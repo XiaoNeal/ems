@@ -1,0 +1,261 @@
+
+.container.data-v-cb1c365a {
+    min-height: 100vh;
+    padding-top: 44px;
+    background-color: #f7f8fa;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.content.data-v-cb1c365a {
+    padding: 16px;
+    margin-top:44px;
+}
+
+/* 充电桩信息卡片 */
+.pile-card.data-v-cb1c365a {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.pile-header.data-v-cb1c365a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.icon-box.data-v-cb1c365a {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background-color: #e8f4ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+}
+.pile-main.data-v-cb1c365a {
+    flex: 1;
+}
+.pile-name.data-v-cb1c365a {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d2129;
+    margin-bottom: 4px;
+}
+.pile-desc.data-v-cb1c365a {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #86909c;
+}
+.pile-desc .tag.data-v-cb1c365a {
+    margin-left: 8px;
+    padding: 2px 8px;
+    background-color: #e6f7ed;
+    color: #00b42a;
+    border-radius: 12px;
+    font-size: 12px;
+}
+.pile-extra.data-v-cb1c365a {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: #86909c;
+}
+.extra-item.data-v-cb1c365a {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 充电状态区域 */
+.charging-status.data-v-cb1c365a {
+    margin-bottom: 24px;
+}
+.status-circle.data-v-cb1c365a {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 20px;
+    position: relative;
+}
+.progress-ring.data-v-cb1c365a {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    position: absolute;
+    -webkit-transform: rotate(-90deg);
+            transform: rotate(-90deg);
+    /* 旋转使进度从顶部开始 */
+    background-color: #f0f0f0;
+}
+.ring-mask.data-v-cb1c365a {
+    width: 80%;
+    height: 80%;
+    background-color: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) inset;
+}
+.circle-inner.data-v-cb1c365a {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 1;
+}
+.power-num.data-v-cb1c365a {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1d2129;
+    line-height: 1.2;
+}
+.status-text.data-v-cb1c365a {
+    font-size: 16px;
+    color: #00b42a;
+    margin-top: 8px;
+    display: inline-block;
+}
+
+/* 电量进度条 */
+.power-progress.data-v-cb1c365a {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+.progress-label.data-v-cb1c365a {
+    font-size: 14px;
+    color: #86909c;
+    margin-bottom: 8px;
+    display: block;
+}
+.progress-bar.data-v-cb1c365a {
+    height: 8px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+.progress-fill.data-v-cb1c365a {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+.progress-info.data-v-cb1c365a {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #86909c;
+}
+
+/* 数据网格 */
+.data-grid.data-v-cb1c365a {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+.data-item.data-v-cb1c365a {
+    flex: 1;
+    min-width: calc(50% - 6px);
+    /* 每行2个 */
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+.data-label.data-v-cb1c365a {
+    font-size: 14px;
+    color: #86909c;
+    display: block;
+    margin-bottom: 6px;
+}
+.data-value.data-v-cb1c365a {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d2129;
+    transition: all 0.3s ease;
+}
+
+/* 操作按钮 */
+.action-buttons.data-v-cb1c365a {
+    padding: 0 10px;
+}
+.action-btn.data-v-cb1c365a {
+    width: 100%;
+    height: 50px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+.start-btn.data-v-cb1c365a {
+    background-color: #409eff;
+    color: #fff;
+}
+.start-btn.data-v-cb1c365a:active {
+    background-color: #337ecc;
+}
+.stop-btn.data-v-cb1c365a {
+    background-color: #f53f3f;
+    color: #fff;
+}
+.stop-btn.data-v-cb1c365a:active {
+    background-color: #d43030;
+}
+.loading.data-v-cb1c365a {
+    -webkit-animation: spin-data-v-cb1c365a 1.5s linear infinite;
+            animation: spin-data-v-cb1c365a 1.5s linear infinite;
+}
+@-webkit-keyframes spin-data-v-cb1c365a {
+from {
+        -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+}
+to {
+        -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+}
+}
+@keyframes spin-data-v-cb1c365a {
+from {
+        -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+}
+to {
+        -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+}
+}
+
+/* 适配深色模式（可选） */
+@media (prefers-color-scheme: dark) {
+.container.data-v-cb1c365a {
+        background-color: #1a1a1a;
+}
+.pile-card.data-v-cb1c365a,
+    .power-progress.data-v-cb1c365a,
+    .data-item.data-v-cb1c365a {
+        background-color: #2c2c2c;
+}
+.pile-name.data-v-cb1c365a,
+    .data-value.data-v-cb1c365a,
+    .power-num.data-v-cb1c365a {
+        color: #f5f5f5;
+}
+.ring-mask.data-v-cb1c365a {
+        background-color: #2c2c2c;
+}
+}
+

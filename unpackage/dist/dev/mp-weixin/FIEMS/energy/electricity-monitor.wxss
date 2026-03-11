@@ -1,0 +1,103 @@
+@charset "UTF-8";
+/* 水平间距 */
+/* 水平间距 */
+.data-v-2228adec page {
+  height: 100%;
+}
+.container.data-v-2228adec {
+  font-size: 28rpx;
+  line-height: 24px;
+  background-color: #0E2264;
+  min-height: 100%;
+}
+.header-container.data-v-2228adec {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 2rem;
+}
+.f1.data-v-2228adec {
+  background-color: #003E98;
+  text-align: center;
+  display: flex;
+  justify-content: space-evenly;
+  z-index: 20;
+}
+.f1 text.data-v-2228adec {
+  line-height: 9vw;
+  padding-bottom: 1vw;
+  color: #a3a3a3;
+  font-size: 4vw;
+  width: 21vw;
+}
+.f1 .active.data-v-2228adec {
+  color: #fff;
+  border-bottom: 1vw solid #00E9AA;
+}
+.box-container.data-v-2228adec {
+  background: #16379A;
+  height: 6rem;
+  margin: 0.5rem;
+  border-radius: 6px;
+  color: #fff;
+  padding: 0.5rem;
+}
+.content-container.data-v-2228adec {
+  width: 46%;
+  float: left;
+  height: 77%;
+  display: flex;
+  flex-direction: column;
+  color: #7287C6;
+}
+.row-container.data-v-2228adec {
+  margin: auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+.col-line.data-v-2228adec {
+  background-color: #7287C6;
+  margin: 3%;
+  width: 1px;
+  float: left;
+  height: 72%;
+}
+.data-container.data-v-2228adec {
+  display: flex;
+}
+.data-v-2228adec.uni-select {
+  border: unset;
+}
+.data-v-2228adec.uni-select__input-text {
+  color: #fff;
+}
+.data-v-2228adec.uni-select__selector {
+  background: #003879;
+  border: unset;
+}
+.data-v-2228adec.uni-popper__arrow::after {
+  border: bottom color #0050ae;
+}
+.data-v-2228adec.table--border {
+  border-left: unset;
+  border-top: unset;
+  border-right: 1px solid #455FAE;
+}
+.data-v-2228adec.uni-table-th {
+  background: #16379A;
+  color: #fff;
+  border-bottom: 1px #455FAE solid;
+  text-align: center !important;
+}
+.data-v-2228adec.uni-table-td {
+  background: #16379A;
+  color: #fff;
+  border-bottom: 1px #455FAE solid;
+  text-align: center !important;
+}
+.data-v-2228adec.u-loading-icon {
+  height: 1000rpx;
+}
+

@@ -1,0 +1,21 @@
+@charset "UTF-8";
+/* 水平间距 */
+/* 水平间距 */
+.container.data-v-e3f9010a {
+  padding: 3vw;
+}
+._p.data-v-e3f9010a {
+  text-indent: 2rem;
+}
+._h1.data-v-e3f9010a {
+  font-size: 38rpx;
+  font-weight: bolder;
+  text-align: center;
+  margin: 3vw auto;
+}
+._h4.data-v-e3f9010a {
+  font-size: 30rpx;
+  font-weight: bold;
+  margin: 3vw 0 1vw;
+}
+

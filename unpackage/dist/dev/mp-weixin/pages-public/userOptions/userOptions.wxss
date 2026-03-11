@@ -1,0 +1,42 @@
+@charset "UTF-8";
+/* 水平间距 */
+/* 水平间距 */
+.container.data-v-64e709a8 {
+  height: 100%;
+}
+.list.data-v-64e709a8 {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem;
+  border-bottom: 1px solid #f2f2f2;
+}
+.list image.data-v-64e709a8 {
+  width: 80rpx;
+  height: 80rpx;
+}
+.center-list.data-v-64e709a8 {
+  background-color: #16379A;
+  padding-left: 9vw;
+  padding-right: 9vw;
+  margin: 1rem;
+}
+.center-list image.data-v-64e709a8 {
+  width: 80rpx;
+  height: 80rpx;
+}
+.logout.data-v-64e709a8 {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  right: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  width: 50%;
+  text-align: center;
+  background-color: #fff;
+  border-radius: 100px;
+  padding: 3vw 6vw;
+  border: 1px solid #f3f8ff;
+  border-radius: 20rpx;
+}
+

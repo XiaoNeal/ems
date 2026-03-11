@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "",
+  "usingComponents": {
+    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar",
+    "u-line": "/uni_modules/uview-ui/components/u-line/u-line",
+    "qiun-data-charts": "/uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts",
+    "progress-rank": "/components/progress-rank/progress-rank",
+    "progress-bar": "/components/progress-bar/progress-bar"
+  }
+}

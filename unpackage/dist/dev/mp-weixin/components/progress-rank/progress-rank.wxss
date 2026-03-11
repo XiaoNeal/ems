@@ -1,0 +1,48 @@
+@charset "UTF-8";
+/* 水平间距 */
+/* 水平间距 */
+.ranking-item.data-v-629a325e {
+  display: flex;
+  margin-bottom: 13px;
+  align-items: center;
+  height: 11px;
+}
+.ranking-item .name.data-v-629a325e {
+  padding-right: 10px;
+  color: #fff;
+  font-size: 20rpx;
+  flex: 2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 5rem;
+}
+.ranking-item .progress.data-v-629a325e {
+  flex: 4;
+  text-align: left;
+  padding-right: 10px;
+  display: flex;
+  background-color: #142C7E;
+  width: 8rem;
+}
+.ranking-item .progress text.data-v-629a325e {
+  display: inline-block;
+  vertical-align: top;
+}
+.ranking-item .num.data-v-629a325e {
+  font-size: 22rpx;
+  color: #fff;
+  width: 6rem;
+  text-align: right;
+}
+.ranking-item .unit.data-v-629a325e {
+  font-size: 22rpx;
+  margin-left: 0.2rem;
+}
+.ranking-item .ration.data-v-629a325e {
+  width: 3rem;
+  font-size: 22rpx;
+  color: #fff;
+  text-align: right;
+}
+

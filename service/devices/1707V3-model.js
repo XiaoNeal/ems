@@ -1,0 +1,195 @@
+import DeviceBase from "./device-base.model"
+
+export class Model1707V3 extends DeviceBase {
+    constructor() {
+        super();
+        this.energyData = new energyData()
+    }
+
+
+    getEnergyData(jsonData) {
+        this.energyData.pcsPortAphaseVoltage.value = jsonData.B0;
+        this.energyData.pcsPortBphaseVoltage.value = jsonData.B2;
+        this.energyData.pcsPortCphaseVoltage.value = jsonData.B4;
+        this.energyData.pcsOutputAphaseCurrent.value = jsonData.B6;
+        this.energyData.pcsOutputBphaseCurrent.value = jsonData.B8;
+        this.energyData.pcsOutputCphaseCurrent.value = jsonData.B10;
+        this.energyData.gridFrequency.value = jsonData.B12;
+        this.energyData.pcsaPhaseOutputActivePower.value = jsonData.B14;
+        this.energyData.pcsbPhaseOutputActivePower.value = jsonData.B16;
+        this.energyData.pcscPhaseOutputActivePower.value = jsonData.B18;
+        this.energyData.pcsTotalOutputActivePower.value = jsonData.B20;
+        this.energyData.pcsaPhaseOutputReactivePower.value = jsonData.B22;
+        this.energyData.pcsbPhaseOutputReactivePower.value = jsonData.B24;
+        this.energyData.pcscPhaseOutputReactivePower.value = jsonData.B26;
+        this.energyData.pcsTotalOutputReactivePower.value = jsonData.B28;
+        this.energyData.pcsaPhaseOutputApparentPower.value = jsonData.B30;
+        this.energyData.pcsbPhaseOutputApparentPower.value = jsonData.B32;
+        this.energyData.pcscPhaseOutputApparentPower.value = jsonData.B34;
+        this.energyData.pcsTotalOutputApparentPower.value = jsonData.B36;
+        this.energyData.pcsOutputAphasePowerFactor.value = jsonData.B38;
+        this.energyData.pcsOutputBphasePowerFactor.value = jsonData.B40;
+        this.energyData.pcsOutputCphasePowerFactor.value = jsonData.B42;
+        this.energyData.pcsOutputTotalPowerFactor.value = jsonData.B44;
+        this.energyData.pcsInputPower.value = jsonData.B46;
+        this.energyData.pcsInputVoltage.value = jsonData.B48;
+        this.energyData.pcsInputCurrent.value = jsonData.B50;
+        this.energyData.pcsHeatSinkTemperature.value = jsonData.B52;
+        this.energyData.pcsAcAccumulatedChargePower.value = jsonData.B54;
+        this.energyData.pcsAcAccumulatedDischargePower.value = jsonData.B58;
+        this.energyData.pcsDcAccumulatedChargePower.value = jsonData.B62;
+        this.energyData.pcsDcAccumulatedDischargePower.value = jsonData.B66;
+        this.energyData.nphaseCurrentRms.value = jsonData.B70;
+        this.energyData.onChipSocTemperature.value = jsonData.B72;
+        this.energyData.igbtTemperature1Group1.value = jsonData.B74;
+        this.energyData.igbtTemperature1Group2.value = jsonData.B75;
+        this.energyData.igbtTemperature2Group1.value = jsonData.B76;
+        this.energyData.igbtTemperature2Group2.value = jsonData.B77;
+        this.energyData.igbtTemperature3Group1.value = jsonData.B78;
+        this.energyData.igbtTemperature3Group2.value = jsonData.B79;
+        this.energyData.igbtTemperature4Group1.value = jsonData.B80;
+        this.energyData.igbtTemperature4Group2.value = jsonData.B81;
+        this.energyData.dcdcInputVoltage.value = jsonData.B82;
+        this.energyData.dcdcOutputVoltage.value = jsonData.B84;
+        this.energyData.dcdcInputCurrent.value = jsonData.B86;
+        this.energyData.dcdcOutputCurrent.value = jsonData.B88;
+        this.energyData.dcdcInputPower.value = jsonData.B90;
+        this.energyData.dcdcHeatSinkTemperature.value = jsonData.B92;
+        this.energyData.dcdcProgramVersion.value = jsonData.B94;
+
+        // this.bmsCmsAllowableChargeCurrent.value = jsonData.B96;
+        // this.bmsCmsAllowableDischargeCurrent.value = jsonData.B98;
+        // this.bmsCmssoc.value = jsonData.B100;
+        // this.bmsCmsAllowableCharge.value = jsonData.B102;
+        // this.bmsCmsDischargable.value = jsonData.B104;
+        // this.bmsCmsTotalVoltage.value = jsonData.B106;
+        // this.bmsCmsTotalCurrent.value = jsonData.B108;
+        // this.bmsCmsSingleHighestSoc.value = jsonData.B110;
+        // this.bmsCmsSingleUnitLowestSoc.value = jsonData.B112;
+        // this.bmsCmsSingleHighestVoltage.value = jsonData.B114;
+        // this.bmsCmsSingleMinVoltage.value = jsonData.B116;
+        // this.bmsCmsSingleHighestTemperature.value = jsonData.B118;
+        // this.bmsCmsSingleMinTemperature.value = jsonData.B120;
+        // this.bmsCmsAllowableChargingPower.value = jsonData.B122;
+        // this.bmsCmsAllowableDischargePower.value = jsonData.B124;
+
+        this.energyData.constantVoltageChargingSet.value = jsonData.B126;
+        this.energyData.constantCurrentChargingCurrentSet.value = jsonData.B128;
+        this.energyData.constantPowerActivePowerExpectation.value = jsonData.B130;
+        this.energyData.constantPowerReactivePowerExpectation.value = jsonData.B132;
+        this.energyData.offGridOutputVoltageGiven.value = jsonData.B134;
+        this.energyData.offGridOutputFrequencyGiven.value = jsonData.B136;
+        this.energyData.splitPhaseControlAphaseActivePower.value = jsonData.B138;
+        this.energyData.splitPhaseControlBphaseActivePower.value = jsonData.B140;
+        this.energyData.splitPhaseControlCphaseActivePower.value = jsonData.B142;
+        this.energyData.splitPhaseControlAphaseReactivePower.value = jsonData.B144;
+        this.energyData.splitPhaseControlBphaseReactivePower.value = jsonData.B146;
+        this.energyData.splitPhaseControlCphaseReactivePower.value = jsonData.B148;
+        this.energyData.offGridOutputVoltageInAphase.value = jsonData.B150;
+        this.energyData.offGridOutputVoltageInBphase.value = jsonData.B152;
+        this.energyData.offGridOutputVoltageInCphase.value = jsonData.B154;
+        this.energyData.microgridDcVoltageSagFactor.value = jsonData.B156;
+        this.energyData.primaryFmFrequencyDeadBand.value = jsonData.B158;
+        this.energyData.primaryFmFrequencyK.value = jsonData.B160;
+        this.energyData.vsgFrequencyModulationCoefficientK.value = jsonData.B162;
+        this.energyData.vsgRotationalInertiaCoefficient.value = jsonData.B164;
+        this.energyData.vsgReactiveVoltageRegulationCoefficientK.value = jsonData.B166;
+        this.energyData.batteryOvercapacityAllowableChargingVoltage.value = jsonData.B168;
+        this.energyData.batteryOvercapacityAllowableDischargeVoltage.value = jsonData.B170;
+        this.energyData.batteryOvercapacityPermissibleChargingCurrent.value = jsonData.B172;
+        this.energyData.batteryOvercapacityPermissibleDischargeCurrent.value = jsonData.B174;
+    }
+
+}
+class energyData {
+    pcsPortAphaseVoltage = { name: 'PCS端口A相电压(V)', value: '--' }
+        pcsPortBphaseVoltage = { name: 'PCS端口B相电压(V)', value: '--' }
+        pcsPortCphaseVoltage = { name: 'PCS端口C相电压(V)', value: '--' }
+        pcsOutputAphaseCurrent = { name: 'PCS输出A相电流(A)', value: '--' }
+        pcsOutputBphaseCurrent = { name: 'PCS输出B相电流(A)', value: '--' }
+        pcsOutputCphaseCurrent = { name: 'PCS输出C相电流(A)', value: '--' }
+        gridFrequency = { name: '电网频率(Hz)', value: '--' }
+        pcsaPhaseOutputActivePower = { name: 'PCSA相输出有功功率(kW)', value: '--' }
+        pcsbPhaseOutputActivePower = { name: 'PCSB相输出有功功率(kW)', value: '--' }
+        pcscPhaseOutputActivePower = { name: 'PCSC相输出有功功率(kW)', value: '--' }
+        pcsTotalOutputActivePower = { name: 'PCS总输出有功功率(kW)', value: '--' }
+        pcsaPhaseOutputReactivePower = { name: 'PCSA相输出无功功率(kVar)', value: '--' }
+        pcsbPhaseOutputReactivePower = { name: 'PCSB相输出无功功率(kVar)', value: '--' }
+        pcscPhaseOutputReactivePower = { name: 'PCSC相输出无功功率(kVar)', value: '--' }
+        pcsTotalOutputReactivePower = { name: 'PCS总输出无功功率(kVar)', value: '--' }
+        pcsaPhaseOutputApparentPower = { name: 'PCSA相输出视在功率(kVA)', value: '--' }
+        pcsbPhaseOutputApparentPower = { name: 'PCSB相输出视在功率(kVA)', value: '--' }
+        pcscPhaseOutputApparentPower = { name: 'PCSC相输出视在功率(kVA)', value: '--' }
+        pcsTotalOutputApparentPower = { name: 'PCS总输出视在功率(kVA)', value: '--' }
+        pcsOutputAphasePowerFactor = { name: 'PCS输出A相功率因数', value: '--' }
+        pcsOutputBphasePowerFactor = { name: 'PCS输出B相功率因数', value: '--' }
+        pcsOutputCphasePowerFactor = { name: 'PCS输出C相功率因数', value: '--' }
+        pcsOutputTotalPowerFactor = { name: 'PCS输出总功率因数', value: '--' }
+        pcsInputPower = { name: 'PCS输入功率(kW)', value: '--' }
+        pcsInputVoltage = { name: 'PCS输入电压(V)', value: '--' }
+        pcsInputCurrent = { name: 'PCS输入电流(A)', value: '--' }
+        pcsHeatSinkTemperature = { name: 'PCS散热器温度(℃)', value: '--' }
+        pcsAcAccumulatedChargePower = { name: 'PCS交流累计充电电量(kWh)', value: '--' }
+        pcsAcAccumulatedDischargePower = { name: 'PCS交流累计放电电量(kWh)', value: '--' }
+        pcsDcAccumulatedChargePower = { name: 'PCS直流累计充电电量(kWh)', value: '--' }
+        pcsDcAccumulatedDischargePower = { name: 'PCS直流累计放电电量(kWh)', value: '--' }
+        nphaseCurrentRms = { name: 'N相电流有效值(A)', value: '--' }
+        onChipSocTemperature = { name: '片上SOC温度(℃)', value: '--' }
+        igbtTemperature1Group1 = { name: 'IGBT温度1-组1(℃)', value: '--' }
+        igbtTemperature1Group2 = { name: 'IGBT温度1-组2(℃)', value: '--' }
+        igbtTemperature2Group1 = { name: 'IGBT温度2-组1(℃)', value: '--' }
+        igbtTemperature2Group2 = { name: 'IGBT温度2-组2(℃)', value: '--' }
+        igbtTemperature3Group1 = { name: 'IGBT温度3-组1(℃)', value: '--' }
+        igbtTemperature3Group2 = { name: 'IGBT温度3-组2(℃)', value: '--' }
+        igbtTemperature4Group1 = { name: 'IGBT温度4-组1(℃)', value: '--' }
+        igbtTemperature4Group2 = { name: 'IGBT温度4-组2(℃)', value: '--' }
+        dcdcInputVoltage = { name: 'DCDC输入电压(V)', value: '--' }
+        dcdcOutputVoltage = { name: 'DCDC输出电压(V)', value: '--' }
+        dcdcInputCurrent = { name: 'DCDC输入电流(A)', value: '--' }
+        dcdcOutputCurrent = { name: 'DCDC输出电流(A)', value: '--' }
+        dcdcInputPower = { name: 'DCDC输入功率(kW)', value: '--' }
+        dcdcHeatSinkTemperature = { name: 'DCDC散热器温度(℃)', value: '--' }
+        dcdcProgramVersion = { name: 'DCDC程序版本', value: '--' }
+
+        // this.bmsCmsAllowableChargeCurrent = { name: 'BMS/CMS允许充电电流(A)', value: '--' }
+        // this.bmsCmsAllowableDischargeCurrent = { name: 'BMS/CMS允许放电电流(A)', value: '--' }
+        // this.bmsCmssoc = { name: 'BMS/CMS SOC(%)', value: '--' }
+        // this.bmsCmsAllowableCharge = { name: 'BMS/CMS可充电电量(kWh)', value: '--' }
+        // this.bmsCmsDischargable = { name: 'BMS/CMS可放电电量(kWh)', value: '--' }
+        // this.bmsCmsTotalVoltage = { name: 'BMS/CMS总电压(V)', value: '--' }
+        // this.bmsCmsTotalCurrent = { name: 'BMS/CMS总电流(A)', value: '--' }
+        // this.bmsCmsSingleHighestSoc = { name: 'BMS/CMS单体最高SOC(%)', value: '--' }
+        // this.bmsCmsSingleUnitLowestSoc = { name: 'BMS/CMS单体最低SOC(%)', value: '--' }
+        // this.bmsCmsSingleHighestVoltage = { name: 'BMS/CMS单体最高电压(V)', value: '--' }
+        // this.bmsCmsSingleMinVoltage = { name: 'BMS/CMS单体最低电压(V)', value: '--' }
+        // this.bmsCmsSingleHighestTemperature = { name: 'BMS/CMS单体最高温度(℃)', value: '--' }
+        // this.bmsCmsSingleMinTemperature = { name: 'BMS/CMS单体最低温度(℃)', value: '--' }
+        // this.bmsCmsAllowableChargingPower = { name: 'BMS/CMS允许充电功率(kW)', value: '--' }
+        // this.bmsCmsAllowableDischargePower = { name: 'BMS/CMS允许放电功率(kW)', value: '--' }
+
+        constantVoltageChargingSet = { name: '恒压充电电压设定值(V)', value: '--' }
+        constantCurrentChargingCurrentSet = { name: '恒流充电电流设定值(A)', value: '--' }
+        constantPowerActivePowerExpectation = { name: '恒功率有功功率期望(三相三线制)(kW)', value: '--' }
+        constantPowerReactivePowerExpectation = { name: '恒功率无功功率期望(三相三线制)(kVar)', value: '--' }
+        offGridOutputVoltageGiven = { name: '离网输出电压给定(三相三线制)(V)', value: '--' }
+        offGridOutputFrequencyGiven = { name: '离网输出频率给定(kW)', value: '--' }
+        splitPhaseControlAphaseActivePower = { name: '分相控制A相有功功率(三相四线制)(kW)', value: '--' }
+        splitPhaseControlBphaseActivePower = { name: '分相控制B相有功功率(三相四线制)(kW)', value: '--' }
+        splitPhaseControlCphaseActivePower = { name: '分相控制C相有功功率(三相四线制)(kW)', value: '--' }
+        splitPhaseControlAphaseReactivePower = { name: '分相控制A相无功功率(kVar)', value: '--' }
+        splitPhaseControlBphaseReactivePower = { name: '分相控制B相无功功率(三相四线制)(kVar)', value: '--' }
+        splitPhaseControlCphaseReactivePower = { name: '分相控制C相无功功率(三相四线制)(kVar)', value: '--' }
+        offGridOutputVoltageInAphase = { name: '离网输出电压分相给定A(三相四线制)(V)', value: '--' }
+        offGridOutputVoltageInBphase = { name: '离网输出电压分相给定B(三相四线制)(V)', value: '--' }
+        offGridOutputVoltageInCphase = { name: '离网输出电压分相给定C(三相四线制)(V)', value: '--' }
+        microgridDcVoltageSagFactor = { name: '微网直流电压下垂系数(V)', value: '--' }
+        primaryFmFrequencyDeadBand = { name: '一次调频频率死区(Hz)', value: '--' }
+        primaryFmFrequencyK = { name: '一次调频K值', value: '--' }
+        vsgFrequencyModulationCoefficientK = { name: 'VSG调频系数K', value: '--' }
+        vsgRotationalInertiaCoefficient = { name: 'VSG转动惯量系数', value: '--' }
+        vsgReactiveVoltageRegulationCoefficientK = { name: 'VSG无功调压系数K', value: '--' }
+        batteryOvercapacityAllowableChargingVoltage = { name: '电池/超容允许充电电压(V)', value: '--' }
+        batteryOvercapacityAllowableDischargeVoltage = { name: '电池/超容允许放电电压(V)', value: '--' }
+        batteryOvercapacityPermissibleChargingCurrent = { name: '电池/超容允许充电电流(A)', value: '--' }
+        batteryOvercapacityPermissibleDischargeCurrent = { name: '电池/超容允许放电电流(A)', value: '--' }
+}

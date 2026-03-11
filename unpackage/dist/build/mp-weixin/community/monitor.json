@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "architecture-diagram": "/community/components/architecture-diagram",
+    "pv-management": "/community/components/pv-management",
+    "energy-storage": "/community/components/energy-storage",
+    "load-management": "/community/components/load-management",
+    "charging-pile": "/community/components/charging-pile"
+  }
+}

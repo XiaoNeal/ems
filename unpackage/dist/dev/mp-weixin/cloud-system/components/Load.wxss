@@ -1,0 +1,712 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 新增整体布局样式 */
+.container.data-v-9bb843b6 {
+  padding: 20rpx;
+  background: #f5f7fa;
+}
+/* 基本信息区块优化 */
+.basic-info.data-v-9bb843b6 {
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+.data-grid.data-v-9bb843b6 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+  padding: 20rpx;
+}
+.data-cell.data-v-9bb843b6 {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+  transition: -webkit-transform 0.2s ease;
+  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, -webkit-transform 0.2s ease;
+}
+.data-cell.data-v-9bb843b6:active {
+  -webkit-transform: scale(0.98);
+          transform: scale(0.98);
+}
+.vertical-layout.data-v-9bb843b6 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+.data-label.data-v-9bb843b6 {
+  font-size: 28rpx;
+  color: #909399;
+  font-weight: 400;
+}
+.data-value.data-v-9bb843b6 {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #303133;
+  letter-spacing: -0.5rpx;
+}
+.data-unit.data-v-9bb843b6 {
+  font-size: 24rpx;
+  color: #909399;
+  margin-top: -4rpx;
+}
+.basic-info-left.data-v-9bb843b6 {
+  flex: 1;
+  padding: 20rpx;
+  border-right: 1rpx solid #ebeef5;
+}
+.basic-info-right.data-v-9bb843b6 {
+  flex: 1;
+  padding: 20rpx 0;
+}
+.basic-info-item.data-v-9bb843b6 {
+  margin-bottom: 30rpx;
+  text-align: center;
+}
+.basic-info-name.data-v-9bb843b6 {
+  font-size: 28rpx;
+  color: #909399;
+  margin-bottom: 10rpx;
+}
+.basic-info-value.data-v-9bb843b6 {
+  font-size: 36rpx;
+  color: #4488fb;
+  font-weight: 600;
+}
+/* 日期选择器容器优化 */
+.chose-date.data-v-9bb843b6 {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+/* 新增设备标题样式 */
+.dcdc-device view.data-v-9bb843b6 {
+  flex: 1;
+  text-align: center;
+  font-weight: 500;
+  color: #303133;
+  padding: 15rpx 0;
+  background: #f5f7fa;
+  border-radius: 8rpx;
+  margin: 0 10rpx;
+}
+/* 数据滚动区域优化 */
+.dcdc-data-box.data-v-9bb843b6 {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 0 20rpx;
+}
+.block.data-v-9bb843b6 {
+  padding: 20rpx;
+  background: #fff;
+  border-radius: 12rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  margin: 20rpx;
+}
+.demonstration.data-v-9bb843b6 {
+  font-size: 32rpx;
+  color: #606266;
+  margin-bottom: 20rpx;
+  font-weight: 500;
+}
+.picker.data-v-9bb843b6 {
+  padding: 20rpx;
+  background: #f5f7fa;
+  border-radius: 8rpx;
+  color: #606266;
+}
+.chart-box.data-v-9bb843b6 {
+  height: 90%;
+  background: #fff;
+  border-radius: 12rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  padding: 20rpx;
+}
+.btns.data-v-9bb843b6 {
+  background: #4488fb;
+  color: white;
+  padding: 12rpx 24rpx;
+  border-radius: 8rpx;
+  display: inline-block;
+  margin-left: 20rpx;
+  transition: opacity 0.3s;
+}
+.btns.data-v-9bb843b6:active {
+  opacity: 0.8;
+}
+.dcdc-title.data-v-9bb843b6 {
+  font-size: 36rpx;
+  color: #303133;
+  font-weight: 600;
+  padding: 20rpx 0;
+}
+.dcdc-data-item.data-v-9bb843b6 {
+  display: flex;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #ebeef5;
+}
+.dcdc-data-name.data-v-9bb843b6 {
+  flex: 2;
+  color: #909399;
+}
+.dcdc-data-value.data-v-9bb843b6 {
+  flex: 1;
+  text-align: center;
+  color: #303133;
+  font-weight: 500;
+}
+.date-picker.data-v-9bb843b6 {
+  width: 100%;
+  max-width: 300px;
+  background: #ffffff;
+  padding: 10px 15px;
+  /* box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1); */
+  transition: all 0.3s ease;
+}
+
+
+.data-container.data-v-9bb843b6 {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+}
+.data-value.data-v-9bb843b6 {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #303133;
+}
+.data-unit.data-v-9bb843b6 {
+  font-size: 24rpx;
+  color: #909399;
+}
+

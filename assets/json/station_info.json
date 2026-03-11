@@ -1,0 +1,79 @@
+{
+    "1": {
+      "stationName": "上海交大光储直柔能源站",
+      "stationType": 1,
+      "totalInstalledCapacity": 12,
+      "totalEnergyStorageCapacity": 258,
+      "totalPowerSupplyCapacity": 70,
+      "totalLoadCapacity": 28,
+      "description": "中意绿色能源实验室是一座以\"绿色能源\"结合建筑应用为特色的低碳建筑，主要研究高效、环保、可持续发展的新一代建筑用能设备与系统。实验室集成了多项国际先进能源技术，获得绿色建筑LEED金牌认证，被业界认为是目前国际上技术最全面的绿色建筑能源系统研究平台。",
+      "city_code": 310112,
+      "imagePath": "https://serviceiems.gree.com/esOperation/img/shzynyl-background.a91e35dc.jpg"
+    },
+    "2": {
+      "stationName": "光伏未来屋光储直柔能源站",
+      "stationType": 1,
+      "totalInstalledCapacity": 60,
+      "totalEnergyStorageCapacity": 258,
+      "totalPowerSupplyCapacity": 110,
+      "totalLoadCapacity": 100,
+      "description": "暂无介绍",
+      "city_code": 440402,
+      "imagePath": "https://serviceiems.gree.com/esOperation/img/gfw-background.252630dc.jpg"
+    },
+    "3": {
+      "stationName": "清华节能楼光储直柔能源站",
+      "stationType": 1,
+      "totalInstalledCapacity": 0,
+      "totalEnergyStorageCapacity": 258,
+      "totalPowerSupplyCapacity": 50,
+      "totalLoadCapacity": 54.2,
+      "description": "清华大学建筑节能研究中心光储直柔系统，构建了DC800V (DC400V)/DC48V高低压双母线分层分级架构，支持并离网自由运行和网荷柔性灵活互动， 实现建筑\"源-储-网一荷\" 一体的近用户侧新型能源系统，为100kW级光储直柔系统实证基地和研究实验平台。",
+      "city_code": 110108,
+      "imagePath": "https://serviceiems.gree.com/esOperation/img/qh-background.b1054c6f.png"
+    },
+    "4": {
+      "stationName": "杭州格力能源站",
+      "stationType": 2,
+      "totalInstalledCapacity": 0,
+      "totalEnergyStorageCapacity": 258,
+      "totalPowerSupplyCapacity": 50,
+      "totalLoadCapacity": 0,
+      "description": "杭州·光伏未来屋光储直柔系统，构建了DC800V(DC400V)/DC48V高低压双母线分层分级架构，支持并离网自由运行和网荷柔性灵活动，实现建筑\"源-储-网-荷\"一体的近用户侧新型能源系统，为100kW级光储直柔系统实证基地和研究实验平台。",
+      "city_code": 330114,
+      "imagePath": "https://serviceiems.gree.com/esOperation/img/hz-background.b5b9dfa5.jpg"
+    },
+    "5": {
+      "stationName": "光伏未来屋智能光储机",
+      "stationType": 1,
+      "totalInstalledCapacity": 0,
+      "totalEnergyStorageCapacity": 215,
+      "totalPowerSupplyCapacity": 100,
+      "totalLoadCapacity": 0,
+      "description": "暂无介绍",
+      "city_code": 440402,
+      "imagePath": "https://serviceiems.gree.com/esOperation/img/gfw-background.252630dc.jpg"
+    },
+    "6": {
+      "stationName": "十千瓦级光储直柔微能源站",
+      "stationType": 3,
+      "totalInstalledCapacity": 60,
+      "totalEnergyStorageCapacity": 258,
+      "totalPowerSupplyCapacity": 110,
+      "totalLoadCapacity": 100,
+      "description": "光储直柔微能源站（十千瓦级）是一款集光储直柔技术于一体的高效能源解决方案，专为零碳家居、别墅、小型商业等场景设计。产品延续国创光储直柔能源站的家族式IP设计，以集成源、储、网、荷、备于一体、可模块化扩容、便携式插拔换电为核心特点，满足用户对高效、可靠、智能能源管理的多样化需求。",
+      "city_code": 440402,
+      "imagePath": "https://serviceiems.gree.com/esOperation/img/gfw-background.252630dc.jpg"
+    },
+    "7": {
+      "stationName": "上交大水熊虫",
+      "stationType": 4,
+      "totalInstalledCapacity": 0,
+      "totalEnergyStorageCapacity": 0,
+      "totalPowerSupplyCapacity": 0,
+      "totalLoadCapacity": 0,
+      "description": "暂无介绍",
+      "city_code": 310112,
+      "imagePath": "https://serviceiems.gree.com/esOperation/img/shzynyl-background.a91e35dc.jpg"
+    }
+  }

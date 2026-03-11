@@ -1,0 +1,70 @@
+@charset "UTF-8";
+/* 水平间距 */
+/* 水平间距 */
+.container.data-v-df2d2820 {
+  font-size: 28rpx;
+  line-height: 24px;
+  background-color: #0E2264;
+  height: 100%;
+  overflow: auto;
+}
+.box-container.data-v-df2d2820 {
+  height: 5rem;
+  border-radius: 6px;
+  color: #fff;
+  padding: 0.5rem;
+  display: flex;
+}
+.header-container.data-v-df2d2820 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 2rem;
+  margin-left: 0.5rem;
+}
+.content-container.data-v-df2d2820 {
+  width: 100%;
+  float: left;
+  display: flex;
+  flex-direction: column;
+  color: #7287C6;
+  margin-bottom: 0.5rem;
+  background: #16379A;
+  border-radius: 6px;
+}
+.data-container.data-v-df2d2820 {
+  display: flex;
+  flex-wrap: wrap;
+}
+.row-container.data-v-df2d2820 {
+  margin: auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 0.5rem;
+}
+.col-line.data-v-df2d2820 {
+  background-color: #7287C6;
+  margin: 3%;
+  width: 1px;
+  float: left;
+  height: 50%;
+}
+.data-v-df2d2820.uni-select {
+  border: unset;
+}
+.data-v-df2d2820.uni-select__input-text {
+  color: #fff;
+}
+.data-v-df2d2820.uni-select__selector {
+  background: #003879;
+  border: unset;
+}
+.data-v-df2d2820.uni-popper__arrow::after {
+  border: bottom color #0050ae;
+}
+.data-v-df2d2820.u-loading-icon {
+  height: 1000rpx;
+}
+

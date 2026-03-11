@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "uni-tooltip": "/uni_modules/uni-tooltip/components/uni-tooltip/uni-tooltip"
+  }
+}

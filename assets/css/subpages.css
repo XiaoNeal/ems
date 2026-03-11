@@ -1,0 +1,109 @@
+.sub-page .content {
+  padding: 15px;
+}
+
+.van-nav-bar {
+  background: #fff;
+}
+
+.van-cell-group--inset {
+  margin: 12px 0;
+  border-radius: 8px;
+}
+
+/* 经济分析组件样式 */
+.stats-card {
+  padding: 20rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
+}
+
+.stats-item {
+  margin-bottom: 32rpx;
+  padding: 20rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+}
+
+.stats-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16rpx;
+}
+
+.data-column {
+  flex: 1;
+  padding: 0 20rpx;
+}
+
+.align-right {
+  align-items: flex-end;
+}
+
+.stats-unit {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.5;
+}
+
+.stats-value {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.income-wrapper {
+  display: flex;
+  align-items: baseline;
+  margin-top: 8rpx;
+}
+
+.stat-value {
+  font-size: 36rpx;
+  color: #1890ff;
+  margin-right: 8rpx;
+}
+
+.stat-unit {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 年度报表表格样式 */
+.uni-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.uni-tr {
+  display: flex;
+  flex-wrap: nowrap;
+  min-width: 100%;
+}
+
+.uni-th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 16rpx 24rpx;
+  background-color: #f8f9fa;
+}
+
+
+/* 自定义标签栏图标 */
+.tab-icon {
+  width: 48rpx;
+  height: 48rpx;
+  transition: transform 0.2s ease;
+}
+
+.tab-icon.active {
+  transform: scale(1.1);
+  filter: drop-shadow(0 4rpx 8rpx rgba(0,122,255,0.2));
+}
+
+.icon-img {
+  width: 100%;
+  height: 100%;
+}

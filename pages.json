@@ -1,0 +1,394 @@
+{
+	"pages": [
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"app-plus": {
+					"bounce": "none"
+				}
+			}
+		},
+		{
+			"path": "pages/system-selector/system-selector",
+			"style": {
+				"navigationBarTitleText": "系统选择",
+				"app-plus": {
+					"bounce": "none"
+				}
+			}
+		}
+	],
+	"subPackages": [
+		{
+			"root": "cloud-system",
+			"pages": [
+				{
+					"path": "index",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "operation",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "report",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "profile",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				}
+			]
+		},
+		{
+			"root": "FIEMS",
+			"pages": [
+				{
+					"path": "index",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "fiems-energy",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "fiems-expert",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "fiems-home",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "fiems-user",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "alert/alert-info",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "expert/elec-rank",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "expert/elec-peak",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "energy/electricity-monitor",
+					"style": {
+						"navigationBarTitleText": "配电监测",
+						"navigationBarBackgroundColor": "#003E98",
+						"navigationBarTextStyle": "white"
+					}
+				},
+				{
+					"path": "energy/storage-monitor",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "energy/air-monitor",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "energy/storage-detail",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "energy/device-monitor",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "energy/water-monitor",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "energy/air-station-monitor",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "energy/electricity-analysis",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "energy/sewage-station-monitor",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "energy/centrifuge-monitor",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				}
+			]
+		},
+		{
+			"root": "community",
+			"pages": [
+				{
+					"path": "index",
+					"style": {
+						"navigationBarTitleText": "",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "home",
+					"style": {
+						"navigationBarTitleText": "",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "monitor",
+					"style": {
+						"navigationBarTitleText": "",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "analysis",
+					"style": {
+						"navigationBarTitleText": "",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "report",
+					"style": {
+						"navigationBarTitleText": "",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "profile",
+					"style": {
+						"navigationBarTitleText": "",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "charging-detail",
+					"style": {
+						"navigationBarTitleText": "充电桩详情",
+						"enablePullDownRefresh": false
+					}
+				}
+			]
+		},
+		{
+			"root": "pages-public",
+			"pages": [
+				{
+					"path": "about/about",
+					"style": {
+						"navigationBarTitleText": "关于我们"
+					}
+				},
+				{
+					"path": "password/password",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "userOptions/setUserName",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "userOptions/userOptions",
+					"style": {
+						"navigationBarTitleText": "设置"
+					}
+				},
+				{
+					"path": "register/register",
+					"style": {
+						"navigationBarTitleText": "注册"
+					}
+				},
+				{
+					"path": "register/user-category",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "account-cancellation/account-cancellation",
+					"style": {
+						"navigationBarTitleText": ""
+					}
+				},
+				{
+					"path": "agreement/privacy-policy",
+					"style": {
+						"navigationBarTitleText": "GIEMS云隐私协议政"
+					}
+				},
+				{
+					"path": "agreement/user-agreement",
+					"style": {
+						"navigationBarTitleText": "GIEMS云软件许可及用户服务协议"
+					}
+				}
+			]
+		},
+		{
+			"root": "pages-wifi",
+			"pages": [
+				{
+					"path": "index",
+					"style": {
+						"navigationBarTitleText": "WLAN配置"
+					}
+				}
+			]
+		},
+		{
+			"root": "pages/profile",
+			"pages": [
+				{
+					"path": "info",
+					"style": {
+						"navigationBarTitleText": "个人信息"
+					}
+				},
+				{
+					"path": "security",
+					"style": {
+						"navigationBarTitleText": "安全设置"
+					}
+				},
+				{
+					"path": "notifications",
+					"style": {
+						"navigationBarTitleText": "消息通知"
+					}
+				},
+				{
+					"path": "settings",
+					"style": {
+						"navigationBarTitleText": "系统设置"
+					}
+				},
+				{
+					"path": "help",
+					"style": {
+						"navigationBarTitleText": "帮助与反馈"
+					}
+				},
+				{
+					"path": "about",
+					"style": {
+						"navigationBarTitleText": "关于我们"
+					}
+				}
+			]
+		},
+		{
+			"root": "charging",
+			"pages": [
+				{
+					"path": "index",
+					"style": {
+						"navigationBarTitleText": "",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "home",
+					"style": {
+						"navigationBarTitleText": "充电桩首页",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "scan",
+					"style": {
+						"navigationBarTitleText": "扫码充电",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "charging-process",
+					"style": {
+						"navigationBarTitleText": "充电中",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "records",
+					"style": {
+						"navigationBarTitleText": "充电记录",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": true
+					}
+				},
+				{
+					"path": "my",
+					"style": {
+						"navigationBarTitleText": "我的",
+						"navigationStyle": "custom",
+						"enablePullDownRefresh": false
+					}
+				}
+			]
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "GIEMS云",
+		"navigationBarBackgroundColor": "#fff",
+		"backgroundColor": "#103071",
+		"navigationStyle": "custom",
+		"enablePullDownRefresh": false
+	}
+}

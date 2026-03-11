@@ -1,0 +1,15 @@
+{
+  "navigationBarTitleText": "配电监测",
+  "navigationBarBackgroundColor": "#003E98",
+  "navigationBarTextStyle": "white",
+  "usingComponents": {
+    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar",
+    "uni-data-select": "/uni_modules/uni-data-select/components/uni-data-select/uni-data-select",
+    "u-search": "/uni_modules/uview-ui/components/u-search/u-search",
+    "u-loading-icon": "/uni_modules/uview-ui/components/u-loading-icon/u-loading-icon",
+    "u-empty": "/uni_modules/uview-ui/components/u-empty/u-empty",
+    "u-line": "/uni_modules/uview-ui/components/u-line/u-line",
+    "u-loadmore": "/uni_modules/uview-ui/components/u-loadmore/u-loadmore",
+    "u-back-top": "/uni_modules/uview-ui/components/u-back-top/u-back-top"
+  }
+}

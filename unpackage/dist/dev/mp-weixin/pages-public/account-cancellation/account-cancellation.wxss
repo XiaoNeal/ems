@@ -1,0 +1,36 @@
+@charset "UTF-8";
+/* 水平间距 */
+/* 水平间距 */
+.container.data-v-50803f60 {
+  height: 100%;
+  padding: 3vw;
+}
+._p.data-v-50803f60 {
+  text-indent: 2rem;
+  margin-bottom: 1vw;
+}
+.logoutBtn.data-v-50803f60 {
+  margin-top: 3vw;
+  color: white;
+  font-size: 4.53vw;
+  line-height: 10.67vw;
+  background-image: linear-gradient(-90deg, #3A40ff 0%, #32C7ffff 100%);
+  box-shadow: 0vw 3vw 3vw 0vw rgba(50, 199, 255, 0.18);
+  border-radius: 12px;
+  letter-spacing: 1vw;
+}
+.logoutBtn.data-v-50803f60::after {
+  border: none;
+}
+.verification-code.data-v-50803f60 {
+  margin-bottom: 50rpx;
+  border: 1px solid rgba(15, 38, 92, 0.5);
+  border-radius: 30rpx;
+  padding-left: 30rpx;
+  padding-right: 30rpx;
+  height: 80rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+

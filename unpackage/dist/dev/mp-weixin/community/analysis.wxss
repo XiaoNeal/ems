@@ -1,0 +1,40 @@
+@charset "UTF-8";
+/* 水平间距 */
+/* 水平间距 */
+.container.data-v-bbece960 {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #EFF4FB;
+}
+/* 选项卡容器 - 优化阴影和背景 */
+.device-tabs.data-v-bbece960 {
+  background: #FAFBFF;
+  border-radius: 20rpx;
+  box-shadow: inset 0 2rpx 8rpx rgba(0, 0, 0, 0.03), 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+.tab-bar.data-v-bbece960 {
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+}
+.tab-bar text.data-v-bbece960 {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  color: #333;
+  min-width: -webkit-fit-content;
+  min-width: fit-content;
+  font-size: 28rpx;
+}
+.active-tab.data-v-bbece960 {
+  color: #007aff;
+  border-bottom: 2px solid #007aff;
+}
+.device-content.data-v-bbece960 {
+  background: #EFF4FB;
+  margin: 10rpx;
+  border-radius: 6px;
+}
+

@@ -1,0 +1,12 @@
+{
+  "navigationBarTitleText": "",
+  "navigationStyle": "custom",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "uni-icons": "/uni_modules/uni-icons/components/uni-icons/uni-icons",
+    "custom-nav-bar": "/charging/components/custom-nav-bar",
+    "home": "/charging/home",
+    "scan": "/charging/scan",
+    "my": "/charging/my"
+  }
+}

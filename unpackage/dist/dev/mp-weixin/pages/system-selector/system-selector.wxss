@@ -1,0 +1,341 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 全局样式 */
+page {
+  background-color: #f5f7fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+}
+.container {
+  padding: 30rpx;
+}
+/* 头部样式 */
+.header {
+  margin-top: 50px;
+  /* 新增顶部外边距 */
+  margin-bottom: 40rpx;
+  padding: 20rpx 0;
+  /* 增加内边距 */
+  background: linear-gradient(135deg, #409EFF 0%, #0066CC 100%);
+  border-radius: 16rpx;
+}
+.title {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #ffffff;
+  /* 改为白色文字 */
+  padding-left: 30rpx;
+  /* 增加左侧内边距 */
+}
+.title::before {
+  content: '';
+  display: inline-block;
+  width: 8rpx;
+  height: 40rpx;
+  background-color: #409EFF;
+  border-radius: 4rpx;
+  margin-right: 16rpx;
+}
+/* 系统列表样式 */
+.system-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+.system-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+/* 触摸反馈效果 */
+.system-card:active {
+  -webkit-transform: scale(0.98);
+          transform: scale(0.98);
+}
+.system-card.active-card {
+  border-left: 8rpx solid #409EFF;
+  box-shadow: 0 8rpx 24rpx rgba(64, 158, 255, 0.15);
+}
+/* 系统图标样式 */
+.system-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: white;
+  flex-shrink: 0;
+}
+.icon-energy {
+  background-color: #52c41a;
+}
+.icon-carbon {
+  background-color: #fa8c16;
+}
+.icon-platform {
+  background-color: #409EFF;
+}
+.icon-unknown {
+  background-color: #909399;
+}
+.icon-text {
+  -webkit-transform: scale(1.2);
+          transform: scale(1.2);
+}
+/* 系统信息样式 */
+.system-info {
+  flex: 1;
+}
+.system-name {
+  font-size: 32rpx;
+  color: #303133;
+  font-weight: 500;
+  margin-bottom: 8rpx;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.system-type {
+  font-size: 24rpx;
+  color: #909399;
+  display: block;
+}
+/* 右侧箭头样式 */
+.arrow-right {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c0c4cc;
+  margin-left: 24rpx;
+  transition: -webkit-transform 0.3s ease;
+  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, -webkit-transform 0.3s ease;
+}
+.system-card:hover .arrow-right,
+.system-card.active-card .arrow-right {
+  -webkit-transform: translateX(10rpx);
+          transform: translateX(10rpx);
+  color: #409EFF;
+}
+/* 图标字体样式 (实际项目中需要引入图标字体库) */
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 28rpx;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.icon-arrow::before {
+  content: "\e62f";
+  /* 箭头图标编码，需根据实际图标库调整 */
+}
+
