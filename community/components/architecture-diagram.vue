@@ -1,5 +1,59 @@
 <template>
     <view class="container">
+        <!-- 顶部导航栏 -->
+        <!-- <view class="nav-bar">
+            <view class="nav-title">光储直柔能源站EMS</view>
+            <view class="nav-menu">
+                <view class="nav-item active">架构图</view>
+                <view class="nav-item">光伏</view>
+                <view class="nav-item">储能</view>
+                <view class="nav-item">电网</view>
+                <view class="nav-item">负荷</view>
+            </view>
+        </view> -->
+
+        <!-- 警告框和启动按钮 -->
+        <view class="warning-and-start">
+            <!-- 警告框 -->
+            <view class="warning-box">
+                <text class="warning-icon">⚠️</text>
+                <view class="warning-content">
+                    <text class="warning-title">能源基础电力装备 非专业禁止操作!</text>
+                    <text class="warning-text">1.系统内置锂电光伏发电，电网断网后仍带电，</text>
+                    <text class="warning-text">请谨慎操作;</text>
+                    <text class="warning-text">2.长期断电将导致锂电过放报警，请联系厂家;</text>
+                    <text class="warning-text">3.系统具备离网应急功能，请依需要谨慎配置和</text>
+                    <text class="warning-text">管理使用。</text>
+                </view>
+            </view>
+
+            <!-- 启动按钮 -->
+            <view class="start-button">
+                <view class="start-circle" @click="showStartModal">
+                    <image src="../static/images/start.svg" class="start-bg" />
+                    <text class="start-text">启动</text>
+                </view>
+            </view>
+        </view>
+        
+        <!-- 自定义启动弹窗 -->
+        <view class="modal-overlay" v-if="showModal" @click="closeModal">
+            <view class="modal-content" @click.stop>
+                <view class="modal-header">
+                    <text class="modal-icon">⚠️</text>
+                    <text class="modal-title">系统启动警告</text>
+                </view>
+                <view class="modal-body">
+                    <text class="modal-text">启动后系统将开始运行，请确保所有设备连接正常。</text>
+                    <text class="modal-text">确认启动系统？</text>
+                </view>
+                <view class="modal-footer">
+                    <button class="modal-cancel" @click="closeModal">取消</button>
+                    <button class="modal-confirm" @click="confirmStart">启动</button>
+                </view>
+            </view>
+        </view>
+
         <view class="system-img">
             <image src="../static/images/system-architecture-new.png"
                 style="width:100%; height:96%; position: absolute; top:0; left:0; z-index: 1;"></image>
@@ -19,31 +73,31 @@
             </view>
 
 
-            <view class="power-label" style="left: 27vw;top: 31%">
+            <view class="power-label" style="left: 20vw;top: 40%">
                 {{ ((currentStatus['600a29b2cdf9e30600897f26'] ? currentStatus['600a29b2cdf9e30600897f26'].P : 0) /
                     1000).toFixed(1) }}kW
             </view>
-            <view class="power-label" style="left: 37vw;top: 31%">
+            <view class="power-label" style="left: 35vw;top: 40%">
                 {{ ((currentStatus['616e66f584c6e1930fa05917'] ? currentStatus['616e66f584c6e1930fa05917'].P : 0) /
                     1000).toFixed(1) }}kW
             </view>
-            <view class="power-label" style="left: 47vw;top: 31%">
+            <view class="power-label" style="left: 50vw;top: 40%">
                 {{ ((currentStatus['616e670d84c6e1930fa05919'] ? currentStatus['616e670d84c6e1930fa05919'].P : 0) /
                     1000).toFixed(1) }}kW
             </view>
-            <view class="power-label" style="left: 57vw;top: 31%">
+            <view class="power-label" style="left: 65vw;top: 40%">
                 {{ ((currentStatus['616e671a84c6e1930fa0591b'] ? currentStatus['616e671a84c6e1930fa0591b'].P : 0) /
                     1000).toFixed(1) }}kW
             </view>
-            <view class="power-label" style="left: 67vw;top: 31%">
+            <view class="power-label" style="left: 20vw;top: 60%">
                 {{ ((currentStatus['616e672b84c6e1930fa0591d'] ? currentStatus['616e672b84c6e1930fa0591d'].P : 0) /
                     1000).toFixed(1) }}kW
             </view>
-            <view class="power-label" style="left: 77vw;top: 31%">
+            <view class="power-label" style="left: 35vw;top: 60%">
                 {{ ((currentStatus['637dcbf0d326f0333863b971'] ? currentStatus['637dcbf0d326f0333863b971'].P : 0) /
                     1000).toFixed(1) }}kW
             </view>
-            <view class="power-label" style="left: 87vw;top: 31%">
+            <view class="power-label" style="left: 50vw;top: 60%">
                 {{ "--" }}kW
             </view>
 
@@ -63,31 +117,27 @@
                         <text class="card-value">{{ totalProvideQ }} </text>
                         <text class="card-unit"> kWh</text>
                     </view>
-
-
                 </view>
                 <view class="card">
                     <view class="card-item">
-                        <image src="../static/images/storage.png" class="card-icon"></image>
-                        <text class="card-title">储能剩余</text>
+                        <image src="../static/images/consumption.png" class="card-icon"></image>
+                        <text class="card-title">今日用电</text>
                     </view>
-
                     <view class="card-item">
-                        <text class="card-value">{{ nyzData.SOC }}</text>
-                        <text class="card-unit">%</text>
+                        <text class="card-value">{{ totalConsumptionQ.consumptionQData }} </text>
+                        <text class="card-unit"> kWh</text>
                     </view>
                 </view>
             </view>
             <view class="card-row">
                 <view class="card">
                     <view class="card-item">
-                        <image src="../static/images/consumption.png" class="card-icon"></image>
-                        <text class="card-title">今日用电</text>
+                        <image src="../static/images/storage.png" class="card-icon"></image>
+                        <text class="card-title">储能剩余</text>
                     </view>
-
                     <view class="card-item">
-                        <text class="card-value">{{ totalConsumptionQ.consumptionQData }} </text>
-                        <text class="card-unit"> kWh</text>
+                        <text class="card-value">{{ nyzData.SOC }}</text>
+                        <text class="card-unit">%</text>
                     </view>
                 </view>
                 <view class="card">
@@ -95,7 +145,6 @@
                         <image src="../static/images/grid.png" class="card-icon"></image>
                         <text class="card-title">电网供电</text>
                     </view>
-
                     <view class="card-item">
                         <text class="card-value">{{ dayEnergyData.totalGridForwardQ }} </text>
                         <text class="card-unit"> kWh</text>
@@ -121,30 +170,44 @@
                     </view>
                 </view>
 
-                <dy-date v-if="timeTypeIndex === 0" timeType="day" @getData="handleDatePicker" v-model="selectedDate"
-                    class="custom-picker date-picker" />
-                <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker"
-                    v-model="selectedDate" class="custom-picker date-picker" />
-                <dy-date v-else timeType="year" @getData="handleDatePicker" v-model="selectedDate"
-                    class="custom-picker date-picker" />
+                <view class="chart-date-info">
+                    <dy-date v-if="timeTypeIndex === 0" timeType="day" @getData="handleDatePicker"
+                        v-model="selectedDate" class="custom-picker date-picker" />
+                    <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker"
+                        v-model="selectedDate" class="custom-picker date-picker" />
+                    <dy-date v-else timeType="year" @getData="handleDatePicker" v-model="selectedDate"
+                        class="custom-picker date-picker" />
+                    <view class="fullscreen-button">
+                        <text>全屏</text>
+                    </view>
+                </view>
             </view>
             <view class="chart-card">
-                <h3 class="chart-title">能源管理</h3>
+                <h3 class="chart-title">能源</h3>
                 <qiun-data-charts ref="energyChart"
                     v-if="electricityData.categories && electricityData.categories.length > 0" type="area"
                     :chartData="electricityData" :ontouch="true" :canvas2d="canvas2d" :opts="electricityOpts" />
                 <view v-else class="empty-chart">
                     <text class="empty-text">暂无能源数据</text>
                 </view>
-            </view>
-
-            <!-- 图表分隔线 -->
-            <view style="height:1rpx;background-color:#eee;margin:10rpx"></view>
-
-            <view class="chart-card" style="margin:5rpx 0">
-                <h3 class="chart-title">收益分析</h3>
-                <qiun-data-charts v-if="incomeData.categories && incomeData.categories.length > 0" ref="incomeChart"
-                    type="column" :ontouch="true" :canvas2d="canvas2d" :chartData="incomeData" :opts="incomeOptions" />
+                <view class="chart-legend">
+                    <view class="legend-item">
+                        <view class="legend-color" style="background-color: #1890FF;"></view>
+                        <text>发电</text>
+                    </view>
+                    <view class="legend-item">
+                        <view class="legend-color" style="background-color: #91CB74;"></view>
+                        <text>负荷</text>
+                    </view>
+                    <view class="legend-item">
+                        <view class="legend-color" style="background-color: #FAC858;"></view>
+                        <text>充电</text>
+                    </view>
+                    <view class="legend-item">
+                        <view class="legend-color" style="background-color: #EE6666;"></view>
+                        <text>放电</text>
+                    </view>
+                </view>
             </view>
         </view>
     </view>
@@ -152,9 +215,6 @@
 
 <script>
 
-import {
-    getSocketinstance
-} from "@/service/websocket";
 import { nyzAreaLevelId } from '@/service/config/devices'
 import { mapGetters } from 'vuex'; // 引入 mapGetters
 import upgrade from '@/api/upgrade'
@@ -167,6 +227,7 @@ import sapi from '@/store/sapi'
 import energy from '@/api/energy'
 import energy_new from '@/api/energy_new'
 import dyDate from '@/components/dy-Date/dy-Date.vue'; // 导入日期选择器组件
+import { realtimeDataProvider } from '@/service/websocket'; // 导入realtimeDataProvider
 export default {
     components: {
         dyDate, // 注册日期选择器组件
@@ -229,6 +290,7 @@ export default {
                 Q: "--",
             },
             incomeDate: new Date(),
+            showModal: false,
             electricityOpts: {
                 color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
                 padding: [15, 20, 0, 15],
@@ -327,7 +389,9 @@ export default {
             return this.currentSystem ? this.currentSystem.ammeterList : [];
         },
         storageData() {
-            const power = parseFloat(this.nyzData.storagePower1 || 0) + parseFloat(this.nyzData.storagePower2 || 0)
+            const power1 = parseFloat(this.nyzData.storagePower1 || 0);
+            const power2 = parseFloat(this.nyzData.storagePower2 || 0);
+            const power = isNaN(power1) ? 0 : power1 + (isNaN(power2) ? 0 : power2);
             const status = power == 0 ? "不充不放" : power > 0 ? "充电中" : "放电中"
             return {
                 power: power.toFixed(2),
@@ -336,23 +400,30 @@ export default {
         },
 
         totalLoadData() {
-            const power1 = this.nyzData.loadPower1 == '--' ? '--' : this.nyzData.loadPower1
-            const power2 = this.nyzData.loadPower2 == '--' ? '--' : this.nyzData.loadPower2
-            const power3 = this.gridPower == '--' ? '--' : this.gridPower
+            const power1 = this.nyzData.loadPower1 == '--' ? '--' : (parseFloat(this.nyzData.loadPower1) || 0)
+            const power2 = this.nyzData.loadPower2 == '--' ? '--' : (parseFloat(this.nyzData.loadPower2) || 0)
+            const power3 = this.gridPower == '--' ? '--' : (parseFloat(this.gridPower) || 0)
             const power = this.getSum([power1, power2, power3])
             return { power }
         },
 
         totalConsumptionQ() {
-            const consumptionQData = parseFloat(this.totalProvideQ || 0) + parseFloat(this.totalStorageDisChargeQ || 0) + parseFloat(this.dayEnergyData.totalGridForwardQ || 0) - parseFloat(this.dayEnergyData.totalGridReverseQ || 0) - parseFloat(this.totalStorageChargeQ || 0)
+            const provideQ = parseFloat(this.totalProvideQ || 0) || 0;
+            const storageDisChargeQ = parseFloat(this.totalStorageDisChargeQ || 0) || 0;
+            const gridForwardQ = parseFloat(this.dayEnergyData.totalGridForwardQ || 0) || 0;
+            const gridReverseQ = parseFloat(this.dayEnergyData.totalGridReverseQ || 0) || 0;
+            const storageChargeQ = parseFloat(this.totalStorageChargeQ || 0) || 0;
+            const consumptionQData = provideQ + storageDisChargeQ + gridForwardQ - gridReverseQ - storageChargeQ;
             return { consumptionQData: consumptionQData.toFixed(2) }
         },
 
         totalSolarData() {
-            const power1 = this.nyzData.photovoltaicPower1 == '--' ? '--' : Math.abs(this.nyzData.photovoltaicPower1)
-            const power2 = this.nyzData.photovoltaicPower2 == '--' ? '--' : Math.abs(this.nyzData.photovoltaicPower2)
-            const power3 = parseFloat(this.selectedEnergyData.P / 1000).toFixed(2) == '--' ? '--' : parseFloat(this.selectedEnergyData.P / 1000).toFixed(2)
-            // const power3 = parseFloat(this.selectedEnergyData.P/1000).toFixed(2)
+            const power1 = this.nyzData.photovoltaicPower1 == '--' ? '--' : Math.abs(parseFloat(this.nyzData.photovoltaicPower1) || 0)
+            const power2 = this.nyzData.photovoltaicPower2 == '--' ? '--' : Math.abs(parseFloat(this.nyzData.photovoltaicPower2) || 0)
+            let power3 = '--';
+            if (this.selectedEnergyData.P !== '--' && !isNaN(this.selectedEnergyData.P)) {
+                power3 = Math.abs(parseFloat(this.selectedEnergyData.P) / 1000).toFixed(2);
+            }
             const power = this.getSum([power1, power2, power3])
             return {
                 power
@@ -361,6 +432,8 @@ export default {
 
     },
     mounted() {
+        // 初始化realtimeDataProvider
+        realtimeDataProvider.createScoket(uni.getStorageSync('currentTemplate'), uni.getStorageSync('urlPrefix'));
         this.getSqRealTimeData()
         this.getNyzRealTimeData()
 
@@ -378,7 +451,8 @@ export default {
 
     },
     beforeDestroy() {
-        getSocketinstance().socket && getSocketinstance().socket.off("center");
+        // 使用realtimeDataProvider替代getSocketinstance
+        realtimeDataProvider.unregister();
     },
     methods: {
 
@@ -504,22 +578,22 @@ export default {
         // 社区实时数据
         getSqRealTimeData() {
             this.selectedEnergyData = { I: "--", U: "--", P: "--", Q: "--" };
-            getSocketinstance().socket && getSocketinstance().socket.emit("register")
-            getSocketinstance().socket && getSocketinstance().socket.on("center", (data) => {
+            realtimeDataProvider.emit("register")
+            realtimeDataProvider.on("center", (data) => {
                 this.currentStatus = data;
             })
 
             // 总表电网实时数据
             this.gridPower = "--"
             // 获取社区的电网数据
-            getSocketinstance().socket && getSocketinstance().socket.on("Grid", (data) => {
+            realtimeDataProvider.on("Grid", (data) => {
                 if (data.data.B56) {
                     this.gridPower = (data.data.B56 / 1000).toFixed(3);
                 }
             });
 
             // 获取箱子全部据 和 社区的光伏、储能、用电数据
-            getSocketinstance().socket && getSocketinstance().socket.on("box", (data) => {
+            realtimeDataProvider.on("box", (data) => {
                 // 拿光伏未来社区的 光伏 和 储能 的数据
                 var community = {
                     energy: { I: 0.0, U: 0.0, P: 0.0, Q: 0.0 },
@@ -606,8 +680,8 @@ export default {
 
         // 能源站实时数据
         getNyzRealTimeData() {
-            getSocketinstance().socket2 && getSocketinstance().socket2.emit("register")
-            getSocketinstance().socket2 && getSocketinstance().socket2.on("nyzData", (jsonData) => {
+            realtimeDataProvider.emit("register")
+            realtimeDataProvider.on("nyzData", (jsonData) => {
                 const {
                     deviceType,
                     address,
@@ -633,7 +707,14 @@ export default {
 
                     case "1704_V1_2":
                         if (address == "02" && dataType == "2") {
-                            this.nyzData.SOC = parseFloat(data.B4).toFixed(2)
+                            let socValue = parseFloat(data.B4);
+                            // 确保SOC在0-100%之间
+                            if (isNaN(socValue)) {
+                                this.nyzData.SOC = "--";
+                            } else {
+                                let clampedSoc = Math.max(0, Math.min(100, socValue));
+                                this.nyzData.SOC = clampedSoc.toFixed(2);
+                            }
                         } else if (address == "02" && dataType == "3") {
                             this.storageStatus = this.enumStorageStatus(data.B2)
                         }
@@ -670,7 +751,7 @@ export default {
             let origin = this.$store.state.centerList.filter(
                 (item) => item.level == 0
             )[0].origin;
-            // return this.$api.statistic.findHomeCommunityCapacitySumByLevelIds({
+            // return this.$api.statistic.findHomeCommunityCapacitySumByLevelIds({}
             return sapi.findHomeCommunityCapacitySumByLevelIds({
                 areaLevelIds: origin,
                 date: dateStandardFormat(new Date()),
@@ -903,791 +984,470 @@ export default {
                     }).then(res => {
                         // let solarIncome = []
                         xAxisData.map(item => {
-                            let sqIdx = result.data.findIndex(e => e.month == item)
                             let nyzIdx = res.data.findIndex(e => e.month == item)
-                            if (sqIdx > -1 || nyzIdx > -1) {
-                                const sqVal = sqIdx > -1 ? result.data[sqIdx].provideQ * 0.85 : 0
-                                const nyzVal = nyzIdx > -1 ? res.data[nyzIdx].total_provide_q * 0.85 : 0
-                                solarIncome.push((sqVal + nyzVal).toFixed(2))
+                            if (nyzIdx > -1) {
+                                solarIncome.push((res.data[nyzIdx].total_provide_q * 0.85).toFixed(2))
                             } else {
                                 solarIncome.push(0)
                             }
                         })
-                        this.incomeData.series[1].data = solarIncome
                         // this.incomeOptions.series[1].data = solarIncome
+                        this.incomeData.series[1].data = solarIncome
                     }).finally(() => {
                         this.incomeLoading = false
                     })
                 })
             }
-
-            nyz.findSOCAndPVIncome(this.type, nyzAreaLevelId, this.incomeDate).then(result => {
-                if (result.data) {
-
-                    this.setStorageIncome(this.type, result.data, solarIncome)
-                }
-            }).catch(err => {
-                console.error(err)
-            })
         },
 
-        setStorageIncome(dateType, data, solarIncome) {
-            console.log(data, solarIncome, "data")
-            let xAxis = this.getTimeXAxis()
-            let res = []
-            if (dateType == 'hour') {
-                xAxis.map(date => {
-                    const idx = data.findIndex(item => item.hour == date + 1)
-                    if (idx > -1) {
-                        res.push((data[idx].storageIncome).toFixed(2))
-                    } else {
-                        res.push(0)
-                    }
-                })
-            } else if (dateType == 'day') {
-                xAxis.map(date => {
-                    const idx = data.findIndex(item => new Date(item.date).getDate() == date)
-                    if (idx > -1) {
-                        res.push((data[idx].storageIncome).toFixed(2))
-                    } else {
-                        res.push(0)
-                    }
-                })
-            } else if (dateType == 'month') {
-                xAxis.map(date => {
-                    const idx = data.findIndex(item => item.month == date)
-                    if (idx > -1) {
-                        res.push((data[idx].storageIncome).toFixed(2))
-                    } else {
-                        res.push(0)
-                    }
-                })
-            }
-            this.incomeData.series[0].data = res
-        },
-
-        getTimeXAxis() {
-            let timeArray = []
-            for (let h = 0; h < 24; h++) {
-                for (let m = 0; m < 60; m++) {
-                    let formattedTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
-                    timeArray.push(formattedTime)
-                }
-            }
-            return timeArray
-        },
-        getDaysInMonth(date) {
-            const today = new Date(date)
-            const days = new Date(today.getFullYear(), today.getMonth() + 2, 0).getDate()
-            return days
-        },
-
-        setXAxisData(dateType, date) {
-            const arrLength = { 'hour': 24, 'day': this.getDaysInMonth(date), 'month': 12 }
+        setXAxisData(type, date) {
             let xAxisData = []
-            if (dateType == 'hour') {
-                xAxisData = Array.from({ length: arrLength[dateType] }, (x, i) => i)
-            } else {
-                xAxisData = Array.from({ length: arrLength[dateType] }, (x, i) => i + 1)
+            if (type === 'hour') {
+                for (let i = 0; i < 24; i++) {
+                    xAxisData.push(i + ':00')
+                }
+            } else if (type === 'day') {
+                const year = date.getFullYear()
+                const month = date.getMonth() + 1
+                const daysInMonth = new Date(year, month, 0).getDate()
+                for (let i = 1; i <= daysInMonth; i++) {
+                    xAxisData.push(i)
+                }
+            } else if (type === 'month') {
+                for (let i = 1; i <= 12; i++) {
+                    xAxisData.push(i)
+                }
             }
-            // this.xAxis[0].data = xAxisData
             return xAxisData
         },
-        setPowerSeries() {
-            this.yAxis[0].name = "单位：kW"
-            this.series = [{
-                name: "发电功率",
-                color: "#00e1b9",
-                type: "line",
-                showSymbol: false,
-                data: [],
-                areaStyle: {
-                    opacity: "0.2",
-                },
-            },
-            {
-                name: "负荷功率",
-                type: "line",
-                showSymbol: false,
-                data: [],
-                areaStyle: {
-                    opacity: "0.2",
-                },
-            },
-            {
-                name: "充电功率",
-                type: "line",
-                showSymbol: false,
-                data: [],
-                areaStyle: {
-                    opacity: "0.2",
-                },
-            },
-            {
-                name: "放电功率",
-                type: "line",
-                showSymbol: false,
-                data: [],
-                areaStyle: {
-                    opacity: "0.2",
-                },
-            },
-            ]
-        },
 
+        getSum(arr) {
+            if (arr.includes('--')) {
+                return '--'
+            }
+            return arr.reduce((acc, val) => acc + val, 0)
+        },
 
         getPowerData2() {
-            // this.eleLoading = true
-            // this.electricityOptions.setTimeXAxis()
-            // this.electricityOptions.setPowerSeries()
-
-            let xAxis = this.getTimeXAxis();
-
-            const sqSolarIds = [1052928, 1049269, 1049278, 1053066]
-            const nyzSolarIds = this.nyzDeviceList.filter(item => item.type == 2).map(item => item.deviceId)
-            const storageIds = this.nyzDeviceList.filter(item => item.type == 1).map(item => item.deviceId)
-            const gridIds = this.nyzDeviceList.filter(item => item.type == 4).map(item => item.deviceId)
-
-            Promise.all([
-                sapi.findPowerByLevelIdsAndDate({
-                    areaLevelIds: this.areaData[0].origin,
-                    startDate: this.$moment(this.powerDate).format('YYYY-MM-DD'),
-                    endDate: this.$moment(this.powerDate).format('YYYY-MM-DD'),
-                }).catch(err => {
-                    console.error(err)
-                }),
-                energy_new.queryStoragePowerCurve({
-                    deviceIdList: sqSolarIds,
-                    date: this.$moment(this.powerDate).format("YYYY-MM-DD")
-                }).catch(err => {
-                    console.error(err)
-                }),
-                energy_new.queryStoragePowerCurve({
-                    deviceIdList: nyzSolarIds,
-                    date: this.$moment(this.powerDate).format("YYYY-MM-DD")
-                }).catch(err => {
-                    console.error(err)
-                }),
-                nyz_new.queryStoragePowerCurve({
-                    deviceIdList: storageIds,
-                    date: this.$moment(this.powerDate).format("YYYY-MM-DD")
-                }).catch(err => {
-                    console.error(err)
-                }),
-                energy_new.queryMeterDevicePower({
-                    deviceId: gridIds[0],
-                    intervalMinutes: 1,
-                    aggregationType: "LAST",
-                    start: this.$moment(this.powerDate).format("YYYY-MM-DD 00:00:00"),
-                    end: this.$moment(this.powerDate).format("YYYY-MM-DD 23:59:59"),
-                }).catch(err => {
-                    console.error(err)
-                }),
-            ]).then(([sqConsumeResult, sqSolarResult, nyzSolarResult, nyzStorageResult, nyzGridResult]) => {
-
-                let chartGridData = nyzGridResult.data.reduce((pre, curr) => {
-                    pre.xAxis.push(this.$moment(curr.time).format('HH:mm'))
-                    if (curr.power >= 0) {
-                        // 若 power 为正数或零，添加到 forward 数组
-                        pre.forward.push((parseFloat(curr.power) / 1000).toFixed(2))
-                        pre.reverse.push(0)
-                    } else {
-                        // 若 power 为负数，添加到 reverse 数组
-                        pre.reverse.push((parseFloat(-curr.power) / 1000).toFixed(2))
-                        pre.forward.push(0)
+            upgrade.findDayEnergyAndIncome({
+                day: dateStandardFormat(this.powerDate),
+            }).then((result) => {
+                if (result && result.data) {
+                    let generationData = []
+                    let loadData = []
+                    let xAxisData = []
+                    result.data.forEach((item) => {
+                        generationData.push(item.provideQ)
+                        loadData.push(item.consumptionQ)
+                        xAxisData.push(item.hour)
+                    })
+                    this.electricityData = {
+                        categories: xAxisData,
+                        series: [
+                            { data: generationData, name: '发电' },
+                            { data: loadData, name: '用电' }
+                        ]
                     }
-                    return pre
-                }, { xAxis: [], forward: [], reverse: [] })
-
-                let sqConsume = sqConsumeResult.data.consumePower.allConsumePower.reduce((pre, curr) => {
-                    pre[curr.frameDatetime] = curr.forwardPower
-                    return pre
-                }, {})
-                let chartData = xAxis.reduce((pre, curr) => {
-                    // let consumeIdx = sqConsumeResult.data.consumePower.allConsumePower.findIndex(e => curr == this.$moment(e.frameDatetime).format("HH:mm"))
-                    // consumeIdx > -1 ? pre.consume.push(sqConsumeResult.data.consumePower.allConsumePower[consumeIdx].forwardPower) : pre.consume.push("-")
-                    let consumeKey = `${this.$moment(this.powerDate).format("YYYY-MM-DD")} ${curr}`
-                    if (sqConsume.hasOwnProperty(consumeKey)) {
-                        pre.consume.push(sqConsume[consumeKey])
-                    } else {
-                        pre.consume.push(0)
-                    }
-
-                    let key = `${this.$moment(this.powerDate).format("YYYY-MM-DD")} ${curr}:00`
-                    if (nyzSolarResult.data.hasOwnProperty(key) || sqSolarResult.data.hasOwnProperty(key)) {
-                        pre.solar.push(((Math.abs(nyzSolarResult.data[key]) || 0) + ((parseFloat(sqSolarResult.data[key]) / 1000) || 0)).toFixed(3))
-                    } else {
-                        pre.solar.push(0)
-                    }
-
-                    if (nyzStorageResult.data.hasOwnProperty(key)) {
-                        pre.charge.push(nyzStorageResult.data[key] <= 0 ? 0 : parseFloat(nyzStorageResult.data[key]).toFixed(3))
-                        pre.discharge.push(nyzStorageResult.data[key] >= 0 ? 0 : parseFloat(-nyzStorageResult.data[key]).toFixed(3))
-                    } else {
-                        pre.charge.push(0)
-                        pre.discharge.push(0)
-                    }
-
-
-                    // //电网
-                    // if (nyzGridResult.data) {
-                    //     pre.gridReverse.push(nyzGridResult.data.power <= 0 ? 0 : parseFloat(nyzGridResult.data.power).toFixed(3))
-                    //     pre.gridForward.push(nyzGridResult.data.power >= 0 ? 0 : parseFloat(-nyzGridResult.data.power).toFixed(3))
-                    // } else {
-                    //     pre.gridReverse.push("-")
-                    //     pre.gridForward.push("-")
-                    // }
-
-                    return pre
-                }, { consume: [], solar: [], charge: [], discharge: [], gridReverse: [], gridForward: [] })
-
-                // this.electricityOptions.formatXAxisLabel()
-                // this.electricityOptions.series[0].data = chartData.solar
-                // this.electricityOptions.series[1].data = chartData.consume
-                // this.electricityOptions.series[2].data = chartData.charge
-                // this.electricityOptions.series[3].data = chartData.discharge
-                // // 使用 chartGridData.forward 作为电网正向功率数据
-                // this.electricityOptions.series[4].data = chartGridData.forward
-                // // 使用 chartGridData.reverse 作为电网反向功率数据
-                // this.electricityOptions.series[5].data = chartGridData.reverse
-
-
-
-
-                this.electricityData = {
-                    categories: xAxis,
-                    series: [
-                        { name: "发电功率", data: chartData.solar },
-                        { name: "负荷功率", data: chartData.consume },
-                        { name: "充电功率", data: chartData.charge },
-                        { name: "放电功率", data: chartData.discharge },
-                        { name: "供电功率", data: chartGridData.forward },
-                        { name: "馈电功率", data: chartGridData.reverse },
-                    ]
                 }
-
-            }).finally(() => {
-                this.eleLoading = false
             })
         },
-
-        getPowerData3() {
-            // this.electricityOptions.setTimeXAxis()
-            // this.electricityOptions.setPowerSeries()
-
-            let xAxis = this.getTimeXAxis();
-            const sqSolarIds = [1052928, 1049269, 1049278, 1053066]
-            const nyzSolarIds = this.nyzDeviceList.filter(item => item.type == 2).map(item => item.deviceId)
-            const storageIds = this.nyzDeviceList.filter(item => item.type == 1).map(item => item.deviceId)
-            Promise.all([
-                sapi.findPowerByLevelIdsAndDate({
-                    areaLevelIds: this.areaData[0].origin,
-                    startDate: dateStandardFormat(this.powerDate),
-                    endDate: dateStandardFormat(this.powerDate),
-                }).catch(err => {
-                    console.error(err)
-                }),
-                energy_new.queryStoragePowerCurve({
-                    deviceIdList: sqSolarIds,
-                    date: dateStandardFormat(this.powerDate)
-                }).catch(err => {
-                    console.error(err)
-                }),
-                energy_new.queryStoragePowerCurve({
-                    deviceIdList: nyzSolarIds,
-                    date: dateStandardFormat(this.powerDate)
-                }).catch(err => {
-                    console.error(err)
-                }),
-                nyz_new.queryStoragePowerCurve({
-                    deviceIdList: storageIds,
-                    date: dateStandardFormat(this.powerDate)
-                }).catch(err => {
-                    console.error(err)
-                })
-            ]).then(([sqConsumeResult, sqSolarResult, nyzSolarResult, nyzStorageResult]) => {
-                let sqConsume = sqConsumeResult.data.consumePower.allConsumePower.reduce((pre, curr) => {
-                    pre[curr.frameDatetime] = curr.forwardPower
-                    return pre
-                }, {})
-                let chartData = xAxis.reduce((pre, curr) => {
-                    // let consumeIdx = sqConsumeResult.data.consumePower.allConsumePower.findIndex(e => curr == this.$moment(e.frameDatetime).format("HH:mm"))
-                    // consumeIdx > -1 ? pre.consume.push(sqConsumeResult.data.consumePower.allConsumePower[consumeIdx].forwardPower) : pre.consume.push("-")
-                    let consumeKey = `${dateStandardFormat(this.powerDate)} ${curr}`
-                    if (sqConsume.hasOwnProperty(consumeKey)) {
-                        pre.consume.push(sqConsume[consumeKey])
-                    } else {
-                        pre.consume.push(0)
-                    }
-
-                    let key = `${dateStandardFormat(this.powerDate)} ${curr}:00`
-                    if (nyzSolarResult.data.hasOwnProperty(key) || sqSolarResult.data.hasOwnProperty(key)) {
-                        pre.solar.push(((Math.abs(nyzSolarResult.data[key]) || 0) + ((parseFloat(sqSolarResult.data[key]) / 1000) || 0)))
-                    } else {
-                        pre.solar.push(0)
-                    }
-
-                    if (nyzStorageResult.data.hasOwnProperty(key)) {
-                        pre.charge.push(nyzStorageResult.data[key] <= 0 ? 0 : parseFloat(nyzStorageResult.data[key]))
-                        pre.discharge.push(nyzStorageResult.data[key] >= 0 ? 0 : parseFloat(-nyzStorageResult.data[key]))
-                    } else {
-                        pre.charge.push(0)
-                        pre.discharge.push(0)
-                    }
-
-                    return pre
-                }, { consume: [], solar: [], charge: [], discharge: [] })
-
-                this.electricityData = {
-                    categories: xAxis,
-                    series: [
-                        { name: "发电功率", data: chartData.solar },
-                        { name: "负荷功率", data: chartData.consume },
-                        { name: "充电功率", data: chartData.charge },
-                        { name: "放电功率", data: chartData.discharge },
-                    ]
-                }
-
-            }).finally(() => {
-
-            })
+        // 显示启动弹窗
+        showStartModal() {
+            this.showModal = true;
         },
-
-
-        // 获取数组元素和
-        getSum(arr) {
-            if (arr.every(item => item == '--')) return '--'
-            const sum = arr.reduce((acc, curr) => {
-                if (curr == '--') {
-                    return acc
-                }
-                return acc + parseFloat(curr)
-            }, 0)
-            return sum.toFixed(2)
+        // 关闭弹窗
+        closeModal() {
+            this.showModal = false;
         },
+        // 确认启动
+        confirmStart() {
+            this.showModal = false;
+            uni.showToast({
+                title: '系统已启动',
+                icon: 'success'
+            });
+        }
     }
 }
 </script>
-<style lang="scss" scoped>
-// 定义主题色
-$primary-color: #165DFF;
-$success-color: #00B42A;
-$warning-color: #FF7D00;
-$danger-color: #F53F3F;
-$info-color: #86909C;
-$light-bg: #F2F3F5;
-$dark-bg: #E5E6EB;
-$card-bg: #FFFFFF;
-$text-color: #1D2129;
-$border-color: #E5E6EB;
-$shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-$hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 
-// 响应式断点
-$breakpoint-mobile: 768px;
-$breakpoint-tablet: 1024px;
-
-// 动画效果
-$transition: all 0.3s ease;
-$animation-duration: 0.5s;
-
+<style scoped>
 .container {
-    // min-height: 100vh;
-    // background-color: $light-bg;
-    margin: 10rpx // padding: 20rpx;
+    padding-bottom: 50px;
 }
 
-/* 数据卡片 */
+.nav-bar {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 10px 15px;
+}
+
+.nav-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.nav-menu {
+    display: flex;
+    overflow-x: auto;
+}
+
+.nav-item {
+    padding: 5px 15px;
+    margin-right: 10px;
+    border-radius: 15px;
+    font-size: 14px;
+    color: #666;
+    white-space: nowrap;
+}
+
+.nav-item.active {
+    background-color: #4488FB;
+    color: white;
+}
+
+.system-img {
+    position: relative;
+    height: 200px;
+    margin: 10px;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #f5f5f5;
+}
+
+.detail-storage,
+.detail-grid,
+.detail-solar {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.detail-storage {
+    top: 10px;
+    left: 10px;
+}
+
+.detail-grid {
+    top: 10px;
+    right: 10px;
+}
+
+.detail-solar {
+    bottom: 10px;
+    left: 10px;
+}
+
+.power-label {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    z-index: 2;
+}
+
 .card-section {
-    // padding: 10rpx;
+    margin: 10px;
 }
 
 .card-row {
     display: flex;
-    flex-direction: row;
     justify-content: space-between;
-    margin-bottom: 5rpx;
+    margin-bottom: 10px;
 }
 
 .card {
-    width: 49.5%;
+    flex: 1;
     background-color: #fff;
-    border-radius: 10rpx;
-    padding: 20rpx;
-    display: flex;
-    // flex-direction: column;
-    align-items: center;
-    justify-content: space-around
+    border-radius: 4px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-right: 10px;
+}
+
+.card:last-child {
+    margin-right: 0;
 }
 
 .card-item {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10px;
 }
 
 .card-icon {
-    width: 40rpx;
-    height: 40rpx;
-    // margin-bottom: 10rpx;
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
 }
 
 .card-title {
-    font-size: 28rpx;
-    color: #1a1a1a;
-    margin-bottom: 10rpx;
+    font-size: 14px;
+    color: #666;
 }
 
-
 .card-value {
-    font-size: 28rpx;
-    color: #4488FB;
+    font-size: 18px;
     font-weight: bold;
+    color: #333;
 }
 
 .card-unit {
-    font-size: 20rpx;
-    text-align: right;
+    font-size: 14px;
+    color: #666;
+}
+
+.chart-container {
+    margin: 10px;
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .chart-tab-bar {
-
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20rpx;
-    border-bottom: 1px solid #e4e7ed
+    margin-bottom: 15px;
 }
-
 
 .chart-tabs {
     display: flex;
-    /* gap: 24rpx; */
 }
 
 .chart-tab-item {
-    padding: 12rpx 32rpx;
-    margin: 0 2rpx;
-    border: 1px solid #4488FB;
-    color: #666;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    width: 120rpx;
-    height: 60rpx;
+    padding: 8rpx 20rpx;
+    margin-right: 10rpx;
+    border-radius: 20rpx;
+    font-size: 20rpx;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.chart-date-info {
     display: flex;
     align-items: center;
-    justify-content: center;
 }
 
-.chart-tab-item.active {
-    background: linear-gradient(135deg, #4488fb 0%, #6ca2ff 100%);
-    color: #fff !important;
-    box-shadow: 0 4rpx 12rpx rgba(68, 136, 251, 0.3);
+.date-picker {
+    margin-right: 15rpx;
 }
 
-
-
-
-// 系统架构图区域
-.system-img {
-    position: relative;
-    height: 400rpx;
-    background: $card-bg;
-    border-radius: 8rpx;
-    // box-shadow: $shadow;
-    // margin: 20rpx 0;
-    overflow: hidden;
-    margin-bottom: 10rpx;
-
-    // 背景图样式优化
-    // &::before {
-    //     content: '';
-    //     position: absolute;
-    //     top: 0;
-    //     left: 0;
-    //     width: 100%;
-    //     height: 100%;
-    //     background: url('../static/images/system-architecture-new.png') no-repeat center;
-    //     background-size: 90% auto;
-    //     filter: brightness(1.05);
-    //     transition: $transition;
-    // }
-
-    &:hover::before {
-        transform: scale(1.02);
-    }
-
-    // 状态标签样式
-    .detail-storage,
-    .detail-grid,
-    .detail-solar {
-        position: absolute;
-        // background: rgba(255, 255, 255, 0.9);
-        border-radius: 12rpx;
-        // padding: 12rpx 16rpx;
-        // box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
-        text-align: center;
-        backdrop-filter: blur(4rpx);
-        transition: $transition;
-
-        &:hover {
-            transform: translateY(-4rpx);
-            box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
-        }
-
-        p {
-            margin: 0;
-        }
-
-        p:first-child {
-            font-size: 22rpx;
-            font-weight: 500;
-            color: $primary-color;
-        }
-
-        p:last-child {
-            font-size: 22rpx;
-            color: $primary-color;
-        }
-    }
-
-    .detail-storage {
-        top: 85%;
-        left: 12%;
-    }
-
-    .detail-grid {
-        top: 52%;
-        right: unset;
-        left: 1%
-    }
-
-    .detail-solar {
-        top: 7%;
-        left: 20%;
-        // transform: translateX(-50%);
-    }
-
-    // 功率标签样式
-    .power-label {
-        position: absolute;
-        // background: rgba(255, 255, 255, 0.8);
-        border-radius: 8rpx;
-        // padding: 6rpx 12rpx;
-        // box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.08);
-        font-size: 20rpx;
-        font-weight: 500;
-        color: $primary-color;
-        backdrop-filter: blur(4rpx);
-        transition: $transition;
-
-        &:hover {
-            background: rgba(255, 255, 255, 0.95);
-            transform: scale(1.05);
-        }
-    }
+.fullscreen-button {
+    padding: 8rpx 16rpx;
+    border: 1px solid #4488FB;
+    border-radius: 4rpx;
+    font-size: 16rpx;
+    color: #4488FB;
+    cursor: pointer;
 }
 
-
-// 日期选择器样式
-.custom-picker {
-    border:unset;
-    .uni-date__input {
-        height: 80rpx;
-        line-height: 80rpx;
-        border-radius: 12rpx;
-        border: 1px solid $border-color;
-        padding: 0 20rpx;
-        font-size: 28rpx;
-        color: $text-color;
-        background-color: $light-bg;
-        transition: $transition;
-
-        &:focus {
-            border-color: $primary-color;
-            box-shadow: 0 0 0 4rpx rgba(22, 93, 255, 0.1);
-        }
-    }
+.chart-card {
+    margin-bottom: 20px;
 }
 
-// 图表区域
-.chart-container {
-    //   display: grid;
-    grid-template-columns: 1fr;
-    gap: 20rpx;
-    margin-top: 10rpx;
-    background: #FFF;
-
-    @media (min-width: $breakpoint-tablet) {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .chart-card {
-        // background: $card-bg;
-        // border-radius: 8rpx;
-        // padding: 24rpx;
-        // box-shadow: $shadow;
-        // transition: $transition;
-        // padding-bottom: 10rpx;
-
-        // &:hover {
-        //     transform: translateY(-4rpx);
-        //     box-shadow: $hover-shadow;
-        // }
-
-        .chart-title {
-            font-size: 32rpx;
-            font-weight: 600;
-            color: $text-color;
-            margin-bottom: 24rpx;
-            position: relative;
-
-            // &::before {
-            //     content: '';
-            //     position: absolute;
-            //     left: 0;
-            //     bottom: -8rpx;
-            //     width: 60rpx;
-            //     height: 4rpx;
-            //     background-color: $primary-color;
-            //     border-radius: 2rpx;
-            // }
-        }
-    }
+.chart-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
 }
 
 .empty-chart {
+    height: 200px;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 300rpx; // 与图表高度一致
-    background-color: #f8f8f8;
-    border-radius: 12rpx;
-
-    .empty-text {
-        color: #999;
-        font-size: 28rpx;
-    }
+    background-color: #f5f5f5;
+    border-radius: 4px;
 }
 
-// 响应式布局调整
-@media (max-width: $breakpoint-mobile) {
-    //   .system-img {
-    //     height: 300rpx;
-    //   }
-
-    .detail-storage,
-    .detail-grid,
-    .detail-solar {
-        // padding: 8rpx 12rpx;
-
-        p:first-child {
-            font-size: 20rpx;
-        }
-
-        p:last-child {
-            font-size: 24rpx;
-        }
-    }
-
-    .power-label {
-        // padding: 4rpx 8rpx;
-        font-size: 20rpx;
-    }
-
-    .chart-card {
-        padding: 20rpx;
-        padding-bottom: 10rpx
-    }
-
-    .chart-title {
-        font-size: 28rpx;
-    }
+.empty-text {
+    font-size: 14px;
+    color: #999;
 }
 
-// 竖屏布局优化
-@media (orientation: portrait) {
-    //   .system-img {
-    //     height: 350rpx;
-    //   }
-
-    .detail-storage {
-        top: 75%;
-        left: 5%;
-    }
-
-    .detail-grid {
-        top: 55%;
-        right: 5%;
-    }
-
-    .detail-solar {
-        top: 15%;
-    }
+.chart-legend {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
 }
 
-// 横屏布局优化
-@media (orientation: landscape) {
-    //   .system-img {
-    //     height: 300rpx;
-    //   }
-
-    .detail-storage {
-        top: 70%;
-        left: 10%;
-    }
-
-    .detail-grid {
-        top: 50%;
-        right: 10%;
-    }
-
-    .detail-solar {
-        top: 15%;
-    }
-
-    .chart-container {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+    font-size: 12px;
+    color: #666;
 }
 
-// 动画效果
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.05);
-        opacity: 0.8;
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    margin-right: 5px;
 }
 
-// 为数据卡片添加动画效果
-.data-card {
-    animation: fadeIn $animation-duration ease forwards;
-
-    @for $i from 1 through 4 {
-        &:nth-child(#{$i}) {
-            animation-delay: $i * 0.1s;
-        }
-    }
+.warning-and-start {
+    margin: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #FFF7E6;
+    border: 1px solid #FFD1CF;
+    border-radius: 8rpx;
+    padding: 15rpx;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20rpx);
-    }
+.warning-box {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+}
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.warning-icon {
+    font-size: 24rpx;
+    margin-right: 10rpx;
+    margin-top: 2rpx;
+}
+
+.warning-content {
+    flex: 1;
+}
+
+.warning-title {
+    font-size: 28rpx;
+    font-weight: bold;
+    color: #4488fb;
+    margin: 0 0 5rpx 0;
+    display: block;
+    text-align: center;
+}
+
+.warning-text {
+    font-size: 20rpx;
+    color: #666666;
+    margin: 0 0 2rpx 0;
+    line-height: 1.4;
+    display: block;
+    text-align: left;
+}
+
+.start-button {
+    margin-left: 20rpx;
+}
+
+.start-circle {
+    width: 100rpx;
+    height: 100rpx;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.start-bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.start-text {
+    color: #4488fb;
+    font-size: 24rpx;
+    font-weight: bold;
+    position: relative;
+    z-index: 2;
+}
+
+/* 自定义弹窗样式 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    width: 80%;
+    max-width: 500rpx;
+    background-color: #fff;
+    border-radius: 16rpx;
+    overflow: hidden;
+    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    padding: 32rpx;
+    background-color: #FFFAF0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1rpx solid #FFE5B4;
+}
+
+.modal-icon {
+    font-size: 40rpx;
+    margin-right: 16rpx;
+    color: #F56C6C;
+}
+
+.modal-title {
+    font-size: 28rpx;
+    font-weight: bold;
+    color: #F56C6C;
+}
+
+.modal-body {
+    padding: 32rpx;
+    line-height: 1.6;
+}
+
+.modal-text {
+    display: block;
+    font-size: 22rpx;
+    color: #606266;
+    margin-bottom: 20rpx;
+    text-align: center;
+}
+
+.modal-footer {
+    display: flex;
+    border-top: 1rpx solid #EBEEF5;
+    height: 88rpx;
+}
+
+.modal-cancel {
+    flex: 1;
+    background-color: #fff;
+    border: none;
+    font-size: 24rpx;
+    color: #909399;
+    border-right: 1rpx solid #EBEEF5;
+}
+
+.modal-confirm {
+    flex: 1;
+    background-color: #F56C6C;
+    border: none;
+    font-size: 24rpx;
+    color: #fff;
 }
 </style>

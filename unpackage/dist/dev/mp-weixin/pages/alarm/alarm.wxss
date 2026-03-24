@@ -1,0 +1,59 @@
+@charset "UTF-8";
+/* 水平间距 */
+/* 水平间距 */
+.container.data-v-797937aa {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #EFF4FB;
+}
+.content.data-v-797937aa {
+  padding: 20rpx;
+  flex: 1;
+}
+.alarm-item.data-v-797937aa {
+  background-color: #fff;
+  border-radius: 10rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
+}
+.alarm-time.data-v-797937aa {
+  font-size: 14rpx;
+  color: #999;
+  margin-bottom: 10rpx;
+}
+.alarm-content.data-v-797937aa {
+  margin-bottom: 10rpx;
+}
+.alarm-title.data-v-797937aa {
+  font-size: 16rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 5rpx;
+}
+.alarm-desc.data-v-797937aa {
+  font-size: 14rpx;
+  color: #666;
+  line-height: 1.4;
+}
+.alarm-status.data-v-797937aa {
+  font-size: 12rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  align-self: flex-start;
+}
+.alarm-status.warning.data-v-797937aa {
+  background-color: #fff7e6;
+  color: #fa8c16;
+}
+.alarm-status.error.data-v-797937aa {
+  background-color: #fff1f0;
+  color: #ff4d4f;
+}
+.alarm-status.info.data-v-797937aa {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+

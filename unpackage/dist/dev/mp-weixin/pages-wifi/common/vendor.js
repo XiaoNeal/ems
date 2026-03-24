@@ -1,9 +1,9 @@
 (global["webpackJsonp"] = global["webpackJsonp"] || []).push([["pages-wifi/common/vendor"],{
 
-/***/ 1010:
-/*!****************************************!*\
-  !*** D:/iems-app/utils/permissions.js ***!
-  \****************************************/
+/***/ 1064:
+/*!***********************************!*\
+  !*** D:/ems/utils/permissions.js ***!
+  \***********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 

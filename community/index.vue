@@ -1,13 +1,17 @@
 <template>
   <view class="container">
     <!-- 头部区域 - 包含安全区域占位和标题栏 -->
+
+
     <view class="header">
       <view class="header-safe-area"></view>
-      <view class="header-content" :class="{ 'justify-center': currentTab !== 0 }">
-        <image v-if="currentTab === 0" src="./static/images/logo.png" class="header-icon"></image>
-        <text class="title" :class="{ 'home-title': currentTab === 0 }">
-          {{ currentTab === 0 ? 'IEMS光储直柔能碳管理系统' : tabs[currentTab] }}
-        </text>
+      <view class="header-content">
+        <view class="header-left">
+          <image v-if="currentTab === 0" src="./static/images/logo.png" class="header-icon"></image>
+          <text class="title">
+            光储直柔能源站EMS
+          </text>
+        </view>
         <view class="chart-actions">
           <button class="refresh-btn" @click="refreshData" hover-class="btn-hover">
             <uni-icons type="refresh" size="24" color="#666"></uni-icons>
@@ -21,18 +25,12 @@
       :scroll-top="scrollTop" ref="contentScroll">
       <view class="content-pages">
         <view v-if="currentTab === 0" class="page-item">
-          <Home ref="home"></Home>
-        </view>
-        <view v-if="currentTab === 1" class="page-item">
           <Monitor ref="monitor"></Monitor>
         </view>
+        <view v-if="currentTab === 1" class="page-item">
+          <System ref="system"></System>
+        </view>
         <view v-if="currentTab === 2" class="page-item">
-          <Analysis ref="analysis"></Analysis>
-        </view>
-        <view v-if="currentTab === 3" class="page-item">
-          <Report ref="report"></Report>
-        </view>
-        <view v-if="currentTab === 4" class="page-item">
           <Profile ref="profile"></Profile>
         </view>
       </view>
@@ -53,41 +51,33 @@
 </template>
 
 <script>
-import Home from './home.vue'
-import Report from './report.vue'
 import Monitor from './monitor.vue'
-import Analysis from './analysis.vue'
 import Profile from './profile.vue'
+import System from './system.vue'
 
 export default {
   components: {
-    Home,
     Monitor,
-    Analysis,
     Profile,
-    Report
+    System
   },
   data() {
     return {
-      tabs: ['首页', '监测', '分析', '报告', '我的'],
+      tabs: ['监测', '系统', '我的'],
       currentTab: 0,
       activeColor: '#007aff',
       inactiveColor: '#8a8a8a',
       activeIcons: {
-        0: require('./static/images/home-active.png'),
-        1: require('./static/images/monitor-active.png'),
-        2: require('./static/images/analysis-active.png'),
-        3: require('./static/images/report-active.png'),
-        4: require('./static/images/mine-active.png')
+        0: require('./static/images/monitor-active.png'),
+        1: require('./static/images/mine-active.png'),
+        2: require('./static/images/mine-active.png')
       },
       inactiveIcons: {
-        0: require('./static/images/home.png'),
-        1: require('./static/images/monitor.png'),
-        2: require('./static/images/analysis.png'),
-        3: require('./static/images/report.png'),
-        4: require('./static/images/mine.png')
+        0: require('./static/images/monitor.png'),
+        1: require('./static/images/mine.png'),
+        2: require('./static/images/mine.png')
       },
-      scrollPositions: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 },
+      scrollPositions: { 0: 0, 1: 0, 2: 0 },
       scrollTop: 0,
     }
   },
@@ -110,12 +100,12 @@ export default {
       });
     },
     getIconType(index) {
-      const icons = ['home', 'list', 'bar-chart', 'file-text', 'user'];
+      const icons = ['list', 'bar-chart', 'file-text', 'settings', 'user'];
       return icons[index];
     },
     tabbarPageScrollLower() {
       // 加载更多逻辑
-      const currentRef = ['home', 'monitor', 'analysis', 'report', 'profile'][this.currentTab];
+      const currentRef = ['monitor', 'analysis', 'report', 'system', 'profile'][this.currentTab];
       this.$refs[currentRef]?.loadMore?.();
     },
 
@@ -128,7 +118,7 @@ export default {
 
       try {
         // 通知当前活跃的子组件进行刷新
-        const currentRef = ['home', 'monitor', 'analysis', 'report', 'profile'][this.currentTab];
+        const currentRef = ['monitor', 'analysis', 'report', 'system', 'profile'][this.currentTab];
         const currentComponent = this.$refs[currentRef];
 
         if (currentComponent && currentComponent.refresh) {
@@ -138,7 +128,7 @@ export default {
         }
 
         // 刷新所有子组件（可选，根据需求决定）
-        ['home', 'monitor', 'analysis', 'report', 'profile'].forEach(refName => {
+        ['monitor', 'system', 'profile'].forEach(refName => {
           const component = this.$refs[refName];
           if (component && component.refresh && refName !== currentRef) {
             component.refresh();
@@ -201,6 +191,12 @@ export default {
   height: 44px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
 }
 
 .justify-center {
@@ -219,16 +215,7 @@ export default {
   font-size: 16px;
   font-weight: bold;
   color: #333;
-  width: 100%;
-  text-align: center;
-  margin-left: 58px;
-}
-
-.home-title {
-  font-size: 16px;
-  font-weight: bold;
-  text-align: left;
-   margin-left: unset;
+  margin-left: 8px;
 }
 
 /* 内容滚动区域 */

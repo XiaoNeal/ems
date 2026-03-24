@@ -17,6 +17,42 @@
 					"bounce": "none"
 				}
 			}
+		},
+		{
+			"path": "pages/alarm/alarm",
+			"style": {
+				"navigationBarTitleText": "报警记录"
+			}
+		},
+		{
+			"path": "pages/operation-record/operation-record",
+			"style": {
+				"navigationBarTitleText": "操作记录"
+			}
+		},
+		{
+			"path": "pages/strategy-config/strategy-config",
+			"style": {
+				"navigationBarTitleText": "策略配置"
+			}
+		},
+		{
+			"path": "pages/monitor-data/monitor-data",
+			"style": {
+				"navigationBarTitleText": "监控数据"
+			}
+		},
+		{
+			"path": "pages/quick-control/quick-control",
+			"style": {
+				"navigationBarTitleText": "快捷控制"
+			}
+		},
+		{
+			"path": "pages/settings/settings",
+			"style": {
+				"navigationBarTitleText": "设置参数"
+			}
 		}
 	],
 	"subPackages": [
@@ -213,6 +249,13 @@
 					"path": "charging-detail",
 					"style": {
 						"navigationBarTitleText": "充电桩详情",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "system",
+					"style": {
+						"navigationBarTitleText": "系统配置",
 						"enablePullDownRefresh": false
 					}
 				}

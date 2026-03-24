@@ -1,11 +1,13 @@
 import io from '@hyoga/uni-socket.io';
 import io2 from '@hyoga/uni-socket.io';
 import systemConfig from './config/system';
+import { RealtimeDataProviderService } from './socket/realtime-data-provider';
 // import { io2 } from 'socket.io-client/dist/socket.io.js';
 // import { io } from 'socket.io-client';
 
 
 let instance = ""
+let realtimeDataProvider = new RealtimeDataProviderService();
 
 class NodeWebsocket {
     constructor() {
@@ -149,4 +151,4 @@ function destroySocket() {
     }
 }
 
-export { createSocket, getSocketinstance, destroySocket };
+export { createSocket, getSocketinstance, destroySocket, realtimeDataProvider };

@@ -1,18 +1,18 @@
 require('../common/vendor.js');(global["webpackJsonp"] = global["webpackJsonp"] || []).push([["community/components/architecture-diagram"],{
 
-/***/ 1412:
-/*!*****************************************************************!*\
-  !*** D:/iems-app/community/components/architecture-diagram.vue ***!
-  \*****************************************************************/
+/***/ 1466:
+/*!************************************************************!*\
+  !*** D:/ems/community/components/architecture-diagram.vue ***!
+  \************************************************************/
 /*! no static exports found */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _architecture_diagram_vue_vue_type_template_id_3121b1ee_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./architecture-diagram.vue?vue&type=template&id=3121b1ee&scoped=true& */ 1413);
-/* harmony import */ var _architecture_diagram_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./architecture-diagram.vue?vue&type=script&lang=js& */ 1415);
+/* harmony import */ var _architecture_diagram_vue_vue_type_template_id_3121b1ee_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./architecture-diagram.vue?vue&type=template&id=3121b1ee&scoped=true& */ 1467);
+/* harmony import */ var _architecture_diagram_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./architecture-diagram.vue?vue&type=script&lang=js& */ 1469);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _architecture_diagram_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _architecture_diagram_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__[key]; }) }(__WEBPACK_IMPORT_KEY__));
-/* harmony import */ var _architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_lang_scss_scoped_true___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./architecture-diagram.vue?vue&type=style&index=0&id=3121b1ee&lang=scss&scoped=true& */ 1420);
+/* harmony import */ var _architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./architecture-diagram.vue?vue&type=style&index=0&id=3121b1ee&scoped=true&lang=css& */ 1474);
 /* harmony import */ var _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/runtime/componentNormalizer.js */ 70);
 
 var renderjs
@@ -41,16 +41,16 @@ component.options.__file = "community/components/architecture-diagram.vue"
 
 /***/ }),
 
-/***/ 1413:
-/*!************************************************************************************************************!*\
-  !*** D:/iems-app/community/components/architecture-diagram.vue?vue&type=template&id=3121b1ee&scoped=true& ***!
-  \************************************************************************************************************/
+/***/ 1467:
+/*!*******************************************************************************************************!*\
+  !*** D:/ems/community/components/architecture-diagram.vue?vue&type=template&id=3121b1ee&scoped=true& ***!
+  \*******************************************************************************************************/
 /*! exports provided: render, staticRenderFns, recyclableRender, components */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_17_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_template_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_uni_app_loader_page_meta_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_template_id_3121b1ee_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--17-0!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/webpack-uni-mp-loader/lib/template.js!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-uni-app-loader/page-meta.js!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib??vue-loader-options!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/webpack-uni-mp-loader/lib/style.js!./architecture-diagram.vue?vue&type=template&id=3121b1ee&scoped=true& */ 1414);
+/* harmony import */ var _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_17_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_template_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_uni_app_loader_page_meta_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_template_id_3121b1ee_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--17-0!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/webpack-uni-mp-loader/lib/template.js!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-uni-app-loader/page-meta.js!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib??vue-loader-options!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/webpack-uni-mp-loader/lib/style.js!./architecture-diagram.vue?vue&type=template&id=3121b1ee&scoped=true& */ 1468);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_17_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_template_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_uni_app_loader_page_meta_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_template_id_3121b1ee_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_17_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_template_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_uni_app_loader_page_meta_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_template_id_3121b1ee_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
@@ -63,10 +63,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ 1414:
-/*!************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--17-0!./node_modules/@dcloudio/webpack-uni-mp-loader/lib/template.js!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-uni-app-loader/page-meta.js!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib??vue-loader-options!./node_modules/@dcloudio/webpack-uni-mp-loader/lib/style.js!D:/iems-app/community/components/architecture-diagram.vue?vue&type=template&id=3121b1ee&scoped=true& ***!
-  \************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ 1468:
+/*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--17-0!./node_modules/@dcloudio/webpack-uni-mp-loader/lib/template.js!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-uni-app-loader/page-meta.js!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib??vue-loader-options!./node_modules/@dcloudio/webpack-uni-mp-loader/lib/style.js!D:/ems/community/components/architecture-diagram.vue?vue&type=template&id=3121b1ee&scoped=true& ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 /*! exports provided: render, staticRenderFns, recyclableRender, components */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -80,7 +80,7 @@ var components
 try {
   components = {
     qiunDataCharts: function () {
-      return Promise.all(/*! import() | uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts")]).then(__webpack_require__.bind(null, /*! @/uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue */ 1267))
+      return Promise.all(/*! import() | uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts")]).then(__webpack_require__.bind(null, /*! @/uni_modules/qiun-data-charts/components/qiun-data-charts/qiun-data-charts.vue */ 1321))
     },
   }
 } catch (e) {
@@ -136,7 +136,6 @@ var render = function () {
   ).toFixed(1)
   var g6 =
     _vm.electricityData.categories && _vm.electricityData.categories.length > 0
-  var g7 = _vm.incomeData.categories && _vm.incomeData.categories.length > 0
   if (!_vm._isMounted) {
     _vm.e0 = function ($event, tab) {
       var _temp = arguments[arguments.length - 1].currentTarget.dataset,
@@ -157,7 +156,6 @@ var render = function () {
         g4: g4,
         g5: g5,
         g6: g6,
-        g7: g7,
       },
     }
   )
@@ -170,57 +168,56 @@ render._withStripped = true
 
 /***/ }),
 
-/***/ 1415:
-/*!******************************************************************************************!*\
-  !*** D:/iems-app/community/components/architecture-diagram.vue?vue&type=script&lang=js& ***!
-  \******************************************************************************************/
+/***/ 1469:
+/*!*************************************************************************************!*\
+  !*** D:/ems/community/components/architecture-diagram.vue?vue&type=script&lang=js& ***!
+  \*************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_babel_loader_lib_index_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_13_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_script_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/babel-loader/lib!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--13-1!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/webpack-uni-mp-loader/lib/script.js!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib??vue-loader-options!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/webpack-uni-mp-loader/lib/style.js!./architecture-diagram.vue?vue&type=script&lang=js& */ 1416);
+/* harmony import */ var _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_babel_loader_lib_index_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_13_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_script_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/babel-loader/lib!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--13-1!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/webpack-uni-mp-loader/lib/script.js!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib??vue-loader-options!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/webpack-uni-mp-loader/lib/style.js!./architecture-diagram.vue?vue&type=script&lang=js& */ 1470);
 /* harmony import */ var _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_babel_loader_lib_index_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_13_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_script_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_babel_loader_lib_index_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_13_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_script_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_babel_loader_lib_index_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_13_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_script_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_babel_loader_lib_index_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_13_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_script_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
  /* harmony default export */ __webpack_exports__["default"] = (_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_babel_loader_lib_index_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_13_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_script_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0___default.a); 
 
 /***/ }),
 
-/***/ 1416:
-/*!*************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--13-1!./node_modules/@dcloudio/webpack-uni-mp-loader/lib/script.js!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib??vue-loader-options!./node_modules/@dcloudio/webpack-uni-mp-loader/lib/style.js!D:/iems-app/community/components/architecture-diagram.vue?vue&type=script&lang=js& ***!
-  \*************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ 1470:
+/*!********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--13-1!./node_modules/@dcloudio/webpack-uni-mp-loader/lib/script.js!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib??vue-loader-options!./node_modules/@dcloudio/webpack-uni-mp-loader/lib/style.js!D:/ems/community/components/architecture-diagram.vue?vue&type=script&lang=js& ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(uni) {
 
 var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-var _slicedToArray2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/slicedToArray */ 5));
 var _defineProperty2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/defineProperty */ 11));
-var _websocket = __webpack_require__(/*! @/service/websocket */ 1417);
 var _devices = __webpack_require__(/*! @/service/config/devices */ 118);
 var _vuex = __webpack_require__(/*! vuex */ 72);
-var _upgrade = _interopRequireDefault(__webpack_require__(/*! @/api/upgrade */ 1418));
-var _nyz = _interopRequireDefault(__webpack_require__(/*! @/api/nyz */ 1419));
-var _nyz_new = _interopRequireDefault(__webpack_require__(/*! @/api/nyz_new */ 866));
+var _upgrade = _interopRequireDefault(__webpack_require__(/*! @/api/upgrade */ 1472));
+var _nyz = _interopRequireDefault(__webpack_require__(/*! @/api/nyz */ 1473));
+var _nyz_new = _interopRequireDefault(__webpack_require__(/*! @/api/nyz_new */ 916));
 var _dateFormat = __webpack_require__(/*! @/utils/date-format */ 135);
 var _sapi = _interopRequireDefault(__webpack_require__(/*! @/store/sapi */ 74));
-var _energy = _interopRequireDefault(__webpack_require__(/*! @/api/energy */ 867));
-var _energy_new = _interopRequireDefault(__webpack_require__(/*! @/api/energy_new */ 868));
+var _energy = _interopRequireDefault(__webpack_require__(/*! @/api/energy */ 964));
+var _energy_new = _interopRequireDefault(__webpack_require__(/*! @/api/energy_new */ 917));
+var _websocket = __webpack_require__(/*! @/service/websocket */ 1471);
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 var dyDate = function dyDate() {
   __webpack_require__.e(/*! require.ensure | components/dy-Date/dy-Date */ "components/dy-Date/dy-Date").then((function () {
-    return resolve(__webpack_require__(/*! @/components/dy-Date/dy-Date.vue */ 1405));
+    return resolve(__webpack_require__(/*! @/components/dy-Date/dy-Date.vue */ 1459));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
-// 导入日期选择器组件
+// 导入realtimeDataProvider
 var _default = {
   components: {
     dyDate: dyDate // 注册日期选择器组件
@@ -287,6 +284,7 @@ var _default = {
         Q: "--"
       },
       incomeDate: new Date(),
+      showModal: false,
       electricityOpts: {
         color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
         padding: [15, 20, 0, 15],
@@ -387,7 +385,9 @@ var _default = {
       return this.currentSystem ? this.currentSystem.ammeterList : [];
     },
     storageData: function storageData() {
-      var power = parseFloat(this.nyzData.storagePower1 || 0) + parseFloat(this.nyzData.storagePower2 || 0);
+      var power1 = parseFloat(this.nyzData.storagePower1 || 0);
+      var power2 = parseFloat(this.nyzData.storagePower2 || 0);
+      var power = isNaN(power1) ? 0 : power1 + (isNaN(power2) ? 0 : power2);
       var status = power == 0 ? "不充不放" : power > 0 ? "充电中" : "放电中";
       return {
         power: power.toFixed(2),
@@ -395,25 +395,32 @@ var _default = {
       };
     },
     totalLoadData: function totalLoadData() {
-      var power1 = this.nyzData.loadPower1 == '--' ? '--' : this.nyzData.loadPower1;
-      var power2 = this.nyzData.loadPower2 == '--' ? '--' : this.nyzData.loadPower2;
-      var power3 = this.gridPower == '--' ? '--' : this.gridPower;
+      var power1 = this.nyzData.loadPower1 == '--' ? '--' : parseFloat(this.nyzData.loadPower1) || 0;
+      var power2 = this.nyzData.loadPower2 == '--' ? '--' : parseFloat(this.nyzData.loadPower2) || 0;
+      var power3 = this.gridPower == '--' ? '--' : parseFloat(this.gridPower) || 0;
       var power = this.getSum([power1, power2, power3]);
       return {
         power: power
       };
     },
     totalConsumptionQ: function totalConsumptionQ() {
-      var consumptionQData = parseFloat(this.totalProvideQ || 0) + parseFloat(this.totalStorageDisChargeQ || 0) + parseFloat(this.dayEnergyData.totalGridForwardQ || 0) - parseFloat(this.dayEnergyData.totalGridReverseQ || 0) - parseFloat(this.totalStorageChargeQ || 0);
+      var provideQ = parseFloat(this.totalProvideQ || 0) || 0;
+      var storageDisChargeQ = parseFloat(this.totalStorageDisChargeQ || 0) || 0;
+      var gridForwardQ = parseFloat(this.dayEnergyData.totalGridForwardQ || 0) || 0;
+      var gridReverseQ = parseFloat(this.dayEnergyData.totalGridReverseQ || 0) || 0;
+      var storageChargeQ = parseFloat(this.totalStorageChargeQ || 0) || 0;
+      var consumptionQData = provideQ + storageDisChargeQ + gridForwardQ - gridReverseQ - storageChargeQ;
       return {
         consumptionQData: consumptionQData.toFixed(2)
       };
     },
     totalSolarData: function totalSolarData() {
-      var power1 = this.nyzData.photovoltaicPower1 == '--' ? '--' : Math.abs(this.nyzData.photovoltaicPower1);
-      var power2 = this.nyzData.photovoltaicPower2 == '--' ? '--' : Math.abs(this.nyzData.photovoltaicPower2);
-      var power3 = parseFloat(this.selectedEnergyData.P / 1000).toFixed(2) == '--' ? '--' : parseFloat(this.selectedEnergyData.P / 1000).toFixed(2);
-      // const power3 = parseFloat(this.selectedEnergyData.P/1000).toFixed(2)
+      var power1 = this.nyzData.photovoltaicPower1 == '--' ? '--' : Math.abs(parseFloat(this.nyzData.photovoltaicPower1) || 0);
+      var power2 = this.nyzData.photovoltaicPower2 == '--' ? '--' : Math.abs(parseFloat(this.nyzData.photovoltaicPower2) || 0);
+      var power3 = '--';
+      if (this.selectedEnergyData.P !== '--' && !isNaN(this.selectedEnergyData.P)) {
+        power3 = Math.abs(parseFloat(this.selectedEnergyData.P) / 1000).toFixed(2);
+      }
       var power = this.getSum([power1, power2, power3]);
       return {
         power: power
@@ -422,6 +429,8 @@ var _default = {
   }),
   mounted: function mounted() {
     var _this = this;
+    // 初始化realtimeDataProvider
+    _websocket.realtimeDataProvider.createScoket(uni.getStorageSync('currentTemplate'), uni.getStorageSync('urlPrefix'));
     this.getSqRealTimeData();
     this.getNyzRealTimeData();
     this.initPage();
@@ -434,7 +443,8 @@ var _default = {
   },
   created: function created() {},
   beforeDestroy: function beforeDestroy() {
-    (0, _websocket.getSocketinstance)().socket && (0, _websocket.getSocketinstance)().socket.off("center");
+    // 使用realtimeDataProvider替代getSocketinstance
+    _websocket.realtimeDataProvider.unregister();
   },
   methods: {
     handleDateTypeChange: function handleDateTypeChange(e) {
@@ -568,22 +578,22 @@ var _default = {
         P: "--",
         Q: "--"
       };
-      (0, _websocket.getSocketinstance)().socket && (0, _websocket.getSocketinstance)().socket.emit("register");
-      (0, _websocket.getSocketinstance)().socket && (0, _websocket.getSocketinstance)().socket.on("center", function (data) {
+      _websocket.realtimeDataProvider.emit("register");
+      _websocket.realtimeDataProvider.on("center", function (data) {
         _this4.currentStatus = data;
       });
 
       // 总表电网实时数据
       this.gridPower = "--";
       // 获取社区的电网数据
-      (0, _websocket.getSocketinstance)().socket && (0, _websocket.getSocketinstance)().socket.on("Grid", function (data) {
+      _websocket.realtimeDataProvider.on("Grid", function (data) {
         if (data.data.B56) {
           _this4.gridPower = (data.data.B56 / 1000).toFixed(3);
         }
       });
 
       // 获取箱子全部据 和 社区的光伏、储能、用电数据
-      (0, _websocket.getSocketinstance)().socket && (0, _websocket.getSocketinstance)().socket.on("box", function (data) {
+      _websocket.realtimeDataProvider.on("box", function (data) {
         // 拿光伏未来社区的 光伏 和 储能 的数据
         var community = {
           energy: {
@@ -664,8 +674,8 @@ var _default = {
     // 能源站实时数据
     getNyzRealTimeData: function getNyzRealTimeData() {
       var _this5 = this;
-      (0, _websocket.getSocketinstance)().socket2 && (0, _websocket.getSocketinstance)().socket2.emit("register");
-      (0, _websocket.getSocketinstance)().socket2 && (0, _websocket.getSocketinstance)().socket2.on("nyzData", function (jsonData) {
+      _websocket.realtimeDataProvider.emit("register");
+      _websocket.realtimeDataProvider.on("nyzData", function (jsonData) {
         var deviceType = jsonData.deviceType,
           address = jsonData.address,
           dataType = jsonData.dataType,
@@ -688,7 +698,14 @@ var _default = {
             break;
           case "1704_V1_2":
             if (address == "02" && dataType == "2") {
-              _this5.nyzData.SOC = parseFloat(data.B4).toFixed(2);
+              var socValue = parseFloat(data.B4);
+              // 确保SOC在0-100%之间
+              if (isNaN(socValue)) {
+                _this5.nyzData.SOC = "--";
+              } else {
+                var clampedSoc = Math.max(0, Math.min(100, socValue));
+                _this5.nyzData.SOC = clampedSoc.toFixed(2);
+              }
             } else if (address == "02" && dataType == "3") {
               _this5.storageStatus = _this5.enumStorageStatus(data.B2);
             }
@@ -718,7 +735,7 @@ var _default = {
       var origin = this.$store.state.centerList.filter(function (item) {
         return item.level == 0;
       })[0].origin;
-      // return this.$api.statistic.findHomeCommunityCapacitySumByLevelIds({
+      // return this.$api.statistic.findHomeCommunityCapacitySumByLevelIds({}
       return _sapi.default.findHomeCommunityCapacitySumByLevelIds({
         areaLevelIds: origin,
         date: (0, _dateFormat.dateStandardFormat)(new Date())
@@ -985,442 +1002,121 @@ var _default = {
           }).then(function (res) {
             // let solarIncome = []
             xAxisData.map(function (item) {
-              var sqIdx = result.data.findIndex(function (e) {
-                return e.month == item;
-              });
               var nyzIdx = res.data.findIndex(function (e) {
                 return e.month == item;
               });
-              if (sqIdx > -1 || nyzIdx > -1) {
-                var sqVal = sqIdx > -1 ? result.data[sqIdx].provideQ * 0.85 : 0;
-                var nyzVal = nyzIdx > -1 ? res.data[nyzIdx].total_provide_q * 0.85 : 0;
-                solarIncome.push((sqVal + nyzVal).toFixed(2));
+              if (nyzIdx > -1) {
+                solarIncome.push((res.data[nyzIdx].total_provide_q * 0.85).toFixed(2));
               } else {
                 solarIncome.push(0);
               }
             });
-            _this10.incomeData.series[1].data = solarIncome;
             // this.incomeOptions.series[1].data = solarIncome
+            _this10.incomeData.series[1].data = solarIncome;
           }).finally(function () {
             _this10.incomeLoading = false;
           });
         });
       }
-      _nyz.default.findSOCAndPVIncome(this.type, _devices.nyzAreaLevelId, this.incomeDate).then(function (result) {
-        if (result.data) {
-          _this10.setStorageIncome(_this10.type, result.data, solarIncome);
-        }
-      }).catch(function (err) {
-        console.error(err);
-      });
     },
-    setStorageIncome: function setStorageIncome(dateType, data, solarIncome) {
-      console.log(data, solarIncome, "data");
-      var xAxis = this.getTimeXAxis();
-      var res = [];
-      if (dateType == 'hour') {
-        xAxis.map(function (date) {
-          var idx = data.findIndex(function (item) {
-            return item.hour == date + 1;
-          });
-          if (idx > -1) {
-            res.push(data[idx].storageIncome.toFixed(2));
-          } else {
-            res.push(0);
-          }
-        });
-      } else if (dateType == 'day') {
-        xAxis.map(function (date) {
-          var idx = data.findIndex(function (item) {
-            return new Date(item.date).getDate() == date;
-          });
-          if (idx > -1) {
-            res.push(data[idx].storageIncome.toFixed(2));
-          } else {
-            res.push(0);
-          }
-        });
-      } else if (dateType == 'month') {
-        xAxis.map(function (date) {
-          var idx = data.findIndex(function (item) {
-            return item.month == date;
-          });
-          if (idx > -1) {
-            res.push(data[idx].storageIncome.toFixed(2));
-          } else {
-            res.push(0);
-          }
-        });
-      }
-      this.incomeData.series[0].data = res;
-    },
-    getTimeXAxis: function getTimeXAxis() {
-      var timeArray = [];
-      for (var h = 0; h < 24; h++) {
-        for (var m = 0; m < 60; m++) {
-          var formattedTime = "".concat(String(h).padStart(2, '0'), ":").concat(String(m).padStart(2, '0'));
-          timeArray.push(formattedTime);
-        }
-      }
-      return timeArray;
-    },
-    getDaysInMonth: function getDaysInMonth(date) {
-      var today = new Date(date);
-      var days = new Date(today.getFullYear(), today.getMonth() + 2, 0).getDate();
-      return days;
-    },
-    setXAxisData: function setXAxisData(dateType, date) {
-      var arrLength = {
-        'hour': 24,
-        'day': this.getDaysInMonth(date),
-        'month': 12
-      };
+    setXAxisData: function setXAxisData(type, date) {
       var xAxisData = [];
-      if (dateType == 'hour') {
-        xAxisData = Array.from({
-          length: arrLength[dateType]
-        }, function (x, i) {
-          return i;
-        });
-      } else {
-        xAxisData = Array.from({
-          length: arrLength[dateType]
-        }, function (x, i) {
-          return i + 1;
-        });
+      if (type === 'hour') {
+        for (var i = 0; i < 24; i++) {
+          xAxisData.push(i + ':00');
+        }
+      } else if (type === 'day') {
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        var daysInMonth = new Date(year, month, 0).getDate();
+        for (var _i = 1; _i <= daysInMonth; _i++) {
+          xAxisData.push(_i);
+        }
+      } else if (type === 'month') {
+        for (var _i2 = 1; _i2 <= 12; _i2++) {
+          xAxisData.push(_i2);
+        }
       }
-      // this.xAxis[0].data = xAxisData
       return xAxisData;
     },
-    setPowerSeries: function setPowerSeries() {
-      this.yAxis[0].name = "单位：kW";
-      this.series = [{
-        name: "发电功率",
-        color: "#00e1b9",
-        type: "line",
-        showSymbol: false,
-        data: [],
-        areaStyle: {
-          opacity: "0.2"
-        }
-      }, {
-        name: "负荷功率",
-        type: "line",
-        showSymbol: false,
-        data: [],
-        areaStyle: {
-          opacity: "0.2"
-        }
-      }, {
-        name: "充电功率",
-        type: "line",
-        showSymbol: false,
-        data: [],
-        areaStyle: {
-          opacity: "0.2"
-        }
-      }, {
-        name: "放电功率",
-        type: "line",
-        showSymbol: false,
-        data: [],
-        areaStyle: {
-          opacity: "0.2"
-        }
-      }];
+    getSum: function getSum(arr) {
+      if (arr.includes('--')) {
+        return '--';
+      }
+      return arr.reduce(function (acc, val) {
+        return acc + val;
+      }, 0);
     },
     getPowerData2: function getPowerData2() {
       var _this11 = this;
-      // this.eleLoading = true
-      // this.electricityOptions.setTimeXAxis()
-      // this.electricityOptions.setPowerSeries()
-
-      var xAxis = this.getTimeXAxis();
-      var sqSolarIds = [1052928, 1049269, 1049278, 1053066];
-      var nyzSolarIds = this.nyzDeviceList.filter(function (item) {
-        return item.type == 2;
-      }).map(function (item) {
-        return item.deviceId;
-      });
-      var storageIds = this.nyzDeviceList.filter(function (item) {
-        return item.type == 1;
-      }).map(function (item) {
-        return item.deviceId;
-      });
-      var gridIds = this.nyzDeviceList.filter(function (item) {
-        return item.type == 4;
-      }).map(function (item) {
-        return item.deviceId;
-      });
-      Promise.all([_sapi.default.findPowerByLevelIdsAndDate({
-        areaLevelIds: this.areaData[0].origin,
-        startDate: this.$moment(this.powerDate).format('YYYY-MM-DD'),
-        endDate: this.$moment(this.powerDate).format('YYYY-MM-DD')
-      }).catch(function (err) {
-        console.error(err);
-      }), _energy_new.default.queryStoragePowerCurve({
-        deviceIdList: sqSolarIds,
-        date: this.$moment(this.powerDate).format("YYYY-MM-DD")
-      }).catch(function (err) {
-        console.error(err);
-      }), _energy_new.default.queryStoragePowerCurve({
-        deviceIdList: nyzSolarIds,
-        date: this.$moment(this.powerDate).format("YYYY-MM-DD")
-      }).catch(function (err) {
-        console.error(err);
-      }), _nyz_new.default.queryStoragePowerCurve({
-        deviceIdList: storageIds,
-        date: this.$moment(this.powerDate).format("YYYY-MM-DD")
-      }).catch(function (err) {
-        console.error(err);
-      }), _energy_new.default.queryMeterDevicePower({
-        deviceId: gridIds[0],
-        intervalMinutes: 1,
-        aggregationType: "LAST",
-        start: this.$moment(this.powerDate).format("YYYY-MM-DD 00:00:00"),
-        end: this.$moment(this.powerDate).format("YYYY-MM-DD 23:59:59")
-      }).catch(function (err) {
-        console.error(err);
-      })]).then(function (_ref2) {
-        var _ref3 = (0, _slicedToArray2.default)(_ref2, 5),
-          sqConsumeResult = _ref3[0],
-          sqSolarResult = _ref3[1],
-          nyzSolarResult = _ref3[2],
-          nyzStorageResult = _ref3[3],
-          nyzGridResult = _ref3[4];
-        var chartGridData = nyzGridResult.data.reduce(function (pre, curr) {
-          pre.xAxis.push(_this11.$moment(curr.time).format('HH:mm'));
-          if (curr.power >= 0) {
-            // 若 power 为正数或零，添加到 forward 数组
-            pre.forward.push((parseFloat(curr.power) / 1000).toFixed(2));
-            pre.reverse.push(0);
-          } else {
-            // 若 power 为负数，添加到 reverse 数组
-            pre.reverse.push((parseFloat(-curr.power) / 1000).toFixed(2));
-            pre.forward.push(0);
-          }
-          return pre;
-        }, {
-          xAxis: [],
-          forward: [],
-          reverse: []
-        });
-        var sqConsume = sqConsumeResult.data.consumePower.allConsumePower.reduce(function (pre, curr) {
-          pre[curr.frameDatetime] = curr.forwardPower;
-          return pre;
-        }, {});
-        var chartData = xAxis.reduce(function (pre, curr) {
-          // let consumeIdx = sqConsumeResult.data.consumePower.allConsumePower.findIndex(e => curr == this.$moment(e.frameDatetime).format("HH:mm"))
-          // consumeIdx > -1 ? pre.consume.push(sqConsumeResult.data.consumePower.allConsumePower[consumeIdx].forwardPower) : pre.consume.push("-")
-          var consumeKey = "".concat(_this11.$moment(_this11.powerDate).format("YYYY-MM-DD"), " ").concat(curr);
-          if (sqConsume.hasOwnProperty(consumeKey)) {
-            pre.consume.push(sqConsume[consumeKey]);
-          } else {
-            pre.consume.push(0);
-          }
-          var key = "".concat(_this11.$moment(_this11.powerDate).format("YYYY-MM-DD"), " ").concat(curr, ":00");
-          if (nyzSolarResult.data.hasOwnProperty(key) || sqSolarResult.data.hasOwnProperty(key)) {
-            pre.solar.push(((Math.abs(nyzSolarResult.data[key]) || 0) + (parseFloat(sqSolarResult.data[key]) / 1000 || 0)).toFixed(3));
-          } else {
-            pre.solar.push(0);
-          }
-          if (nyzStorageResult.data.hasOwnProperty(key)) {
-            pre.charge.push(nyzStorageResult.data[key] <= 0 ? 0 : parseFloat(nyzStorageResult.data[key]).toFixed(3));
-            pre.discharge.push(nyzStorageResult.data[key] >= 0 ? 0 : parseFloat(-nyzStorageResult.data[key]).toFixed(3));
-          } else {
-            pre.charge.push(0);
-            pre.discharge.push(0);
-          }
-
-          // //电网
-          // if (nyzGridResult.data) {
-          //     pre.gridReverse.push(nyzGridResult.data.power <= 0 ? 0 : parseFloat(nyzGridResult.data.power).toFixed(3))
-          //     pre.gridForward.push(nyzGridResult.data.power >= 0 ? 0 : parseFloat(-nyzGridResult.data.power).toFixed(3))
-          // } else {
-          //     pre.gridReverse.push("-")
-          //     pre.gridForward.push("-")
-          // }
-
-          return pre;
-        }, {
-          consume: [],
-          solar: [],
-          charge: [],
-          discharge: [],
-          gridReverse: [],
-          gridForward: []
-        });
-
-        // this.electricityOptions.formatXAxisLabel()
-        // this.electricityOptions.series[0].data = chartData.solar
-        // this.electricityOptions.series[1].data = chartData.consume
-        // this.electricityOptions.series[2].data = chartData.charge
-        // this.electricityOptions.series[3].data = chartData.discharge
-        // // 使用 chartGridData.forward 作为电网正向功率数据
-        // this.electricityOptions.series[4].data = chartGridData.forward
-        // // 使用 chartGridData.reverse 作为电网反向功率数据
-        // this.electricityOptions.series[5].data = chartGridData.reverse
-
-        _this11.electricityData = {
-          categories: xAxis,
-          series: [{
-            name: "发电功率",
-            data: chartData.solar
-          }, {
-            name: "负荷功率",
-            data: chartData.consume
-          }, {
-            name: "充电功率",
-            data: chartData.charge
-          }, {
-            name: "放电功率",
-            data: chartData.discharge
-          }, {
-            name: "供电功率",
-            data: chartGridData.forward
-          }, {
-            name: "馈电功率",
-            data: chartGridData.reverse
-          }]
-        };
-      }).finally(function () {
-        _this11.eleLoading = false;
-      });
-    },
-    getPowerData3: function getPowerData3() {
-      var _this12 = this;
-      // this.electricityOptions.setTimeXAxis()
-      // this.electricityOptions.setPowerSeries()
-
-      var xAxis = this.getTimeXAxis();
-      var sqSolarIds = [1052928, 1049269, 1049278, 1053066];
-      var nyzSolarIds = this.nyzDeviceList.filter(function (item) {
-        return item.type == 2;
-      }).map(function (item) {
-        return item.deviceId;
-      });
-      var storageIds = this.nyzDeviceList.filter(function (item) {
-        return item.type == 1;
-      }).map(function (item) {
-        return item.deviceId;
-      });
-      Promise.all([_sapi.default.findPowerByLevelIdsAndDate({
-        areaLevelIds: this.areaData[0].origin,
-        startDate: (0, _dateFormat.dateStandardFormat)(this.powerDate),
-        endDate: (0, _dateFormat.dateStandardFormat)(this.powerDate)
-      }).catch(function (err) {
-        console.error(err);
-      }), _energy_new.default.queryStoragePowerCurve({
-        deviceIdList: sqSolarIds,
-        date: (0, _dateFormat.dateStandardFormat)(this.powerDate)
-      }).catch(function (err) {
-        console.error(err);
-      }), _energy_new.default.queryStoragePowerCurve({
-        deviceIdList: nyzSolarIds,
-        date: (0, _dateFormat.dateStandardFormat)(this.powerDate)
-      }).catch(function (err) {
-        console.error(err);
-      }), _nyz_new.default.queryStoragePowerCurve({
-        deviceIdList: storageIds,
-        date: (0, _dateFormat.dateStandardFormat)(this.powerDate)
-      }).catch(function (err) {
-        console.error(err);
-      })]).then(function (_ref4) {
-        var _ref5 = (0, _slicedToArray2.default)(_ref4, 4),
-          sqConsumeResult = _ref5[0],
-          sqSolarResult = _ref5[1],
-          nyzSolarResult = _ref5[2],
-          nyzStorageResult = _ref5[3];
-        var sqConsume = sqConsumeResult.data.consumePower.allConsumePower.reduce(function (pre, curr) {
-          pre[curr.frameDatetime] = curr.forwardPower;
-          return pre;
-        }, {});
-        var chartData = xAxis.reduce(function (pre, curr) {
-          // let consumeIdx = sqConsumeResult.data.consumePower.allConsumePower.findIndex(e => curr == this.$moment(e.frameDatetime).format("HH:mm"))
-          // consumeIdx > -1 ? pre.consume.push(sqConsumeResult.data.consumePower.allConsumePower[consumeIdx].forwardPower) : pre.consume.push("-")
-          var consumeKey = "".concat((0, _dateFormat.dateStandardFormat)(_this12.powerDate), " ").concat(curr);
-          if (sqConsume.hasOwnProperty(consumeKey)) {
-            pre.consume.push(sqConsume[consumeKey]);
-          } else {
-            pre.consume.push(0);
-          }
-          var key = "".concat((0, _dateFormat.dateStandardFormat)(_this12.powerDate), " ").concat(curr, ":00");
-          if (nyzSolarResult.data.hasOwnProperty(key) || sqSolarResult.data.hasOwnProperty(key)) {
-            pre.solar.push((Math.abs(nyzSolarResult.data[key]) || 0) + (parseFloat(sqSolarResult.data[key]) / 1000 || 0));
-          } else {
-            pre.solar.push(0);
-          }
-          if (nyzStorageResult.data.hasOwnProperty(key)) {
-            pre.charge.push(nyzStorageResult.data[key] <= 0 ? 0 : parseFloat(nyzStorageResult.data[key]));
-            pre.discharge.push(nyzStorageResult.data[key] >= 0 ? 0 : parseFloat(-nyzStorageResult.data[key]));
-          } else {
-            pre.charge.push(0);
-            pre.discharge.push(0);
-          }
-          return pre;
-        }, {
-          consume: [],
-          solar: [],
-          charge: [],
-          discharge: []
-        });
-        _this12.electricityData = {
-          categories: xAxis,
-          series: [{
-            name: "发电功率",
-            data: chartData.solar
-          }, {
-            name: "负荷功率",
-            data: chartData.consume
-          }, {
-            name: "充电功率",
-            data: chartData.charge
-          }, {
-            name: "放电功率",
-            data: chartData.discharge
-          }]
-        };
-      }).finally(function () {});
-    },
-    // 获取数组元素和
-    getSum: function getSum(arr) {
-      if (arr.every(function (item) {
-        return item == '--';
-      })) return '--';
-      var sum = arr.reduce(function (acc, curr) {
-        if (curr == '--') {
-          return acc;
+      _upgrade.default.findDayEnergyAndIncome({
+        day: (0, _dateFormat.dateStandardFormat)(this.powerDate)
+      }).then(function (result) {
+        if (result && result.data) {
+          var generationData = [];
+          var loadData = [];
+          var xAxisData = [];
+          result.data.forEach(function (item) {
+            generationData.push(item.provideQ);
+            loadData.push(item.consumptionQ);
+            xAxisData.push(item.hour);
+          });
+          _this11.electricityData = {
+            categories: xAxisData,
+            series: [{
+              data: generationData,
+              name: '发电'
+            }, {
+              data: loadData,
+              name: '用电'
+            }]
+          };
         }
-        return acc + parseFloat(curr);
-      }, 0);
-      return sum.toFixed(2);
+      });
+    },
+    // 显示启动弹窗
+    showStartModal: function showStartModal() {
+      this.showModal = true;
+    },
+    // 关闭弹窗
+    closeModal: function closeModal() {
+      this.showModal = false;
+    },
+    // 确认启动
+    confirmStart: function confirmStart() {
+      this.showModal = false;
+      uni.showToast({
+        title: '系统已启动',
+        icon: 'success'
+      });
     }
   }
 };
 exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
 
-/***/ 1420:
-/*!***************************************************************************************************************************!*\
-  !*** D:/iems-app/community/components/architecture-diagram.vue?vue&type=style&index=0&id=3121b1ee&lang=scss&scoped=true& ***!
-  \***************************************************************************************************************************/
+/***/ 1474:
+/*!*********************************************************************************************************************!*\
+  !*** D:/ems/community/components/architecture-diagram.vue?vue&type=style&index=0&id=3121b1ee&scoped=true&lang=css& ***!
+  \*********************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_mini_css_extract_plugin_dist_loader_js_ref_8_oneOf_1_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_css_loader_dist_cjs_js_ref_8_oneOf_1_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_stylePostLoader_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_8_oneOf_1_2_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_postcss_loader_src_index_js_ref_8_oneOf_1_3_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_sass_loader_dist_cjs_js_ref_8_oneOf_1_4_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_8_oneOf_1_5_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_lang_scss_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/mini-css-extract-plugin/dist/loader.js??ref--8-oneOf-1-0!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/css-loader/dist/cjs.js??ref--8-oneOf-1-1!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/loaders/stylePostLoader.js!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--8-oneOf-1-2!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/postcss-loader/src??ref--8-oneOf-1-3!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/sass-loader/dist/cjs.js??ref--8-oneOf-1-4!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--8-oneOf-1-5!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib??vue-loader-options!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/webpack-uni-mp-loader/lib/style.js!./architecture-diagram.vue?vue&type=style&index=0&id=3121b1ee&lang=scss&scoped=true& */ 1421);
-/* harmony import */ var _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_mini_css_extract_plugin_dist_loader_js_ref_8_oneOf_1_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_css_loader_dist_cjs_js_ref_8_oneOf_1_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_stylePostLoader_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_8_oneOf_1_2_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_postcss_loader_src_index_js_ref_8_oneOf_1_3_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_sass_loader_dist_cjs_js_ref_8_oneOf_1_4_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_8_oneOf_1_5_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_lang_scss_scoped_true___WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_mini_css_extract_plugin_dist_loader_js_ref_8_oneOf_1_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_css_loader_dist_cjs_js_ref_8_oneOf_1_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_stylePostLoader_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_8_oneOf_1_2_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_postcss_loader_src_index_js_ref_8_oneOf_1_3_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_sass_loader_dist_cjs_js_ref_8_oneOf_1_4_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_8_oneOf_1_5_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_lang_scss_scoped_true___WEBPACK_IMPORTED_MODULE_0__);
-/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_mini_css_extract_plugin_dist_loader_js_ref_8_oneOf_1_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_css_loader_dist_cjs_js_ref_8_oneOf_1_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_stylePostLoader_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_8_oneOf_1_2_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_postcss_loader_src_index_js_ref_8_oneOf_1_3_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_sass_loader_dist_cjs_js_ref_8_oneOf_1_4_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_8_oneOf_1_5_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_lang_scss_scoped_true___WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_mini_css_extract_plugin_dist_loader_js_ref_8_oneOf_1_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_css_loader_dist_cjs_js_ref_8_oneOf_1_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_stylePostLoader_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_8_oneOf_1_2_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_postcss_loader_src_index_js_ref_8_oneOf_1_3_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_sass_loader_dist_cjs_js_ref_8_oneOf_1_4_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_8_oneOf_1_5_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_lang_scss_scoped_true___WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
- /* harmony default export */ __webpack_exports__["default"] = (_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_mini_css_extract_plugin_dist_loader_js_ref_8_oneOf_1_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_css_loader_dist_cjs_js_ref_8_oneOf_1_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_stylePostLoader_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_8_oneOf_1_2_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_postcss_loader_src_index_js_ref_8_oneOf_1_3_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_sass_loader_dist_cjs_js_ref_8_oneOf_1_4_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_8_oneOf_1_5_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_lang_scss_scoped_true___WEBPACK_IMPORTED_MODULE_0___default.a); 
+/* harmony import */ var _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_mini_css_extract_plugin_dist_loader_js_ref_6_oneOf_1_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_css_loader_dist_cjs_js_ref_6_oneOf_1_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_stylePostLoader_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_6_oneOf_1_2_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/mini-css-extract-plugin/dist/loader.js??ref--6-oneOf-1-0!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/css-loader/dist/cjs.js??ref--6-oneOf-1-1!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/loaders/stylePostLoader.js!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--6-oneOf-1-2!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/postcss-loader/src??ref--6-oneOf-1-3!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib??vue-loader-options!../../../HBuilderX.4.76.2025082103/HBuilderX/plugins/uniapp-cli/node_modules/@dcloudio/webpack-uni-mp-loader/lib/style.js!./architecture-diagram.vue?vue&type=style&index=0&id=3121b1ee&scoped=true&lang=css& */ 1475);
+/* harmony import */ var _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_mini_css_extract_plugin_dist_loader_js_ref_6_oneOf_1_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_css_loader_dist_cjs_js_ref_6_oneOf_1_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_stylePostLoader_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_6_oneOf_1_2_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_mini_css_extract_plugin_dist_loader_js_ref_6_oneOf_1_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_css_loader_dist_cjs_js_ref_6_oneOf_1_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_stylePostLoader_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_6_oneOf_1_2_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_mini_css_extract_plugin_dist_loader_js_ref_6_oneOf_1_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_css_loader_dist_cjs_js_ref_6_oneOf_1_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_stylePostLoader_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_6_oneOf_1_2_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_mini_css_extract_plugin_dist_loader_js_ref_6_oneOf_1_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_css_loader_dist_cjs_js_ref_6_oneOf_1_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_stylePostLoader_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_6_oneOf_1_2_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+ /* harmony default export */ __webpack_exports__["default"] = (_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_mini_css_extract_plugin_dist_loader_js_ref_6_oneOf_1_0_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_css_loader_dist_cjs_js_ref_6_oneOf_1_1_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_loaders_stylePostLoader_js_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_webpack_preprocess_loader_index_js_ref_6_oneOf_1_2_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_postcss_loader_src_index_js_ref_6_oneOf_1_3_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_vue_cli_plugin_uni_packages_vue_loader_lib_index_js_vue_loader_options_HBuilderX_4_76_2025082103_HBuilderX_plugins_uniapp_cli_node_modules_dcloudio_webpack_uni_mp_loader_lib_style_js_architecture_diagram_vue_vue_type_style_index_0_id_3121b1ee_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0___default.a); 
 
 /***/ }),
 
-/***/ 1421:
-/*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/mini-css-extract-plugin/dist/loader.js??ref--8-oneOf-1-0!./node_modules/css-loader/dist/cjs.js??ref--8-oneOf-1-1!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--8-oneOf-1-2!./node_modules/postcss-loader/src??ref--8-oneOf-1-3!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/sass-loader/dist/cjs.js??ref--8-oneOf-1-4!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--8-oneOf-1-5!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib??vue-loader-options!./node_modules/@dcloudio/webpack-uni-mp-loader/lib/style.js!D:/iems-app/community/components/architecture-diagram.vue?vue&type=style&index=0&id=3121b1ee&lang=scss&scoped=true& ***!
-  \*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ 1475:
+/*!*************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/mini-css-extract-plugin/dist/loader.js??ref--6-oneOf-1-0!./node_modules/css-loader/dist/cjs.js??ref--6-oneOf-1-1!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader??ref--6-oneOf-1-2!./node_modules/postcss-loader/src??ref--6-oneOf-1-3!./node_modules/@dcloudio/vue-cli-plugin-uni/packages/vue-loader/lib??vue-loader-options!./node_modules/@dcloudio/webpack-uni-mp-loader/lib/style.js!D:/ems/community/components/architecture-diagram.vue?vue&type=style&index=0&id=3121b1ee&scoped=true&lang=css& ***!
+  \*************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1436,7 +1132,7 @@ __webpack_require__.r(__webpack_exports__);
     'community/components/architecture-diagram-create-component',
     {
         'community/components/architecture-diagram-create-component':(function(module, exports, __webpack_require__){
-            __webpack_require__('2')['createComponent'](__webpack_require__(1412))
+            __webpack_require__('2')['createComponent'](__webpack_require__(1466))
         })
     },
     [['community/components/architecture-diagram-create-component']]

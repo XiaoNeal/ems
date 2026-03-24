@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "快捷控制",
+  "usingComponents": {
+    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar"
+  }
+}

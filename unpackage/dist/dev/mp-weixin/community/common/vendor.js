@@ -1,9 +1,9 @@
 (global["webpackJsonp"] = global["webpackJsonp"] || []).push([["community/common/vendor"],{
 
-/***/ 1417:
-/*!****************************************!*\
-  !*** D:/iems-app/service/websocket.js ***!
-  \****************************************/
+/***/ 1471:
+/*!***********************************!*\
+  !*** D:/ems/service/websocket.js ***!
+  \***********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -17,14 +17,18 @@ Object.defineProperty(exports, "__esModule", {
 exports.createSocket = createSocket;
 exports.destroySocket = destroySocket;
 exports.getSocketinstance = getSocketinstance;
+exports.realtimeDataProvider = void 0;
 var _createClass2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/createClass */ 24));
 var _classCallCheck2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ 23));
 var _uniSocket = _interopRequireDefault(__webpack_require__(/*! @hyoga/uni-socket.io */ 112));
 var _system = _interopRequireDefault(__webpack_require__(/*! ./config/system */ 115));
+var _realtimeDataProvider = __webpack_require__(/*! ./socket/realtime-data-provider */ 76);
 // import { io2 } from 'socket.io-client/dist/socket.io.js';
 // import { io } from 'socket.io-client';
 
 var instance = "";
+var realtimeDataProvider = new _realtimeDataProvider.RealtimeDataProviderService();
+exports.realtimeDataProvider = realtimeDataProvider;
 var NodeWebsocket = /*#__PURE__*/(0, _createClass2.default)(function NodeWebsocket() {
   var _this = this;
   (0, _classCallCheck2.default)(this, NodeWebsocket);
@@ -166,10 +170,10 @@ function destroySocket() {
 
 /***/ }),
 
-/***/ 1418:
-/*!**********************************!*\
-  !*** D:/iems-app/api/upgrade.js ***!
-  \**********************************/
+/***/ 1472:
+/*!*****************************!*\
+  !*** D:/ems/api/upgrade.js ***!
+  \*****************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -402,10 +406,10 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 1419:
-/*!******************************!*\
-  !*** D:/iems-app/api/nyz.js ***!
-  \******************************/
+/***/ 1473:
+/*!*************************!*\
+  !*** D:/ems/api/nyz.js ***!
+  \*************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -419,7 +423,11 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 var _request = _interopRequireDefault(__webpack_require__(/*! @/utils/request */ 75));
 var getNyzUrl = function getNyzUrl(url) {
-  return "/shequApi/shangHaiZYNYL/" + url;
+  // 确保不会出现双斜杠
+  var baseUrl = "/shequApi/shangHaiZYNYL";
+  // 如果url以斜杠开头，去掉它
+  var cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+  return "".concat(baseUrl, "/").concat(cleanUrl);
 
   // if (process.env.NODE_ENV === "development") {
   //     return location.origin + `/nyzkoa` + url;
@@ -537,10 +545,10 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 1427:
-/*!**************************************!*\
-  !*** D:/iems-app/api/upgrade_new.js ***!
-  \**************************************/
+/***/ 1481:
+/*!*********************************!*\
+  !*** D:/ems/api/upgrade_new.js ***!
+  \*********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -775,10 +783,10 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 1440:
-/*!***************************************************!*\
-  !*** D:/iems-app/community/static/images/VRV.png ***!
-  \***************************************************/
+/***/ 1494:
+/*!**********************************************!*\
+  !*** D:/ems/community/static/images/VRV.png ***!
+  \**********************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -786,10 +794,10 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABvCAYAAAAT
 
 /***/ }),
 
-/***/ 1441:
-/*!*******************************************************************!*\
-  !*** D:/iems-app/community/static/images/load-airconditioner.png ***!
-  \*******************************************************************/
+/***/ 1495:
+/*!**************************************************************!*\
+  !*** D:/ems/community/static/images/load-airconditioner.png ***!
+  \**************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -797,10 +805,10 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABNCAYAAAAr
 
 /***/ }),
 
-/***/ 1442:
-/*!*****************************************************************!*\
-  !*** D:/iems-app/community/static/images/load-chargingPile.png ***!
-  \*****************************************************************/
+/***/ 1496:
+/*!************************************************************!*\
+  !*** D:/ems/community/static/images/load-chargingPile.png ***!
+  \************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -808,10 +816,10 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAF8AAABKCAYAAADd
 
 /***/ }),
 
-/***/ 1473:
-/*!*********************************************!*\
-  !*** D:/iems-app/service/config/storage.js ***!
-  \*********************************************/
+/***/ 1527:
+/*!****************************************!*\
+  !*** D:/ems/service/config/storage.js ***!
+  \****************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -851,10 +859,10 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 1481:
-/*!*********************************!*\
-  !*** D:/iems-app/utils/wind.js ***!
-  \*********************************/
+/***/ 1535:
+/*!****************************!*\
+  !*** D:/ems/utils/wind.js ***!
+  \****************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1254,10 +1262,10 @@ WWindUtil.windFormatLevel = function (value) {
 
 /***/ }),
 
-/***/ 1482:
-/*!**********************************!*\
-  !*** D:/iems-app/api/weather.js ***!
-  \**********************************/
+/***/ 1536:
+/*!*****************************!*\
+  !*** D:/ems/api/weather.js ***!
+  \*****************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1314,10 +1322,10 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 1490:
-/*!**********************************!*\
-  !*** D:/iems-app/utils/tools.js ***!
-  \**********************************/
+/***/ 1544:
+/*!*****************************!*\
+  !*** D:/ems/utils/tools.js ***!
+  \*****************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1358,1020 +1366,10 @@ function debounce(func) {
 
 /***/ }),
 
-/***/ 866:
-/*!**********************************!*\
-  !*** D:/iems-app/api/nyz_new.js ***!
-  \**********************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _request = _interopRequireDefault(__webpack_require__(/*! @/utils/request */ 75));
-var _forSpringBoot = __webpack_require__(/*! @/utils/forSpringBoot */ 114);
-// import Moment from 'moment'
-
-var getNyzUrl = function getNyzUrl(url) {
-  return "/shequApi" + url;
-};
-var nyz_new = {
-  /**
-   * 查询充放电最大最小功率
-   */
-  queryHighestChargeAndPower: function queryHighestChargeAndPower(data) {
-    return (0, _request.default)({
-      url: getNyzUrl("/homeCommunity/queryHighestChargeAndPower"),
-      method: 'post',
-      data: data
-    });
-  },
-  /**
-   * 查询储能日功率曲线
-   */
-  queryStoragePowerCurve: function queryStoragePowerCurve(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)("/homeCommunity/queryStoragePowerCurve"),
-      method: 'post',
-      data: data
-    });
-  },
-  /**
-   * 查询正反向电能
-   */
-  findEveryHourByDeviceIds: function findEveryHourByDeviceIds(data) {
-    return (0, _request.default)({
-      url: getNyzUrl('/shangHaiZYNYL/findEveryHourByDeviceIds'),
-      method: "POST",
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  findEveryDayByDeviceIds: function findEveryDayByDeviceIds(data) {
-    return (0, _request.default)({
-      url: getNyzUrl('/shangHaiZYNYL/findEveryDayByDeviceIds'),
-      method: "POST",
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  findEveryMonthByDeviceIds: function findEveryMonthByDeviceIds(data) {
-    return (0, _request.default)({
-      url: getNyzUrl('/shangHaiZYNYL/findEveryMonthByDeviceIds'),
-      method: "POST",
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  getStorageRemainEnergy: function getStorageRemainEnergy(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/v4/quickQuery/battery_stack_discharge/db_deviceId'),
-      method: "get",
-      params: params
-    });
-  }
-};
-var _default = nyz_new;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 867:
-/*!*********************************!*\
-  !*** D:/iems-app/api/energy.js ***!
-  \*********************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _request = _interopRequireDefault(__webpack_require__(/*! @/utils/request */ 75));
-var _forSpringBoot = __webpack_require__(/*! @/utils/forSpringBoot */ 114);
-/**
- * energy模块所用到的接口封装
- */
-
-var energy = {
-  /**
-   * =====电表曲线=====
-   *  */
-  // 1.获取电表曲线数据（最大值，最小值，平均值）
-  findPowerByDeviceIdAndDate: function findPowerByDeviceIdAndDate(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findPowerByDeviceIdAndDate'),
-      method: 'GET',
-      params: params
-    });
-  },
-  //2.获取电梯A相电流数据
-  findAphaseCurrentByDeviceIdAndDate: function findAphaseCurrentByDeviceIdAndDate(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findAphaseCurrentByDeviceIdAndDate'),
-      method: 'GET',
-      params: params
-    });
-  },
-  /**
-   * =====发电分析=====
-   */
-  // 1.获取各个箱子的发电数据（预测发电量，实际发电量，相差）
-  findHomeCommunityPowerSumByRandomLevelIdsAndDataType: function findHomeCommunityPowerSumByRandomLevelIdsAndDataType(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findHomeCommunityPowerSumByRandomLevelIdsAndDataType'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  // 2.获取天气数据（辐照度和温度）
-  findWeatherStationByDays: function findWeatherStationByDays(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findWeatherStationByDays'),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 2.获取天气数据（辐照度和温度）用设备id查询
-  findWeatherStationByDaysByDeviceId: function findWeatherStationByDaysByDeviceId(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findWeatherStationByDaysByDeviceId'),
-      method: 'GET',
-      params: params
-    });
-  },
-  /**
-   * =====能源曲线数据=====
-   */
-  // 1.单个箱子数据
-  findHomeCommunityPowerSumByLevelIdAndDataType: function findHomeCommunityPowerSumByLevelIdAndDataType(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findHomeCommunityPowerSumByLevelIdAndDataType'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  // 2.获取多个层级（社区/分中心）的发、储、并、用的每分钟功率
-  findPowerByLevelIdsAndDate: function findPowerByLevelIdsAndDate(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findPowerByLevelIdsAndDate'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  /**
-   * 获取某日的总用电、人均用电、单位面积用电
-   */
-  findSubareaConsumptionByDay: function findSubareaConsumptionByDay(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findSubareaConsumptionByDay'),
-      method: 'GET',
-      params: params
-    });
-  },
-  /**
-   * 周报表每日统计数据
-   */
-  findStatisticsDayByLevelIdsAndDays: function findStatisticsDayByLevelIdsAndDays(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findStatisticsDayByLevelIdsAndDays'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  findAtrributes: function findAtrributes(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/atrributes'),
-      method: 'GET',
-      params: params
-    });
-  },
-  getAtrributesData: function getAtrributesData(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/atrributesData'),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 获取多个层级天的每小时层级统计数据 ------获取光伏未来社区、分中心的日报表数据
-  findDayStatisticsDetailsByLevelIdsAndDay: function findDayStatisticsDetailsByLevelIdsAndDay(ids, time) {
-    var data = {
-      areaLevelIds: ids,
-      date: time
-    };
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findDayStatisticsDetailsByLevelIdsAndDay'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  // 获取多个层级月的每天层级统计数据 ------获取光伏未来社区、分中心的月报表数据
-  findMonthStatisticsDetailsByLevelIdsAndMonth: function findMonthStatisticsDetailsByLevelIdsAndMonth(ids, time) {
-    var data = {
-      areaLevelIds: ids,
-      month: new Date(time).getMonth() + 1,
-      year: new Date(time).getFullYear()
-    };
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findMonthStatisticsDetailsByLevelIdsAndMonth'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  // 获取多个层级年的每月层级统计数据 ------获取光伏未来社区、分中心的年报表数据
-  findYearStatisticsDetailsByLevelIdsAndYear: function findYearStatisticsDetailsByLevelIdsAndYear(ids, time) {
-    var data = {
-      areaLevelIds: ids,
-      year: new Date(time).getFullYear()
-    };
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findYearStatisticsDetailsByLevelIdsAndYear'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  // 获取碳排因子
-  queryCarbonFactor: function queryCarbonFactor(areaId, year) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)("/carbon/factor/areaId/".concat(areaId, "/year/").concat(year)),
-      method: 'GET'
-    });
-  },
-  // 设备管理 => 负荷曲线
-  findConsumeQAndPower: function findConsumeQAndPower(dateType, date) {
-    var d = new Date(date);
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'date') {
-      requestURI = '/homeCommunity/findDayConsumeQAndPower';
-      params = {
-        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findMonthConsumeQAndPower';
-      params = {
-        year: d.getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'year') {
-      requestURI = '/homeCommunity/findYearConsumeQAndPower';
-      params = {
-        year: d.getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 设备管理 => 总设备信息
-  findAllDeviceInfo: function findAllDeviceInfo() {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findAllDeviceInfo'),
-      method: 'GET'
-    });
-  },
-  // 设备管理 => 所有设备
-  findDeviceEnergyInfo: function findDeviceEnergyInfo() {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findDeviceEnergyInfo'),
-      method: 'GET'
-    });
-  },
-  queryFlexibility: function queryFlexibility(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/queryFlexibility'),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 经济性分析 => 经济性分析信息概览
-  findEconomicalAnalysisInfo: function findEconomicalAnalysisInfo() {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findEconomicalAnalysisInfo'),
-      method: 'GET'
-    });
-  },
-  // 经济性分析 => 峰平谷电价及运行收益
-  findPeakFlatValleyElectrovalenceAndIncome: function findPeakFlatValleyElectrovalenceAndIncome(dateType, date) {
-    var d = new Date(date);
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'hour') {
-      requestURI = '/homeCommunity/findDayPeakFlatValleyElectrovalenceAndIncome';
-      params = {
-        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
-      };
-    } else if (dateType == 'day') {
-      requestURI = '/homeCommunity/findMonthPeakFlatValleyElectrovalenceAndIncome';
-      params = {
-        year: d.getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findYearPeakFlatValleyElectrovalenceAndIncomeonsumeQAndPower';
-      params = {
-        year: d.getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 经济性分析 => 碳排因子响应及电力响应收益
-  findCarbonEmissionFactorAndPowerFactorIncome: function findCarbonEmissionFactorAndPowerFactorIncome(dateType, date) {
-    var d = new Date(date);
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'hour') {
-      requestURI = '/homeCommunity/findDayCarbonEmissionFactorAndPowerFactorIncome';
-      params = {
-        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
-      };
-    } else if (dateType == 'day') {
-      requestURI = '/homeCommunity/findMonthCarbonEmissionFactorAndPowerFactorIncomethConsumeQAndPower';
-      params = {
-        year: d.getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findYearCarbonEmissionFactorAndPowerFactorIncome';
-      params = {
-        year: d.getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 设备管理 => 获取所有设备列表
-  findDeviceInfoList: function findDeviceInfoList() {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findDeviceInfoList'),
-      method: 'GET'
-    });
-  },
-  // 报警分析 => 告警信息统计按日月年查询
-  findAlarmInfoCount: function findAlarmInfoCount(dateType, date) {
-    var d = new Date(date);
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'date') {
-      requestURI = '/homeCommunity/findDayAlarmInfoCount';
-      params = {
-        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findMonthAlarmInfoCount';
-      params = {
-        year: d.getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'year') {
-      requestURI = '/homeCommunity/findYearAlarmInfoCount';
-      params = {
-        year: d.getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 报警分析 => 告警信息统计按日月年查询
-  findAreaAlarmInfoCount: function findAreaAlarmInfoCount(dateType, date) {
-    var d = new Date(date);
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'date') {
-      requestURI = '/homeCommunity/findDayAreaAlarmInfoCount';
-      params = {
-        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findMonthAreaAlarmInfoCount';
-      params = {
-        year: d.getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'year') {
-      requestURI = '/homeCommunity/findYearAreaAlarmInfoCount';
-      params = {
-        year: d.getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 报警分析 => 告警信息统计按日月年查询
-  findDeviceAlarmInfoCount: function findDeviceAlarmInfoCount(dateType, date) {
-    var d = new Date(date);
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'date') {
-      requestURI = '/homeCommunity/findDayDeviceAlarmInfoCount';
-      params = {
-        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findMonthDeviceAlarmInfoCount';
-      params = {
-        year: d.getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'year') {
-      requestURI = '/homeCommunity/findYearDeviceAlarmInfoCount';
-      params = {
-        year: d.getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 报警分析 => 告警信息统计按日月年查询
-  findSeverityLevelAlarmInfoCount: function findSeverityLevelAlarmInfoCount(dateType, date) {
-    var d = new Date(date);
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'date') {
-      requestURI = '/homeCommunity/findDaySeverityLevelAlarmInfoCount';
-      params = {
-        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findMonthSeverityLevelAlarmInfoCount';
-      params = {
-        year: d.getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'year') {
-      requestURI = '/homeCommunity/findYearSeverityLevelAlarmInfoCount';
-      params = {
-        year: d.getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 报警分析 => 以列表的形式查询所有的告警信息，每个告警都有级别（紧急、次要、提示）
-  findAlarmInfoList: function findAlarmInfoList(dateType, date, deviceType, area) {
-    var d = new Date(date);
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'date') {
-      requestURI = '/homeCommunity/findDayAlarmInfoList';
-      params = {
-        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0')),
-        area: area,
-        deviceType: deviceType
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findMonthAlarmInfoList';
-      params = {
-        year: d.getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0'),
-        area: area,
-        deviceType: deviceType
-      };
-    } else if (dateType == 'year') {
-      requestURI = '/homeCommunity/findYearAlarmInfoList';
-      params = {
-        year: d.getFullYear(),
-        area: area,
-        deviceType: deviceType
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 查询设备日功率曲线
-  queryStoragePowerCurve: function queryStoragePowerCurve(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)("/homeCommunity/queryStoragePowerCurve"),
-      method: 'post',
-      data: data
-    });
-  }
-};
-var _default = energy;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 868:
-/*!*************************************!*\
-  !*** D:/iems-app/api/energy_new.js ***!
-  \*************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _request = _interopRequireDefault(__webpack_require__(/*! @/utils/request */ 75));
-var _forSpringBoot = __webpack_require__(/*! @/utils/forSpringBoot */ 114);
-/**
- * energy模块所用到的接口封装
- */
-// import request from '../utils/request'
-// // import Moment from 'moment'
-// import { URL, DATA, FORMDATA } from '../utils/forSpringBoot'
-
-var energy = {
-  /**
-   * =====电表曲线=====
-   *  */
-  // 1.获取电表曲线数据（最大值，最小值，平均值）
-  findPowerByDeviceIdAndDate: function findPowerByDeviceIdAndDate(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findPowerByDeviceIdAndDate'),
-      method: 'GET',
-      params: params
-    });
-  },
-  //2.获取电梯A相电流数据
-  findAphaseCurrentByDeviceIdAndDate: function findAphaseCurrentByDeviceIdAndDate(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findAphaseCurrentByDeviceIdAndDate'),
-      method: 'GET',
-      params: params
-    });
-  },
-  /**
-   * =====发电分析=====
-   */
-  // 1.获取各个箱子的发电数据（预测发电量，实际发电量，相差）
-  findHomeCommunityPowerSumByRandomLevelIdsAndDataType: function findHomeCommunityPowerSumByRandomLevelIdsAndDataType(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findHomeCommunityPowerSumByRandomLevelIdsAndDataType'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  // 2.获取天气数据（辐照度和温度）
-  findWeatherStationByDays: function findWeatherStationByDays(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findWeatherStationByDays'),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 2.获取天气数据（辐照度和温度）用设备id查询
-  findWeatherStationByDaysByDeviceId: function findWeatherStationByDaysByDeviceId(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findWeatherStationByDaysByDeviceId'),
-      method: 'GET',
-      params: params
-    });
-  },
-  /**
-   * =====能源曲线数据=====
-   */
-  // 1.单个箱子数据
-  findHomeCommunityPowerSumByLevelIdAndDataType: function findHomeCommunityPowerSumByLevelIdAndDataType(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findHomeCommunityPowerSumByLevelIdAndDataType'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  // 2.获取多个层级（社区/分中心）的发、储、并、用的每分钟功率
-  findPowerByLevelIdsAndDate: function findPowerByLevelIdsAndDate(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findPowerByLevelIdsAndDate'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  /**
-   * 获取某日的总用电、人均用电、单位面积用电
-   */
-  findSubareaConsumptionByDay: function findSubareaConsumptionByDay(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findSubareaConsumptionByDay'),
-      method: 'GET',
-      params: params
-    });
-  },
-  /**
-   * 周报表每日统计数据
-   */
-  findStatisticsDayByLevelIdsAndDays: function findStatisticsDayByLevelIdsAndDays(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findStatisticsDayByLevelIdsAndDays'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  findAtrributes: function findAtrributes(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/atrributes'),
-      method: 'GET',
-      params: params
-    });
-  },
-  getAtrributesData: function getAtrributesData(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/atrributesData'),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 获取多个层级天的每小时层级统计数据 ------获取光伏未来社区、分中心的日报表数据
-  findDayStatisticsDetailsByLevelIdsAndDay: function findDayStatisticsDetailsByLevelIdsAndDay(ids, time) {
-    var data = {
-      areaLevelIds: ids,
-      date: time
-    };
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findDayStatisticsDetailsByLevelIdsAndDay'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  // 获取多个层级月的每天层级统计数据 ------获取光伏未来社区、分中心的月报表数据
-  findMonthStatisticsDetailsByLevelIdsAndMonth: function findMonthStatisticsDetailsByLevelIdsAndMonth(ids, time) {
-    var data = {
-      areaLevelIds: ids,
-      month: new Date(time).getMonth() + 1,
-      year: new Date(time).getFullYear()
-    };
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findMonthStatisticsDetailsByLevelIdsAndMonth'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  // 获取多个层级年的每月层级统计数据 ------获取光伏未来社区、分中心的年报表数据
-  findYearStatisticsDetailsByLevelIdsAndYear: function findYearStatisticsDetailsByLevelIdsAndYear(ids, time) {
-    var data = {
-      areaLevelIds: ids,
-      year: new Date(time).getFullYear()
-    };
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findYearStatisticsDetailsByLevelIdsAndYear'),
-      method: 'POST',
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  // 获取碳排因子
-  queryCarbonFactor: function queryCarbonFactor(areaId, year) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)("/carbon/factor/areaId/".concat(areaId, "/year/").concat(year)),
-      method: 'GET'
-    });
-  },
-  // 设备管理 => 负荷曲线
-  findConsumeQAndPower: function findConsumeQAndPower(dateType, date) {
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'date') {
-      requestURI = '/homeCommunity/findDayConsumeQAndPower';
-      params = {
-        day: new Date(date).toISOString().split('T')[0]
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findMonthConsumeQAndPower';
-      params = {
-        year: new Date(date).getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'year') {
-      requestURI = '/homeCommunity/findYearConsumeQAndPower';
-      params = {
-        year: new Date(date).getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 设备管理 => 总设备信息
-  findAllDeviceInfo: function findAllDeviceInfo() {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findAllDeviceInfo'),
-      method: 'GET'
-    });
-  },
-  // 设备管理 => 所有设备
-  findDeviceEnergyInfo: function findDeviceEnergyInfo() {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findDeviceEnergyInfo'),
-      method: 'GET'
-    });
-  },
-  // 经济性分析 => 经济性分析信息概览
-  findEconomicalAnalysisInfo: function findEconomicalAnalysisInfo() {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findEconomicalAnalysisInfo'),
-      method: 'GET'
-    });
-  },
-  // 经济性分析 => 峰平谷电价及运行收益
-  findPeakFlatValleyElectrovalenceAndIncome: function findPeakFlatValleyElectrovalenceAndIncome(dateType, date) {
-    console.log(date, "-------------");
-    dateType = 'hour';
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'hour') {
-      requestURI = '/homeCommunity/findDayPeakFlatValleyElectrovalenceAndIncome';
-      params = {
-        day: new Date(date).toISOString().split('T')[0]
-      };
-    } else if (dateType == 'day') {
-      requestURI = '/homeCommunity/findMonthPeakFlatValleyElectrovalenceAndIncome';
-      params = {
-        year: new Date(date).getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findYearPeakFlatValleyElectrovalenceAndIncomeonsumeQAndPower';
-      params = {
-        year: new Date(date).getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 经济性分析 => 碳排因子响应及电力响应收益
-  findCarbonEmissionFactorAndPowerFactorIncome: function findCarbonEmissionFactorAndPowerFactorIncome(dateType, date) {
-    console.log(date, "-------------");
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'hour') {
-      requestURI = '/homeCommunity/findDayCarbonEmissionFactorAndPowerFactorIncome';
-      params = {
-        day: new Date(date).toISOString().split('T')[0]
-      };
-    } else if (dateType == 'day') {
-      requestURI = '/homeCommunity/findMonthCarbonEmissionFactorAndPowerFactorIncomethConsumeQAndPower';
-      params = {
-        year: new Date(date).getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findYearCarbonEmissionFactorAndPowerFactorIncome';
-      params = {
-        year: new Date(date).getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 设备管理 => 获取所有设备列表
-  findDeviceInfoList: function findDeviceInfoList() {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/findDeviceInfoList'),
-      method: 'GET'
-    });
-  },
-  // 报警分析 => 告警信息统计按日月年查询
-  findAlarmInfoCount: function findAlarmInfoCount(dateType, date) {
-    console.log(date, "-------------");
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'date') {
-      requestURI = '/homeCommunity/findDayAlarmInfoCount';
-      params = {
-        day: new Date(date).toISOString().split('T')[0]
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findMonthAlarmInfoCount';
-      params = {
-        year: new Date(date).getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'year') {
-      requestURI = '/homeCommunity/findYearAlarmInfoCount';
-      params = {
-        year: new Date(date).getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 报警分析 => 告警信息统计按日月年查询
-  findAreaAlarmInfoCount: function findAreaAlarmInfoCount(dateType, date) {
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'date') {
-      requestURI = '/homeCommunity/findDayAreaAlarmInfoCount';
-      params = {
-        day: new Date(date).toISOString().split('T')[0]
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findMonthAreaAlarmInfoCount';
-      params = {
-        year: new Date(date).getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'year') {
-      requestURI = '/homeCommunity/findYearAreaAlarmInfoCount';
-      params = {
-        year: new Date(date).getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 报警分析 => 告警信息统计按日月年查询
-  findDeviceAlarmInfoCount: function findDeviceAlarmInfoCount(dateType, date) {
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'date') {
-      requestURI = '/homeCommunity/findDayDeviceAlarmInfoCount';
-      params = {
-        day: new Date(date).toISOString().split('T')[0]
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findMonthDeviceAlarmInfoCount';
-      params = {
-        year: new Date(date).getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'year') {
-      requestURI = '/homeCommunity/findYearDeviceAlarmInfoCount';
-      params = {
-        year: new Date(date).getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 报警分析 => 告警信息统计按日月年查询
-  findSeverityLevelAlarmInfoCount: function findSeverityLevelAlarmInfoCount(dateType, date) {
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'date') {
-      requestURI = '/homeCommunity/findDaySeverityLevelAlarmInfoCount';
-      params = {
-        day: new Date(date).toISOString().split('T')[0]
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findMonthSeverityLevelAlarmInfoCount';
-      params = {
-        year: new Date(date).getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0')
-      };
-    } else if (dateType == 'year') {
-      requestURI = '/homeCommunity/findYearSeverityLevelAlarmInfoCount';
-      params = {
-        year: new Date(date).getFullYear()
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 报警分析 => 以列表的形式查询所有的告警信息，每个告警都有级别（紧急、次要、提示）
-  findAlarmInfoList: function findAlarmInfoList(dateType, date, deviceType, area) {
-    var requestURI = '';
-    var params = {};
-    if (dateType == 'date') {
-      requestURI = '/homeCommunity/findDayAlarmInfoList';
-      params = {
-        day: new Date(date).toISOString().split('T')[0],
-        area: area,
-        deviceType: deviceType
-      };
-    } else if (dateType == 'month') {
-      requestURI = '/homeCommunity/findMonthAlarmInfoList';
-      params = {
-        year: new Date(date).getFullYear(),
-        month: String(d.getMonth() + 1).padStart(2, '0'),
-        area: area,
-        deviceType: deviceType
-      };
-    } else if (dateType == 'year') {
-      requestURI = '/homeCommunity/findYearAlarmInfoList';
-      params = {
-        year: new Date(date).getFullYear(),
-        area: area,
-        deviceType: deviceType
-      };
-    }
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)(requestURI),
-      method: 'GET',
-      params: params
-    });
-  },
-  // 查询设备日功率曲线
-  queryStoragePowerCurve: function queryStoragePowerCurve(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)("/homeCommunity/queryStoragePowerCurve"),
-      method: 'post',
-      data: data
-    });
-  },
-  queryFlexibility: function queryFlexibility(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/queryFlexibility'),
-      method: 'GET',
-      params: params
-    });
-  },
-  //柔性负载总功率
-  findFlexibilityLoadPowerTotal: function findFlexibilityLoadPowerTotal(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/v3/quickQuery/flexibilityLoadPowerTotal'),
-      method: "GET",
-      params: params
-    });
-  },
-  findFlexibilityLoadPowerV2: function findFlexibilityLoadPowerV2(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/v4/quickQuery/flexibilityLoadPowerV2/devId'),
-      method: "GET",
-      params: params
-    });
-  },
-  findEveryHourByDeviceIds: function findEveryHourByDeviceIds(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/shangHaiZYNYL/findEveryHourByDeviceIds'),
-      method: "POST",
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  findEveryDayByDeviceIds: function findEveryDayByDeviceIds(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/shangHaiZYNYL/findEveryDayByDeviceIds'),
-      method: "POST",
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  findEveryMonthByDeviceIds: function findEveryMonthByDeviceIds(data) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/shangHaiZYNYL/findEveryMonthByDeviceIds'),
-      method: "POST",
-      data: (0, _forSpringBoot.DATA)(data)
-    });
-  },
-  queryMeterDevicePower: function queryMeterDevicePower(params) {
-    return (0, _request.default)({
-      url: (0, _forSpringBoot.URL)('/homeCommunity/v4/quickQuery/1803_V2_2power/db_deviceId'),
-      method: 'GET',
-      params: params
-    });
-  }
-};
-var _default = energy;
-exports.default = _default;
-
-/***/ }),
-
-/***/ 876:
-/*!*********************************!*\
-  !*** D:/iems-app/api/center.js ***!
-  \*********************************/
+/***/ 914:
+/*!****************************!*\
+  !*** D:/ems/api/center.js ***!
+  \****************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2452,10 +1450,10 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 877:
-/*!************************************!*\
-  !*** D:/iems-app/api/statistic.js ***!
-  \************************************/
+/***/ 915:
+/*!*******************************!*\
+  !*** D:/ems/api/statistic.js ***!
+  \*******************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2966,21 +1964,576 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 901:
-/*!***********************************************************!*\
-  !*** D:/iems-app/community/static/images/home-active.png ***!
-  \***********************************************************/
+/***/ 916:
+/*!*****************************!*\
+  !*** D:/ems/api/nyz_new.js ***!
+  \*****************************/
 /*! no static exports found */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDYuMC1jMDA2IDc5LjE2NDc1MywgMjAyMS8wMi8xNS0xMTo1MjoxMyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIyLjMgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOkVGRjBBRUU1NEJGMTExRjA4NEI0RURGNTczNjQyODE5IiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOkVGRjBBRUU2NEJGMTExRjA4NEI0RURGNTczNjQyODE5Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6RUZGMEFFRTM0QkYxMTFGMDg0QjRFREY1NzM2NDI4MTkiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6RUZGMEFFRTQ0QkYxMTFGMDg0QjRFREY1NzM2NDI4MTkiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz6eYOpnAAACJUlEQVR42uyayytEURzH72UiM0QTpZTXYhZTiKaUJo88NoQNGxaiWFrJypRSYjVLioQFG0KEpLxlRfkbsER5lKbG9zS/qVuGuWPOvfdczqlP3Zl77jm/z9w75/GbUcPhsPIXSoryR4oUEa04ogfNUyHebVeAaVBHr4/BKLjh2cnBqMPQO9IOLkELSCfY8QXosMujNQjWQUaMc+y9NTAkusg4mAWpP9Rh52aoriqaCAtuDgQSuCZA1zhEEXGBDTDwi2v76VqX1SK54BC0JdFGK7WRZ5VICTgH1RzuKmvjDJSaLVJJQ6mH40DhoQ+myiyRJprc8g0YulmbR2x+NlqkB+yALANXG6ztbdBrlMgIWAZpJiydWB9L1Cc3EVYnSOsmVTGvqNRnUE+c8SqwNdIKGLZwYcv6XqVYfiWSA3ZBtwCr9C6wRzElJFJAI1ODQFuOenBCsekS8dJ4Xi7g/qmM5i9vPBE/OAVFAm8GCylG/3ciPrAP3DbY2bopVl8skTHgtNE23andNmhFXm2Yc3j7knygWdRFK9E0zaSUI0jQTyCaTfwAV9qZXytyFyMxkE0NiFCKwbOZyQdLihSRIlJEikgRKSJF/pNISKBYQ8mIsKX9vQASD/G2GXoerXkBRBZ4fEcmwbWFErdggofIO2gEmxZIbCmRlNR7vIp6f/Z6BJ2gFvSBGiWSX8rkHPgLbfBYymdRieTWdBVV/hdFikgRKWKr8inAAGbhU6uHuxjlAAAAAElFTkSuQmCC"
+"use strict";
+
+
+var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _request = _interopRequireDefault(__webpack_require__(/*! @/utils/request */ 75));
+var _forSpringBoot = __webpack_require__(/*! @/utils/forSpringBoot */ 114);
+// import Moment from 'moment'
+
+var getNyzUrl = function getNyzUrl(url) {
+  return "/shequApi" + url;
+};
+var nyz_new = {
+  /**
+   * 查询充放电最大最小功率
+   */
+  queryHighestChargeAndPower: function queryHighestChargeAndPower(data) {
+    return (0, _request.default)({
+      url: getNyzUrl("/homeCommunity/queryHighestChargeAndPower"),
+      method: 'post',
+      data: data
+    });
+  },
+  /**
+   * 查询储能日功率曲线
+   */
+  queryStoragePowerCurve: function queryStoragePowerCurve(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)("/homeCommunity/queryStoragePowerCurve"),
+      method: 'post',
+      data: data
+    });
+  },
+  /**
+   * 查询正反向电能
+   */
+  findEveryHourByDeviceIds: function findEveryHourByDeviceIds(data) {
+    return (0, _request.default)({
+      url: getNyzUrl('/shangHaiZYNYL/findEveryHourByDeviceIds'),
+      method: "POST",
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  findEveryDayByDeviceIds: function findEveryDayByDeviceIds(data) {
+    return (0, _request.default)({
+      url: getNyzUrl('/shangHaiZYNYL/findEveryDayByDeviceIds'),
+      method: "POST",
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  findEveryMonthByDeviceIds: function findEveryMonthByDeviceIds(data) {
+    return (0, _request.default)({
+      url: getNyzUrl('/shangHaiZYNYL/findEveryMonthByDeviceIds'),
+      method: "POST",
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  getStorageRemainEnergy: function getStorageRemainEnergy(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/v4/quickQuery/battery_stack_discharge/db_deviceId'),
+      method: "get",
+      params: params
+    });
+  }
+};
+var _default = nyz_new;
+exports.default = _default;
 
 /***/ }),
 
-/***/ 902:
-/*!**************************************************************!*\
-  !*** D:/iems-app/community/static/images/monitor-active.png ***!
-  \**************************************************************/
+/***/ 917:
+/*!********************************!*\
+  !*** D:/ems/api/energy_new.js ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _request = _interopRequireDefault(__webpack_require__(/*! @/utils/request */ 75));
+var _forSpringBoot = __webpack_require__(/*! @/utils/forSpringBoot */ 114);
+/**
+ * energy模块所用到的接口封装
+ */
+// import request from '../utils/request'
+// // import Moment from 'moment'
+// import { URL, DATA, FORMDATA } from '../utils/forSpringBoot'
+
+var energy = {
+  /**
+   * =====电表曲线=====
+   *  */
+  // 1.获取电表曲线数据（最大值，最小值，平均值）
+  findPowerByDeviceIdAndDate: function findPowerByDeviceIdAndDate(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findPowerByDeviceIdAndDate'),
+      method: 'GET',
+      params: params
+    });
+  },
+  //2.获取电梯A相电流数据
+  findAphaseCurrentByDeviceIdAndDate: function findAphaseCurrentByDeviceIdAndDate(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findAphaseCurrentByDeviceIdAndDate'),
+      method: 'GET',
+      params: params
+    });
+  },
+  /**
+   * =====发电分析=====
+   */
+  // 1.获取各个箱子的发电数据（预测发电量，实际发电量，相差）
+  findHomeCommunityPowerSumByRandomLevelIdsAndDataType: function findHomeCommunityPowerSumByRandomLevelIdsAndDataType(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findHomeCommunityPowerSumByRandomLevelIdsAndDataType'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  // 2.获取天气数据（辐照度和温度）
+  findWeatherStationByDays: function findWeatherStationByDays(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findWeatherStationByDays'),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 2.获取天气数据（辐照度和温度）用设备id查询
+  findWeatherStationByDaysByDeviceId: function findWeatherStationByDaysByDeviceId(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findWeatherStationByDaysByDeviceId'),
+      method: 'GET',
+      params: params
+    });
+  },
+  /**
+   * =====能源曲线数据=====
+   */
+  // 1.单个箱子数据
+  findHomeCommunityPowerSumByLevelIdAndDataType: function findHomeCommunityPowerSumByLevelIdAndDataType(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findHomeCommunityPowerSumByLevelIdAndDataType'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  // 2.获取多个层级（社区/分中心）的发、储、并、用的每分钟功率
+  findPowerByLevelIdsAndDate: function findPowerByLevelIdsAndDate(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findPowerByLevelIdsAndDate'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  /**
+   * 获取某日的总用电、人均用电、单位面积用电
+   */
+  findSubareaConsumptionByDay: function findSubareaConsumptionByDay(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findSubareaConsumptionByDay'),
+      method: 'GET',
+      params: params
+    });
+  },
+  /**
+   * 周报表每日统计数据
+   */
+  findStatisticsDayByLevelIdsAndDays: function findStatisticsDayByLevelIdsAndDays(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findStatisticsDayByLevelIdsAndDays'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  findAtrributes: function findAtrributes(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/atrributes'),
+      method: 'GET',
+      params: params
+    });
+  },
+  getAtrributesData: function getAtrributesData(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/atrributesData'),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 获取多个层级天的每小时层级统计数据 ------获取光伏未来社区、分中心的日报表数据
+  findDayStatisticsDetailsByLevelIdsAndDay: function findDayStatisticsDetailsByLevelIdsAndDay(ids, time) {
+    var data = {
+      areaLevelIds: ids,
+      date: time
+    };
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findDayStatisticsDetailsByLevelIdsAndDay'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  // 获取多个层级月的每天层级统计数据 ------获取光伏未来社区、分中心的月报表数据
+  findMonthStatisticsDetailsByLevelIdsAndMonth: function findMonthStatisticsDetailsByLevelIdsAndMonth(ids, time) {
+    var data = {
+      areaLevelIds: ids,
+      month: new Date(time).getMonth() + 1,
+      year: new Date(time).getFullYear()
+    };
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findMonthStatisticsDetailsByLevelIdsAndMonth'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  // 获取多个层级年的每月层级统计数据 ------获取光伏未来社区、分中心的年报表数据
+  findYearStatisticsDetailsByLevelIdsAndYear: function findYearStatisticsDetailsByLevelIdsAndYear(ids, time) {
+    var data = {
+      areaLevelIds: ids,
+      year: new Date(time).getFullYear()
+    };
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findYearStatisticsDetailsByLevelIdsAndYear'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  // 获取碳排因子
+  queryCarbonFactor: function queryCarbonFactor(areaId, year) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)("/carbon/factor/areaId/".concat(areaId, "/year/").concat(year)),
+      method: 'GET'
+    });
+  },
+  // 设备管理 => 负荷曲线
+  findConsumeQAndPower: function findConsumeQAndPower(dateType, date) {
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'date') {
+      requestURI = '/homeCommunity/findDayConsumeQAndPower';
+      params = {
+        day: new Date(date).toISOString().split('T')[0]
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findMonthConsumeQAndPower';
+      params = {
+        year: new Date(date).getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'year') {
+      requestURI = '/homeCommunity/findYearConsumeQAndPower';
+      params = {
+        year: new Date(date).getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 设备管理 => 总设备信息
+  findAllDeviceInfo: function findAllDeviceInfo() {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findAllDeviceInfo'),
+      method: 'GET'
+    });
+  },
+  // 设备管理 => 所有设备
+  findDeviceEnergyInfo: function findDeviceEnergyInfo() {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findDeviceEnergyInfo'),
+      method: 'GET'
+    });
+  },
+  // 经济性分析 => 经济性分析信息概览
+  findEconomicalAnalysisInfo: function findEconomicalAnalysisInfo() {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findEconomicalAnalysisInfo'),
+      method: 'GET'
+    });
+  },
+  // 经济性分析 => 峰平谷电价及运行收益
+  findPeakFlatValleyElectrovalenceAndIncome: function findPeakFlatValleyElectrovalenceAndIncome(dateType, date) {
+    console.log(date, "-------------");
+    dateType = 'hour';
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'hour') {
+      requestURI = '/homeCommunity/findDayPeakFlatValleyElectrovalenceAndIncome';
+      params = {
+        day: new Date(date).toISOString().split('T')[0]
+      };
+    } else if (dateType == 'day') {
+      requestURI = '/homeCommunity/findMonthPeakFlatValleyElectrovalenceAndIncome';
+      params = {
+        year: new Date(date).getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findYearPeakFlatValleyElectrovalenceAndIncomeonsumeQAndPower';
+      params = {
+        year: new Date(date).getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 经济性分析 => 碳排因子响应及电力响应收益
+  findCarbonEmissionFactorAndPowerFactorIncome: function findCarbonEmissionFactorAndPowerFactorIncome(dateType, date) {
+    console.log(date, "-------------");
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'hour') {
+      requestURI = '/homeCommunity/findDayCarbonEmissionFactorAndPowerFactorIncome';
+      params = {
+        day: new Date(date).toISOString().split('T')[0]
+      };
+    } else if (dateType == 'day') {
+      requestURI = '/homeCommunity/findMonthCarbonEmissionFactorAndPowerFactorIncomethConsumeQAndPower';
+      params = {
+        year: new Date(date).getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findYearCarbonEmissionFactorAndPowerFactorIncome';
+      params = {
+        year: new Date(date).getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 设备管理 => 获取所有设备列表
+  findDeviceInfoList: function findDeviceInfoList() {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findDeviceInfoList'),
+      method: 'GET'
+    });
+  },
+  // 报警分析 => 告警信息统计按日月年查询
+  findAlarmInfoCount: function findAlarmInfoCount(dateType, date) {
+    console.log(date, "-------------");
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'date') {
+      requestURI = '/homeCommunity/findDayAlarmInfoCount';
+      params = {
+        day: new Date(date).toISOString().split('T')[0]
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findMonthAlarmInfoCount';
+      params = {
+        year: new Date(date).getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'year') {
+      requestURI = '/homeCommunity/findYearAlarmInfoCount';
+      params = {
+        year: new Date(date).getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 报警分析 => 告警信息统计按日月年查询
+  findAreaAlarmInfoCount: function findAreaAlarmInfoCount(dateType, date) {
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'date') {
+      requestURI = '/homeCommunity/findDayAreaAlarmInfoCount';
+      params = {
+        day: new Date(date).toISOString().split('T')[0]
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findMonthAreaAlarmInfoCount';
+      params = {
+        year: new Date(date).getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'year') {
+      requestURI = '/homeCommunity/findYearAreaAlarmInfoCount';
+      params = {
+        year: new Date(date).getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 报警分析 => 告警信息统计按日月年查询
+  findDeviceAlarmInfoCount: function findDeviceAlarmInfoCount(dateType, date) {
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'date') {
+      requestURI = '/homeCommunity/findDayDeviceAlarmInfoCount';
+      params = {
+        day: new Date(date).toISOString().split('T')[0]
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findMonthDeviceAlarmInfoCount';
+      params = {
+        year: new Date(date).getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'year') {
+      requestURI = '/homeCommunity/findYearDeviceAlarmInfoCount';
+      params = {
+        year: new Date(date).getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 报警分析 => 告警信息统计按日月年查询
+  findSeverityLevelAlarmInfoCount: function findSeverityLevelAlarmInfoCount(dateType, date) {
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'date') {
+      requestURI = '/homeCommunity/findDaySeverityLevelAlarmInfoCount';
+      params = {
+        day: new Date(date).toISOString().split('T')[0]
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findMonthSeverityLevelAlarmInfoCount';
+      params = {
+        year: new Date(date).getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'year') {
+      requestURI = '/homeCommunity/findYearSeverityLevelAlarmInfoCount';
+      params = {
+        year: new Date(date).getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 报警分析 => 以列表的形式查询所有的告警信息，每个告警都有级别（紧急、次要、提示）
+  findAlarmInfoList: function findAlarmInfoList(dateType, date, deviceType, area) {
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'date') {
+      requestURI = '/homeCommunity/findDayAlarmInfoList';
+      params = {
+        day: new Date(date).toISOString().split('T')[0],
+        area: area,
+        deviceType: deviceType
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findMonthAlarmInfoList';
+      params = {
+        year: new Date(date).getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0'),
+        area: area,
+        deviceType: deviceType
+      };
+    } else if (dateType == 'year') {
+      requestURI = '/homeCommunity/findYearAlarmInfoList';
+      params = {
+        year: new Date(date).getFullYear(),
+        area: area,
+        deviceType: deviceType
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 查询设备日功率曲线
+  queryStoragePowerCurve: function queryStoragePowerCurve(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)("/homeCommunity/queryStoragePowerCurve"),
+      method: 'post',
+      data: data
+    });
+  },
+  queryFlexibility: function queryFlexibility(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/queryFlexibility'),
+      method: 'GET',
+      params: params
+    });
+  },
+  //柔性负载总功率
+  findFlexibilityLoadPowerTotal: function findFlexibilityLoadPowerTotal(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/v3/quickQuery/flexibilityLoadPowerTotal'),
+      method: "GET",
+      params: params
+    });
+  },
+  findFlexibilityLoadPowerV2: function findFlexibilityLoadPowerV2(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/v4/quickQuery/flexibilityLoadPowerV2/devId'),
+      method: "GET",
+      params: params
+    });
+  },
+  findEveryHourByDeviceIds: function findEveryHourByDeviceIds(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/shangHaiZYNYL/findEveryHourByDeviceIds'),
+      method: "POST",
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  findEveryDayByDeviceIds: function findEveryDayByDeviceIds(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/shangHaiZYNYL/findEveryDayByDeviceIds'),
+      method: "POST",
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  findEveryMonthByDeviceIds: function findEveryMonthByDeviceIds(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/shangHaiZYNYL/findEveryMonthByDeviceIds'),
+      method: "POST",
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  queryMeterDevicePower: function queryMeterDevicePower(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/v4/quickQuery/1803_V2_2power/db_deviceId'),
+      method: 'GET',
+      params: params
+    });
+  }
+};
+var _default = energy;
+exports.default = _default;
+
+/***/ }),
+
+/***/ 948:
+/*!*********************************************************!*\
+  !*** D:/ems/community/static/images/monitor-active.png ***!
+  \*********************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -2988,32 +2541,10 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAe
 
 /***/ }),
 
-/***/ 903:
-/*!***************************************************************!*\
-  !*** D:/iems-app/community/static/images/analysis-active.png ***!
-  \***************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDYuMC1jMDA2IDc5LjE2NDc1MywgMjAyMS8wMi8xNS0xMTo1MjoxMyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIyLjMgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOkVGRjBBRURENEJGMTExRjA4NEI0RURGNTczNjQyODE5IiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOkVGRjBBRURFNEJGMTExRjA4NEI0RURGNTczNjQyODE5Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6RUZFRDdFQ0I0QkYxMTFGMDg0QjRFREY1NzM2NDI4MTkiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6RUZGMEFFREM0QkYxMTFGMDg0QjRFREY1NzM2NDI4MTkiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz4aTifPAAACEklEQVR42uyaO0jDUBSGm1qchIpVqq66qbNCQUEQddFVioOLIFZcBB0KPkZBxVcFqYODVRx1UqQOvnBXR/eqKBY6KvW/8BdCsDG32va23gMfJ03uqfm4N81J0Ein065yCLerTEKLaBEtokVKKzz5/PKexY/vdleBUTAI2kANeAN34AhEQcpadDbjkRfJcgKOv9QmgmAZ1Fv2C5kuMg2mwP5fLK20DbnGHIhR4oZSDcBgDnJ/PcfNqXiNiJOcB2KqJ0AAHIAEjyf4OcDjnxw/rJKIuCZWuD0OIj+MF8fHuL0KqlURGQF+Lpuow5odcA18TmelECIDzJuSdRFLfdFFWpjPJesumFtVEallfpKse2H2qSLyyuyXrKuz1Bdd5J65W7Kuk/lBFZFj5pBkXWb8kSoiu7w+AhIyIY4Xy2ov0zZlkGkajRyawWyRYu8kTmiNbc6WzXhx01zndhi856vXyoUYW44K3h+uwBBoBJXM4vMlj7tNN1Nv0dt4SyyAR7DEZRPIMu4ZzFKiA5yAPpBU6cFKLK9mMAnifA5xMce5vwls8+RvTTJeVWbEfM1sELtIUuaEMqegN9vMFEzE6cOY5YfEsUwpPLMnTcusHRyW8ssH88yEVblGfiPTr18HFTpyfUNT9jNi/PUfkuzPpGfNY9NrqRxG2S4tLaJFtIgW0SJaRIuIW73+pxotokX+h8iXAAMAygiN1K72EooAAAAASUVORK5CYII="
-
-/***/ }),
-
-/***/ 904:
-/*!*************************************************************!*\
-  !*** D:/iems-app/community/static/images/report-active.png ***!
-  \*************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA3NpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDYuMC1jMDA2IDc5LjE2NDc1MywgMjAyMS8wMi8xNS0xMTo1MjoxMyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpiZTYyY2M2NC1kZTM4LTdmNGItOGU4ZC0xYmExNjMzYWVhOGUiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MUQ1MjNBOTk1QjlEMTFGMEI1QTZDMzkzMEIzMTg5NjMiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MUQ1MjNBOTg1QjlEMTFGMEI1QTZDMzkzMEIzMTg5NjMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIyLjMgKFdpbmRvd3MpIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6ODQ3ZWUwYmUtMTc1ZS1iNDQzLThkNTQtYWFhYjYzYTcxNTEzIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOmJlNjJjYzY0LWRlMzgtN2Y0Yi04ZThkLTFiYTE2MzNhZWE4ZSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PpPlogQAAACGSURBVHja7NrBCYAwDAVQK67mTM7gTK4mxLsHBbUllvevenkmKSlYImLoIePQSUCyZbp7YV73NEO0LVPRWiAgICAgICAgCZfGBzkvdqEiWit5+6hI47yqsopkmy3HLwiIU+sy0fiZ1gIBAfn2PlIjtt9qX8uMgICAfHeH9i8KCAjIr3IIMAB5dBRoedA60gAAAABJRU5ErkJggg=="
-
-/***/ }),
-
-/***/ 905:
-/*!***********************************************************!*\
-  !*** D:/iems-app/community/static/images/mine-active.png ***!
-  \***********************************************************/
+/***/ 951:
+/*!******************************************************!*\
+  !*** D:/ems/community/static/images/mine-active.png ***!
+  \******************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -3021,21 +2552,10 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAe
 
 /***/ }),
 
-/***/ 906:
-/*!****************************************************!*\
-  !*** D:/iems-app/community/static/images/home.png ***!
-  \****************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDYuMC1jMDA2IDc5LjE2NDc1MywgMjAyMS8wMi8xNS0xMTo1MjoxMyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIyLjMgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOkVGRjBBRUUxNEJGMTExRjA4NEI0RURGNTczNjQyODE5IiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOkVGRjBBRUUyNEJGMTExRjA4NEI0RURGNTczNjQyODE5Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6RUZGMEFFREY0QkYxMTFGMDg0QjRFREY1NzM2NDI4MTkiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6RUZGMEFFRTA0QkYxMTFGMDg0QjRFREY1NzM2NDI4MTkiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz6vGKv1AAAC4ElEQVR42uyaTUhUURTHZ8qolCCkRAhKXbQQKgopyAE1yoXZx6KPRR9QQe4sLGkRCYKrYEpoo+CqdCxCcZGVldJ3BEVl0GqSNi3cmaMRWkz/g/8HF8dx3szc9+FwD/x4b3z3nnf+8+7cc+95BuPxeCAXbFkgR8wI8ZvlWScDD0d0+94GroMqfn4BroDPOm9yuG6Po0/kIHgHasEo+MLzt+DQUhla50E/WAUug51gF8/lb32gwe9CWkEn+AdOg7ByTc5P8VoH2wb9JmQ56AItYAocAN0LtOvhtSm27VJ/p14LKZC5ApwD46AGPFmkvVyrZtuz7FvgtZB1YBjUgzEQAh9s9PvItt/BfvpY75WQUvCGP2QJbDeIptFf2layr/h4DcrcFrKdU+lm8IzDaTwDP9ZQfEpf8sXscEvIXia3YhDh0Ihl8WRjHJoR+nwO9jkt5AQYBGvATXASzGiYMGbo6wZ9P+BnR4Q0gztgBZNbE9C5BxBfl+hb7nGb99QmRNq0c900y6QWdnD9ZyXOWd6z3U6cqRqsBL3ggpLoelxYzKqJU+59l7FkJGQteASOcXapTpHodJuaOI+Cx4wpLSEbODPVMGmFON+7bVbijFLUS8ZmS0g55/OtdFSZZqLTbVHli9zC/FWeSoh0eAU2MUllmuh0m7qG28gYQ8mEVIAhUMjkVJ9lotNtMU4AEcY4xJgThFwD+UxKuhKdbrMSZ5ixtiTs2WHTPDaR+Rb0KPjFku7vhYQ0c18gK9EiDwNPZhOKKHky79XMrwr5maQw4JdSZAn4lfN1LSPECDFCjBDf2d9cETJthpYRYoQkWOH8VW42QiwnRR4IOc7jNx1CRnm86rIIqQW38XxAh5AOHhvBfRYjVjsoQEo+Z7gvl6H1A9xK1cnO2yIpXUr1XQplR4hbJnskebE6qeOJyMbqYmCuQn6P39AfhxPfp8DcO0Yp/3y10ylo/hfFCDFCjJAlZf8FGABdjZ06gphvsgAAAABJRU5ErkJggg=="
-
-/***/ }),
-
-/***/ 907:
-/*!*******************************************************!*\
-  !*** D:/iems-app/community/static/images/monitor.png ***!
-  \*******************************************************/
+/***/ 952:
+/*!**************************************************!*\
+  !*** D:/ems/community/static/images/monitor.png ***!
+  \**************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -3043,36 +2563,458 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAe
 
 /***/ }),
 
-/***/ 908:
-/*!********************************************************!*\
-  !*** D:/iems-app/community/static/images/analysis.png ***!
-  \********************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDYuMC1jMDA2IDc5LjE2NDc1MywgMjAyMS8wMi8xNS0xMTo1MjoxMyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIyLjMgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOkVGRUQ3RUM5NEJGMTExRjA4NEI0RURGNTczNjQyODE5IiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOkVGRUQ3RUNBNEJGMTExRjA4NEI0RURGNTczNjQyODE5Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6RUZFRDdFQzc0QkYxMTFGMDg0QjRFREY1NzM2NDI4MTkiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6RUZFRDdFQzg0QkYxMTFGMDg0QjRFREY1NzM2NDI4MTkiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz6+kmlRAAADLUlEQVR42uyaS2jUUBSGJ0VHrdrWarW+wdYHXWiVgu6UbnygoAsLIoKCuCgovjbiSgRXiqAVFMGNLtSNLnwvfKxcGFCRtqIjKFZBlDrVap06cfwP/IEwZCa5SWYyjxz4uEnInXv/nHvOPUmrZTKZWCVYTaxCLBISCYmEVImQMXYXb955WMgxx4NpoI7HGvgHfoMk+AaMfD+weUOnOyGwWQ6TSXJgVe/PAU2gVuYD1oBWivoBEuAR6AHvfXsENtOhX0pRiIyzkALWgQNgatY9ImYF2QmOgbN+heh5+nQoekKWTgtF7CFiz8A5IOt4kEJF5DawFJwB88FhP0KCtOlgEicpItL0SE/WfS9Ar4Qo2EUBh0AfuOQ3a3VQrOZRhPRrpjcO8lq3jQjT/oK34DI4wWunQEPY6XcyH8RG0AiegosOfSRjfaRnXlLEjrCF1LFdzdZt8A7RO9d5viVsIePYLmCrskFJVnzO47Yggr3NhxDzQZlr/ItCX1li33ncGIRH4sSLpS1LRWyGQl8ZcwqPB8NeWuam+Y5tp8L+NhEs53mvXyG6BdPesJxwY0m2T9juc9mvmam7i+c3CuGRn8wobizF+29xeaxyIaaeS1BELGOcXHEqanMFe2uegVo8LrHT4Djbsdzosh+qVAGzwVZLaXLE4lnlrJUIOFbawV0wl2XKSbCdpYdsksNgHiuJLt5vmhSQVy0JI7RaK8b3jQ/gAhgA+xnIuTZIWYbnwSYux3us1Ya8CpEn9IkTUbU4Sw3T5IXpF2PmMScpO/4Sy/vIa3Cb3pMxH1Csoxg3Hvnq9MaWw2ptro2wKBTv9LNU1/j7IxRjcF6L2GevRcx9sNZOTFjv7KP00AC99pnZybBspJLm/zB+RMwrsJJi6svp40Oa3kvZiLlWbl9RRukZU8xuxspRLzHSXgJi+lmySLJYH2b69WuGU1nkJEQvRVV237WKFSN9hR6gJs9HgyAxgpy0StFY6n/G0sot/bo2N7VWKZnup/pNeCwagzR5d2/yW8YPBx2sHmxC2B8fimZVE+ymW8OOkXgQQhZXgkf0KEaKvdVH/1QTCYmEVIeQ/wIMAEWXtAuEcfuhAAAAAElFTkSuQmCC"
-
-/***/ }),
-
-/***/ 909:
-/*!******************************************************!*\
-  !*** D:/iems-app/community/static/images/report.png ***!
-  \******************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA3NpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDYuMC1jMDA2IDc5LjE2NDc1MywgMjAyMS8wMi8xNS0xMTo1MjoxMyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpiZTYyY2M2NC1kZTM4LTdmNGItOGU4ZC0xYmExNjMzYWVhOGUiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MUQ1MjNBOTU1QjlEMTFGMEI1QTZDMzkzMEIzMTg5NjMiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MUQ1MjNBOTQ1QjlEMTFGMEI1QTZDMzkzMEIzMTg5NjMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIyLjMgKFdpbmRvd3MpIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6ODQ3ZWUwYmUtMTc1ZS1iNDQzLThkNTQtYWFhYjYzYTcxNTEzIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOmJlNjJjYzY0LWRlMzgtN2Y0Yi04ZThkLTFiYTE2MzNhZWE4ZSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PvPCMQIAAAC+SURBVHja7Jq7EkAwEEWtyZcpVT5VpfRri04VM9iHOLeNMU727iMjoqpdC+q7RgRINpWrB+ZlTZNE0zgIETlJAr9T3wQ5QutOsFubqgUIIIAAAkiqzn67eXk00mLwTo0Ybf5rrUj7WFgrxD7eORJSJEoimz+KcvnSrmeKiFluMaIAAggjSlXivPY+SK3uW6yRI4C0ch6xkMf06/HPRLCW1W6lBIk+m2OtqIplCZL6ikQz1hLuogACCCCf0ibAAK/NKfdHtZeZAAAAAElFTkSuQmCC"
-
-/***/ }),
-
-/***/ 910:
-/*!****************************************************!*\
-  !*** D:/iems-app/community/static/images/mine.png ***!
-  \****************************************************/
+/***/ 955:
+/*!***********************************************!*\
+  !*** D:/ems/community/static/images/mine.png ***!
+  \***********************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
 module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDYuMC1jMDA2IDc5LjE2NDc1MywgMjAyMS8wMi8xNS0xMTo1MjoxMyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIyLjMgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOkVGRUI0MTg1NEJGMTExRjA4NEI0RURGNTczNjQyODE5IiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOkVGRUI0MTg2NEJGMTExRjA4NEI0RURGNTczNjQyODE5Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6RUZFQjQxODM0QkYxMTFGMDg0QjRFREY1NzM2NDI4MTkiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6RUZFQjQxODQ0QkYxMTFGMDg0QjRFREY1NzM2NDI4MTkiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz4EkogbAAADLklEQVR42uyaa4iMYRTHZ9wyOwzFuq9bbrm2WXxBUsp9XT/gw5K2FCGkfHDJfiEJscklNrmVyKYmba1bSKFY93uxGuy27eQyFmv8T/ufmibTet/nnfd5dsypX89bO++Z+T+Xc55zWm80GvWkgzXzpIllhGSEpMhaJPvD+eAlJ/y3Bl05YSHwTdXhrKkTXVuRfmA3eAUi4DV4Cb6Ah2Ar6Gjy1pLZ3wUegVWgL/gO3oBK8AsMARspcj3wmiakC7gMVoPmoASMAX4KyuGz7ItSEADbwRmQldIzYsHkB5aBYeA5mA8q/vK5nxQrTAYnwVz+htkgqntFdlKEnIOxSUQk2kUwDoRBPrei1q01FBRy/88DVRbelbO0lM9bQHudQlbQxxFw38b7Z8E10A4s1ikkn+MhBR/FCb5cF9KD0aoG3FXwc4XjSF1CunF8pxhxPoE60JZbzHUhsXcjDkS+Op1R6wPHnoq/IUBkQj7rEPKW50O22GAFP+M5StT7rUOIfGmQzwUKfgo5BnWG3/1x+aSXjfflJjCT2+qwTiE3mdSy4kYrUe9Y3DUnpPuutYzXdMkDV5lfGrPh4AboA26BIhOu8dW8nkuNkQeesObonKTo2gdug95c0Rnghyn1yAswGpwDbVgFhnitl1UqZ6Uon1vO7y3mBFSbUo/ErIb1hRzgdWAS6E9iVivtALADPHal+aBg10krVoed+FzJFal3tYvigMm+f0pSbv9tg04+Px0cZ2kb4c3XCcJsF4nvKVY7LFa21ihwAOSmaFIDbBcJi8AdlsIVTq5IAQ9wLi+Lm5nUfJw5J/DRfxFr/zwmyzlOCVkIjjLy7AWDmCceeBoacE6Z+LoHNoEB4BTFnWYoVxIiOeAgZ2wDWOlQIdWY1XJ77QEtwQmQrSJEWqB+OtrmciCSALDW09DQy2bLyJaQEWAa+EqHOkyS5xqKWgI62BGygGMJ+KgxRci5KeN5ybcjZALHCwbku9KEstiSkIFxtbRue8Yxx46QWC+2ygAh7zl2V8kj9QYIiYV8X+bSaJh5m7qQcNzFMrO1moT9Sz1i0r8P+dNlRZJOvDfz/1qG2R8BBgCvvLgtCUW+1wAAAABJRU5ErkJggg=="
+
+/***/ }),
+
+/***/ 964:
+/*!****************************!*\
+  !*** D:/ems/api/energy.js ***!
+  \****************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _request = _interopRequireDefault(__webpack_require__(/*! @/utils/request */ 75));
+var _forSpringBoot = __webpack_require__(/*! @/utils/forSpringBoot */ 114);
+/**
+ * energy模块所用到的接口封装
+ */
+
+var energy = {
+  /**
+   * =====电表曲线=====
+   *  */
+  // 1.获取电表曲线数据（最大值，最小值，平均值）
+  findPowerByDeviceIdAndDate: function findPowerByDeviceIdAndDate(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findPowerByDeviceIdAndDate'),
+      method: 'GET',
+      params: params
+    });
+  },
+  //2.获取电梯A相电流数据
+  findAphaseCurrentByDeviceIdAndDate: function findAphaseCurrentByDeviceIdAndDate(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findAphaseCurrentByDeviceIdAndDate'),
+      method: 'GET',
+      params: params
+    });
+  },
+  /**
+   * =====发电分析=====
+   */
+  // 1.获取各个箱子的发电数据（预测发电量，实际发电量，相差）
+  findHomeCommunityPowerSumByRandomLevelIdsAndDataType: function findHomeCommunityPowerSumByRandomLevelIdsAndDataType(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findHomeCommunityPowerSumByRandomLevelIdsAndDataType'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  // 2.获取天气数据（辐照度和温度）
+  findWeatherStationByDays: function findWeatherStationByDays(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findWeatherStationByDays'),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 2.获取天气数据（辐照度和温度）用设备id查询
+  findWeatherStationByDaysByDeviceId: function findWeatherStationByDaysByDeviceId(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findWeatherStationByDaysByDeviceId'),
+      method: 'GET',
+      params: params
+    });
+  },
+  /**
+   * =====能源曲线数据=====
+   */
+  // 1.单个箱子数据
+  findHomeCommunityPowerSumByLevelIdAndDataType: function findHomeCommunityPowerSumByLevelIdAndDataType(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findHomeCommunityPowerSumByLevelIdAndDataType'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  // 2.获取多个层级（社区/分中心）的发、储、并、用的每分钟功率
+  findPowerByLevelIdsAndDate: function findPowerByLevelIdsAndDate(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findPowerByLevelIdsAndDate'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  /**
+   * 获取某日的总用电、人均用电、单位面积用电
+   */
+  findSubareaConsumptionByDay: function findSubareaConsumptionByDay(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findSubareaConsumptionByDay'),
+      method: 'GET',
+      params: params
+    });
+  },
+  /**
+   * 周报表每日统计数据
+   */
+  findStatisticsDayByLevelIdsAndDays: function findStatisticsDayByLevelIdsAndDays(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findStatisticsDayByLevelIdsAndDays'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  findAtrributes: function findAtrributes(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/atrributes'),
+      method: 'GET',
+      params: params
+    });
+  },
+  getAtrributesData: function getAtrributesData(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/atrributesData'),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 获取多个层级天的每小时层级统计数据 ------获取光伏未来社区、分中心的日报表数据
+  findDayStatisticsDetailsByLevelIdsAndDay: function findDayStatisticsDetailsByLevelIdsAndDay(ids, time) {
+    var data = {
+      areaLevelIds: ids,
+      date: time
+    };
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findDayStatisticsDetailsByLevelIdsAndDay'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  // 获取多个层级月的每天层级统计数据 ------获取光伏未来社区、分中心的月报表数据
+  findMonthStatisticsDetailsByLevelIdsAndMonth: function findMonthStatisticsDetailsByLevelIdsAndMonth(ids, time) {
+    var data = {
+      areaLevelIds: ids,
+      month: new Date(time).getMonth() + 1,
+      year: new Date(time).getFullYear()
+    };
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findMonthStatisticsDetailsByLevelIdsAndMonth'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  // 获取多个层级年的每月层级统计数据 ------获取光伏未来社区、分中心的年报表数据
+  findYearStatisticsDetailsByLevelIdsAndYear: function findYearStatisticsDetailsByLevelIdsAndYear(ids, time) {
+    var data = {
+      areaLevelIds: ids,
+      year: new Date(time).getFullYear()
+    };
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findYearStatisticsDetailsByLevelIdsAndYear'),
+      method: 'POST',
+      data: (0, _forSpringBoot.DATA)(data)
+    });
+  },
+  // 获取碳排因子
+  queryCarbonFactor: function queryCarbonFactor(areaId, year) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)("/carbon/factor/areaId/".concat(areaId, "/year/").concat(year)),
+      method: 'GET'
+    });
+  },
+  // 设备管理 => 负荷曲线
+  findConsumeQAndPower: function findConsumeQAndPower(dateType, date) {
+    var d = new Date(date);
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'date') {
+      requestURI = '/homeCommunity/findDayConsumeQAndPower';
+      params = {
+        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findMonthConsumeQAndPower';
+      params = {
+        year: d.getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'year') {
+      requestURI = '/homeCommunity/findYearConsumeQAndPower';
+      params = {
+        year: d.getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 设备管理 => 总设备信息
+  findAllDeviceInfo: function findAllDeviceInfo() {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findAllDeviceInfo'),
+      method: 'GET'
+    });
+  },
+  // 设备管理 => 所有设备
+  findDeviceEnergyInfo: function findDeviceEnergyInfo() {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findDeviceEnergyInfo'),
+      method: 'GET'
+    });
+  },
+  queryFlexibility: function queryFlexibility(params) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/queryFlexibility'),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 经济性分析 => 经济性分析信息概览
+  findEconomicalAnalysisInfo: function findEconomicalAnalysisInfo() {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findEconomicalAnalysisInfo'),
+      method: 'GET'
+    });
+  },
+  // 经济性分析 => 峰平谷电价及运行收益
+  findPeakFlatValleyElectrovalenceAndIncome: function findPeakFlatValleyElectrovalenceAndIncome(dateType, date) {
+    var d = new Date(date);
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'hour') {
+      requestURI = '/homeCommunity/findDayPeakFlatValleyElectrovalenceAndIncome';
+      params = {
+        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
+      };
+    } else if (dateType == 'day') {
+      requestURI = '/homeCommunity/findMonthPeakFlatValleyElectrovalenceAndIncome';
+      params = {
+        year: d.getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findYearPeakFlatValleyElectrovalenceAndIncomeonsumeQAndPower';
+      params = {
+        year: d.getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 经济性分析 => 碳排因子响应及电力响应收益
+  findCarbonEmissionFactorAndPowerFactorIncome: function findCarbonEmissionFactorAndPowerFactorIncome(dateType, date) {
+    var d = new Date(date);
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'hour') {
+      requestURI = '/homeCommunity/findDayCarbonEmissionFactorAndPowerFactorIncome';
+      params = {
+        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
+      };
+    } else if (dateType == 'day') {
+      requestURI = '/homeCommunity/findMonthCarbonEmissionFactorAndPowerFactorIncomethConsumeQAndPower';
+      params = {
+        year: d.getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findYearCarbonEmissionFactorAndPowerFactorIncome';
+      params = {
+        year: d.getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 设备管理 => 获取所有设备列表
+  findDeviceInfoList: function findDeviceInfoList() {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)('/homeCommunity/findDeviceInfoList'),
+      method: 'GET'
+    });
+  },
+  // 报警分析 => 告警信息统计按日月年查询
+  findAlarmInfoCount: function findAlarmInfoCount(dateType, date) {
+    var d = new Date(date);
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'date') {
+      requestURI = '/homeCommunity/findDayAlarmInfoCount';
+      params = {
+        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findMonthAlarmInfoCount';
+      params = {
+        year: d.getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'year') {
+      requestURI = '/homeCommunity/findYearAlarmInfoCount';
+      params = {
+        year: d.getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 报警分析 => 告警信息统计按日月年查询
+  findAreaAlarmInfoCount: function findAreaAlarmInfoCount(dateType, date) {
+    var d = new Date(date);
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'date') {
+      requestURI = '/homeCommunity/findDayAreaAlarmInfoCount';
+      params = {
+        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findMonthAreaAlarmInfoCount';
+      params = {
+        year: d.getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'year') {
+      requestURI = '/homeCommunity/findYearAreaAlarmInfoCount';
+      params = {
+        year: d.getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 报警分析 => 告警信息统计按日月年查询
+  findDeviceAlarmInfoCount: function findDeviceAlarmInfoCount(dateType, date) {
+    var d = new Date(date);
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'date') {
+      requestURI = '/homeCommunity/findDayDeviceAlarmInfoCount';
+      params = {
+        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findMonthDeviceAlarmInfoCount';
+      params = {
+        year: d.getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'year') {
+      requestURI = '/homeCommunity/findYearDeviceAlarmInfoCount';
+      params = {
+        year: d.getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 报警分析 => 告警信息统计按日月年查询
+  findSeverityLevelAlarmInfoCount: function findSeverityLevelAlarmInfoCount(dateType, date) {
+    var d = new Date(date);
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'date') {
+      requestURI = '/homeCommunity/findDaySeverityLevelAlarmInfoCount';
+      params = {
+        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0'))
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findMonthSeverityLevelAlarmInfoCount';
+      params = {
+        year: d.getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0')
+      };
+    } else if (dateType == 'year') {
+      requestURI = '/homeCommunity/findYearSeverityLevelAlarmInfoCount';
+      params = {
+        year: d.getFullYear()
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 报警分析 => 以列表的形式查询所有的告警信息，每个告警都有级别（紧急、次要、提示）
+  findAlarmInfoList: function findAlarmInfoList(dateType, date, deviceType, area) {
+    var d = new Date(date);
+    var requestURI = '';
+    var params = {};
+    if (dateType == 'date') {
+      requestURI = '/homeCommunity/findDayAlarmInfoList';
+      params = {
+        day: "".concat(d.getFullYear(), "-").concat(String(d.getMonth() + 1).padStart(2, '0'), "-").concat(String(d.getDate()).padStart(2, '0')),
+        area: area,
+        deviceType: deviceType
+      };
+    } else if (dateType == 'month') {
+      requestURI = '/homeCommunity/findMonthAlarmInfoList';
+      params = {
+        year: d.getFullYear(),
+        month: String(d.getMonth() + 1).padStart(2, '0'),
+        area: area,
+        deviceType: deviceType
+      };
+    } else if (dateType == 'year') {
+      requestURI = '/homeCommunity/findYearAlarmInfoList';
+      params = {
+        year: d.getFullYear(),
+        area: area,
+        deviceType: deviceType
+      };
+    }
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)(requestURI),
+      method: 'GET',
+      params: params
+    });
+  },
+  // 查询设备日功率曲线
+  queryStoragePowerCurve: function queryStoragePowerCurve(data) {
+    return (0, _request.default)({
+      url: (0, _forSpringBoot.URL)("/homeCommunity/queryStoragePowerCurve"),
+      method: 'post',
+      data: data
+    });
+  }
+};
+var _default = energy;
+exports.default = _default;
 
 /***/ })
 

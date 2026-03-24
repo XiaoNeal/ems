@@ -1,7 +1,13 @@
 {
   "pages": [
     "pages/login/login",
-    "pages/system-selector/system-selector"
+    "pages/system-selector/system-selector",
+    "pages/alarm/alarm",
+    "pages/operation-record/operation-record",
+    "pages/strategy-config/strategy-config",
+    "pages/monitor-data/monitor-data",
+    "pages/quick-control/quick-control",
+    "pages/settings/settings"
   ],
   "subPackages": [
     {
@@ -45,7 +51,8 @@
         "analysis",
         "report",
         "profile",
-        "charging-detail"
+        "charging-detail",
+        "system"
       ]
     },
     {

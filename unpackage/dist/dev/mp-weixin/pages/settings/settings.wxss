@@ -1,0 +1,106 @@
+@charset "UTF-8";
+/* 水平间距 */
+/* 水平间距 */
+.container.data-v-57211de6 {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #EFF4FB;
+}
+.content.data-v-57211de6 {
+  padding: 20rpx;
+  flex: 1;
+}
+.tab-bar.data-v-57211de6 {
+  display: flex;
+  background-color: #fff;
+  border-radius: 10rpx;
+  padding: 10rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
+}
+.tab-item.data-v-57211de6 {
+  flex: 1;
+  padding: 15rpx;
+  text-align: center;
+  font-size: 16rpx;
+  color: #666;
+  border-radius: 8rpx;
+}
+.tab-item.active.data-v-57211de6 {
+  background-color: #1890ff;
+  color: #fff;
+}
+.control-section.data-v-57211de6 {
+  background-color: #fff;
+  border-radius: 10rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
+}
+.section-title.data-v-57211de6 {
+  font-size: 18rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+.control-buttons.data-v-57211de6 {
+  display: flex;
+  gap: 15rpx;
+  margin-bottom: 15rpx;
+}
+.control-btn.data-v-57211de6 {
+  flex: 1;
+  padding: 15rpx;
+  text-align: center;
+  border-radius: 8rpx;
+  font-size: 16rpx;
+  background-color: #f0f0f0;
+  color: #333;
+}
+.control-btn.active.data-v-57211de6 {
+  background-color: #1890ff;
+  color: #fff;
+}
+.action-buttons.data-v-57211de6 {
+  margin-bottom: 15rpx;
+}
+.action-btn.data-v-57211de6 {
+  width: 100%;
+  padding: 15rpx;
+  text-align: center;
+  border-radius: 8rpx;
+  font-size: 16rpx;
+  background-color: #1890ff;
+  color: #fff;
+}
+.param-item.data-v-57211de6 {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15rpx;
+}
+.param-label.data-v-57211de6 {
+  font-size: 16rpx;
+  color: #333;
+  width: 300rpx;
+}
+.param-input.data-v-57211de6 {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background-color: #f9f9f9;
+  border-radius: 8rpx;
+  padding: 0 15rpx;
+}
+.param-input input.data-v-57211de6 {
+  flex: 1;
+  padding: 15rpx 0;
+  font-size: 16rpx;
+  color: #333;
+}
+.param-unit.data-v-57211de6 {
+  margin-left: 10rpx;
+  font-size: 16rpx;
+  color: #999;
+}
+

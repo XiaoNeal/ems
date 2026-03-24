@@ -128,11 +128,24 @@ const request = (options) => {
 
           // 解密处理
           try {
+            // 检查data是否存在且不为空
+            if (!data || typeof data !== 'string') {
+              console.error('数据为空或格式错误:', data);
+              reject(new Error('数据为空或格式错误'));
+              return;
+            }
             result = JSON.parse(decrypt(data));
             resolve(result);
           } catch (e) {
             console.error('数据解密失败:', e);
-            reject(new Error('数据解析失败'));
+            // 尝试直接解析data，可能是未加密的数据
+            try {
+              result = JSON.parse(data);
+              resolve(result);
+            } catch (parseError) {
+              console.error('直接解析也失败:', parseError);
+              reject(new Error('数据解析失败'));
+            }
           }
         },
         fail: (error) => {

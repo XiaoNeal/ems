@@ -136,7 +136,7 @@
     "quickapp" : {},
     /* 快应用特有相关 */
     "mp-weixin" : {
-        "appid" : "wx29cf05708e425974",
+        "appid" : "wxea9c89df2499f8a0",
         "navigationStyle" : "custom",
         "__usePrivacyCheck__" : true,
         "setting" : {

@@ -1,6 +1,10 @@
 import request from '@/utils/request'
 const getNyzUrl = (url) => {
-    return  `/shequApi/shangHaiZYNYL/` + url
+    // 确保不会出现双斜杠
+    const baseUrl = `/shequApi/shangHaiZYNYL`;
+    // 如果url以斜杠开头，去掉它
+    const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+    return `${baseUrl}/${cleanUrl}`;
 
     // if (process.env.NODE_ENV === "development") {
     //     return location.origin + `/nyzkoa` + url;

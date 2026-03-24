@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "设置参数",
+  "usingComponents": {
+    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar"
+  }
+}

@@ -150,6 +150,27 @@ export class RealtimeDataProviderService {
 		socket.emit('controlCode', sendMsg);
 	}
 
+	// 添加emit方法
+	emit(event, data) {
+		if (socket) {
+			socket.emit(event, data);
+		}
+	}
+
+	// 添加on方法
+	on(event, callback) {
+		if (socket) {
+			socket.on(event, callback);
+		}
+	}
+
+	// 添加off方法
+	off(event) {
+		if (socket) {
+			socket.off(event);
+		}
+	}
+
 	static closeSocket() {
 		// socket.colse()
 		if(socket){
