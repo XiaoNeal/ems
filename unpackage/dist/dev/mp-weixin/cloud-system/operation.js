@@ -80,7 +80,7 @@ var components
 try {
   components = {
     uniSegmentedControl: function () {
-      return __webpack_require__.e(/*! import() | uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control */ "uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control").then(__webpack_require__.bind(null, /*! @/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue */ 1215))
+      return __webpack_require__.e(/*! import() | uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control */ "uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control").then(__webpack_require__.bind(null, /*! @/uni_modules/uni-segmented-control/components/uni-segmented-control/uni-segmented-control.vue */ 1211))
     },
   }
 } catch (e) {
@@ -145,32 +145,32 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 var Photovoltaic = function Photovoltaic() {
   Promise.all(/*! require.ensure | cloud-system/components/Photovoltaic */[__webpack_require__.e("common/vendor"), __webpack_require__.e("cloud-system/common/vendor"), __webpack_require__.e("cloud-system/components/Photovoltaic")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/Photovoltaic.vue */ 1222));
+    return resolve(__webpack_require__(/*! ./components/Photovoltaic.vue */ 1218));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var EnergyStorage = function EnergyStorage() {
   Promise.all(/*! require.ensure | cloud-system/components/EnergyStorage */[__webpack_require__.e("common/vendor"), __webpack_require__.e("cloud-system/common/vendor"), __webpack_require__.e("cloud-system/components/EnergyStorage")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/EnergyStorage.vue */ 1230));
+    return resolve(__webpack_require__(/*! ./components/EnergyStorage.vue */ 1226));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var PowerGrid = function PowerGrid() {
   Promise.all(/*! require.ensure | cloud-system/components/PowerGrid */[__webpack_require__.e("common/vendor"), __webpack_require__.e("cloud-system/common/vendor"), __webpack_require__.e("cloud-system/components/PowerGrid")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/PowerGrid.vue */ 1237));
+    return resolve(__webpack_require__(/*! ./components/PowerGrid.vue */ 1233));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var Load = function Load() {
   Promise.all(/*! require.ensure | cloud-system/components/Load */[__webpack_require__.e("common/vendor"), __webpack_require__.e("cloud-system/common/vendor"), __webpack_require__.e("cloud-system/components/Load")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/Load.vue */ 1246));
+    return resolve(__webpack_require__(/*! ./components/Load.vue */ 1242));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var Control = function Control() {
   Promise.all(/*! require.ensure | cloud-system/components/Control */[__webpack_require__.e("common/vendor"), __webpack_require__.e("cloud-system/common/vendor"), __webpack_require__.e("cloud-system/components/Control")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/Control.vue */ 1255));
+    return resolve(__webpack_require__(/*! ./components/Control.vue */ 1251));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var FireSafety = function FireSafety() {
   Promise.all(/*! require.ensure | cloud-system/components/FireSafety */[__webpack_require__.e("common/vendor"), __webpack_require__.e("cloud-system/components/FireSafety")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/FireSafety.vue */ 1264));
+    return resolve(__webpack_require__(/*! ./components/FireSafety.vue */ 1260));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var _default = {

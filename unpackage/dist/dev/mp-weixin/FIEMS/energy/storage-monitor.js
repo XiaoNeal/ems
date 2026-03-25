@@ -101,16 +101,16 @@ var components
 try {
   components = {
     uNavbar: function () {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-navbar/u-navbar */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-navbar/u-navbar")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-navbar/u-navbar.vue */ 1189))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-navbar/u-navbar */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-navbar/u-navbar")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-navbar/u-navbar.vue */ 1185))
     },
     uLine: function () {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-line/u-line */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-line/u-line")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-line/u-line.vue */ 1313))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-line/u-line */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-line/u-line")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-line/u-line.vue */ 1309))
     },
     biaofunDatetimePicker: function () {
-      return Promise.all(/*! import() | components/biaofun-datetime-picker/biaofun-datetime-picker */[__webpack_require__.e("common/vendor"), __webpack_require__.e("components/biaofun-datetime-picker/biaofun-datetime-picker")]).then(__webpack_require__.bind(null, /*! @/components/biaofun-datetime-picker/biaofun-datetime-picker.vue */ 1371))
+      return Promise.all(/*! import() | components/biaofun-datetime-picker/biaofun-datetime-picker */[__webpack_require__.e("common/vendor"), __webpack_require__.e("components/biaofun-datetime-picker/biaofun-datetime-picker")]).then(__webpack_require__.bind(null, /*! @/components/biaofun-datetime-picker/biaofun-datetime-picker.vue */ 1367))
     },
     progressBar: function () {
-      return __webpack_require__.e(/*! import() | components/progress-bar/progress-bar */ "components/progress-bar/progress-bar").then(__webpack_require__.bind(null, /*! @/components/progress-bar/progress-bar.vue */ 1356))
+      return __webpack_require__.e(/*! import() | components/progress-bar/progress-bar */ "components/progress-bar/progress-bar").then(__webpack_require__.bind(null, /*! @/components/progress-bar/progress-bar.vue */ 1352))
     },
   }
 } catch (e) {
