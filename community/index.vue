@@ -69,12 +69,12 @@ export default {
       inactiveColor: '#8a8a8a',
       activeIcons: {
         0: require('./static/images/monitor-active.png'),
-        1: require('./static/images/mine-active.png'),
+        1: require('./static/images/系统-pre.png'),
         2: require('./static/images/mine-active.png')
       },
       inactiveIcons: {
         0: require('./static/images/monitor.png'),
-        1: require('./static/images/mine.png'),
+        1: require('./static/images/系统-nor.png'),
         2: require('./static/images/mine.png')
       },
       scrollPositions: { 0: 0, 1: 0, 2: 0 },

@@ -1,149 +1,96 @@
 <template>
   <view class="pv-monitor container">
-
-
+    <!-- 数据卡片区域 -->
     <view class="stats-box">
-      <view class="stat-item">
-
-        <view class="stat-content">
-          <text class="stat-label">日最高发电量</text>
-          <view>
-            <text class="stat-value">{{ maxGeneration || "--" }}</text>
-            <text class="stat-unit">kWh</text>
-          </view>
-
-
-        </view>
-        <view class="vertical-divider"></view>
-        <view class="stat-content">
-          <text class="stat-label">出现在</text>
-          <text class="stat-unit" style="color: #4488FB;font-weight: bold;">{{ maxGenerationTime || "--" }}</text>
-        </view>
-
-      </view>
-      <view class="horizontal-divider"></view>
-      <view class="stat-item">
-        <view class="stat-content">
-          <text class="stat-label">历史最高发电功率</text>
-          <view>
-            <text class="stat-value">{{ historyGenerationPower || "--" }}</text>
-            <text class="stat-unit">kW</text>
-          </view>
-
-        </view>
-        <view class="vertical-divider"></view>
-        <view class="stat-content">
-          <text class="stat-label">出现在</text>
-          <text class="stat-unit" style="color: #4488FB;font-weight: bold;">{{ historyGenerationPowerTime || "--"
-            }}</text>
-        </view>
-
-
-      </view>
-      <view class="horizontal-divider"></view>
-      <view class="stat-item">
-        <view class="stat-content">
-          <text class="stat-label">累计发电量</text>
-          <view>
-            <text class="stat-value">{{ totalGeneration || "--" }}</text>
-            <text class="stat-unit">kWh</text>
-          </view>
-
-        </view>
-        <view class="vertical-divider"></view>
-        <view class="stat-content">
-          <text class="stat-label">累计发电时长 </text>
-          <view>
-            <text class="stat-value" v-for="(number, index) in runningDates" :key="index"> {{ number }}</text>
-            <text class="stat-unit">天</text>
-          </view>
-
-        </view>
-
-      </view>
-      <view class="horizontal-divider"></view>
-      <view class="stat-item">
-        <view class="stat-content">
+      <view class="stat-row">
+        <view class="stat-item">
           <text class="stat-label">当日发电量</text>
-          <view>
-            <text class="stat-value">{{ dailyGeneration }}</text>
-            <text class="stat-unit">kWh</text>
-          </view>
-
+          <text class="stat-value">{{ dailyGeneration }}<text class="stat-unit">kWh</text></text>
         </view>
-        <view class="vertical-divider"></view>
-        <view class="stat-content">
-          <text class="stat-label">当日发电收益 </text>
-          <view>
-            <text class="stat-value">{{ incomeValue }}</text>
-            <text class="stat-unit">元</text>
-          </view>
-
+        <view class="stat-item">
+          <text class="stat-label">累计发电量</text>
+          <text class="stat-value">{{ totalGeneration }}<text class="stat-unit">kWh</text></text>
         </view>
-
+      </view>
+      <view class="stat-row">
+        <view class="stat-item">
+          <text class="stat-label">当日发电收益</text>
+          <text class="stat-value">{{ incomeValue }}<text class="stat-unit">元</text></text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-label">累计发电时长</text>
+          <text class="stat-value">{{ runningDays }}<text class="stat-unit">天</text></text>
+        </view>
+      </view>
+      <view class="stat-row">
+        <view class="stat-item">
+          <text class="stat-label">日最高发电量</text>
+          <text class="stat-value">{{ maxGeneration }}<text class="stat-unit">kWh</text></text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-label">历史最高发电功率</text>
+          <text class="stat-value">{{ historyGenerationPower }}<text class="stat-unit">kW</text></text>
+        </view>
+      </view>
+      <view class="stat-row">
+        <view class="stat-item">
+          <text class="stat-label">出现在</text>
+          <text class="stat-value">{{ maxGenerationTime }}</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-label">出现在</text>
+          <text class="stat-value">{{ historyGenerationPowerTime }}</text>
+        </view>
       </view>
     </view>
 
-
-
-    <!-- 图表区域 -->
-    <view class="chart-section">
-      <!-- 发电功率曲线 -->
-      <view class="chart-card">
-        <view class="chart-header">
-          <text class="chart-title">发电功率曲线</text>
-
-          <dy-date timeType="day" @getData="onPowerDateChange" v-model="powerDate" class="custom-picker date-picker" />
-        </view>
-        <view class="chart-body">
-          <qiun-data-charts type="area" :chartData="providePowerData" :opts="providePowerOptions" :ontouch="true"
-            :canvas2d="canvas2d" class="power-chart" />
+    <!-- 日期选择器：使用dy-date组件 -->
+    <view class="date-selector">
+      <view class="date-tabs">
+        <view
+          v-for="(tab, i) in ['日', '月', '年']"
+          :key="i"
+          :class="['date-tab', { active: activeDateTab === tab }]"
+          @click="switchDateTab(tab)"
+        >
+          {{ tab }}
         </view>
       </view>
 
-      <!-- 发电量统计 -->
+      <!-- 使用dy-date组件 -->
+      <dy-date v-if="timeTypeIndex === 0" timeType="day" @getData="handleDatePicker" v-model="selectedDate"
+        class="custom-picker date-picker" />
+      <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker" v-model="selectedDate"
+        class="custom-picker date-picker" />
+      <dy-date v-else timeType="year" @getData="handleDatePicker" v-model="selectedDate"
+        class="custom-picker date-picker" />
+    </view>
+
+    <!-- 图表区域 -->
+    <view class="chart-section">
+      <view class="chart-card">
+        <view class="chart-header">
+          <text class="chart-title">发电功率曲线</text>
+          <view class="chart-controls">
+            <view class="chart-tab">今日</view>
+          </view>
+        </view>
+        <view class="chart-body">
+          <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" 
+            :ontouch="true" :canvas2d="canvas2d" class="power-chart" />
+        </view>
+      </view>
+
       <view class="chart-card">
         <view class="chart-header">
           <text class="chart-title">发电量统计</text>
-
-        </view>
-        <view class="chart-tab-bar">
-          <view class="chart-tabs">
-            <view v-for="(tab, i) in ['日', '月', '年']" :key="i"
-              :class="['chart-tab-item', { active: activeChartTab === tab }]" @click="handleDateTypeChange(tab)" :style="{
-                backgroundColor: activeChartTab === tab ? '#4488FB' : 'white',
-                color: activeChartTab === tab ? 'white' : '#4488FB'
-              }">
-              {{ tab }}
-            </view>
+          <view class="chart-controls">
+            <view class="chart-tab">全部</view>
           </view>
-
-          <dy-date v-if="timeTypeIndex === 0" timeType="day" @getData="handleDatePicker" v-model="selectedDate"
-            class="custom-picker date-picker" />
-          <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker" v-model="selectedDate"
-            class="custom-picker date-picker" />
-          <dy-date v-else timeType="year" @getData="handleDatePicker" v-model="selectedDate"
-            class="custom-picker date-picker" />
         </view>
-
-
-
-
-
-
-        <!-- <view>
-          <uni-segmented-control :current="dateTypeIndex" :values="['日', '月', '年']" @clickItem="handleDateTypeChange"
-            class="segment-control" />
-          <dy-date v-if="timeTypeIndex === 0" timeType="day" @getData="handleDatePicker" v-model="selectedDate"
-            class="custom-picker date-picker" />
-          <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker" v-model="selectedDate"
-            class="custom-picker date-picker" />
-          <dy-date v-else timeType="year" @getData="handleDatePicker" v-model="selectedDate"
-            class="custom-picker date-picker" />
-        </view> -->
         <view class="chart-body">
-          <qiun-data-charts type="column" :chartData="generationData" :opts="generationOptions" :ontouch="true"
-            :canvas2d="canvas2d" class="generation-chart" />
+          <qiun-data-charts type="column" :chartData="generationData" :opts="generationOptions" 
+            :ontouch="true" :canvas2d="canvas2d" class="generation-chart" />
         </view>
       </view>
     </view>
@@ -151,704 +98,203 @@
 </template>
 
 <script>
-// import { nyzDeviceList } from '@/config/devices'
-import { nyzAreaLevelId, nyzDeviceList } from '@/service/config/devices'
-import upgrade from '@/api/upgrade_new'
-import nyz_new from '@/api/nyz_new'
-// import energy from '@/api/energy_new'
-import energy_new from '@/api/energy_new'
 import dyDate from '@/components/dy-Date/dy-Date.vue'; // 导入日期选择器组件
-import { mapGetters } from 'vuex';
 export default {
   components: {
     dyDate, // 注册日期选择器组件
   },
   name: "PV-Management",
-  data: function () {
+  data() {
     return {
+      canvas2d: this.$Config?.ISCANVAS2D ?? false,
+      // 假数据
+      dailyGeneration: "157",
+      totalGeneration: "157",
+      incomeValue: "19",
+      runningDays: "254",
+      maxGeneration: "157",
+      historyGenerationPower: "157",
+      maxGenerationTime: "2025-07-21 12:00",
+      historyGenerationPowerTime: "2025-07-21 12:00",
 
-      activeChartTab: '日',
-      canvas2d: this.$Config.ISCANVAS2D,
-      current: "PV-Management",
-      maxGeneration: "--",
-      maxGenerationTime: "--",
-      historyGenerationPower: "",
-      historyGenerationPowerTime: "",
-      totalGeneration: "",
-      totalGenerationTime: "",
-      type: "hour",
-      dayEnergyData: {
-        totalProvideQ: 0,
-        totalStorageForwardQ: 0,
-        totalStorageReverseQ: 0,
-        totalGridForwardQ: 0,
-        totalGridReverseQ: 0,
-        totalConsumeElectricityQ: 0,
-      },
-      powerDate: new Date().toISOString().split('T')[0],
-
-      generationOptions: {
-        color: ["#6DE188"],
-        padding: [15, 15, 0, 5],
-        dataLabel: false,
-        enableScroll: false,
-        xAxis: {
-          labelCount: 7,
-          disableGrid: true,
-          format: (val) => val.split('-')[1] + '月' + val.split('-')[2] + '日'
-        },
-        yAxis: {
-          disabled: false,
-          disableGrid: false,
-          gridType: "dash",
-          dashLength: 4,
-          gridColor: "#F0F0F0",
-          showTitle: true,
-          data: [{
-            position: "left",
-            title: "单位:kWh"
-          }],
-          format: (val) => val.toFixed(1) + 'kWh'
-        },
-        extra: {
-          column: {
-            type: "group",
-            width: 10,
-            activeBgColor: "#1890FF",
-            activeBgOpacity: 0.3,
-            linearType: "custom"
-          }
-        }
-      },
-
-
-      providePowerOptions: {
-        color: ["#6DE188", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
-        padding: [15, 18, 0, 15],
-        dataLabel: false,
-        dataPointShape: false,
-        enableScroll: false,
-        legend: {},
-        xAxis: {
-          labelCount: 7,
-          disableGrid: true
-        },
-        yAxis: {
-          gridType: "dash",
-          dashLength: 2,
-          showTitle: true,
-          data: [{
-            position: "left",
-            title: "单位:kW"
-          }],
-        },
-        extra: {
-          area: {
-            type: "curve",
-            width: 2,
-            activeType: "hollow",
-            linearType: "custom",
-            gradient: true
-          }
-        }
-      },
-      generationData: {
-
-      },
-      providePowerData: {
-
-      },
-
-      dateTypeIndex: 0, // 当前日期类型索引 0:日 1:月 2:年
+      // 日期选择核心
+      activeDateTab: "日",
       timeTypeIndex: 0,
       selectedDate: new Date().toISOString().split('T')[0],
-
-      incomeValue: '--',
-      dailyGeneration: '--',
-    }
-  },
-  computed: {
-    runningDates() {
-      const startDate = "2021-01-01";
-      const diffDays = Math.floor((Date.now() - new Date(startDate)) / (1000 * 60 * 60 * 24));
-      return diffDays.toString().padStart(4, '0').split('');
-    },
-    ...mapGetters([
-      'currentSystem'
-    ]),
-    nyzDeviceList() {
-      return this.currentSystem ? this.currentSystem.ammeterList : [];
-    },
-  },
-  mounted() {
-    this.findPhotovoltaicEnergyInfo();
-    this.getNyzSolarData()
-    this.getProvideCurve()
+    };
   },
 
   methods: {
-    handleDateTypeChange(e) {
-
-      this.activeChartTab = e;
-      if (e === '日') {
-        this.dateTypeIndex = 0;
+    // 切换日/月/年标签
+    switchDateTab(tab) {
+      this.activeDateTab = tab;
+      if (tab === '日') {
         this.timeTypeIndex = 0;
-      } else if (e === '月') {
-        this.dateTypeIndex = 1;
+      } else if (tab === '月') {
         this.timeTypeIndex = 1;
-      } else if (e === '年') {
-        this.dateTypeIndex = 2;
+      } else if (tab === '年') {
         this.timeTypeIndex = 2;
       }
-      // this.dateTypeIndex = e.currentIndex;
-      // this.timeTypeIndex = e.currentIndex;
-      const currentDate = new Date();
-      const year = currentDate.getFullYear();
-      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-
-      this.selectedDate = {
-        0: currentDate.toISOString().split('T')[0],
-        1: `${year}-${month}`,
-        2: `${year}`
-      }[this.timeTypeIndex];
-
-      this.handleDatePicker(this.selectedDate);
     },
 
-    switchTab(value) {
-      this.dateTypeIndex = value;
-      this.timeTypeIndex = value;
-      const currentDate = new Date();
-      const year = currentDate.getFullYear();
-      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-
-      this.selectedDate = {
-
-        0: currentDate.toISOString().split('T')[0],
-        1: `${year}-${month}`,
-        2: `${year}`
-      }[this.timeTypeIndex];
-
-      this.handleDatePicker(this.selectedDate);
-    },
-
+    // 处理日期选择
     handleDatePicker(value) {
-      const dateMap = {
-        0: { dateType: 'hour', dateValue: value },
-        1: { dateType: 'day', dateValue: value },
-        2: { dateType: 'month', dateValue: value }
-      };
-      this.type = dateMap[this.dateTypeIndex].dateType;
-      this.getProvideCurve()
-    },
+      this.selectedDate = value;
+      console.log("选中日期：", value, " 类型：", this.activeDateTab);
+      // 这里调用接口刷新图表数据
+    }
+  },
 
-    findPhotovoltaicEnergyInfo() {
-      let that = this;
-      upgrade.findPhotovoltaicEnergyInfo({}).then((result) => {
-        if (result && result.data) {
-          that.maxGeneration = result.data.dayMaxProvideQ;
-          that.maxGenerationTime = result.data.dayMaxProvideQDatetime;
-          that.historyGenerationPower = result.data.maxProvidePower;
-          that.historyGenerationPowerTime = result.data.maxProvidePowerDatetime;
-          that.totalGeneration = result.data.totalProvideQ;
-          that.totalProvideTime = result.data.totalProvideTime;
-        }
-      })
-    },
-
-    onPowerDateChange() {
-      this.getNyzSolarData()
-    },
-
-    getNyzSolarData() {
-      const sqSolarIds = [1052928, 1049269, 1049278, 1053066]
-      const nyzSolarIds = this.nyzDeviceList.filter(item => item.type == 2).map(item => item.deviceId)
-
-      Promise.all([
-        energy_new.queryStoragePowerCurve({
-          deviceIdList: sqSolarIds,
-          date: this.powerDate
-        }).catch(err => {
-          console.error(err)
-        }),
-        energy_new.queryStoragePowerCurve({
-          deviceIdList: nyzSolarIds,
-          date: this.powerDate
-        }).catch(err => {
-          console.error(err)
-        })
-      ]).then(([sqResult, nyzResult]) => {
-        let timeArray = []
-        let dataArray = []
-        for (let h = 0; h < 24; h++) {
-          for (let m = 0; m < 60; m++) {
-            let formattedTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
-            timeArray.push(formattedTime)
-
-            let key = `${this.powerDate} ${formattedTime}:00`
-            if (nyzResult.data.hasOwnProperty(key) || sqResult.data.hasOwnProperty(key)) {
-              dataArray.push(((Math.abs(nyzResult.data[key]) || 0) + ((parseFloat(sqResult.data[key]) / 1000) || 0)))
-            } else {
-              dataArray.push(0)
-            }
-          }
-        }
-        this.providePowerData = {
-          categories: timeArray,
-          series: [{
-            data: dataArray,
-            name: '发电功率',
-          }]
-        }
-      }).catch(err => {
-        console.error(err)
-      }).finally(() => {
-      })
-    },
-
-    getProvideCurve() {
-      this.provideQData = []
-      this.provideQxAxisData = []
-
-      if (this.type == 'hour') {
-        upgrade.findDayProvideQAndPower({
-          day: this.selectedDate
-        }).then(result => {
-          let xAxisData = Array.from([...Array(24).keys()], (v) => v)
-          let chartData = Array.from([...Array(24).keys()], (v) => 0)
-          result.data.provideQMap.forEach((item) => {
-            chartData[item.hour] = item.provideQ
-          })
-          const totallyProvideQ = result.data.provideQMap.reduce((acc, cur) => {
-            return acc + cur.provideQ
-          }, 0);
-          let solarIds = this.nyzDeviceList.filter(item => item.type == 2).map(item => item.deviceId)
-          nyz_new.findEveryHourByDeviceIds({
-            deviceIds: solarIds,
-            day: this.selectedDate
-          }).then(result => {
-            result.data.map(item => {
-              chartData[item.hour] = parseFloat(chartData[item.hour] + item.total_provide_q)
-            })
-            const totallyProvideQ1 = result.data.reduce((acc, cur) => {
-              return acc + cur.total_provide_q
-            }, 0);
-            this.generationData = {
-              categories: xAxisData,
-              series: [{
-                name: '发电量',
-                data: chartData
-              }]
-            }
-            this.dailyGeneration = parseFloat(totallyProvideQ + totallyProvideQ1).toFixed(2)
-            this.incomeValue = (parseFloat(totallyProvideQ + totallyProvideQ1) * 0.85).toFixed(2)
-          })
-        }).catch(err => {
-          this.generationData = {
-            categories: [],
-            series: [{
-              name: '发电量',
-              data: []
-            }]
-          }
-        }).finally(() => {
-        })
-      } else if (this.type == 'day') {
-        upgrade.findMonthProvideQAndPower({
-          month: String(new Date(this.selectedDate).getMonth() + 1).padStart(2, '0'),
-          year: new Date(this.selectedDate).getFullYear(),
-        }).then(result => {
-          let today = new Date(this.selectedDate)
-          let days = new Date(today.getFullYear(), today.getMonth() + 2, 0).getDate()
-          let xAxisData = Array.from([...Array(days).keys()], (v) => v + 1)
-          let chartData = Array.from([...Array(days).keys()], (v) => "0")
-          result.data.provideQMap.forEach((item) => {
-            let dayIndex = String(new Date(item.day).getDate()).padStart(2, '0')
-            chartData[dayIndex - 1] = item.provideQ
-          })
-
-          let solarIds = this.nyzDeviceList.filter(item => item.type == 2).map(item => item.deviceId)
-          nyz_new.findEveryDayByDeviceIds({
-            deviceIds: solarIds,
-            year: new Date(this.selectedDate).getFullYear(),
-            month: String(new Date(this.selectedDate).getMonth() + 1).padStart(2, '0')
-          }).then(result => {
-            result.data.map(item => {
-              let dayIndex = String(new Date(item.date).getDate()).padStart(2, '0')
-              chartData[dayIndex - 1] = parseFloat(chartData[dayIndex - 1] + item.total_provide_q)
-            })
-            this.generationOptions.extra.column.width = 5;
-            this.generationData = {
-              categories: xAxisData,
-              series: [{
-                name: '发电量',
-                data: chartData
-              }]
-            }
-          })
-        }).catch(err => {
-          this.generationData = {
-            categories: [],
-            series: [{
-              name: '发电量',
-              data: []
-            }]
-          }
-        }).finally(() => {
-        })
-      } else if (this.type == 'month') {
-        upgrade.findYearProvideQAndPower({
-          year: new Date(this.selectedDate).getFullYear(),
-        }).then(result => {
-          let xAxisData = Array.from([...Array(12).keys()], (v) => v + 1)
-          let chartData = Array.from([...Array(12).keys()], (v) => "--")
-          result.data.provideQMap.forEach((item) => {
-            chartData[item.month - 1] = item.provideQ
-          })
-
-          let solarIds = this.nyzDeviceList.filter(item => item.type == 2).map(item => item.deviceId)
-          nyz_new.findEveryMonthByDeviceIds({
-            deviceIds: solarIds,
-            year: new Date(this.selectedDate).getFullYear()
-          }).then(result => {
-            result.data.map(item => {
-              chartData[item.month - 1] = parseFloat(chartData[item.month - 1] + item.total_provide_q)
-            })
-            this.generationData = {
-              categories: xAxisData,
-              series: [{
-                name: '发电量',
-                data: chartData
-              }]
-            }
-          }).finally(() => {
-          })
-        }).catch(err => {
-          this.generationData = {
-            categories: [],
-            series: [{
-              name: '发电量',
-              data: []
-            }]
-          }
-        }).finally(() => {
-        })
+  computed: {
+    powerCurveData() {
+      return {
+        categories: ['00:00','02:00','04:00','06:00','08:00','10:00','12:00','14:00','16:00','18:00','20:00','22:00'],
+        series: [{ data: [0,0,0,20,60,100,157,140,110,50,10,0], name: '发电功率' }]
       }
     },
-    findDayProvideQAndPower() {
-      this.provideQData = [];
-      this.provideQxAxisData = [];
-      let providePowerData = [];
-      this.providePowerxAxisData = [];
-      upgrade.findDayProvideQAndPower({
-        day: this.selectedDate
-      }).then((result) => {
-        if (result && result.data) {
-          result.data.provideQMap.forEach((item) => {
-            this.provideQData.push(item.provideQ);
-            this.provideQxAxisData.push(item.hour)
-          });
-          result.data.providePowerMap.forEach((item) => {
-            providePowerData.push(item.power);
-            this.providePowerxAxisData.push(item.hour)
-          })
-          this.generationData = {
-            categories: this.provideQxAxisData,
-            series: [{
-              name: '发电量',
-              data: this.provideQData,
-              type: 'line'
-            }]
-          }
-
-          this.providePowerData = {
-            categories: this.providePowerxAxisData,
-            series: [{
-              name: '发电功率',
-              data: providePowerData,
-            }]
-          }
-        }
-      })
+    powerCurveOptions() {
+      return {
+        color: ["#6DE188"],
+        xAxis: { labelCount:6, disableGrid:true },
+        yAxis: { gridType:"dash", data:[{position:"left",title:"单位:kW"}] },
+        extra: { area:{type:"curve",gradient:true} }
+      }
     },
-    findMonthProvideQAndPower() {
-      this.provideQData = [];
-      this.provideQxAxisData = [];
-      providePowerData = [];
-      this.providePowerxAxisData = [];
-      upgrade.findMonthProvideQAndPower({
-        month: String(new Date(this.selectedDate).getMonth() + 1).padStart(2, '0'),
-        year: new Date(this.selectedDate).getFullYear(),
-      }).then((result) => {
-        if (result && result.data) {
-          result.data.provideQMap.forEach((item) => {
-            this.provideQData.push(item.provideQ);
-            this.provideQxAxisData.push(item.day)
-          });
-          result.data.providePowerMap.forEach((item) => {
-            providePowerData.push(item.power);
-            this.providePowerxAxisData.push(item.day)
-          })
-          this.generationData = {
-            categories: this.provideQxAxisData,
-            series: [{
-              name: '发电量',
-              data: this.provideQData
-            }]
-          }
-
-          this.providePowerData = {
-            categories: this.providePowerxAxisData,
-            series: [{
-              name: '功率',
-              data: providePowerData
-            }]
-          }
-        }
-      })
+    generationData() {
+      return {
+        categories: Array.from({length:24},(_,i)=>i+1),
+        series: [{ data: [0,0,0,0,5,15,30,45,60,75,90,105,120,135,150,157,145,125,100,70,40,20,5,0], name:'发电量' }]
+      }
     },
-    findYearProvideQAndPower() {
-      this.provideQData = [];
-      this.provideQxAxisData = [];
-      let providePowerData = [];
-      this.providePowerxAxisData = [];
-      upgrade.findYearProvideQAndPower({
-        year: this.selectedDate,
-      }).then((result) => {
-        if (result && result.data) {
-          result.data.provideQMap.forEach((item) => {
-            this.provideQData.push(item.provideQ);
-            this.provideQxAxisData.push(item.month)
-          });
-          result.data.providePowerMap.forEach((item) => {
-            providePowerData.push(item.power);
-            this.providePowerxAxisData.push(item.month)
-          })
-          this.generationData = {
-            categories: Array.from([...this.provideQxAxisData.values()], (v) => v + "月"),
-            series: [{
-              name: '发电量',
-              data: this.provideQData
-            }]
-          }
-
-          this.providePowerData = {
-            categories: this.providePowerxAxisData,
-            series: [{
-              name: '功率',
-              data: providePowerData
-            }]
-          }
-        }
-      })
-    },
+    generationOptions() {
+      return {
+        color:["#6DE188"],
+        xAxis:{labelCount:8,disableGrid:true},
+        yAxis:{gridType:"dash",data:[{position:"left",title:"单位:kWh"}]},
+      }
+    }
   }
 }
 </script>
 
-
-
-
-
-
-
 <style scoped>
 /* 基础样式 */
 .container {
-  /* padding: 32rpx; */
-  /* background-color: #f5f7fa; */
-}
-
-.pv-monitor {
   padding: 10rpx;
-  /* background-color: #fff; */
+  background-color: #f5f7fa;
+}
+.pv-monitor {
+  background-color: #f5f7fa;
 }
 
-.vertical-divider {
-  width: 1px;
-  height: 40px;
-  background-color: #e8e8e8;
-  margin: 0 12px;
-  align-self: center;
-}
-
-
-.horizontal-divider {
-  height: 1px;
-  width: 100%;
-  background-color: #e8e8e8;
-  /* margin: 12px 0; */
-}
-
-
+/* 数据卡片 */
 .stats-box {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 10px;
   background: #fff;
-
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  margin-bottom: 10rpx;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
-
-.stat-item {
+.stat-row {
   display: flex;
   justify-content: space-between;
-  /* padding: 12px; */
-  /* background: #f8f9fa; */
-  /* border-radius: 8px; */
+  margin-bottom: 16rpx;
 }
-
-.stat-content {
+.stat-row:last-child { margin-bottom: 0; }
+.stat-item {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 50%
+  padding: 16rpx;
+  background: #f8f9fa;
+  border-radius: 8rpx;
+  margin: 0 8rpx;
+}
+.stat-item:first-child { margin-left: 0; }
+.stat-item:last-child { margin-right: 0; }
+.stat-label { font-size: 14px; color: #666; margin-bottom: 8rpx; }
+.stat-value { font-size: 18px; font-weight: bold; color: #4488FB; }
+.stat-unit { font-size: 12px; color: #666; margin-left: 4rpx; }
+
+/* 日期选择器：修复样式 */
+.date-selector {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 100; /* 保证层级 */
+}
+.date-tabs {
+  display: flex;
+  gap: 10rpx;
+}
+.date-tab {
+  padding: 6rpx 16rpx;
+  border: 1rpx solid #e8e8e8;
+  border-radius: 20rpx;
+  font-size: 15px;
+  color: #666;
+  background: #f8f9fa;
+  cursor: pointer;
+}
+.date-tab.active {
+  background: #4488FB;
+  color: #fff;
+  border-color: #4488FB;
 }
 
-.stat-label {
-  font-size: 14px;
-  color: #1a1a1a;
-  margin-bottom: 4px;
-  /* font-weight: 600 */
+/* 日期显示文字：可点击、样式美观 */
+.date-display {
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
+  padding: 8rpx 10rpx;
+  border-radius: 8rpx;
+  background: #f8f9fa;
 }
-
-.stat-value {
-  font-size: 18px;
-
-  font-weight: bold;
-  color: #4488FB;
+.date-display:active {
+  background: #e8e8e8;
 }
-
-.stat-unit {
-  font-size: 12px;
-  color: #1a1a1a;
-  margin-left: 4px;
-}
-
-
-
 
 /* 图表区域 */
-/* .chart-section {
-  margin-bottom: 40rpx;
-} */
-
+.chart-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
 .chart-card {
   background-color: #ffffff;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
-  margin-bottom: 10rpx;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
-
 .chart-header {
-  padding: 12rpx 32rpx;
+  padding: 16rpx 20rpx;
   border-bottom: 1rpx solid #f0f4ff;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
-.chart-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #1a1a1a;
-  min-width: fit-content
-}
-
-
-
-.chart-tabs {
-  display: flex;
-  /* gap: 24rpx; */
-}
-
-
-
-
-.chart-tab-bar {
-
-  display: flex;
-  justify-content: space-around;
-  margin-top: 12rpx;
-}
-
-.chart-tab-item {
-  padding: 12rpx 32rpx;
-  margin: 0 2rpx;
-  border: 1px solid #4488FB;
-  color: #666;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  width: 120rpx;
-  height: 60rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.chart-tab-item.active {
-  background: linear-gradient(135deg, #4488fb 0%, #6ca2ff 100%);
-  color: #fff !important;
-  box-shadow: 0 4rpx 12rpx rgba(68, 136, 251, 0.3);
-}
-
-
-
-
-
-
-
-/* 时间选择器样式 */
-.custom-picker {
-  border: unset;
-  max-width: fit-content;
+.chart-title { font-size: 16px; font-weight: 600; color: #333; }
+.chart-controls { display: flex; gap: 12rpx; }
+.chart-tab {
+  padding: 6rpx 16rpx;
+  border: 1rpx solid #4488FB;
   border-radius: 16rpx;
-  /* padding: 16rpx 24rpx;
-  margin-top: 20rpx; */
-  background: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  color: #4488FB;
+  background: #f0f4ff;
 }
-
-.chart-body {
-  padding: 12rpx;
-}
-
+.chart-body { padding: 20rpx; }
 .power-chart,
 .generation-chart {
   width: 100%;
-  height: 480rpx;
-}
-
-/* 响应式调整 */
-@media screen and (min-width: 768px) {
-  .stat-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .power-chart,
-  .generation-chart {
-    height: 560rpx;
-  }
-}
-
-@media screen and (orientation: landscape) {
-  .container {
-    /* padding: 40rpx; */
-  }
-
-  .stat-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .chart-card {
-    min-height: 600rpx;
-  }
-
-  .power-chart,
-  .generation-chart {
-    height: 640rpx;
-  }
+  height: 400rpx;
 }
 </style>

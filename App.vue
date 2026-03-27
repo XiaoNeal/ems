@@ -109,9 +109,9 @@ export default {
 page {
 	// background-image: url('static/main_bg_img_750.jpg');
 	height: 100%;
-	// padding-top: env(safe-area-inset-top);
-	// padding-top: var(--status-bar-height);
-	// box-sizing: border-box;
+	padding-top: env(safe-area-inset-top);
+	padding-bottom: env(safe-area-inset-bottom);
+	box-sizing: border-box;
 }
 
 

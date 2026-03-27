@@ -361,18 +361,6 @@ to {
   font-size: 14px;
   color: #333;
 }
-.logout-section.data-v-2b599fba {
-  background-color: #fff;
-  border-radius: 10rpx;
-  margin-top: 40rpx;
-  padding: 20rpx;
-  text-align: center;
-}
-.logout-text.data-v-2b599fba {
-  font-size: 16px;
-  color: #ff4d4f;
-  font-weight: bold;
-}
 
 @charset "UTF-8";
 /* 水平间距 */

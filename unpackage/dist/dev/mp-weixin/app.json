@@ -52,7 +52,8 @@
         "report",
         "profile",
         "charging-detail",
-        "system"
+        "system",
+        "system-info"
       ]
     },
     {
@@ -104,7 +105,8 @@
     "navigationBarBackgroundColor": "#fff",
     "backgroundColor": "#103071",
     "navigationStyle": "custom",
-    "enablePullDownRefresh": false
+    "enablePullDownRefresh": false,
+    "pageOrientation": "auto"
   },
   "networkTimeout": {
     "request": 40000

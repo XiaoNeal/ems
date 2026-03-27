@@ -78,11 +78,6 @@
           <text class="info-text">系统信息</text>
         </view>
       </view>
-
-      <!-- 退出账号 -->
-      <view class="logout-section" @click="logout">
-        <text class="logout-text">退出账号</text>
-      </view>
     </view>
   </view>
 </template>
@@ -150,29 +145,10 @@ export default {
       });
     },
     
-    // 显示系统信息
+    // 跳转到系统信息页面
     showSystemInfo() {
-      uni.showModal({
-        title: '系统信息',
-        content: `系统名称: ${this.systemInfo.systemName}\n版本号: ${this.systemInfo.version}\n设备数量: ${this.systemInfo.deviceCount}\n在线状态: ${this.systemInfo.onlineStatus}\n最后更新: ${this.systemInfo.lastUpdate}`,
-        showCancel: false
-      });
-    },
-    
-    // 退出账号
-    logout() {
-      uni.showModal({
-        title: '退出账号',
-        content: '确定要退出当前账号吗？',
-        success: (res) => {
-          if (res.confirm) {
-            // 这里可以添加退出登录的逻辑
-            uni.showToast({
-              title: '已退出账号',
-              icon: 'success'
-            });
-          }
-        }
+      uni.navigateTo({
+        url: '/community/system-info'
       });
     }
   }
@@ -309,17 +285,4 @@ export default {
   color: #333;
 }
 
-.logout-section {
-  background-color: #fff;
-  border-radius: 10rpx;
-  margin-top: 40rpx;
-  padding: 20rpx;
-  text-align: center;
-}
-
-.logout-text {
-  font-size: 16px;
-  color: #ff4d4f;
-  font-weight: bold;
-}
 </style>

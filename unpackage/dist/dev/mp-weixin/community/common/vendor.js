@@ -1,6 +1,6 @@
 (global["webpackJsonp"] = global["webpackJsonp"] || []).push([["community/common/vendor"],{
 
-/***/ 1440:
+/***/ 1451:
 /*!*****************************!*\
   !*** D:/ems/api/upgrade.js ***!
   \*****************************/
@@ -236,7 +236,7 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 1441:
+/***/ 1452:
 /*!*************************!*\
   !*** D:/ems/api/nyz.js ***!
   \*************************/
@@ -375,7 +375,7 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 1442:
+/***/ 1453:
 /*!***********************************!*\
   !*** D:/ems/service/websocket.js ***!
   \***********************************/
@@ -545,7 +545,7 @@ function destroySocket() {
 
 /***/ }),
 
-/***/ 1450:
+/***/ 1468:
 /*!*********************************!*\
   !*** D:/ems/api/upgrade_new.js ***!
   \*********************************/
@@ -783,7 +783,7 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 1463:
+/***/ 1474:
 /*!**********************************************!*\
   !*** D:/ems/community/static/images/VRV.png ***!
   \**********************************************/
@@ -794,7 +794,7 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABvCAYAAAAT
 
 /***/ }),
 
-/***/ 1464:
+/***/ 1475:
 /*!**************************************************************!*\
   !*** D:/ems/community/static/images/load-airconditioner.png ***!
   \**************************************************************/
@@ -805,7 +805,7 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABNCAYAAAAr
 
 /***/ }),
 
-/***/ 1465:
+/***/ 1476:
 /*!************************************************************!*\
   !*** D:/ems/community/static/images/load-chargingPile.png ***!
   \************************************************************/
@@ -816,7 +816,7 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAF8AAABKCAYAAADd
 
 /***/ }),
 
-/***/ 1496:
+/***/ 1507:
 /*!****************************************!*\
   !*** D:/ems/service/config/storage.js ***!
   \****************************************/
@@ -859,7 +859,7 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 1504:
+/***/ 1515:
 /*!****************************!*\
   !*** D:/ems/utils/wind.js ***!
   \****************************/
@@ -1262,7 +1262,7 @@ WWindUtil.windFormatLevel = function (value) {
 
 /***/ }),
 
-/***/ 1505:
+/***/ 1516:
 /*!*****************************!*\
   !*** D:/ems/api/weather.js ***!
   \*****************************/
@@ -1322,51 +1322,7 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 1513:
-/*!*****************************!*\
-  !*** D:/ems/utils/tools.js ***!
-  \*****************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.debounce = debounce;
-// utils/tools.js
-/**
- * 防抖函数 - 限制函数的执行频率
- * @param {Function} func - 要执行的函数
- * @param {number} wait - 等待时间（毫秒）
- * @param {boolean} immediate - 是否立即执行
- * @returns {Function} - 返回一个防抖后的函数
- */
-function debounce(func) {
-  var wait = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 300;
-  var immediate = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-  var timeout;
-  return function () {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-    var context = this;
-    var later = function later() {
-      timeout = null;
-      if (!immediate) func.apply(context, args);
-    };
-    var callNow = immediate && !timeout;
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-    if (callNow) func.apply(context, args);
-  };
-}
-
-/***/ }),
-
-/***/ 930:
+/***/ 931:
 /*!*********************************************************!*\
   !*** D:/ems/community/static/images/monitor-active.png ***!
   \*********************************************************/
@@ -1377,7 +1333,18 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAe
 
 /***/ }),
 
-/***/ 931:
+/***/ 932:
+/*!*************************************************!*\
+  !*** D:/ems/community/static/images/系统-pre.png ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAtCAYAAAA6GuKaAAADl0lEQVRYhc2ZW4hNURjHf2dmHLcxojFuoUQUg0xu5VKuuSTJi3lBhDy5RxnmgZoGER4kNBJJNEjjThQeMBQPE5mJMoPCCGEYo6++M+2Ovffa56x9zvGv00x7rbO+31l7Xf7rW5GpZb+wUBEwHHisH5NygJlALnATeJdM6KwkeacDt4GHwBGgGig3tNcNuAtcAE4Cr4ETwIhUQxcC14ErwMS4sg3AWaCny/eKtGdHO55FgWL9wfIjegSFCDo8soHNQIkG89NP4JrCdATGAuMCdNBHYBlQGQZ0PnAKmBLk11mqBdgObNP/XZVjiNEFuA8MSAOwKKJvs0nhXWV6ZUvSCOzUFqCdV6EJOjdlWP5qC/TyqmGCfpZGUKc+AHVehSboVynD8tdzv4logs5OI6hTEb9CE3RhSpDMGuq3H5igi9MMG5MsAAu8Cv2g5wOTU4ZlVrnuE//IC3oGcCyDwKLewHkgL77ACR3RnhXzcimDa7RTE4AaYDXQpxVUvUcHtYxh+Ita7aFa3dVGAbPVPNnoN7ADKI15j5IQgMXdrQcOagCnxK4e0HmSrHLUSFXFhscsS+BmYI6CxQOLGnQ1OGoZRzQpS8f1QMuGdurhwE+yw60CXlrGGpylr669RSMyKXYFrCtDaLdFLFF/ge5q2Ui1GpygumEZL0+gO1k28j7B+kmdwB2KCvQXy0YKEqzf3TJek0A3WjYyMsEhZru0fhboej2TJas2wNqA340mUNdLtVm6xr6wbGhDgB4Um7AvhDNnTWxzuWPZkPTgRWClhwkr0DTECss40sFVMe+Rr0HHWDaKeo5K/RvVrNLckLzHRmCPM1kTUVe1EFiqY/V/UKPag4rYbupM1rToMJHPcXkNQOcMQz8A5uli0SqvQ8A9YHH62Fz1Rg8j9fGFfsetc5pIzJS2Ap/cYpsOtmFYyWQkE+20V6EJujoFQEEkE+6rVz0TdHPacQPENUEPCpclsPr6sZmgw9hskpHY5X5ehSbohhQABdEf4JtXPRN0RYbSvfv9Dhcm6B/ANOBR+Fyukgm4CVjjV8l05yJ6q55kL7A8QH15rZc1KS7JmvEB7wrr1PPcMlUMAi36rrbyjLgsYIhHPdmM1rmchuSW9rDHlUSTDodSv7XZqUQvP2VbHwYsAp44novZKtOecju+SW5Q7hOfOp7J0DskeQzNTAUCFtnejYtXlkSPjHlJFJok/lqyWZIJvapDLzEBfwGQH6xzZ5nu3QAAAABJRU5ErkJggg=="
+
+/***/ }),
+
+/***/ 933:
 /*!******************************************************!*\
   !*** D:/ems/community/static/images/mine-active.png ***!
   \******************************************************/
@@ -1388,7 +1355,7 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAe
 
 /***/ }),
 
-/***/ 932:
+/***/ 934:
 /*!**************************************************!*\
   !*** D:/ems/community/static/images/monitor.png ***!
   \**************************************************/
@@ -1399,7 +1366,18 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAe
 
 /***/ }),
 
-/***/ 933:
+/***/ 935:
+/*!*************************************************!*\
+  !*** D:/ems/community/static/images/系统-nor.png ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAtCAYAAAA6GuKaAAAF9ElEQVRYhbWZe5BXYxjHP/vLppLLSrPJpWTUlihyKzPCWP0RxbhEJCkS4z4aMy7jmiGaJsq4NFFo5D5uaUUIuW4jppIyFdplYkRJtzWP+Z6Zt8d7zvn9fm3fmZ39ve95L9/zXp7n+zyn4uU35rIDKAAtgK3AtiKHaaF+W4CmcqYulMn3EOAJYCOwSX835vSpBJ4VWWu/FpgAHLizSe8DPAwsBkaKCFq9+4FHgd1T+s0Czg/qqoDrgKXAA8AexZIo5XicA0wRgSz8AjwD1AMtgaOBIcBeOf1WAiOA95qDtE08ERgTebYZ+BE4KG8QhyVA18hO2724Fngoq3Pe8WgFzIkQtgv0JNAFOAx4ugTC44GeQDfguQifScBdO0L6EqC/q7Mz2E9baau8HhgG1ALzUsaxFXwTOA4YK2vzPXAeMAD4ybW/OWv3dskh3cWVnweGA39H2r6jv32BY4GOIrcK+BT4LWUO28k++n+46iq0gz+UQ3q5K89NIRxiDfBKThuPRmB1QBpZqCjyjsdSV96vRDKlIBzbjtyyckn7VW25E0m3Cn5vyGqYR/pgV15bPqdc/Bo0aC/nE0Ue6TNdeeFOJP2VK5+V1jCL9FHAGUF5HfBBRvu2suezgQbZ8q2yADO1AFnzvebKt6W59rRBOsnwh8+nAf9E2pp5ulxueIrsbnUwfmfZ45eAb4ETU+Y0970oKB8ATI/dI0/aVusKbVVoo22V741M1FKr+AiwdwqZEDUym9dHnm2LKMXBcljHa3G2I20Vd8jGTo4QGCFbGsL6zJAY8jBHskAv7y2QzfmgFsfjbc0foi8wXzs5LCR9pc5QW9fBBNEoba3HaOBcV2fK7lTd/r7ydO00RoNrO9E5kwTXpGiZ5Lj0T0iPjjSq17ZMjTyzlxvn6mZJW9S5KMZW2sY4Umc6QaVW3MMu70XS2n9Gng9JSHcLKk28DJT1+DzSCQ0a2tF6bd2mlPbo6A2Ut0twCtAj0rZJO2Gi6Qb3rKagI1IZVH4kRZYV8w1y5bE5hBOsFJmssUIkIVl4tLoWwlsprCpi8t7Bb7t07xbRJ8EsVz6iiD6hdK2KkV5PPqqDFt+VEIkTEWHVKe1C/BX8blNuNB6SLFVE+fZbS528EMk9pAqVAKuD392B1iXM2SdjrDS0C+rXxUh3KmKQT4LfRnhoCaRHZoyVhpBTY0FbHZ7jWuUvajIG8ZfpHoVXeTATd0HQZnNOlNNHCZ4wl7I0OdNLgso2wGXAN8CdSsR4vOr6VMupdM4gYIRfdBd/WkQeIOdlz75wCR5DfUL6vkhHI3urXKcnvk0yNLyQPfSidwO9gF21QqbqZihwDaWmkb0lMq9JgA+BiyPPLFCYnJC2KPt0DbzFNRyqFfeYF1Fluyn8X6g83zpJzgvdCptrP9tFKyjQfsH5ASSJZyp10RiavNelhbuIfIibtHoeEyS2NkeepaFRomp+5Lnp8hNc3VQFvUOVK4kGAau16m8FdYWIQEowRTqlLoesvdhjymfECLfSLoW4XQpxu9g0K5fXQZdtT5XNNO4P/JxBrLuEe2/1T5I1C2QlYpcuwSBd8ASfSd7+z9tmJWsatDLJua2QBZie0WdxVpIlB7Xu8fg0eZDnxme7cs8yCRWD7q5N6nHLI+2jjaIT32UgzF+bdfmjXNI+VkwdqBkQjt1adr4s0v1c2SckmxNexx+aNnZe1rS9K4+RKUxTZtb+NMWDHWTmVgDvK1BIk6GDIxmljpGs03/I+3xRG3E0vwNX6btKSHaccteVxLFSEf+MQFm2U3A73PXYKCe3JjZS3vGok4ILUaUQ/2OZwGOUGRqVQRjJy6dkizsqrlweIbxBGakoYUr4unWpPF/sODVFQrY8pPVZoZzf11n9iw23HtentUWRZ+HkTdr+AfKeXfXC3uF4wk1alF55hEshjZSbaYyrI+oMBRInKycyRxH0Mn3ZNTI+dZDA1KItiAmvMIBtFtIGy23YNz5Lopgis9ttl8aSOllft8yKWMbI8nf2wiY1LbdiX85OAr4smgHwL+BIUtKQipkgAAAAAElFTkSuQmCC"
+
+/***/ }),
+
+/***/ 936:
 /*!***********************************************!*\
   !*** D:/ems/community/static/images/mine.png ***!
   \***********************************************/
@@ -1410,7 +1388,7 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAe
 
 /***/ }),
 
-/***/ 942:
+/***/ 945:
 /*!*****************************!*\
   !*** D:/ems/api/nyz_new.js ***!
   \*****************************/
@@ -1490,7 +1468,7 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 943:
+/***/ 946:
 /*!****************************!*\
   !*** D:/ems/api/energy.js ***!
   \****************************/
@@ -1934,7 +1912,7 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 944:
+/***/ 947:
 /*!********************************!*\
   !*** D:/ems/api/energy_new.js ***!
   \********************************/
@@ -2420,7 +2398,7 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 962:
+/***/ 965:
 /*!****************************!*\
   !*** D:/ems/api/center.js ***!
   \****************************/
@@ -2504,7 +2482,7 @@ exports.default = _default;
 
 /***/ }),
 
-/***/ 963:
+/***/ 966:
 /*!*******************************!*\
   !*** D:/ems/api/statistic.js ***!
   \*******************************/

@@ -258,6 +258,13 @@
 						"navigationBarTitleText": "系统配置",
 						"enablePullDownRefresh": false
 					}
+				},
+				{
+					"path": "system-info",
+					"style": {
+						"navigationBarTitleText": "系统信息",
+						"enablePullDownRefresh": false
+					}
 				}
 			]
 		},
@@ -432,6 +439,7 @@
 		"navigationBarBackgroundColor": "#fff",
 		"backgroundColor": "#103071",
 		"navigationStyle": "custom",
-		"enablePullDownRefresh": false
+		"enablePullDownRefresh": false,
+		"pageOrientation": "auto"
 	}
 }

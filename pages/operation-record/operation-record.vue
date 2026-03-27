@@ -1,8 +1,7 @@
 <template>
   <view class="container">
     <!-- 顶部导航栏 -->
-    <u-navbar title="操作记录" :autoBack="true" :placeholder="true">
-    </u-navbar>
+    <u-navbar title="操作记录" :autoBack="true" :placeholder="true" />
     
     <!-- 内容区域 -->
     <view class="content">
@@ -47,32 +46,12 @@ export default {
     };
   },
   methods: {
-    // 刷新数据方法
     refresh() {
-      // 显示加载提示
-      uni.showLoading({
-        title: '刷新中...'
-      });
-
-      try {
-        // 模拟刷新数据
-        setTimeout(() => {
-          uni.hideLoading();
-          uni.showToast({
-            title: '刷新成功',
-            icon: 'success',
-            duration: 1500
-          });
-        }, 500);
-      } catch (error) {
-        console.error('刷新失败:', error);
+      uni.showLoading({ title: '刷新中...' });
+      setTimeout(() => {
         uni.hideLoading();
-        uni.showToast({
-          title: '刷新失败',
-          icon: 'error',
-          duration: 1500
-        });
-      }
+        uni.showToast({ title: '刷新成功', icon: 'success' });
+      }, 500);
     }
   }
 };
@@ -81,47 +60,39 @@ export default {
 <style lang="scss" scoped>
 .container {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
   background: #EFF4FB;
 }
 
-
-
 .content {
-  padding: 20rpx;
+  padding: 30rpx;
   flex: 1;
 }
 
 .operation-item {
-  background-color: #fff;
-  border-radius: 10rpx;
-  padding: 20rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
 }
 
 .operation-time {
-  font-size: 14rpx;
+  font-size: 26rpx;
   color: #999;
-  margin-bottom: 10rpx;
-}
-
-.operation-content {
-  margin-bottom: 10rpx;
+  margin-bottom: 16rpx;
 }
 
 .operation-user {
-  font-size: 16rpx;
-  font-weight: bold;
-  color: #333;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #222;
   display: block;
-  margin-bottom: 5rpx;
+  margin-bottom: 12rpx;
 }
 
 .operation-desc {
-  font-size: 14rpx;
+  font-size: 28rpx;
   color: #666;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 </style>

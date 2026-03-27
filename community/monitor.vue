@@ -25,7 +25,7 @@
         <PvManagement v-if="currentTab === 1" />
         <EnergyStorage v-if="currentTab === 2" />
         <LoadManagement v-if="currentTab === 3" />
-        <ChargingPile v-if="currentTab === 4" />
+        <GridManagement v-if="currentTab === 4" />
       </view>
     </view>
 
@@ -38,7 +38,7 @@ import ArchitectureDiagram from './components/architecture-diagram.vue'
 import PvManagement from './components/pv-management.vue'
 import EnergyStorage from './components/energy-storage.vue'
 import LoadManagement from './components/load-management.vue'
-import ChargingPile from './components/charging-pile.vue'
+import GridManagement from './components/grid-management.vue'
 
 export default {
   components: {
@@ -46,12 +46,12 @@ export default {
     PvManagement,
     EnergyStorage,
     LoadManagement,
-    ChargingPile
+    GridManagement
   },
   data() {
     return {
       currentTab: 0,
-      tabList: ['架构图', '光伏管理', '储能管理', '负荷管理', '充电桩管理'],
+      tabList: ['架构图', '光伏管理', '储能管理', '负荷管理', '电网管理'],
     };
   },
   computed: {
@@ -87,7 +87,7 @@ export default {
           'pvManagement',
           'energyStorage',
           'loadManagement',
-          'chargingPile'
+          'gridManagement'
         ];
         
         const currentComponent = this.$refs[currentComponentRefs[this.currentTab]];
