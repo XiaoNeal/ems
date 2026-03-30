@@ -313,27 +313,14 @@ to {
 .icon-text.data-v-2b599fba {
   font-size: 32rpx;
 }
+.icon-image.data-v-2b599fba {
+  width: 48rpx;
+  height: 48rpx;
+  object-fit: contain;
+}
 .info-icon-text.data-v-2b599fba {
   font-size: 14rpx;
   color: #fff;
-}
-.alarm-icon.data-v-2b599fba {
-  background-color: #e6f7ff;
-}
-.record-icon.data-v-2b599fba {
-  background-color: #f6ffed;
-}
-.strategy-icon.data-v-2b599fba {
-  background-color: #fff7e6;
-}
-.data-icon.data-v-2b599fba {
-  background-color: #f9f0ff;
-}
-.control-icon.data-v-2b599fba {
-  background-color: #fff1f0;
-}
-.setting-icon.data-v-2b599fba {
-  background-color: #f0f5ff;
 }
 .item-text.data-v-2b599fba {
   font-size: 12px;

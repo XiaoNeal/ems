@@ -489,7 +489,7 @@ var _default = {
   data: function data() {
     return {
       currentTab: 0,
-      tabList: ['架构图', '光伏管理', '储能管理', '负荷管理', '电网管理']
+      tabList: ['架构图', '光伏', '储能', '负荷', '电网']
     };
   },
   computed: {

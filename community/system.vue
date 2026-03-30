@@ -13,13 +13,13 @@
           <view class="item-row">
             <view class="item" @click="goToAlarm">
               <view class="item-icon alarm-icon">
-                <text class="icon-text">🔔</text>
+                <image src="./static/images/报警.png" class="icon-image" />
               </view>
               <text class="item-text">报警</text>
             </view>
             <view class="item" @click="goToOperationRecord">
               <view class="item-icon record-icon">
-                <text class="icon-text">📝</text>
+                <image src="./static/images/操作.png" class="icon-image" />
               </view>
               <text class="item-text">操作记录</text>
             </view>
@@ -34,7 +34,7 @@
           <view class="item-row">
             <view class="item" @click="goToStrategyConfig">
               <view class="item-icon strategy-icon">
-                <text class="icon-text">⚙️</text>
+                <image src="./static/images/配置.png" class="icon-image" />
               </view>
               <text class="item-text">策略配置</text>
             </view>
@@ -49,19 +49,19 @@
           <view class="item-row">
             <view class="item" @click="goToMonitorData">
               <view class="item-icon data-icon">
-                <text class="icon-text">📊</text>
+                <image src="./static/images/监控数据.png" class="icon-image" />
               </view>
               <text class="item-text">监控数据</text>
             </view>
             <view class="item" @click="goToQuickControl">
               <view class="item-icon control-icon">
-                <text class="icon-text">🎮</text>
+                <image src="./static/images/快捷.png" class="icon-image" />
               </view>
               <text class="item-text">快捷控制</text>
             </view>
             <view class="item" @click="goToSettings">
               <view class="item-icon setting-icon">
-                <text class="icon-text">🔧</text>
+                <image src="./static/images/设置.png" class="icon-image" />
               </view>
               <text class="item-text">设置参数</text>
             </view>
@@ -226,34 +226,18 @@ export default {
   font-size: 32rpx;
 }
 
+.icon-image {
+  width: 48rpx;
+  height: 48rpx;
+  object-fit: contain;
+}
+
 .info-icon-text {
   font-size: 14rpx;
   color: #fff;
 }
 
-.alarm-icon {
-  background-color: #e6f7ff;
-}
 
-.record-icon {
-  background-color: #f6ffed;
-}
-
-.strategy-icon {
-  background-color: #fff7e6;
-}
-
-.data-icon {
-  background-color: #f9f0ff;
-}
-
-.control-icon {
-  background-color: #fff1f0;
-}
-
-.setting-icon {
-  background-color: #f0f5ff;
-}
 
 .item-text {
   font-size: 12px;

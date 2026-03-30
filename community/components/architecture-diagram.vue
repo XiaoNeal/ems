@@ -155,18 +155,19 @@
 
     <!-- 启动弹窗 -->
     <view class="modal-overlay" v-if="showModal" @click="closeModal">
+      <!-- 警告图标 - 位于弹窗正上方，确保在最上层 -->
+      <image src="../static/images/img-警告.png" class="modal-icon-absolute" />
       <view class="modal-content" @click.stop>
         <view class="modal-header">
-          <text class="modal-icon">⚠️</text>
-          <text class="modal-title">系统启动警告</text>
+          <text class="modal-title">相关配置将影响系统运行效能和运维安全</text>
         </view>
         <view class="modal-body">
-          <text class="modal-text">启动后系统将开始运行，请确保所有设备连接正常。</text>
-          <text class="modal-text">确认启动系统？</text>
+          <text class="modal-text">请确认您是专业人士，已知悉相关影响和责任，并取得授权。</text>
+          <!-- <text class="modal-text">确认启动系统？</text> -->
         </view>
         <view class="modal-footer">
-          <button class="modal-cancel" @click="closeModal">取消</button>
-          <button class="modal-confirm" @click="confirmStart">启动</button>
+          <button class="modal-cancel" @click="closeModal">退出</button>
+          <button class="modal-confirm" @click="confirmStart">已知悉风险</button>
         </view>
       </view>
     </view>
@@ -699,24 +700,43 @@ export default {
   background: #fff;
   border-radius: 16rpx;
   overflow: hidden;
+  position: relative;
+  z-index: 9999;
 }
 .modal-header {
   padding: 32rpx;
-  background: #FFFAF0;
+  /* background: #FFFAF0; */
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1rpx solid #FFE5B4;
+  /* border-bottom: 1rpx solid #FFE5B4; */
+
+  padding-top:15%
 }
 .modal-icon {
-  font-size: 40rpx;
-  margin-right: 16rpx;
-  color: #F56C6C;
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-icon-absolute {
+  position: fixed;
+  top: 46%;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  width: 80rpx;
+  height: 80rpx;
+  z-index: 10000;
+  margin-top: -120rpx;
+  pointer-events: none;
 }
 .modal-title {
   font-size: 28rpx;
   font-weight: bold;
   color: #F56C6C;
+  text-align: center;
 }
 .modal-body {
   padding: 32rpx;
@@ -730,22 +750,33 @@ export default {
 }
 .modal-footer {
   display: flex;
-  border-top: 1rpx solid #EBEEF5;
+  /* border-top: 1rpx solid #EBEEF5; */
   height: 88rpx;
+  margin-bottom:5%
 }
 .modal-cancel {
   flex: 1;
   background: #fff;
-  border: none;
+  border: 1rpx solid #D9D9D9;
   font-size: 24rpx;
-  color: #909399;
-  border-right: 1rpx solid #EBEEF5;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  margin:4px 20rpx
 }
 .modal-confirm {
   flex: 1;
-  background: #F56C6C;
-  border: none;
+  background: #fff;
+  border: 1rpx solid #F56C6C;
   font-size: 24rpx;
-  color: #fff;
+  font-weight: bold;
+  color: #F56C6C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+   margin:4px 20rpx
 }
 </style>
