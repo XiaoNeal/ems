@@ -462,7 +462,7 @@ export default {
   display: flex;
   align-items: center;
   background: #FFF7E6;
-  border: 1px solid #FFD1CF;
+  /* border: 1px solid #FFD1CF; */
   border-radius: 12rpx;
   padding: 20rpx;
 }
@@ -479,7 +479,7 @@ export default {
 .warning-title {
   font-size: 28rpx;
   font-weight: bold;
-  color: #4488FB;
+  color: #ff762C;
   display: block;
   text-align: center;
   margin-bottom: 8rpx;
@@ -561,13 +561,14 @@ export default {
 }
 .card-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
   margin-bottom: 12rpx;
 }
 .card-icon {
   width: 28rpx;
   height: 28rpx;
-  margin-right: 10rpx;
+  margin-bottom: 8rpx;
 }
 .card-title {
   font-size: 24rpx;
@@ -577,9 +578,10 @@ export default {
   font-size: 32rpx;
   font-weight: bold;
   color: #333;
+  margin-bottom: 4rpx;
 }
 .card-unit {
-  font-size: 24rpx;
+  font-size: 20rpx;
   color: #666;
 }
 /* 图表容器基础样式 */
