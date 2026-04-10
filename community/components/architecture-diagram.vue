@@ -558,6 +558,10 @@ export default {
   border-radius: 16rpx;
   padding: 24rpx;
   box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
 }
 .card-item {
   display: flex;
@@ -577,7 +581,7 @@ export default {
 .card-value {
   font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: #4482fb;
   margin-bottom: 4rpx;
 }
 .card-unit {

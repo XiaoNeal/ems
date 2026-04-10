@@ -252,7 +252,7 @@ export default {
             this.$u.vuex('userId', res.data.code);
             // 解析并过滤系统列表
             // const allowedIds = [5, 14, 25];
-            const allowedIds = [25];
+            const allowedIds = [25,27];
             const systems = Object.entries(res.data.plugininfo)
                 .filter(([key]) => {
                     const id = key.replace('system', '');
@@ -270,6 +270,7 @@ export default {
 
             const systemConfig1 = Object.values(res.data.plugininfo)[0];
             const systemType1 = systemConfig1.match(/systemType=(\d+)/)[1];
+            console.log(systems, "systems--------------");
 
             // 系统跳转逻辑
             if (systems.length === 1) {
@@ -280,22 +281,23 @@ export default {
                     uni.navigateTo({ url: targetPath });
                 } else if (systems[0].type == 2) {
                     // 珠海能源管理系统 
-                    const { code, data } = await request({
-                        url: '/ApihomecommunityKoa/login',
-                        method: 'POST',
-                        data: {
-                            username: this.username,
-                            password: md5(this.password)
-                        }
-                    });
-                    if (code == 10000) {
-                        this.$u.vuex('token', "Bearer " + data.token);
-                        uni.setStorageSync('token', "Bearer " + data.token);
+                    // const { code, data } = await request({
+                    //     url: '/ApihomecommunityKoa/login',
+                    //     method: 'POST',
+                    //     data: {
+                    //         username: this.username,
+                    //         password: md5(this.password)
+                    //     }
+                    // });
+                    // if (code == 10000) {
+                        // this.$u.vuex('token', "Bearer " + data.token);
+                        // uni.setStorageSync('token', "Bearer " + data.token);
 
                         const result = await loginPermission({
                             userid: res.data.code,
-                            systemId: 25
+                            systemId: systems[0].id
                         })
+                        console.log(result, "result--------------");
                         const userInfo = {
                             _id: result.data.homecommunityRole.roleId,
                             username: result.data.username,
@@ -335,9 +337,11 @@ export default {
                         })
 
 
-                    } else {
-                        this.showToast('error', '登录失败:服务器繁忙 ');
-                    }
+                    
+                    
+                    // } else {
+                    //     this.showToast('error', '登录失败:服务器繁忙 ');
+                    // }
                 } else if (systems[0].type == 3) {
 
                     // IEMS光储直柔云控平台

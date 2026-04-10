@@ -64994,447 +64994,7 @@ function debounce(func) {
 /* 736 */,
 /* 737 */,
 /* 738 */,
-/* 739 */,
-/* 740 */,
-/* 741 */,
-/* 742 */,
-/* 743 */,
-/* 744 */,
-/* 745 */,
-/* 746 */,
-/* 747 */,
-/* 748 */,
-/* 749 */,
-/* 750 */,
-/* 751 */,
-/* 752 */,
-/* 753 */,
-/* 754 */,
-/* 755 */,
-/* 756 */,
-/* 757 */,
-/* 758 */,
-/* 759 */,
-/* 760 */,
-/* 761 */,
-/* 762 */,
-/* 763 */,
-/* 764 */,
-/* 765 */,
-/* 766 */,
-/* 767 */,
-/* 768 */,
-/* 769 */,
-/* 770 */,
-/* 771 */,
-/* 772 */,
-/* 773 */,
-/* 774 */,
-/* 775 */,
-/* 776 */,
-/* 777 */,
-/* 778 */,
-/* 779 */,
-/* 780 */,
-/* 781 */,
-/* 782 */,
-/* 783 */,
-/* 784 */,
-/* 785 */,
-/* 786 */,
-/* 787 */,
-/* 788 */,
-/* 789 */,
-/* 790 */,
-/* 791 */,
-/* 792 */,
-/* 793 */,
-/* 794 */,
-/* 795 */,
-/* 796 */,
-/* 797 */,
-/* 798 */,
-/* 799 */,
-/* 800 */,
-/* 801 */,
-/* 802 */,
-/* 803 */,
-/* 804 */,
-/* 805 */,
-/* 806 */,
-/* 807 */,
-/* 808 */,
-/* 809 */,
-/* 810 */,
-/* 811 */,
-/* 812 */,
-/* 813 */,
-/* 814 */,
-/* 815 */,
-/* 816 */,
-/* 817 */,
-/* 818 */,
-/* 819 */,
-/* 820 */,
-/* 821 */,
-/* 822 */,
-/* 823 */,
-/* 824 */,
-/* 825 */,
-/* 826 */,
-/* 827 */,
-/* 828 */,
-/* 829 */,
-/* 830 */,
-/* 831 */,
-/* 832 */,
-/* 833 */,
-/* 834 */,
-/* 835 */,
-/* 836 */,
-/* 837 */,
-/* 838 */,
-/* 839 */,
-/* 840 */,
-/* 841 */,
-/* 842 */,
-/* 843 */,
-/* 844 */,
-/* 845 */,
-/* 846 */,
-/* 847 */,
-/* 848 */,
-/* 849 */,
-/* 850 */,
-/* 851 */,
-/* 852 */,
-/* 853 */,
-/* 854 */,
-/* 855 */,
-/* 856 */,
-/* 857 */,
-/* 858 */,
-/* 859 */,
-/* 860 */,
-/* 861 */,
-/* 862 */,
-/* 863 */,
-/* 864 */,
-/* 865 */,
-/* 866 */,
-/* 867 */,
-/* 868 */,
-/* 869 */,
-/* 870 */,
-/* 871 */,
-/* 872 */,
-/* 873 */,
-/* 874 */,
-/* 875 */,
-/* 876 */,
-/* 877 */,
-/* 878 */,
-/* 879 */,
-/* 880 */,
-/* 881 */,
-/* 882 */,
-/* 883 */,
-/* 884 */,
-/* 885 */,
-/* 886 */,
-/* 887 */,
-/* 888 */,
-/* 889 */,
-/* 890 */,
-/* 891 */,
-/* 892 */,
-/* 893 */,
-/* 894 */,
-/* 895 */,
-/* 896 */,
-/* 897 */,
-/* 898 */,
-/* 899 */,
-/* 900 */,
-/* 901 */,
-/* 902 */,
-/* 903 */,
-/* 904 */,
-/* 905 */,
-/* 906 */,
-/* 907 */,
-/* 908 */,
-/* 909 */,
-/* 910 */,
-/* 911 */,
-/* 912 */,
-/* 913 */,
-/* 914 */,
-/* 915 */,
-/* 916 */,
-/* 917 */,
-/* 918 */,
-/* 919 */,
-/* 920 */,
-/* 921 */,
-/* 922 */,
-/* 923 */,
-/* 924 */,
-/* 925 */,
-/* 926 */,
-/* 927 */,
-/* 928 */,
-/* 929 */,
-/* 930 */,
-/* 931 */,
-/* 932 */,
-/* 933 */,
-/* 934 */,
-/* 935 */,
-/* 936 */,
-/* 937 */,
-/* 938 */,
-/* 939 */,
-/* 940 */,
-/* 941 */,
-/* 942 */,
-/* 943 */,
-/* 944 */,
-/* 945 */,
-/* 946 */,
-/* 947 */,
-/* 948 */,
-/* 949 */,
-/* 950 */,
-/* 951 */,
-/* 952 */,
-/* 953 */,
-/* 954 */,
-/* 955 */,
-/* 956 */,
-/* 957 */,
-/* 958 */,
-/* 959 */,
-/* 960 */,
-/* 961 */,
-/* 962 */,
-/* 963 */,
-/* 964 */,
-/* 965 */,
-/* 966 */,
-/* 967 */,
-/* 968 */,
-/* 969 */,
-/* 970 */,
-/* 971 */,
-/* 972 */,
-/* 973 */,
-/* 974 */,
-/* 975 */,
-/* 976 */,
-/* 977 */,
-/* 978 */,
-/* 979 */,
-/* 980 */,
-/* 981 */,
-/* 982 */,
-/* 983 */,
-/* 984 */,
-/* 985 */,
-/* 986 */,
-/* 987 */,
-/* 988 */,
-/* 989 */,
-/* 990 */,
-/* 991 */,
-/* 992 */,
-/* 993 */,
-/* 994 */,
-/* 995 */,
-/* 996 */,
-/* 997 */,
-/* 998 */,
-/* 999 */,
-/* 1000 */,
-/* 1001 */,
-/* 1002 */,
-/* 1003 */,
-/* 1004 */,
-/* 1005 */,
-/* 1006 */,
-/* 1007 */,
-/* 1008 */,
-/* 1009 */,
-/* 1010 */,
-/* 1011 */,
-/* 1012 */,
-/* 1013 */,
-/* 1014 */,
-/* 1015 */,
-/* 1016 */,
-/* 1017 */,
-/* 1018 */,
-/* 1019 */,
-/* 1020 */,
-/* 1021 */,
-/* 1022 */,
-/* 1023 */,
-/* 1024 */,
-/* 1025 */,
-/* 1026 */,
-/* 1027 */,
-/* 1028 */,
-/* 1029 */,
-/* 1030 */,
-/* 1031 */,
-/* 1032 */,
-/* 1033 */,
-/* 1034 */,
-/* 1035 */,
-/* 1036 */,
-/* 1037 */,
-/* 1038 */,
-/* 1039 */,
-/* 1040 */,
-/* 1041 */,
-/* 1042 */,
-/* 1043 */,
-/* 1044 */,
-/* 1045 */,
-/* 1046 */,
-/* 1047 */,
-/* 1048 */,
-/* 1049 */,
-/* 1050 */,
-/* 1051 */,
-/* 1052 */,
-/* 1053 */,
-/* 1054 */,
-/* 1055 */,
-/* 1056 */,
-/* 1057 */,
-/* 1058 */,
-/* 1059 */,
-/* 1060 */,
-/* 1061 */,
-/* 1062 */,
-/* 1063 */,
-/* 1064 */,
-/* 1065 */,
-/* 1066 */,
-/* 1067 */,
-/* 1068 */,
-/* 1069 */,
-/* 1070 */,
-/* 1071 */,
-/* 1072 */,
-/* 1073 */,
-/* 1074 */,
-/* 1075 */,
-/* 1076 */,
-/* 1077 */,
-/* 1078 */,
-/* 1079 */,
-/* 1080 */,
-/* 1081 */,
-/* 1082 */,
-/* 1083 */,
-/* 1084 */,
-/* 1085 */,
-/* 1086 */,
-/* 1087 */,
-/* 1088 */,
-/* 1089 */,
-/* 1090 */,
-/* 1091 */,
-/* 1092 */,
-/* 1093 */,
-/* 1094 */,
-/* 1095 */,
-/* 1096 */,
-/* 1097 */,
-/* 1098 */,
-/* 1099 */,
-/* 1100 */,
-/* 1101 */,
-/* 1102 */,
-/* 1103 */,
-/* 1104 */,
-/* 1105 */,
-/* 1106 */,
-/* 1107 */,
-/* 1108 */,
-/* 1109 */,
-/* 1110 */,
-/* 1111 */,
-/* 1112 */,
-/* 1113 */,
-/* 1114 */,
-/* 1115 */,
-/* 1116 */,
-/* 1117 */,
-/* 1118 */,
-/* 1119 */,
-/* 1120 */,
-/* 1121 */,
-/* 1122 */,
-/* 1123 */,
-/* 1124 */,
-/* 1125 */,
-/* 1126 */,
-/* 1127 */,
-/* 1128 */,
-/* 1129 */,
-/* 1130 */,
-/* 1131 */,
-/* 1132 */,
-/* 1133 */,
-/* 1134 */,
-/* 1135 */,
-/* 1136 */,
-/* 1137 */,
-/* 1138 */,
-/* 1139 */,
-/* 1140 */,
-/* 1141 */,
-/* 1142 */,
-/* 1143 */,
-/* 1144 */,
-/* 1145 */,
-/* 1146 */,
-/* 1147 */,
-/* 1148 */,
-/* 1149 */,
-/* 1150 */,
-/* 1151 */,
-/* 1152 */,
-/* 1153 */,
-/* 1154 */,
-/* 1155 */,
-/* 1156 */,
-/* 1157 */,
-/* 1158 */,
-/* 1159 */,
-/* 1160 */,
-/* 1161 */,
-/* 1162 */,
-/* 1163 */,
-/* 1164 */,
-/* 1165 */,
-/* 1166 */,
-/* 1167 */,
-/* 1168 */,
-/* 1169 */,
-/* 1170 */,
-/* 1171 */,
-/* 1172 */,
-/* 1173 */,
-/* 1174 */,
-/* 1175 */,
-/* 1176 */,
-/* 1177 */,
-/* 1178 */,
-/* 1179 */
+/* 739 */
 /*!*******************************************************************************!*\
   !*** D:/ems/node_modules/@dcloudio/uni-ui/lib/uni-icons/uniicons_file_vue.js ***!
   \*******************************************************************************/
@@ -65937,28 +65497,28 @@ var fontData = [{
 exports.fontData = fontData;
 
 /***/ }),
-/* 1180 */,
-/* 1181 */,
-/* 1182 */,
-/* 1183 */,
-/* 1184 */,
-/* 1185 */,
-/* 1186 */,
-/* 1187 */,
-/* 1188 */,
-/* 1189 */,
-/* 1190 */,
-/* 1191 */,
-/* 1192 */,
-/* 1193 */,
-/* 1194 */,
-/* 1195 */,
-/* 1196 */,
-/* 1197 */,
-/* 1198 */,
-/* 1199 */,
-/* 1200 */,
-/* 1201 */
+/* 740 */,
+/* 741 */,
+/* 742 */,
+/* 743 */,
+/* 744 */,
+/* 745 */,
+/* 746 */,
+/* 747 */,
+/* 748 */,
+/* 749 */,
+/* 750 */,
+/* 751 */,
+/* 752 */,
+/* 753 */,
+/* 754 */,
+/* 755 */,
+/* 756 */,
+/* 757 */,
+/* 758 */,
+/* 759 */,
+/* 760 */,
+/* 761 */
 /*!****************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-navbar/props.js ***!
   \****************************************************************/
@@ -66060,14 +65620,14 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 1202 */,
-/* 1203 */,
-/* 1204 */,
-/* 1205 */,
-/* 1206 */,
-/* 1207 */,
-/* 1208 */,
-/* 1209 */
+/* 762 */,
+/* 763 */,
+/* 764 */,
+/* 765 */,
+/* 766 */,
+/* 767 */,
+/* 768 */,
+/* 769 */
 /*!************************************************************************************!*\
   !*** ./node_modules/@dcloudio/vue-cli-plugin-uni/packages/uni-cloud/dist/index.js ***!
   \************************************************************************************/
@@ -66092,10 +65652,10 @@ var _defineProperty2 = _interopRequireDefault(__webpack_require__(/*! @babel/run
 var _inherits2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/inherits */ 81));
 var _possibleConstructorReturn2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/possibleConstructorReturn */ 82));
 var _getPrototypeOf2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/getPrototypeOf */ 83));
-var _wrapNativeSuper2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/wrapNativeSuper */ 1210));
+var _wrapNativeSuper2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/wrapNativeSuper */ 770));
 var _classCallCheck2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ 23));
 var _createClass2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/createClass */ 24));
-var _pages = _interopRequireDefault(__webpack_require__(/*! @/pages.json */ 1212));
+var _pages = _interopRequireDefault(__webpack_require__(/*! @/pages.json */ 772));
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e34) { throw _e34; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e35) { didErr = true; err = _e35; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
@@ -66606,7 +66166,7 @@ var b = "development" === "development",
   x = true;
 var N = "";
 try {
-  N = (__webpack_require__(/*! uni-stat-config */ 1213).default || __webpack_require__(/*! uni-stat-config */ 1213)).appid;
+  N = (__webpack_require__(/*! uni-stat-config */ 773).default || __webpack_require__(/*! uni-stat-config */ 773)).appid;
 } catch (e) {}
 var R,
   L = {};
@@ -74476,7 +74036,7 @@ exports.default = er;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../../webpack/buildin/global.js */ 3), __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"], __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/wx.js */ 1)["default"]))
 
 /***/ }),
-/* 1210 */
+/* 770 */
 /*!****************************************************************!*\
   !*** ./node_modules/@babel/runtime/helpers/wrapNativeSuper.js ***!
   \****************************************************************/
@@ -74485,7 +74045,7 @@ exports.default = er;
 
 var getPrototypeOf = __webpack_require__(/*! ./getPrototypeOf.js */ 83);
 var setPrototypeOf = __webpack_require__(/*! ./setPrototypeOf.js */ 16);
-var isNativeFunction = __webpack_require__(/*! ./isNativeFunction.js */ 1211);
+var isNativeFunction = __webpack_require__(/*! ./isNativeFunction.js */ 771);
 var construct = __webpack_require__(/*! ./construct.js */ 15);
 function _wrapNativeSuper(Class) {
   var _cache = typeof Map === "function" ? new Map() : undefined;
@@ -74516,7 +74076,7 @@ function _wrapNativeSuper(Class) {
 module.exports = _wrapNativeSuper, module.exports.__esModule = true, module.exports["default"] = module.exports;
 
 /***/ }),
-/* 1211 */
+/* 771 */
 /*!*****************************************************************!*\
   !*** ./node_modules/@babel/runtime/helpers/isNativeFunction.js ***!
   \*****************************************************************/
@@ -74533,7 +74093,7 @@ function _isNativeFunction(fn) {
 module.exports = _isNativeFunction, module.exports.__esModule = true, module.exports["default"] = module.exports;
 
 /***/ }),
-/* 1212 */
+/* 772 */
 /*!******************************************************!*\
   !*** D:/ems/pages.json?{"type":"origin-pages-json"} ***!
   \******************************************************/
@@ -74594,126 +74154,18 @@ var _default = {
     "style": {
       "navigationBarTitleText": "设置参数"
     }
+  }, {
+    "path": "pages/access-setting/access-setting",
+    "style": {
+      "navigationBarTitleText": "接入设置"
+    }
+  }, {
+    "path": "pages/device-detail/device-detail",
+    "style": {
+      "navigationBarTitleText": "设备详情"
+    }
   }],
   "subPackages": [{
-    "root": "cloud-system",
-    "pages": [{
-      "path": "index",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "operation",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "report",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "profile",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }]
-  }, {
-    "root": "FIEMS",
-    "pages": [{
-      "path": "index",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "fiems-energy",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "fiems-expert",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "fiems-home",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "fiems-user",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "alert/alert-info",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "expert/elec-rank",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "expert/elec-peak",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "energy/electricity-monitor",
-      "style": {
-        "navigationBarTitleText": "配电监测",
-        "navigationBarBackgroundColor": "#003E98",
-        "navigationBarTextStyle": "white"
-      }
-    }, {
-      "path": "energy/storage-monitor",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "energy/air-monitor",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "energy/storage-detail",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "energy/device-monitor",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "energy/water-monitor",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "energy/air-station-monitor",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "energy/electricity-analysis",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "energy/sewage-station-monitor",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }, {
-      "path": "energy/centrifuge-monitor",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    }]
-  }, {
     "root": "community",
     "pages": [{
       "path": "index",
@@ -74749,12 +74201,6 @@ var _default = {
       "path": "profile",
       "style": {
         "navigationBarTitleText": "",
-        "enablePullDownRefresh": false
-      }
-    }, {
-      "path": "charging-detail",
-      "style": {
-        "navigationBarTitleText": "充电桩详情",
         "enablePullDownRefresh": false
       }
     }, {
@@ -74859,66 +74305,28 @@ var _default = {
         "navigationBarTitleText": "关于我们"
       }
     }]
-  }, {
-    "root": "charging",
-    "pages": [{
-      "path": "index",
-      "style": {
-        "navigationBarTitleText": "",
-        "navigationStyle": "custom",
-        "enablePullDownRefresh": false
-      }
-    }, {
-      "path": "home",
-      "style": {
-        "navigationBarTitleText": "充电桩首页",
-        "navigationStyle": "custom",
-        "enablePullDownRefresh": false
-      }
-    }, {
-      "path": "scan",
-      "style": {
-        "navigationBarTitleText": "扫码充电",
-        "navigationStyle": "custom",
-        "enablePullDownRefresh": false
-      }
-    }, {
-      "path": "charging-process",
-      "style": {
-        "navigationBarTitleText": "充电中",
-        "navigationStyle": "custom",
-        "enablePullDownRefresh": false
-      }
-    }, {
-      "path": "records",
-      "style": {
-        "navigationBarTitleText": "充电记录",
-        "navigationStyle": "custom",
-        "enablePullDownRefresh": true
-      }
-    }, {
-      "path": "my",
-      "style": {
-        "navigationBarTitleText": "我的",
-        "navigationStyle": "custom",
-        "enablePullDownRefresh": false
-      }
-    }]
   }],
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "GIEMS云",
     "navigationBarBackgroundColor": "#fff",
-    "backgroundColor": "#103071",
+    "backgroundColor": "#fff",
     "navigationStyle": "custom",
     "enablePullDownRefresh": false,
-    "pageOrientation": "auto"
+    "pageOrientation": "auto",
+    "app-plus": {
+      "bounce": "none"
+    },
+    "safeArea": {
+      "paddingTop": "auto",
+      "paddingBottom": "auto"
+    }
   }
 };
 exports.default = _default;
 
 /***/ }),
-/* 1213 */
+/* 773 */
 /*!*****************************************!*\
   !*** D:/ems/pages.json?{"type":"stat"} ***!
   \*****************************************/
@@ -74938,7 +74346,7 @@ var _default = {
 exports.default = _default;
 
 /***/ }),
-/* 1214 */
+/* 774 */
 /*!***********************************************************************!*\
   !*** D:/ems/uni_modules/qiun-data-charts/js_sdk/u-charts/u-charts.js ***!
   \***********************************************************************/
@@ -82598,7 +82006,7 @@ var _default = uCharts;
 exports.default = _default;
 
 /***/ }),
-/* 1215 */
+/* 775 */
 /*!*****************************************************************************!*\
   !*** D:/ems/uni_modules/qiun-data-charts/js_sdk/u-charts/config-ucharts.js ***!
   \*****************************************************************************/
@@ -83219,14 +82627,14 @@ var _default = cfu;
 exports.default = _default;
 
 /***/ }),
-/* 1216 */,
-/* 1217 */,
-/* 1218 */,
-/* 1219 */,
-/* 1220 */,
-/* 1221 */,
-/* 1222 */,
-/* 1223 */
+/* 776 */,
+/* 777 */,
+/* 778 */,
+/* 779 */,
+/* 780 */,
+/* 781 */,
+/* 782 */,
+/* 783 */
 /*!******************************************************************!*\
   !*** D:/ems/uni_modules/uni-icons/components/uni-icons/icons.js ***!
   \******************************************************************/
@@ -84247,83 +83655,124 @@ var _default = {
 exports.default = _default;
 
 /***/ }),
-/* 1224 */,
-/* 1225 */,
-/* 1226 */,
-/* 1227 */,
-/* 1228 */,
-/* 1229 */,
-/* 1230 */,
-/* 1231 */,
-/* 1232 */,
-/* 1233 */,
-/* 1234 */,
-/* 1235 */,
-/* 1236 */,
-/* 1237 */,
-/* 1238 */,
-/* 1239 */,
-/* 1240 */,
-/* 1241 */,
-/* 1242 */,
-/* 1243 */,
-/* 1244 */,
-/* 1245 */,
-/* 1246 */,
-/* 1247 */,
-/* 1248 */,
-/* 1249 */,
-/* 1250 */,
-/* 1251 */,
-/* 1252 */,
-/* 1253 */,
-/* 1254 */,
-/* 1255 */,
-/* 1256 */,
-/* 1257 */,
-/* 1258 */,
-/* 1259 */,
-/* 1260 */,
-/* 1261 */,
-/* 1262 */,
-/* 1263 */,
-/* 1264 */,
-/* 1265 */,
-/* 1266 */,
-/* 1267 */,
-/* 1268 */,
-/* 1269 */,
-/* 1270 */,
-/* 1271 */,
-/* 1272 */,
-/* 1273 */,
-/* 1274 */,
-/* 1275 */,
-/* 1276 */,
-/* 1277 */,
-/* 1278 */,
-/* 1279 */,
-/* 1280 */,
-/* 1281 */,
-/* 1282 */,
-/* 1283 */,
-/* 1284 */,
-/* 1285 */,
-/* 1286 */,
-/* 1287 */,
-/* 1288 */,
-/* 1289 */,
-/* 1290 */,
-/* 1291 */,
-/* 1292 */,
-/* 1293 */,
-/* 1294 */,
-/* 1295 */,
-/* 1296 */,
-/* 1297 */
-/*!*******************************************************************************************!*\
-  !*** D:/ems/uni_modules/uni-datetime-picker/components/uni-datetime-picker/i18n/index.js ***!
-  \*******************************************************************************************/
+/* 784 */,
+/* 785 */,
+/* 786 */,
+/* 787 */,
+/* 788 */,
+/* 789 */,
+/* 790 */,
+/* 791 */,
+/* 792 */,
+/* 793 */,
+/* 794 */,
+/* 795 */,
+/* 796 */,
+/* 797 */,
+/* 798 */,
+/* 799 */,
+/* 800 */,
+/* 801 */,
+/* 802 */,
+/* 803 */,
+/* 804 */,
+/* 805 */,
+/* 806 */,
+/* 807 */,
+/* 808 */,
+/* 809 */,
+/* 810 */,
+/* 811 */,
+/* 812 */,
+/* 813 */,
+/* 814 */,
+/* 815 */,
+/* 816 */,
+/* 817 */,
+/* 818 */,
+/* 819 */,
+/* 820 */,
+/* 821 */,
+/* 822 */,
+/* 823 */,
+/* 824 */,
+/* 825 */,
+/* 826 */,
+/* 827 */,
+/* 828 */,
+/* 829 */,
+/* 830 */,
+/* 831 */,
+/* 832 */,
+/* 833 */,
+/* 834 */,
+/* 835 */,
+/* 836 */,
+/* 837 */,
+/* 838 */,
+/* 839 */,
+/* 840 */,
+/* 841 */,
+/* 842 */,
+/* 843 */,
+/* 844 */,
+/* 845 */,
+/* 846 */,
+/* 847 */,
+/* 848 */,
+/* 849 */,
+/* 850 */,
+/* 851 */,
+/* 852 */,
+/* 853 */,
+/* 854 */,
+/* 855 */,
+/* 856 */,
+/* 857 */,
+/* 858 */,
+/* 859 */,
+/* 860 */,
+/* 861 */,
+/* 862 */,
+/* 863 */,
+/* 864 */,
+/* 865 */,
+/* 866 */,
+/* 867 */,
+/* 868 */,
+/* 869 */,
+/* 870 */,
+/* 871 */,
+/* 872 */,
+/* 873 */,
+/* 874 */,
+/* 875 */,
+/* 876 */,
+/* 877 */,
+/* 878 */,
+/* 879 */,
+/* 880 */,
+/* 881 */,
+/* 882 */,
+/* 883 */,
+/* 884 */,
+/* 885 */,
+/* 886 */,
+/* 887 */,
+/* 888 */,
+/* 889 */,
+/* 890 */,
+/* 891 */,
+/* 892 */,
+/* 893 */,
+/* 894 */,
+/* 895 */,
+/* 896 */,
+/* 897 */,
+/* 898 */
+/*!*******************************************************************************!*\
+  !*** D:/ems/uni_modules/uni-load-more/components/uni-load-more/i18n/index.js ***!
+  \*******************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -84335,9 +83784,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-var _en = _interopRequireDefault(__webpack_require__(/*! ./en.json */ 1298));
-var _zhHans = _interopRequireDefault(__webpack_require__(/*! ./zh-Hans.json */ 1299));
-var _zhHant = _interopRequireDefault(__webpack_require__(/*! ./zh-Hant.json */ 1300));
+var _en = _interopRequireDefault(__webpack_require__(/*! ./en.json */ 899));
+var _zhHans = _interopRequireDefault(__webpack_require__(/*! ./zh-Hans.json */ 900));
+var _zhHant = _interopRequireDefault(__webpack_require__(/*! ./zh-Hant.json */ 901));
 var _default = {
   en: _en.default,
   'zh-Hans': _zhHans.default,
@@ -84346,476 +83795,44 @@ var _default = {
 exports.default = _default;
 
 /***/ }),
-/* 1298 */
-/*!******************************************************************************************!*\
-  !*** D:/ems/uni_modules/uni-datetime-picker/components/uni-datetime-picker/i18n/en.json ***!
-  \******************************************************************************************/
-/*! exports provided: uni-datetime-picker.selectDate, uni-datetime-picker.selectTime, uni-datetime-picker.selectDateTime, uni-datetime-picker.startDate, uni-datetime-picker.endDate, uni-datetime-picker.startTime, uni-datetime-picker.endTime, uni-datetime-picker.ok, uni-datetime-picker.clear, uni-datetime-picker.cancel, uni-datetime-picker.year, uni-datetime-picker.month, uni-calender.MON, uni-calender.TUE, uni-calender.WED, uni-calender.THU, uni-calender.FRI, uni-calender.SAT, uni-calender.SUN, uni-calender.confirm, default */
+/* 899 */
+/*!******************************************************************************!*\
+  !*** D:/ems/uni_modules/uni-load-more/components/uni-load-more/i18n/en.json ***!
+  \******************************************************************************/
+/*! exports provided: uni-load-more.contentdown, uni-load-more.contentrefresh, uni-load-more.contentnomore, default */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"uni-datetime-picker.selectDate\":\"select date\",\"uni-datetime-picker.selectTime\":\"select time\",\"uni-datetime-picker.selectDateTime\":\"select datetime\",\"uni-datetime-picker.startDate\":\"start date\",\"uni-datetime-picker.endDate\":\"end date\",\"uni-datetime-picker.startTime\":\"start time\",\"uni-datetime-picker.endTime\":\"end time\",\"uni-datetime-picker.ok\":\"ok\",\"uni-datetime-picker.clear\":\"clear\",\"uni-datetime-picker.cancel\":\"cancel\",\"uni-datetime-picker.year\":\"-\",\"uni-datetime-picker.month\":\"\",\"uni-calender.MON\":\"MON\",\"uni-calender.TUE\":\"TUE\",\"uni-calender.WED\":\"WED\",\"uni-calender.THU\":\"THU\",\"uni-calender.FRI\":\"FRI\",\"uni-calender.SAT\":\"SAT\",\"uni-calender.SUN\":\"SUN\",\"uni-calender.confirm\":\"confirm\"}");
+module.exports = JSON.parse("{\"uni-load-more.contentdown\":\"Pull up to show more\",\"uni-load-more.contentrefresh\":\"loading...\",\"uni-load-more.contentnomore\":\"No more data\"}");
 
 /***/ }),
-/* 1299 */
-/*!***********************************************************************************************!*\
-  !*** D:/ems/uni_modules/uni-datetime-picker/components/uni-datetime-picker/i18n/zh-Hans.json ***!
-  \***********************************************************************************************/
-/*! exports provided: uni-datetime-picker.selectDate, uni-datetime-picker.selectTime, uni-datetime-picker.selectDateTime, uni-datetime-picker.startDate, uni-datetime-picker.endDate, uni-datetime-picker.startTime, uni-datetime-picker.endTime, uni-datetime-picker.ok, uni-datetime-picker.clear, uni-datetime-picker.cancel, uni-datetime-picker.year, uni-datetime-picker.month, uni-calender.SUN, uni-calender.MON, uni-calender.TUE, uni-calender.WED, uni-calender.THU, uni-calender.FRI, uni-calender.SAT, uni-calender.confirm, default */
+/* 900 */
+/*!***********************************************************************************!*\
+  !*** D:/ems/uni_modules/uni-load-more/components/uni-load-more/i18n/zh-Hans.json ***!
+  \***********************************************************************************/
+/*! exports provided: uni-load-more.contentdown, uni-load-more.contentrefresh, uni-load-more.contentnomore, default */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"uni-datetime-picker.selectDate\":\"选择日期\",\"uni-datetime-picker.selectTime\":\"选择时间\",\"uni-datetime-picker.selectDateTime\":\"选择日期时间\",\"uni-datetime-picker.startDate\":\"开始日期\",\"uni-datetime-picker.endDate\":\"结束日期\",\"uni-datetime-picker.startTime\":\"开始时间\",\"uni-datetime-picker.endTime\":\"结束时间\",\"uni-datetime-picker.ok\":\"确定\",\"uni-datetime-picker.clear\":\"清除\",\"uni-datetime-picker.cancel\":\"取消\",\"uni-datetime-picker.year\":\"年\",\"uni-datetime-picker.month\":\"月\",\"uni-calender.SUN\":\"日\",\"uni-calender.MON\":\"一\",\"uni-calender.TUE\":\"二\",\"uni-calender.WED\":\"三\",\"uni-calender.THU\":\"四\",\"uni-calender.FRI\":\"五\",\"uni-calender.SAT\":\"六\",\"uni-calender.confirm\":\"确认\"}");
+module.exports = JSON.parse("{\"uni-load-more.contentdown\":\"上拉显示更多\",\"uni-load-more.contentrefresh\":\"正在加载...\",\"uni-load-more.contentnomore\":\"没有更多数据了\"}");
 
 /***/ }),
-/* 1300 */
-/*!***********************************************************************************************!*\
-  !*** D:/ems/uni_modules/uni-datetime-picker/components/uni-datetime-picker/i18n/zh-Hant.json ***!
-  \***********************************************************************************************/
-/*! exports provided: uni-datetime-picker.selectDate, uni-datetime-picker.selectTime, uni-datetime-picker.selectDateTime, uni-datetime-picker.startDate, uni-datetime-picker.endDate, uni-datetime-picker.startTime, uni-datetime-picker.endTime, uni-datetime-picker.ok, uni-datetime-picker.clear, uni-datetime-picker.cancel, uni-datetime-picker.year, uni-datetime-picker.month, uni-calender.SUN, uni-calender.MON, uni-calender.TUE, uni-calender.WED, uni-calender.THU, uni-calender.FRI, uni-calender.SAT, uni-calender.confirm, default */
+/* 901 */
+/*!***********************************************************************************!*\
+  !*** D:/ems/uni_modules/uni-load-more/components/uni-load-more/i18n/zh-Hant.json ***!
+  \***********************************************************************************/
+/*! exports provided: uni-load-more.contentdown, uni-load-more.contentrefresh, uni-load-more.contentnomore, default */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"uni-datetime-picker.selectDate\":\"選擇日期\",\"uni-datetime-picker.selectTime\":\"選擇時間\",\"uni-datetime-picker.selectDateTime\":\"選擇日期時間\",\"uni-datetime-picker.startDate\":\"開始日期\",\"uni-datetime-picker.endDate\":\"結束日期\",\"uni-datetime-picker.startTime\":\"開始时间\",\"uni-datetime-picker.endTime\":\"結束时间\",\"uni-datetime-picker.ok\":\"確定\",\"uni-datetime-picker.clear\":\"清除\",\"uni-datetime-picker.cancel\":\"取消\",\"uni-datetime-picker.year\":\"年\",\"uni-datetime-picker.month\":\"月\",\"uni-calender.SUN\":\"日\",\"uni-calender.MON\":\"一\",\"uni-calender.TUE\":\"二\",\"uni-calender.WED\":\"三\",\"uni-calender.THU\":\"四\",\"uni-calender.FRI\":\"五\",\"uni-calender.SAT\":\"六\",\"uni-calender.confirm\":\"確認\"}");
+module.exports = JSON.parse("{\"uni-load-more.contentdown\":\"上拉顯示更多\",\"uni-load-more.contentrefresh\":\"正在加載...\",\"uni-load-more.contentnomore\":\"沒有更多數據了\"}");
 
 /***/ }),
-/* 1301 */,
-/* 1302 */,
-/* 1303 */,
-/* 1304 */,
-/* 1305 */,
-/* 1306 */,
-/* 1307 */,
-/* 1308 */
-/*!**********************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-loading-icon/props.js ***!
-  \**********************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _default = {
-  props: {
-    // 是否显示组件
-    show: {
-      type: Boolean,
-      default: uni.$u.props.loadingIcon.show
-    },
-    // 颜色
-    color: {
-      type: String,
-      default: uni.$u.props.loadingIcon.color
-    },
-    // 提示文字颜色
-    textColor: {
-      type: String,
-      default: uni.$u.props.loadingIcon.textColor
-    },
-    // 文字和图标是否垂直排列
-    vertical: {
-      type: Boolean,
-      default: uni.$u.props.loadingIcon.vertical
-    },
-    // 模式选择，circle-圆形，spinner-花朵形，semicircle-半圆形
-    mode: {
-      type: String,
-      default: uni.$u.props.loadingIcon.mode
-    },
-    // 图标大小，单位默认px
-    size: {
-      type: [String, Number],
-      default: uni.$u.props.loadingIcon.size
-    },
-    // 文字大小
-    textSize: {
-      type: [String, Number],
-      default: uni.$u.props.loadingIcon.textSize
-    },
-    // 文字内容
-    text: {
-      type: [String, Number],
-      default: uni.$u.props.loadingIcon.text
-    },
-    // 动画模式
-    timingFunction: {
-      type: String,
-      default: uni.$u.props.loadingIcon.timingFunction
-    },
-    // 动画执行周期时间
-    duration: {
-      type: [String, Number],
-      default: uni.$u.props.loadingIcon.duration
-    },
-    // mode=circle时的暗边颜色
-    inactiveColor: {
-      type: String,
-      default: uni.$u.props.loadingIcon.inactiveColor
-    }
-  }
-};
-exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
-
-/***/ }),
-/* 1309 */,
-/* 1310 */,
-/* 1311 */,
-/* 1312 */,
-/* 1313 */,
-/* 1314 */,
-/* 1315 */,
-/* 1316 */
-/*!******************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-back-top/props.js ***!
-  \******************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _default = {
-  props: {
-    // 返回顶部的形状，circle-圆形，square-方形
-    mode: {
-      type: String,
-      default: uni.$u.props.backtop.mode
-    },
-    // 自定义图标
-    icon: {
-      type: String,
-      default: uni.$u.props.backtop.icon
-    },
-    // 提示文字
-    text: {
-      type: String,
-      default: uni.$u.props.backtop.text
-    },
-    // 返回顶部滚动时间
-    duration: {
-      type: [String, Number],
-      default: uni.$u.props.backtop.duration
-    },
-    // 滚动距离
-    scrollTop: {
-      type: [String, Number],
-      default: uni.$u.props.backtop.scrollTop
-    },
-    // 距离顶部多少距离显示，单位px
-    top: {
-      type: [String, Number],
-      default: uni.$u.props.backtop.top
-    },
-    // 返回顶部按钮到底部的距离，单位px
-    bottom: {
-      type: [String, Number],
-      default: uni.$u.props.backtop.bottom
-    },
-    // 返回顶部按钮到右边的距离，单位px
-    right: {
-      type: [String, Number],
-      default: uni.$u.props.backtop.right
-    },
-    // 层级
-    zIndex: {
-      type: [String, Number],
-      default: uni.$u.props.backtop.zIndex
-    },
-    // 图标的样式，对象形式
-    iconStyle: {
-      type: Object,
-      default: uni.$u.props.backtop.iconStyle
-    }
-  }
-};
-exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
-
-/***/ }),
-/* 1317 */,
-/* 1318 */,
-/* 1319 */,
-/* 1320 */,
-/* 1321 */,
-/* 1322 */,
-/* 1323 */,
-/* 1324 */,
-/* 1325 */,
-/* 1326 */,
-/* 1327 */,
-/* 1328 */,
-/* 1329 */,
-/* 1330 */,
-/* 1331 */
-/*!********************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-notice-bar/props.js ***!
-  \********************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _default = {
-  props: {
-    // 显示的内容，数组
-    text: {
-      type: [Array, String],
-      default: uni.$u.props.noticeBar.text
-    },
-    // 通告滚动模式，row-横向滚动，column-竖向滚动
-    direction: {
-      type: String,
-      default: uni.$u.props.noticeBar.direction
-    },
-    // direction = row时，是否使用步进形式滚动
-    step: {
-      type: Boolean,
-      default: uni.$u.props.noticeBar.step
-    },
-    // 是否显示左侧的音量图标
-    icon: {
-      type: String,
-      default: uni.$u.props.noticeBar.icon
-    },
-    // 通告模式，link-显示右箭头，closable-显示右侧关闭图标
-    mode: {
-      type: String,
-      default: uni.$u.props.noticeBar.mode
-    },
-    // 文字颜色，各图标也会使用文字颜色
-    color: {
-      type: String,
-      default: uni.$u.props.noticeBar.color
-    },
-    // 背景颜色
-    bgColor: {
-      type: String,
-      default: uni.$u.props.noticeBar.bgColor
-    },
-    // 水平滚动时的滚动速度，即每秒滚动多少px(px)，这有利于控制文字无论多少时，都能有一个恒定的速度
-    speed: {
-      type: [String, Number],
-      default: uni.$u.props.noticeBar.speed
-    },
-    // 字体大小
-    fontSize: {
-      type: [String, Number],
-      default: uni.$u.props.noticeBar.fontSize
-    },
-    // 滚动一个周期的时间长，单位ms
-    duration: {
-      type: [String, Number],
-      default: uni.$u.props.noticeBar.duration
-    },
-    // 是否禁止用手滑动切换
-    // 目前HX2.6.11，只支持App 2.5.5+、H5 2.5.5+、支付宝小程序、字节跳动小程序
-    disableTouch: {
-      type: Boolean,
-      default: uni.$u.props.noticeBar.disableTouch
-    },
-    // 跳转的页面路径
-    url: {
-      type: String,
-      default: uni.$u.props.noticeBar.url
-    },
-    // 页面跳转的类型
-    linkType: {
-      type: String,
-      default: uni.$u.props.noticeBar.linkType
-    }
-  }
-};
-exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
-
-/***/ }),
-/* 1332 */,
-/* 1333 */,
-/* 1334 */,
-/* 1335 */,
-/* 1336 */,
-/* 1337 */,
-/* 1338 */,
-/* 1339 */
-/*!**************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-line/props.js ***!
-  \**************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _default = {
-  props: {
-    color: {
-      type: String,
-      default: uni.$u.props.line.color
-    },
-    // 长度，竖向时表现为高度，横向时表现为长度，可以为百分比，带px单位的值等
-    length: {
-      type: [String, Number],
-      default: uni.$u.props.line.length
-    },
-    // 线条方向，col-竖向，row-横向
-    direction: {
-      type: String,
-      default: uni.$u.props.line.direction
-    },
-    // 是否显示细边框
-    hairline: {
-      type: Boolean,
-      default: uni.$u.props.line.hairline
-    },
-    // 线条与上下左右元素的间距，字符串形式，如"30px"、"20px 30px"
-    margin: {
-      type: [String, Number],
-      default: uni.$u.props.line.margin
-    },
-    // 是否虚线，true-虚线，false-实线
-    dashed: {
-      type: Boolean,
-      default: uni.$u.props.line.dashed
-    }
-  }
-};
-exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
-
-/***/ }),
-/* 1340 */,
-/* 1341 */,
-/* 1342 */,
-/* 1343 */,
-/* 1344 */,
-/* 1345 */,
-/* 1346 */,
-/* 1347 */
-/*!***************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-modal/props.js ***!
-  \***************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _default = {
-  props: {
-    // 是否展示modal
-    show: {
-      type: Boolean,
-      default: uni.$u.props.modal.show
-    },
-    // 标题
-    title: {
-      type: [String],
-      default: uni.$u.props.modal.title
-    },
-    // 弹窗内容
-    content: {
-      type: String,
-      default: uni.$u.props.modal.content
-    },
-    // 确认文案
-    confirmText: {
-      type: String,
-      default: uni.$u.props.modal.confirmText
-    },
-    // 取消文案
-    cancelText: {
-      type: String,
-      default: uni.$u.props.modal.cancelText
-    },
-    // 是否显示确认按钮
-    showConfirmButton: {
-      type: Boolean,
-      default: uni.$u.props.modal.showConfirmButton
-    },
-    // 是否显示取消按钮
-    showCancelButton: {
-      type: Boolean,
-      default: uni.$u.props.modal.showCancelButton
-    },
-    // 确认按钮颜色
-    confirmColor: {
-      type: String,
-      default: uni.$u.props.modal.confirmColor
-    },
-    // 取消文字颜色
-    cancelColor: {
-      type: String,
-      default: uni.$u.props.modal.cancelColor
-    },
-    // 对调确认和取消的位置
-    buttonReverse: {
-      type: Boolean,
-      default: uni.$u.props.modal.buttonReverse
-    },
-    // 是否开启缩放效果
-    zoom: {
-      type: Boolean,
-      default: uni.$u.props.modal.zoom
-    },
-    // 是否异步关闭，只对确定按钮有效
-    asyncClose: {
-      type: Boolean,
-      default: uni.$u.props.modal.asyncClose
-    },
-    // 是否允许点击遮罩关闭modal
-    closeOnClickOverlay: {
-      type: Boolean,
-      default: uni.$u.props.modal.closeOnClickOverlay
-    },
-    // 给一个负的margin-top，往上偏移，避免和键盘重合的情况
-    negativeTop: {
-      type: [String, Number],
-      default: uni.$u.props.modal.negativeTop
-    },
-    // modal宽度，不支持百分比，可以数值，px，rpx单位
-    width: {
-      type: [String, Number],
-      default: uni.$u.props.modal.width
-    },
-    // 确认按钮的样式，circle-圆形，square-方形，如设置，将不会显示取消按钮
-    confirmButtonShape: {
-      type: String,
-      default: uni.$u.props.modal.confirmButtonShape
-    }
-  }
-};
-exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
-
-/***/ }),
-/* 1348 */,
-/* 1349 */,
-/* 1350 */,
-/* 1351 */,
-/* 1352 */,
-/* 1353 */,
-/* 1354 */,
-/* 1355 */
+/* 902 */,
+/* 903 */,
+/* 904 */,
+/* 905 */,
+/* 906 */,
+/* 907 */,
+/* 908 */,
+/* 909 */
 /*!***************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-image/props.js ***!
   \***************************************************************/
@@ -84917,29 +83934,50 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 1356 */,
-/* 1357 */,
-/* 1358 */,
-/* 1359 */,
-/* 1360 */,
-/* 1361 */,
-/* 1362 */,
-/* 1363 */,
-/* 1364 */,
-/* 1365 */,
-/* 1366 */,
-/* 1367 */,
-/* 1368 */,
-/* 1369 */,
-/* 1370 */,
-/* 1371 */,
-/* 1372 */,
-/* 1373 */,
-/* 1374 */,
-/* 1375 */
-/*!***************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-empty/props.js ***!
-  \***************************************************************/
+/* 910 */,
+/* 911 */,
+/* 912 */,
+/* 913 */,
+/* 914 */,
+/* 915 */,
+/* 916 */,
+/* 917 */,
+/* 918 */,
+/* 919 */,
+/* 920 */,
+/* 921 */,
+/* 922 */,
+/* 923 */,
+/* 924 */,
+/* 925 */,
+/* 926 */,
+/* 927 */,
+/* 928 */,
+/* 929 */,
+/* 930 */,
+/* 931 */,
+/* 932 */,
+/* 933 */,
+/* 934 */,
+/* 935 */,
+/* 936 */,
+/* 937 */,
+/* 938 */,
+/* 939 */,
+/* 940 */,
+/* 941 */,
+/* 942 */,
+/* 943 */,
+/* 944 */,
+/* 945 */,
+/* 946 */,
+/* 947 */,
+/* 948 */,
+/* 949 */,
+/* 950 */
+/*!*****************************************************************!*\
+  !*** D:/ems/uni_modules/uview-ui/components/u-overlay/props.js ***!
+  \*****************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -84952,60 +83990,25 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 var _default = {
   props: {
-    // 内置图标名称，或图片路径，建议绝对路径
-    icon: {
-      type: String,
-      default: uni.$u.props.empty.icon
-    },
-    // 提示文字
-    text: {
-      type: String,
-      default: uni.$u.props.empty.text
-    },
-    // 文字颜色
-    textColor: {
-      type: String,
-      default: uni.$u.props.empty.textColor
-    },
-    // 文字大小
-    textSize: {
-      type: [String, Number],
-      default: uni.$u.props.empty.textSize
-    },
-    // 图标的颜色
-    iconColor: {
-      type: String,
-      default: uni.$u.props.empty.iconColor
-    },
-    // 图标的大小
-    iconSize: {
-      type: [String, Number],
-      default: uni.$u.props.empty.iconSize
-    },
-    // 选择预置的图标类型
-    mode: {
-      type: String,
-      default: uni.$u.props.empty.mode
-    },
-    //  图标宽度，单位px
-    width: {
-      type: [String, Number],
-      default: uni.$u.props.empty.width
-    },
-    // 图标高度，单位px
-    height: {
-      type: [String, Number],
-      default: uni.$u.props.empty.height
-    },
-    // 是否显示组件
+    // 是否显示遮罩
     show: {
       type: Boolean,
-      default: uni.$u.props.empty.show
+      default: uni.$u.props.overlay.show
     },
-    // 组件距离上一个元素之间的距离，默认px单位
-    marginTop: {
+    // 层级z-index
+    zIndex: {
       type: [String, Number],
-      default: uni.$u.props.empty.marginTop
+      default: uni.$u.props.overlay.zIndex
+    },
+    // 遮罩的过渡时间，单位为ms
+    duration: {
+      type: [String, Number],
+      default: uni.$u.props.overlay.duration
+    },
+    // 不透明度值，当做rgba的第四个参数
+    opacity: {
+      type: [String, Number],
+      default: uni.$u.props.overlay.opacity
     }
   }
 };
@@ -85013,365 +84016,98 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 1376 */,
-/* 1377 */,
-/* 1378 */,
-/* 1379 */,
-/* 1380 */,
-/* 1381 */,
-/* 1382 */,
-/* 1383 */
-/*!**********************************************************!*\
-  !*** D:/ems/components/biaofun-datetime-picker/utils.js ***!
-  \**********************************************************/
+/* 951 */,
+/* 952 */,
+/* 953 */,
+/* 954 */,
+/* 955 */,
+/* 956 */,
+/* 957 */,
+/* 958 */
+/*!**********************************************************************!*\
+  !*** D:/ems/uni_modules/uview-ui/components/u-loading-icon/props.js ***!
+  \**********************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(uni) {
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-/**
- * @说明：工具集
- * @作者：陈万照
- * @公司：山东标梵互动技术有限公司
- * @官网：http://biaofun.com/
- * @版本：v1.0.0
- * @时间：2020年4月28日11:28:13
- */
 var _default = {
-  /**
-   * 同步 try catch 的进一步封装处理
-   * 使用方法：
-   * let [err, res] = await this.$utils.asyncTasks(Promise函数);
-   * if(res) 成功
-   * if(err) 失败
-   */
-  asyncTasks: function asyncTasks(promise) {
-    return promise.then(function (data) {
-      return [null, data];
-    }).catch(function (err) {
-      return [err];
-    });
-  },
-  /**
-   * 精确判断数据是否是 Object 类型
-   * @param {Any} val 要判断的数据
-   * @returns {Boolean} true：是；false：不是；
-   */
-  isObject: function isObject(val) {
-    return Object.prototype.toString.call(val) === '[object Object]' && val !== null && val !== undefined;
-  },
-  /**
-   * 判断数据是否是 Array 类型
-   * @param {Any} val 要判断的数据
-   * @returns {Boolean} true：是；false：不是；
-   */
-  isArray: function isArray(val) {
-    return Object.prototype.toString.call(val) === '[object Array]';
-  },
-  /**
-   * 判断数据是否是 String 类型
-   * @param {Any} val 要判断的数据
-   * @returns {Boolean} true：是；false：不是；
-   */
-  isString: function isString(val) {
-    return Object.prototype.toString.call(val) === '[object String]';
-  },
-  /**
-   * 精确判断数据是否是 Date 类型
-   * @param {Any} val 要判断的数据
-   * @returns {Boolean} true：是；false：不是；
-   */
-  isDate: function isDate(val) {
-    return Object.prototype.toString.call(val) === '[object Date]';
-  },
-  /**
-   * 精确判断数据是否是 Function 类型
-   * @param {Any} val 要判断的数据
-   * @returns {Boolean} true：是；false：不是；
-   */
-  isFunction: function isFunction(val) {
-    return Object.prototype.toString.call(val) === '[object Function]';
-  },
-  /**
-   * 精确判断数据是否是 Number 类型
-   * @param {Any} val 要判断的数据
-   * @returns {Boolean} true：是；false：不是；
-   */
-  isNumber: function isNumber(val) {
-    return Object.prototype.toString.call(val) === '[object Number]';
-  },
-  /**
-   * 精确判断数据是否是 Boolean 类型
-   * @param {Any} val 要判断的数据
-   * @returns {Boolean} true：是；false：不是；
-   */
-  isBoolean: function isBoolean(val) {
-    return Object.prototype.toString.call(val) === '[object Boolean]';
-  },
-  /**
-   * 判断 URL 是否是绝对 URL。
-   * @param {String} url 要判断的 URL
-   * @return {Boolean} true：是绝对URL；false：不是绝对URL；
-   */
-  isAbsoluteURL: function isAbsoluteURL(url) {
-    // 如果 URL 以 “<scheme>：//” 或 “//”（协议相对URL）开头，则认为它是绝对的
-    // RFC 3986 将方案名称定义为以字母开头的字符序列，然后是字母，数字，加号，句点或连字符的任意组合
-    return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
-  },
-  /**
-   * 合并 baseURL 和相对 URL 成一个完整的 URL
-   * @param {String} baseURL baseURL
-   * @param {String} relativeURL 相对 URL
-   * @returns {String} 返回组合后的完整 URL
-   */
-  combineURLs: function combineURLs(baseURL, relativeURL) {
-    return relativeURL && this.isString(relativeURL) && this.isString(baseURL) ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '') : baseURL;
-  },
-  /**
-   * 深度合并对象，只支持合并两个对象，该方法不会改变原有的对象
-   * @param {Object} FirstOBJ 第一个对象
-   * @param {Object} SecondOBJ 第二个对象
-   * @return {Object} 返回深度合并后的对象
-   */
-  deepMargeObject: function deepMargeObject(FirstOBJ, SecondOBJ) {
-    var ResultOBJ = {};
-    for (var key in FirstOBJ) {
-      ResultOBJ[key] = ResultOBJ[key] && ResultOBJ[key].toString() === "[object Object]" ? this.deepMargeObject(ResultOBJ[key], FirstOBJ[key]) : ResultOBJ[key] = FirstOBJ[key];
+  props: {
+    // 是否显示组件
+    show: {
+      type: Boolean,
+      default: uni.$u.props.loadingIcon.show
+    },
+    // 颜色
+    color: {
+      type: String,
+      default: uni.$u.props.loadingIcon.color
+    },
+    // 提示文字颜色
+    textColor: {
+      type: String,
+      default: uni.$u.props.loadingIcon.textColor
+    },
+    // 文字和图标是否垂直排列
+    vertical: {
+      type: Boolean,
+      default: uni.$u.props.loadingIcon.vertical
+    },
+    // 模式选择，circle-圆形，spinner-花朵形，semicircle-半圆形
+    mode: {
+      type: String,
+      default: uni.$u.props.loadingIcon.mode
+    },
+    // 图标大小，单位默认px
+    size: {
+      type: [String, Number],
+      default: uni.$u.props.loadingIcon.size
+    },
+    // 文字大小
+    textSize: {
+      type: [String, Number],
+      default: uni.$u.props.loadingIcon.textSize
+    },
+    // 文字内容
+    text: {
+      type: [String, Number],
+      default: uni.$u.props.loadingIcon.text
+    },
+    // 动画模式
+    timingFunction: {
+      type: String,
+      default: uni.$u.props.loadingIcon.timingFunction
+    },
+    // 动画执行周期时间
+    duration: {
+      type: [String, Number],
+      default: uni.$u.props.loadingIcon.duration
+    },
+    // mode=circle时的暗边颜色
+    inactiveColor: {
+      type: String,
+      default: uni.$u.props.loadingIcon.inactiveColor
     }
-    for (var _key in SecondOBJ) {
-      ResultOBJ[_key] = ResultOBJ[_key] && ResultOBJ[_key].toString() === "[object Object]" ? this.deepMargeObject(ResultOBJ[_key], SecondOBJ[_key]) : ResultOBJ[_key] = SecondOBJ[_key];
-    }
-    return ResultOBJ;
-  },
-  /**
-   * 生成指定长度的随机字符串
-   * @param {Number} min 最小程度
-   * @param {Number} max 最大长度 
-   * @return {String} 返回生成的字符串
-   */
-  randomString: function randomString(min, max) {
-    var returnStr = "",
-      range = max ? Math.round(Math.random() * (max - min)) + min : min,
-      arr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
-    for (var i = 0; i < range; i++) {
-      var index = Math.round(Math.random() * (arr.length - 1));
-      returnStr += arr[index];
-    }
-    return returnStr;
-  },
-  /**
-   * 格式化日期
-   * @param {Date|String} date 日期或日期字符串
-   */
-  formatDate: function formatDate(date) {
-    var YYYY = null;
-    var M = null;
-    var MM = null;
-    var D = null;
-    var DD = null;
-    var h = null;
-    var hh = null;
-    var m = null;
-    var mm = null;
-    var s = null;
-    var ss = null;
-    var ms = null;
-    var ms2 = null;
-    var ms3 = null;
-    var ms4 = null;
-    var dt = null;
-
-    // 如果 date 是 String 类型
-    if (date && this.isString(date)) {
-      // 真机运行时，如果直接用 new Date('YYYY-MM-DD hh:mm:ss') 会报 Invalid Date 错误，所以采用下面的方式创建日期
-      var dtArr = date.replace(/\//g, '.').replace(/-/g, '.').replace(/:/g, '.').replace(/T/g, ' ').replace(' ', '.').replace('Z', '').split('.');
-      var year = 2020;
-      var month = 12;
-      var day = 18;
-      var hour = 0;
-      var minute = 0;
-      var second = 0;
-      var millisecond = 0;
-
-      // 年
-      if (dtArr.length > 0 && !isNaN(dtArr[0])) {
-        year = parseInt(dtArr[0]);
-      }
-      // 月
-      if (dtArr.length > 1 && !isNaN(dtArr[1])) {
-        month = parseInt(dtArr[1]);
-      }
-      // 日
-      if (dtArr.length > 2 && !isNaN(dtArr[2])) {
-        day = parseInt(dtArr[2]);
-      }
-      // 时
-      if (dtArr.length > 3 && !isNaN(dtArr[3])) {
-        hour = parseInt(dtArr[3]);
-      }
-      // 分
-      if (dtArr.length > 4 && !isNaN(dtArr[4])) {
-        minute = parseInt(dtArr[4]);
-      }
-      // 秒
-      if (dtArr.length > 5 && !isNaN(dtArr[5])) {
-        second = parseInt(dtArr[5]);
-      }
-      // 毫秒
-      if (dtArr.length > 6 && !isNaN(dtArr[6])) {
-        millisecond = parseInt(dtArr[6]);
-      }
-      date = new Date(year, month - 1, day, hour, minute, second, millisecond);
-    }
-
-    // 如果 date 是 Date 类型
-    if (date && this.isDate(date)) {
-      YYYY = date.getFullYear();
-      M = date.getMonth() + 1;
-      MM = M >= 10 ? M : '0' + M;
-      D = date.getDate();
-      DD = D >= 10 ? D : '0' + D;
-      h = date.getHours();
-      hh = h >= 10 ? h : '0' + h;
-      m = date.getMinutes();
-      mm = m >= 10 ? m : '0' + m;
-      s = date.getSeconds();
-      ss = s >= 10 ? s : '0' + s;
-      ms = date.getMilliseconds();
-      ms2 = ms;
-      ms3 = ms;
-      ms4 = ms;
-      if (ms < 10) {
-        ms2 = '0' + ms;
-        ms3 = '00' + ms;
-        ms4 = '000' + ms;
-      } else if (ms < 100) {
-        ms3 = '0' + ms;
-        ms4 = '00' + ms;
-      } else {
-        ms4 = '0' + ms;
-      }
-    }
-
-    // 返回的数据对象
-    var result = {
-      YYYY: YYYY,
-      MM: MM,
-      M: M,
-      DD: DD,
-      D: D,
-      hh: hh,
-      h: h,
-      mm: mm,
-      m: m,
-      ss: ss,
-      s: s,
-      ms: ms,
-      ms2: ms2,
-      ms3: ms3,
-      ms4: ms4,
-      dt: date,
-      f1: "".concat(YYYY, "-").concat(MM, "-").concat(DD),
-      f2: "".concat(YYYY, "\u5E74").concat(M, "\u6708").concat(D, "\u65E5"),
-      f3: "".concat(YYYY, "-").concat(M, "-").concat(D, " ").concat(hh, ":").concat(mm),
-      f4: "".concat(h, ":").concat(m, ":").concat(s),
-      f5: "".concat(MM, "-").concat(DD),
-      f6: "".concat(YYYY, "-").concat(MM),
-      f7: "".concat(YYYY, "\u5E74").concat(M, "\u6708"),
-      f8: "".concat(h, ":").concat(m),
-      f9: "".concat(M, "\u6708").concat(D, "\u65E5"),
-      notes: 'YYYY（年），MM（月，补0），M（月，不补0），DD（日，补0），D（日，不补0），hh（时，补0），h（时，不补0），mm（分，补0），m（分，不补0），ss（秒，补0），s（秒，不补0），ms（毫秒，不补0），ms2（毫秒，补0到2位），ms3（毫秒，补0到3位），ms4（毫秒，补0到4位），其余的f1，f2，... 看格式就知道了！'
-    };
-    return result;
-  },
-  /**
-   * 数字转中文
-   * @param {Number} num 数字
-   */
-  numberToChinese: function numberToChinese(num) {
-    if (!/^\d*(\.\d*)?$/.test(num)) return "Number is wrong!";
-    var AA = new Array("零", "一", "二", "三", "四", "五", "六", "七", "八", "九");
-    var BB = new Array("", "十", "百", "千", "万", "亿", "点", "");
-    var a = ("" + num).replace(/(^0*)/g, "").split("."),
-      k = 0,
-      re = "";
-    for (var i = a[0].length - 1; i >= 0; i--) {
-      switch (k) {
-        case 0:
-          re = BB[7] + re;
-          break;
-        case 4:
-          if (!new RegExp("0{4}\\d{" + (a[0].length - i - 1) + "}$").test(a[0])) re = BB[4] + re;
-          break;
-        case 8:
-          re = BB[5] + re;
-          BB[7] = BB[5];
-          k = 0;
-          break;
-      }
-      if (k % 4 == 2 && a[0].charAt(i + 2) != 0 && a[0].charAt(i + 1) == 0) re = AA[0] + re;
-      if (a[0].charAt(i) != 0) re = AA[a[0].charAt(i)] + BB[k % 4] + re;
-      k++;
-    }
-    if (a.length > 1)
-      //加上小数部分(如果有小数部分) 
-      {
-        re += BB[6];
-        for (var _i = 0; _i < a[1].length; _i++) {
-          re += AA[a[1].charAt(_i)];
-        }
-      }
-    return re;
-  },
-  /**
-   * 计算两个经纬度点之间的距离
-   * @param {Number} lng1 第一个点的经度
-   * @param {Number} lat1 第一个点的纬度
-   * @param {Number} lng2 第二个点的经度
-   * @param {Number} lat2 第二个点的纬度
-   */
-  calcDistance: function calcDistance(lng1, lat1, lng2, lat2) {
-    var radLat1 = lat1 * Math.PI / 180.0;
-    var radLat2 = lat2 * Math.PI / 180.0;
-    var a = radLat1 - radLat2;
-    var b = lng1 * Math.PI / 180.0 - lng2 * Math.PI / 180.0;
-    var s = 2 * Math.asin(Math.sqrt(Math.pow(Math.sin(a / 2), 2) + Math.cos(radLat1) * Math.cos(radLat2) * Math.pow(Math.sin(b / 2), 2)));
-    s = s * 6378.137; // EARTH_RADIUS;
-    s = Math.round(s * 10000) / 10000;
-    return s;
-  },
-  /**
-   * 获取数组最小值的下标
-   * @param {Array} arr 数组
-   */
-  getArrayMixValueIndex: function getArrayMixValueIndex(arrar) {
-    var min = arrar[0];
-    var index = 0;
-    for (var i = 0; i < arrar.length; i++) {
-      if (min > arrar[i]) {
-        min = arrar[i];
-        index = i;
-      }
-    }
-    return index;
   }
 };
 exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 1384 */,
-/* 1385 */,
-/* 1386 */,
-/* 1387 */,
-/* 1388 */,
-/* 1389 */,
-/* 1390 */,
-/* 1391 */
+/* 959 */,
+/* 960 */,
+/* 961 */,
+/* 962 */,
+/* 963 */,
+/* 964 */,
+/* 965 */,
+/* 966 */
 /*!**************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-icon/icons.js ***!
   \**************************************************************/
@@ -85602,7 +84338,7 @@ var _default = {
 exports.default = _default;
 
 /***/ }),
-/* 1392 */
+/* 967 */
 /*!**************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-icon/props.js ***!
   \**************************************************************/
@@ -85709,544 +84445,14 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 1393 */,
-/* 1394 */,
-/* 1395 */,
-/* 1396 */,
-/* 1397 */,
-/* 1398 */,
-/* 1399 */,
-/* 1400 */,
-/* 1401 */,
-/* 1402 */,
-/* 1403 */,
-/* 1404 */,
-/* 1405 */,
-/* 1406 */,
-/* 1407 */
-/*!****************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-search/props.js ***!
-  \****************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _default = {
-  props: {
-    // 搜索框形状，round-圆形，square-方形
-    shape: {
-      type: String,
-      default: uni.$u.props.search.shape
-    },
-    // 搜索框背景色，默认值#f2f2f2
-    bgColor: {
-      type: String,
-      default: uni.$u.props.search.bgColor
-    },
-    // 占位提示文字
-    placeholder: {
-      type: String,
-      default: uni.$u.props.search.placeholder
-    },
-    // 是否启用清除控件
-    clearabled: {
-      type: Boolean,
-      default: uni.$u.props.search.clearabled
-    },
-    // 是否自动聚焦
-    focus: {
-      type: Boolean,
-      default: uni.$u.props.search.focus
-    },
-    // 是否在搜索框右侧显示取消按钮
-    showAction: {
-      type: Boolean,
-      default: uni.$u.props.search.showAction
-    },
-    // 右边控件的样式
-    actionStyle: {
-      type: Object,
-      default: uni.$u.props.search.actionStyle
-    },
-    // 取消按钮文字
-    actionText: {
-      type: String,
-      default: uni.$u.props.search.actionText
-    },
-    // 输入框内容对齐方式，可选值为 left|center|right
-    inputAlign: {
-      type: String,
-      default: uni.$u.props.search.inputAlign
-    },
-    // input输入框的样式，可以定义文字颜色，大小等，对象形式
-    inputStyle: {
-      type: Object,
-      default: uni.$u.props.search.inputStyle
-    },
-    // 是否启用输入框
-    disabled: {
-      type: Boolean,
-      default: uni.$u.props.search.disabled
-    },
-    // 边框颜色
-    borderColor: {
-      type: String,
-      default: uni.$u.props.search.borderColor
-    },
-    // 搜索图标的颜色，默认同输入框字体颜色
-    searchIconColor: {
-      type: String,
-      default: uni.$u.props.search.searchIconColor
-    },
-    // 输入框字体颜色
-    color: {
-      type: String,
-      default: uni.$u.props.search.color
-    },
-    // placeholder的颜色
-    placeholderColor: {
-      type: String,
-      default: uni.$u.props.search.placeholderColor
-    },
-    // 左边输入框的图标，可以为uView图标名称或图片路径
-    searchIcon: {
-      type: String,
-      default: uni.$u.props.search.searchIcon
-    },
-    searchIconSize: {
-      type: [Number, String],
-      default: uni.$u.props.search.searchIconSize
-    },
-    // 组件与其他上下左右元素之间的距离，带单位的字符串形式，如"30px"、"30px 20px"等写法
-    margin: {
-      type: String,
-      default: uni.$u.props.search.margin
-    },
-    // 开启showAction时，是否在input获取焦点时才显示
-    animation: {
-      type: Boolean,
-      default: uni.$u.props.search.animation
-    },
-    // 输入框的初始化内容
-    value: {
-      type: String,
-      default: uni.$u.props.search.value
-    },
-    // 输入框最大能输入的长度，-1为不限制长度(来自uniapp文档)
-    maxlength: {
-      type: [String, Number],
-      default: uni.$u.props.search.maxlength
-    },
-    // 搜索框高度，单位px
-    height: {
-      type: [String, Number],
-      default: uni.$u.props.search.height
-    },
-    // 搜索框左侧文本
-    label: {
-      type: [String, Number, null],
-      default: uni.$u.props.search.label
-    }
-  }
-};
-exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
-
-/***/ }),
-/* 1408 */,
-/* 1409 */,
-/* 1410 */,
-/* 1411 */,
-/* 1412 */,
-/* 1413 */,
-/* 1414 */,
-/* 1415 */
-/*!******************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-loadmore/props.js ***!
-  \******************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _default = {
-  props: {
-    // 组件状态，loadmore-加载前的状态，loading-加载中的状态，nomore-没有更多的状态
-    status: {
-      type: String,
-      default: uni.$u.props.loadmore.status
-    },
-    // 组件背景色
-    bgColor: {
-      type: String,
-      default: uni.$u.props.loadmore.bgColor
-    },
-    // 是否显示加载中的图标
-    icon: {
-      type: Boolean,
-      default: uni.$u.props.loadmore.icon
-    },
-    // 字体大小
-    fontSize: {
-      type: [String, Number],
-      default: uni.$u.props.loadmore.fontSize
-    },
-    // 图标大小
-    iconSize: {
-      type: [String, Number],
-      default: uni.$u.props.loadmore.iconSize
-    },
-    // 字体颜色
-    color: {
-      type: String,
-      default: uni.$u.props.loadmore.color
-    },
-    // 加载中状态的图标，spinner-花朵状图标，circle-圆圈状，semicircle-半圆
-    loadingIcon: {
-      type: String,
-      default: uni.$u.props.loadmore.loadingIcon
-    },
-    // 加载前的提示语
-    loadmoreText: {
-      type: String,
-      default: uni.$u.props.loadmore.loadmoreText
-    },
-    // 加载中提示语
-    loadingText: {
-      type: String,
-      default: uni.$u.props.loadmore.loadingText
-    },
-    // 没有更多的提示语
-    nomoreText: {
-      type: String,
-      default: uni.$u.props.loadmore.nomoreText
-    },
-    // 在“没有更多”状态下，是否显示粗点
-    isDot: {
-      type: Boolean,
-      default: uni.$u.props.loadmore.isDot
-    },
-    // 加载中图标的颜色
-    iconColor: {
-      type: String,
-      default: uni.$u.props.loadmore.iconColor
-    },
-    // 上边距
-    marginTop: {
-      type: [String, Number],
-      default: uni.$u.props.loadmore.marginTop
-    },
-    // 下边距
-    marginBottom: {
-      type: [String, Number],
-      default: uni.$u.props.loadmore.marginBottom
-    },
-    // 高度，单位px
-    height: {
-      type: [String, Number],
-      default: uni.$u.props.loadmore.height
-    },
-    // 是否显示左边分割线
-    line: {
-      type: Boolean,
-      default: uni.$u.props.loadmore.line
-    },
-    // 线条颜色
-    lineColor: {
-      type: String,
-      default: uni.$u.props.loadmore.lineColor
-    },
-    // 是否虚线，true-虚线，false-实线
-    dashed: {
-      type: Boolean,
-      default: uni.$u.props.loadmore.dashed
-    }
-  }
-};
-exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
-
-/***/ }),
-/* 1416 */,
-/* 1417 */,
-/* 1418 */,
-/* 1419 */,
-/* 1420 */,
-/* 1421 */,
-/* 1422 */,
-/* 1423 */,
-/* 1424 */,
-/* 1425 */,
-/* 1426 */,
-/* 1427 */,
-/* 1428 */,
-/* 1429 */,
-/* 1430 */,
-/* 1431 */,
-/* 1432 */,
-/* 1433 */,
-/* 1434 */,
-/* 1435 */,
-/* 1436 */,
-/* 1437 */,
-/* 1438 */,
-/* 1439 */,
-/* 1440 */,
-/* 1441 */,
-/* 1442 */,
-/* 1443 */,
-/* 1444 */,
-/* 1445 */,
-/* 1446 */,
-/* 1447 */,
-/* 1448 */,
-/* 1449 */,
-/* 1450 */,
-/* 1451 */,
-/* 1452 */,
-/* 1453 */,
-/* 1454 */,
-/* 1455 */,
-/* 1456 */,
-/* 1457 */,
-/* 1458 */,
-/* 1459 */,
-/* 1460 */,
-/* 1461 */,
-/* 1462 */,
-/* 1463 */,
-/* 1464 */,
-/* 1465 */,
-/* 1466 */,
-/* 1467 */,
-/* 1468 */,
-/* 1469 */,
-/* 1470 */,
-/* 1471 */,
-/* 1472 */,
-/* 1473 */,
-/* 1474 */,
-/* 1475 */,
-/* 1476 */,
-/* 1477 */,
-/* 1478 */,
-/* 1479 */,
-/* 1480 */,
-/* 1481 */,
-/* 1482 */,
-/* 1483 */,
-/* 1484 */,
-/* 1485 */,
-/* 1486 */,
-/* 1487 */,
-/* 1488 */,
-/* 1489 */,
-/* 1490 */,
-/* 1491 */,
-/* 1492 */,
-/* 1493 */,
-/* 1494 */,
-/* 1495 */,
-/* 1496 */,
-/* 1497 */,
-/* 1498 */,
-/* 1499 */,
-/* 1500 */,
-/* 1501 */,
-/* 1502 */,
-/* 1503 */,
-/* 1504 */,
-/* 1505 */,
-/* 1506 */,
-/* 1507 */,
-/* 1508 */,
-/* 1509 */,
-/* 1510 */,
-/* 1511 */,
-/* 1512 */,
-/* 1513 */,
-/* 1514 */,
-/* 1515 */,
-/* 1516 */,
-/* 1517 */,
-/* 1518 */,
-/* 1519 */,
-/* 1520 */,
-/* 1521 */,
-/* 1522 */,
-/* 1523 */,
-/* 1524 */,
-/* 1525 */,
-/* 1526 */,
-/* 1527 */,
-/* 1528 */,
-/* 1529 */,
-/* 1530 */,
-/* 1531 */,
-/* 1532 */,
-/* 1533 */,
-/* 1534 */,
-/* 1535 */,
-/* 1536 */,
-/* 1537 */,
-/* 1538 */,
-/* 1539 */,
-/* 1540 */,
-/* 1541 */,
-/* 1542 */,
-/* 1543 */,
-/* 1544 */,
-/* 1545 */,
-/* 1546 */,
-/* 1547 */,
-/* 1548 */,
-/* 1549 */,
-/* 1550 */,
-/* 1551 */,
-/* 1552 */,
-/* 1553 */,
-/* 1554 */,
-/* 1555 */,
-/* 1556 */,
-/* 1557 */,
-/* 1558 */
-/*!*******************************************************************************!*\
-  !*** D:/ems/uni_modules/uni-load-more/components/uni-load-more/i18n/index.js ***!
-  \*******************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _en = _interopRequireDefault(__webpack_require__(/*! ./en.json */ 1559));
-var _zhHans = _interopRequireDefault(__webpack_require__(/*! ./zh-Hans.json */ 1560));
-var _zhHant = _interopRequireDefault(__webpack_require__(/*! ./zh-Hant.json */ 1561));
-var _default = {
-  en: _en.default,
-  'zh-Hans': _zhHans.default,
-  'zh-Hant': _zhHant.default
-};
-exports.default = _default;
-
-/***/ }),
-/* 1559 */
-/*!******************************************************************************!*\
-  !*** D:/ems/uni_modules/uni-load-more/components/uni-load-more/i18n/en.json ***!
-  \******************************************************************************/
-/*! exports provided: uni-load-more.contentdown, uni-load-more.contentrefresh, uni-load-more.contentnomore, default */
-/***/ (function(module) {
-
-module.exports = JSON.parse("{\"uni-load-more.contentdown\":\"Pull up to show more\",\"uni-load-more.contentrefresh\":\"loading...\",\"uni-load-more.contentnomore\":\"No more data\"}");
-
-/***/ }),
-/* 1560 */
-/*!***********************************************************************************!*\
-  !*** D:/ems/uni_modules/uni-load-more/components/uni-load-more/i18n/zh-Hans.json ***!
-  \***********************************************************************************/
-/*! exports provided: uni-load-more.contentdown, uni-load-more.contentrefresh, uni-load-more.contentnomore, default */
-/***/ (function(module) {
-
-module.exports = JSON.parse("{\"uni-load-more.contentdown\":\"上拉显示更多\",\"uni-load-more.contentrefresh\":\"正在加载...\",\"uni-load-more.contentnomore\":\"没有更多数据了\"}");
-
-/***/ }),
-/* 1561 */
-/*!***********************************************************************************!*\
-  !*** D:/ems/uni_modules/uni-load-more/components/uni-load-more/i18n/zh-Hant.json ***!
-  \***********************************************************************************/
-/*! exports provided: uni-load-more.contentdown, uni-load-more.contentrefresh, uni-load-more.contentnomore, default */
-/***/ (function(module) {
-
-module.exports = JSON.parse("{\"uni-load-more.contentdown\":\"上拉顯示更多\",\"uni-load-more.contentrefresh\":\"正在加載...\",\"uni-load-more.contentnomore\":\"沒有更多數據了\"}");
-
-/***/ }),
-/* 1562 */,
-/* 1563 */,
-/* 1564 */,
-/* 1565 */,
-/* 1566 */,
-/* 1567 */,
-/* 1568 */,
-/* 1569 */,
-/* 1570 */,
-/* 1571 */,
-/* 1572 */,
-/* 1573 */,
-/* 1574 */,
-/* 1575 */,
-/* 1576 */,
-/* 1577 */,
-/* 1578 */,
-/* 1579 */,
-/* 1580 */,
-/* 1581 */,
-/* 1582 */,
-/* 1583 */
-/*!*****************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-overlay/props.js ***!
-  \*****************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _default = {
-  props: {
-    // 是否显示遮罩
-    show: {
-      type: Boolean,
-      default: uni.$u.props.overlay.show
-    },
-    // 层级z-index
-    zIndex: {
-      type: [String, Number],
-      default: uni.$u.props.overlay.zIndex
-    },
-    // 遮罩的过渡时间，单位为ms
-    duration: {
-      type: [String, Number],
-      default: uni.$u.props.overlay.duration
-    },
-    // 不透明度值，当做rgba的第四个参数
-    opacity: {
-      type: [String, Number],
-      default: uni.$u.props.overlay.opacity
-    }
-  }
-};
-exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
-
-/***/ }),
-/* 1584 */,
-/* 1585 */,
-/* 1586 */,
-/* 1587 */,
-/* 1588 */,
-/* 1589 */,
-/* 1590 */,
-/* 1591 */
+/* 968 */,
+/* 969 */,
+/* 970 */,
+/* 971 */,
+/* 972 */,
+/* 973 */,
+/* 974 */,
+/* 975 */
 /*!*************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-gap/props.js ***!
   \*************************************************************/
@@ -86288,14 +84494,14 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 1592 */,
-/* 1593 */,
-/* 1594 */,
-/* 1595 */,
-/* 1596 */,
-/* 1597 */,
-/* 1598 */,
-/* 1599 */
+/* 976 */,
+/* 977 */,
+/* 978 */,
+/* 979 */,
+/* 980 */,
+/* 981 */,
+/* 982 */,
+/* 983 */
 /*!********************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-status-bar/props.js ***!
   \********************************************************************/
@@ -86321,526 +84527,54 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 1600 */,
-/* 1601 */,
-/* 1602 */,
-/* 1603 */,
-/* 1604 */,
-/* 1605 */,
-/* 1606 */,
-/* 1607 */,
-/* 1608 */,
-/* 1609 */,
-/* 1610 */,
-/* 1611 */,
-/* 1612 */,
-/* 1613 */,
-/* 1614 */,
-/* 1615 */,
-/* 1616 */,
-/* 1617 */,
-/* 1618 */,
-/* 1619 */,
-/* 1620 */,
-/* 1621 */,
-/* 1622 */,
-/* 1623 */,
-/* 1624 */,
-/* 1625 */,
-/* 1626 */,
-/* 1627 */,
-/* 1628 */,
-/* 1629 */,
-/* 1630 */,
-/* 1631 */,
-/* 1632 */,
-/* 1633 */,
-/* 1634 */,
-/* 1635 */,
-/* 1636 */,
-/* 1637 */,
-/* 1638 */,
-/* 1639 */,
-/* 1640 */
-/*!*************************************************************************************!*\
-  !*** D:/ems/uni_modules/uni-datetime-picker/components/uni-datetime-picker/util.js ***!
-  \*************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _typeof2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/typeof */ 13));
-var _classCallCheck2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ 23));
-var _createClass2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/createClass */ 24));
-var Calendar = /*#__PURE__*/function () {
-  function Calendar() {
-    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-      date = _ref.date,
-      selected = _ref.selected,
-      startDate = _ref.startDate,
-      endDate = _ref.endDate,
-      range = _ref.range;
-    (0, _classCallCheck2.default)(this, Calendar);
-    // 当前日期
-    this.date = this.getDate(new Date()); // 当前初入日期
-    // 打点信息
-    this.selected = selected || [];
-    // 范围开始
-    this.startDate = startDate;
-    // 范围结束
-    this.endDate = endDate;
-    this.range = range;
-    // 多选状态
-    this.cleanMultipleStatus();
-    // 每周日期
-    this.weeks = {};
-    // this._getWeek(this.date.fullDate)
-    // this.multipleStatus = multipleStatus
-    this.lastHover = false;
-  }
-  /**
-   * 设置日期
-   * @param {Object} date
-   */
-  (0, _createClass2.default)(Calendar, [{
-    key: "setDate",
-    value: function setDate(date) {
-      this.selectDate = this.getDate(date);
-      this._getWeek(this.selectDate.fullDate);
-    }
-
-    /**
-     * 清理多选状态
-     */
-  }, {
-    key: "cleanMultipleStatus",
-    value: function cleanMultipleStatus() {
-      this.multipleStatus = {
-        before: '',
-        after: '',
-        data: []
-      };
-    }
-
-    /**
-     * 重置开始日期
-     */
-  }, {
-    key: "resetSatrtDate",
-    value: function resetSatrtDate(startDate) {
-      // 范围开始
-      this.startDate = startDate;
-    }
-
-    /**
-     * 重置结束日期
-     */
-  }, {
-    key: "resetEndDate",
-    value: function resetEndDate(endDate) {
-      // 范围结束
-      this.endDate = endDate;
-    }
-
-    /**
-     * 获取任意时间
-     */
-  }, {
-    key: "getDate",
-    value: function getDate(date) {
-      var AddDayCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-      var str = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'day';
-      if (!date) {
-        date = new Date();
-      }
-      if ((0, _typeof2.default)(date) !== 'object') {
-        date = date.replace(/-/g, '/');
-      }
-      var dd = new Date(date);
-      switch (str) {
-        case 'day':
-          dd.setDate(dd.getDate() + AddDayCount); // 获取AddDayCount天后的日期
-          break;
-        case 'month':
-          if (dd.getDate() === 31) {
-            dd.setDate(dd.getDate() + AddDayCount);
-          } else {
-            dd.setMonth(dd.getMonth() + AddDayCount); // 获取AddDayCount天后的日期
-          }
-
-          break;
-        case 'year':
-          dd.setFullYear(dd.getFullYear() + AddDayCount); // 获取AddDayCount天后的日期
-          break;
-      }
-      var y = dd.getFullYear();
-      var m = dd.getMonth() + 1 < 10 ? '0' + (dd.getMonth() + 1) : dd.getMonth() + 1; // 获取当前月份的日期，不足10补0
-      var d = dd.getDate() < 10 ? '0' + dd.getDate() : dd.getDate(); // 获取当前几号，不足10补0
-      return {
-        fullDate: y + '-' + m + '-' + d,
-        year: y,
-        month: m,
-        date: d,
-        day: dd.getDay()
-      };
-    }
-
-    /**
-     * 获取上月剩余天数
-     */
-  }, {
-    key: "_getLastMonthDays",
-    value: function _getLastMonthDays(firstDay, full) {
-      var dateArr = [];
-      for (var i = firstDay; i > 0; i--) {
-        var beforeDate = new Date(full.year, full.month - 1, -i + 1).getDate();
-        dateArr.push({
-          date: beforeDate,
-          month: full.month - 1,
-          disable: true
-        });
-      }
-      return dateArr;
-    }
-    /**
-     * 获取本月天数
-     */
-  }, {
-    key: "_currentMonthDys",
-    value: function _currentMonthDys(dateData, full) {
-      var _this = this;
-      var dateArr = [];
-      var fullDate = this.date.fullDate;
-      var _loop = function _loop(i) {
-        var isinfo = false;
-        var nowDate = full.year + '-' + (full.month < 10 ? full.month : full.month) + '-' + (i < 10 ? '0' + i : i);
-        // 是否今天
-        var isDay = fullDate === nowDate;
-        // 获取打点信息
-        var info = _this.selected && _this.selected.find(function (item) {
-          if (_this.dateEqual(nowDate, item.date)) {
-            return item;
-          }
-        });
-
-        // 日期禁用
-        var disableBefore = true;
-        var disableAfter = true;
-        if (_this.startDate) {
-          // let dateCompBefore = this.dateCompare(this.startDate, fullDate)
-          // disableBefore = this.dateCompare(dateCompBefore ? this.startDate : fullDate, nowDate)
-          disableBefore = _this.dateCompare(_this.startDate, nowDate);
-        }
-        if (_this.endDate) {
-          // let dateCompAfter = this.dateCompare(fullDate, this.endDate)
-          // disableAfter = this.dateCompare(nowDate, dateCompAfter ? this.endDate : fullDate)
-          disableAfter = _this.dateCompare(nowDate, _this.endDate);
-        }
-        var multiples = _this.multipleStatus.data;
-        var checked = false;
-        var multiplesStatus = -1;
-        if (_this.range) {
-          if (multiples) {
-            multiplesStatus = multiples.findIndex(function (item) {
-              return _this.dateEqual(item, nowDate);
-            });
-          }
-          if (multiplesStatus !== -1) {
-            checked = true;
-          }
-        }
-        var data = {
-          fullDate: nowDate,
-          year: full.year,
-          date: i,
-          multiple: _this.range ? checked : false,
-          beforeMultiple: _this.isLogicBefore(nowDate, _this.multipleStatus.before, _this.multipleStatus.after),
-          afterMultiple: _this.isLogicAfter(nowDate, _this.multipleStatus.before, _this.multipleStatus.after),
-          month: full.month,
-          disable: !(disableBefore && disableAfter),
-          isDay: isDay,
-          userChecked: false
-        };
-        if (info) {
-          data.extraInfo = info;
-        }
-        dateArr.push(data);
-      };
-      for (var i = 1; i <= dateData; i++) {
-        _loop(i);
-      }
-      return dateArr;
-    }
-    /**
-     * 获取下月天数
-     */
-  }, {
-    key: "_getNextMonthDays",
-    value: function _getNextMonthDays(surplus, full) {
-      var dateArr = [];
-      for (var i = 1; i < surplus + 1; i++) {
-        dateArr.push({
-          date: i,
-          month: Number(full.month) + 1,
-          disable: true
-        });
-      }
-      return dateArr;
-    }
-
-    /**
-     * 获取当前日期详情
-     * @param {Object} date
-     */
-  }, {
-    key: "getInfo",
-    value: function getInfo(date) {
-      var _this2 = this;
-      if (!date) {
-        date = new Date();
-      }
-      var dateInfo = this.canlender.find(function (item) {
-        return item.fullDate === _this2.getDate(date).fullDate;
-      });
-      return dateInfo;
-    }
-
-    /**
-     * 比较时间大小
-     */
-  }, {
-    key: "dateCompare",
-    value: function dateCompare(startDate, endDate) {
-      // 计算截止时间
-      startDate = new Date(startDate.replace('-', '/').replace('-', '/'));
-      // 计算详细项的截止时间
-      endDate = new Date(endDate.replace('-', '/').replace('-', '/'));
-      if (startDate <= endDate) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    /**
-     * 比较时间是否相等
-     */
-  }, {
-    key: "dateEqual",
-    value: function dateEqual(before, after) {
-      // 计算截止时间
-      before = new Date(before.replace('-', '/').replace('-', '/'));
-      // 计算详细项的截止时间
-      after = new Date(after.replace('-', '/').replace('-', '/'));
-      if (before.getTime() - after.getTime() === 0) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    /**
-     *  比较真实起始日期
-     */
-  }, {
-    key: "isLogicBefore",
-    value: function isLogicBefore(currentDay, before, after) {
-      var logicBefore = before;
-      if (before && after) {
-        logicBefore = this.dateCompare(before, after) ? before : after;
-      }
-      return this.dateEqual(logicBefore, currentDay);
-    }
-  }, {
-    key: "isLogicAfter",
-    value: function isLogicAfter(currentDay, before, after) {
-      var logicAfter = after;
-      if (before && after) {
-        logicAfter = this.dateCompare(before, after) ? after : before;
-      }
-      return this.dateEqual(logicAfter, currentDay);
-    }
-
-    /**
-     * 获取日期范围内所有日期
-     * @param {Object} begin
-     * @param {Object} end
-     */
-  }, {
-    key: "geDateAll",
-    value: function geDateAll(begin, end) {
-      var arr = [];
-      var ab = begin.split('-');
-      var ae = end.split('-');
-      var db = new Date();
-      db.setFullYear(ab[0], ab[1] - 1, ab[2]);
-      var de = new Date();
-      de.setFullYear(ae[0], ae[1] - 1, ae[2]);
-      var unixDb = db.getTime() - 24 * 60 * 60 * 1000;
-      var unixDe = de.getTime() - 24 * 60 * 60 * 1000;
-      for (var k = unixDb; k <= unixDe;) {
-        k = k + 24 * 60 * 60 * 1000;
-        arr.push(this.getDate(new Date(parseInt(k))).fullDate);
-      }
-      return arr;
-    }
-
-    /**
-     *  获取多选状态
-     */
-  }, {
-    key: "setMultiple",
-    value: function setMultiple(fullDate) {
-      var _this$multipleStatus = this.multipleStatus,
-        before = _this$multipleStatus.before,
-        after = _this$multipleStatus.after;
-      if (!this.range) return;
-      if (before && after) {
-        if (!this.lastHover) {
-          this.lastHover = true;
-          return;
-        }
-        this.multipleStatus.before = fullDate;
-        this.multipleStatus.after = '';
-        this.multipleStatus.data = [];
-        this.multipleStatus.fulldate = '';
-        this.lastHover = false;
-      } else {
-        if (!before) {
-          this.multipleStatus.before = fullDate;
-          this.lastHover = false;
-        } else {
-          this.multipleStatus.after = fullDate;
-          if (this.dateCompare(this.multipleStatus.before, this.multipleStatus.after)) {
-            this.multipleStatus.data = this.geDateAll(this.multipleStatus.before, this.multipleStatus.after);
-          } else {
-            this.multipleStatus.data = this.geDateAll(this.multipleStatus.after, this.multipleStatus.before);
-          }
-          this.lastHover = true;
-        }
-      }
-      this._getWeek(fullDate);
-    }
-
-    /**
-     *  鼠标 hover 更新多选状态
-     */
-  }, {
-    key: "setHoverMultiple",
-    value: function setHoverMultiple(fullDate) {
-      var _this$multipleStatus2 = this.multipleStatus,
-        before = _this$multipleStatus2.before,
-        after = _this$multipleStatus2.after;
-      if (!this.range) return;
-      if (this.lastHover) return;
-      if (!before) {
-        this.multipleStatus.before = fullDate;
-      } else {
-        this.multipleStatus.after = fullDate;
-        if (this.dateCompare(this.multipleStatus.before, this.multipleStatus.after)) {
-          this.multipleStatus.data = this.geDateAll(this.multipleStatus.before, this.multipleStatus.after);
-        } else {
-          this.multipleStatus.data = this.geDateAll(this.multipleStatus.after, this.multipleStatus.before);
-        }
-      }
-      this._getWeek(fullDate);
-    }
-
-    /**
-     * 更新默认值多选状态
-     */
-  }, {
-    key: "setDefaultMultiple",
-    value: function setDefaultMultiple(before, after) {
-      this.multipleStatus.before = before;
-      this.multipleStatus.after = after;
-      if (before && after) {
-        if (this.dateCompare(before, after)) {
-          this.multipleStatus.data = this.geDateAll(before, after);
-          this._getWeek(after);
-        } else {
-          this.multipleStatus.data = this.geDateAll(after, before);
-          this._getWeek(before);
-        }
-      }
-    }
-
-    /**
-     * 获取每周数据
-     * @param {Object} dateData
-     */
-  }, {
-    key: "_getWeek",
-    value: function _getWeek(dateData) {
-      var _this$getDate = this.getDate(dateData),
-        fullDate = _this$getDate.fullDate,
-        year = _this$getDate.year,
-        month = _this$getDate.month,
-        date = _this$getDate.date,
-        day = _this$getDate.day;
-      var firstDay = new Date(year, month - 1, 1).getDay();
-      var currentDay = new Date(year, month, 0).getDate();
-      var dates = {
-        lastMonthDays: this._getLastMonthDays(firstDay, this.getDate(dateData)),
-        // 上个月末尾几天
-        currentMonthDys: this._currentMonthDys(currentDay, this.getDate(dateData)),
-        // 本月天数
-        nextMonthDays: [],
-        // 下个月开始几天
-        weeks: []
-      };
-      var canlender = [];
-      var surplus = 42 - (dates.lastMonthDays.length + dates.currentMonthDys.length);
-      dates.nextMonthDays = this._getNextMonthDays(surplus, this.getDate(dateData));
-      canlender = canlender.concat(dates.lastMonthDays, dates.currentMonthDys, dates.nextMonthDays);
-      var weeks = {};
-      // 拼接数组  上个月开始几天 + 本月天数+ 下个月开始几天
-      for (var i = 0; i < canlender.length; i++) {
-        if (i % 7 === 0) {
-          weeks[parseInt(i / 7)] = new Array(7);
-        }
-        weeks[parseInt(i / 7)][i % 7] = canlender[i];
-      }
-      this.canlender = canlender;
-      this.weeks = weeks;
-    }
-
-    //静态方法
-    // static init(date) {
-    // 	if (!this.instance) {
-    // 		this.instance = new Calendar(date);
-    // 	}
-    // 	return this.instance;
-    // }
-  }]);
-  return Calendar;
-}();
-var _default = Calendar;
-exports.default = _default;
-
-/***/ }),
-/* 1641 */,
-/* 1642 */,
-/* 1643 */,
-/* 1644 */,
-/* 1645 */,
-/* 1646 */,
-/* 1647 */,
-/* 1648 */,
-/* 1649 */,
-/* 1650 */,
-/* 1651 */,
-/* 1652 */,
-/* 1653 */,
-/* 1654 */,
-/* 1655 */
+/* 984 */,
+/* 985 */,
+/* 986 */,
+/* 987 */,
+/* 988 */,
+/* 989 */,
+/* 990 */,
+/* 991 */,
+/* 992 */,
+/* 993 */,
+/* 994 */,
+/* 995 */,
+/* 996 */,
+/* 997 */,
+/* 998 */,
+/* 999 */,
+/* 1000 */,
+/* 1001 */,
+/* 1002 */,
+/* 1003 */,
+/* 1004 */,
+/* 1005 */,
+/* 1006 */,
+/* 1007 */,
+/* 1008 */,
+/* 1009 */,
+/* 1010 */,
+/* 1011 */,
+/* 1012 */,
+/* 1013 */,
+/* 1014 */,
+/* 1015 */,
+/* 1016 */,
+/* 1017 */,
+/* 1018 */,
+/* 1019 */,
+/* 1020 */,
+/* 1021 */,
+/* 1022 */,
+/* 1023 */,
+/* 1024 */,
+/* 1025 */,
+/* 1026 */,
+/* 1027 */,
+/* 1028 */,
+/* 1029 */,
+/* 1030 */,
+/* 1031 */
 /*!********************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-transition/props.js ***!
   \********************************************************************/
@@ -86882,7 +84616,7 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 1656 */
+/* 1032 */
 /*!*************************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-transition/transition.js ***!
   \*************************************************************************/
@@ -86899,7 +84633,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 123));
 var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 125));
-var _nvueAniMap = _interopRequireDefault(__webpack_require__(/*! ./nvue.ani-map.js */ 1657));
+var _nvueAniMap = _interopRequireDefault(__webpack_require__(/*! ./nvue.ani-map.js */ 1033));
 // 定义一个一定时间后自动成功的promise，让调用nextTick方法处，进入下一个then方法
 var nextTick = function nextTick() {
   return new Promise(function (resolve) {
@@ -86991,7 +84725,7 @@ var _default = {
 exports.default = _default;
 
 /***/ }),
-/* 1657 */
+/* 1033 */
 /*!***************************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-transition/nvue.ani-map.js ***!
   \***************************************************************************/
@@ -87180,490 +84914,6 @@ var _default = {
       transform: 'scale(0.95)'
     }
   }
-};
-exports.default = _default;
-
-/***/ }),
-/* 1658 */,
-/* 1659 */,
-/* 1660 */,
-/* 1661 */,
-/* 1662 */,
-/* 1663 */,
-/* 1664 */,
-/* 1665 */
-/*!***********************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-column-notice/props.js ***!
-  \***********************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _default = {
-  props: {
-    // 显示的内容，字符串
-    text: {
-      type: [Array],
-      default: uni.$u.props.columnNotice.text
-    },
-    // 是否显示左侧的音量图标
-    icon: {
-      type: String,
-      default: uni.$u.props.columnNotice.icon
-    },
-    // 通告模式，link-显示右箭头，closable-显示右侧关闭图标
-    mode: {
-      type: String,
-      default: uni.$u.props.columnNotice.mode
-    },
-    // 文字颜色，各图标也会使用文字颜色
-    color: {
-      type: String,
-      default: uni.$u.props.columnNotice.color
-    },
-    // 背景颜色
-    bgColor: {
-      type: String,
-      default: uni.$u.props.columnNotice.bgColor
-    },
-    // 字体大小，单位px
-    fontSize: {
-      type: [String, Number],
-      default: uni.$u.props.columnNotice.fontSize
-    },
-    // 水平滚动时的滚动速度，即每秒滚动多少px(px)，这有利于控制文字无论多少时，都能有一个恒定的速度
-    speed: {
-      type: [String, Number],
-      default: uni.$u.props.columnNotice.speed
-    },
-    // direction = row时，是否使用步进形式滚动
-    step: {
-      type: Boolean,
-      default: uni.$u.props.columnNotice.step
-    },
-    // 滚动一个周期的时间长，单位ms
-    duration: {
-      type: [String, Number],
-      default: uni.$u.props.columnNotice.duration
-    },
-    // 是否禁止用手滑动切换
-    // 目前HX2.6.11，只支持App 2.5.5+、H5 2.5.5+、支付宝小程序、字节跳动小程序
-    disableTouch: {
-      type: Boolean,
-      default: uni.$u.props.columnNotice.disableTouch
-    }
-  }
-};
-exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
-
-/***/ }),
-/* 1666 */,
-/* 1667 */,
-/* 1668 */,
-/* 1669 */,
-/* 1670 */,
-/* 1671 */,
-/* 1672 */,
-/* 1673 */
-/*!********************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-row-notice/props.js ***!
-  \********************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _default = {
-  props: {
-    // 显示的内容，字符串
-    text: {
-      type: String,
-      default: uni.$u.props.rowNotice.text
-    },
-    // 是否显示左侧的音量图标
-    icon: {
-      type: String,
-      default: uni.$u.props.rowNotice.icon
-    },
-    // 通告模式，link-显示右箭头，closable-显示右侧关闭图标
-    mode: {
-      type: String,
-      default: uni.$u.props.rowNotice.mode
-    },
-    // 文字颜色，各图标也会使用文字颜色
-    color: {
-      type: String,
-      default: uni.$u.props.rowNotice.color
-    },
-    // 背景颜色
-    bgColor: {
-      type: String,
-      default: uni.$u.props.rowNotice.bgColor
-    },
-    // 字体大小，单位px
-    fontSize: {
-      type: [String, Number],
-      default: uni.$u.props.rowNotice.fontSize
-    },
-    // 水平滚动时的滚动速度，即每秒滚动多少px(rpx)，这有利于控制文字无论多少时，都能有一个恒定的速度
-    speed: {
-      type: [String, Number],
-      default: uni.$u.props.rowNotice.speed
-    }
-  }
-};
-exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
-
-/***/ }),
-/* 1674 */,
-/* 1675 */,
-/* 1676 */,
-/* 1677 */,
-/* 1678 */,
-/* 1679 */,
-/* 1680 */,
-/* 1681 */
-/*!***************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-popup/props.js ***!
-  \***************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _default = {
-  props: {
-    // 是否展示弹窗
-    show: {
-      type: Boolean,
-      default: uni.$u.props.popup.show
-    },
-    // 是否显示遮罩
-    overlay: {
-      type: Boolean,
-      default: uni.$u.props.popup.overlay
-    },
-    // 弹出的方向，可选值为 top bottom right left center
-    mode: {
-      type: String,
-      default: uni.$u.props.popup.mode
-    },
-    // 动画时长，单位ms
-    duration: {
-      type: [String, Number],
-      default: uni.$u.props.popup.duration
-    },
-    // 是否显示关闭图标
-    closeable: {
-      type: Boolean,
-      default: uni.$u.props.popup.closeable
-    },
-    // 自定义遮罩的样式
-    overlayStyle: {
-      type: [Object, String],
-      default: uni.$u.props.popup.overlayStyle
-    },
-    // 点击遮罩是否关闭弹窗
-    closeOnClickOverlay: {
-      type: Boolean,
-      default: uni.$u.props.popup.closeOnClickOverlay
-    },
-    // 层级
-    zIndex: {
-      type: [String, Number],
-      default: uni.$u.props.popup.zIndex
-    },
-    // 是否为iPhoneX留出底部安全距离
-    safeAreaInsetBottom: {
-      type: Boolean,
-      default: uni.$u.props.popup.safeAreaInsetBottom
-    },
-    // 是否留出顶部安全距离（状态栏高度）
-    safeAreaInsetTop: {
-      type: Boolean,
-      default: uni.$u.props.popup.safeAreaInsetTop
-    },
-    // 自定义关闭图标位置，top-left为左上角，top-right为右上角，bottom-left为左下角，bottom-right为右下角
-    closeIconPos: {
-      type: String,
-      default: uni.$u.props.popup.closeIconPos
-    },
-    // 是否显示圆角
-    round: {
-      type: [Boolean, String, Number],
-      default: uni.$u.props.popup.round
-    },
-    // mode=center，也即中部弹出时，是否使用缩放模式
-    zoom: {
-      type: Boolean,
-      default: uni.$u.props.popup.zoom
-    },
-    // 弹窗背景色，设置为transparent可去除白色背景
-    bgColor: {
-      type: String,
-      default: uni.$u.props.popup.bgColor
-    },
-    // 遮罩的透明度，0-1之间
-    overlayOpacity: {
-      type: [Number, String],
-      default: uni.$u.props.popup.overlayOpacity
-    }
-  }
-};
-exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
-
-/***/ }),
-/* 1682 */,
-/* 1683 */,
-/* 1684 */,
-/* 1685 */,
-/* 1686 */,
-/* 1687 */,
-/* 1688 */,
-/* 1689 */,
-/* 1690 */,
-/* 1691 */,
-/* 1692 */,
-/* 1693 */,
-/* 1694 */,
-/* 1695 */,
-/* 1696 */,
-/* 1697 */,
-/* 1698 */,
-/* 1699 */,
-/* 1700 */,
-/* 1701 */,
-/* 1702 */,
-/* 1703 */,
-/* 1704 */,
-/* 1705 */,
-/* 1706 */,
-/* 1707 */,
-/* 1708 */,
-/* 1709 */,
-/* 1710 */,
-/* 1711 */,
-/* 1712 */,
-/* 1713 */,
-/* 1714 */,
-/* 1715 */,
-/* 1716 */,
-/* 1717 */,
-/* 1718 */,
-/* 1719 */,
-/* 1720 */,
-/* 1721 */,
-/* 1722 */,
-/* 1723 */,
-/* 1724 */,
-/* 1725 */,
-/* 1726 */,
-/* 1727 */,
-/* 1728 */,
-/* 1729 */,
-/* 1730 */,
-/* 1731 */,
-/* 1732 */,
-/* 1733 */,
-/* 1734 */,
-/* 1735 */,
-/* 1736 */,
-/* 1737 */,
-/* 1738 */,
-/* 1739 */,
-/* 1740 */,
-/* 1741 */,
-/* 1742 */,
-/* 1743 */,
-/* 1744 */,
-/* 1745 */,
-/* 1746 */,
-/* 1747 */,
-/* 1748 */,
-/* 1749 */,
-/* 1750 */,
-/* 1751 */,
-/* 1752 */
-/*!**************************************************************************************!*\
-  !*** D:/ems/uni_modules/uni-transition/components/uni-transition/createAnimation.js ***!
-  \**************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {
-
-var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.createAnimation = createAnimation;
-var _defineProperty2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/defineProperty */ 11));
-var _classCallCheck2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ 23));
-var _createClass2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/createClass */ 24));
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
-// const defaultOption = {
-// 	duration: 300,
-// 	timingFunction: 'linear',
-// 	delay: 0,
-// 	transformOrigin: '50% 50% 0'
-// }
-var MPAnimation = /*#__PURE__*/function () {
-  function MPAnimation(options, _this) {
-    (0, _classCallCheck2.default)(this, MPAnimation);
-    this.options = options;
-    // 在iOS10+QQ小程序平台下，传给原生的对象一定是个普通对象而不是Proxy对象，否则会报parameter should be Object instead of ProxyObject的错误
-    this.animation = uni.createAnimation(_objectSpread({}, options));
-    this.currentStepAnimates = {};
-    this.next = 0;
-    this.$ = _this;
-  }
-  (0, _createClass2.default)(MPAnimation, [{
-    key: "_nvuePushAnimates",
-    value: function _nvuePushAnimates(type, args) {
-      var aniObj = this.currentStepAnimates[this.next];
-      var styles = {};
-      if (!aniObj) {
-        styles = {
-          styles: {},
-          config: {}
-        };
-      } else {
-        styles = aniObj;
-      }
-      if (animateTypes1.includes(type)) {
-        if (!styles.styles.transform) {
-          styles.styles.transform = '';
-        }
-        var unit = '';
-        if (type === 'rotate') {
-          unit = 'deg';
-        }
-        styles.styles.transform += "".concat(type, "(").concat(args + unit, ") ");
-      } else {
-        styles.styles[type] = "".concat(args);
-      }
-      this.currentStepAnimates[this.next] = styles;
-    }
-  }, {
-    key: "_animateRun",
-    value: function _animateRun() {
-      var styles = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var config = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var ref = this.$.$refs['ani'].ref;
-      if (!ref) return;
-      return new Promise(function (resolve, reject) {
-        nvueAnimation.transition(ref, _objectSpread({
-          styles: styles
-        }, config), function (res) {
-          resolve();
-        });
-      });
-    }
-  }, {
-    key: "_nvueNextAnimate",
-    value: function _nvueNextAnimate(animates) {
-      var _this2 = this;
-      var step = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-      var fn = arguments.length > 2 ? arguments[2] : undefined;
-      var obj = animates[step];
-      if (obj) {
-        var styles = obj.styles,
-          config = obj.config;
-        this._animateRun(styles, config).then(function () {
-          step += 1;
-          _this2._nvueNextAnimate(animates, step, fn);
-        });
-      } else {
-        this.currentStepAnimates = {};
-        typeof fn === 'function' && fn();
-        this.isEnd = true;
-      }
-    }
-  }, {
-    key: "step",
-    value: function step() {
-      var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      this.animation.step(config);
-      return this;
-    }
-  }, {
-    key: "run",
-    value: function run(fn) {
-      this.$.animationData = this.animation.export();
-      this.$.timer = setTimeout(function () {
-        typeof fn === 'function' && fn();
-      }, this.$.durationTime);
-    }
-  }]);
-  return MPAnimation;
-}();
-var animateTypes1 = ['matrix', 'matrix3d', 'rotate', 'rotate3d', 'rotateX', 'rotateY', 'rotateZ', 'scale', 'scale3d', 'scaleX', 'scaleY', 'scaleZ', 'skew', 'skewX', 'skewY', 'translate', 'translate3d', 'translateX', 'translateY', 'translateZ'];
-var animateTypes2 = ['opacity', 'backgroundColor'];
-var animateTypes3 = ['width', 'height', 'left', 'right', 'top', 'bottom'];
-animateTypes1.concat(animateTypes2, animateTypes3).forEach(function (type) {
-  MPAnimation.prototype[type] = function () {
-    var _this$animation;
-    (_this$animation = this.animation)[type].apply(_this$animation, arguments);
-    return this;
-  };
-});
-function createAnimation(option, _this) {
-  if (!_this) return;
-  clearTimeout(_this.timer);
-  return new MPAnimation(option, _this);
-}
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
-
-/***/ }),
-/* 1753 */,
-/* 1754 */,
-/* 1755 */,
-/* 1756 */,
-/* 1757 */,
-/* 1758 */,
-/* 1759 */,
-/* 1760 */,
-/* 1761 */,
-/* 1762 */,
-/* 1763 */,
-/* 1764 */,
-/* 1765 */
-/*!*********************************************************************!*\
-  !*** D:/ems/uni_modules/uview-ui/components/u-safe-bottom/props.js ***!
-  \*********************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _default = {
-  props: {}
 };
 exports.default = _default;
 

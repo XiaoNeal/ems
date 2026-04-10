@@ -7,41 +7,11 @@
     "pages/strategy-config/strategy-config",
     "pages/monitor-data/monitor-data",
     "pages/quick-control/quick-control",
-    "pages/settings/settings"
+    "pages/settings/settings",
+    "pages/access-setting/access-setting",
+    "pages/device-detail/device-detail"
   ],
   "subPackages": [
-    {
-      "root": "cloud-system",
-      "pages": [
-        "index",
-        "operation",
-        "report",
-        "profile"
-      ]
-    },
-    {
-      "root": "FIEMS",
-      "pages": [
-        "index",
-        "fiems-energy",
-        "fiems-expert",
-        "fiems-home",
-        "fiems-user",
-        "alert/alert-info",
-        "expert/elec-rank",
-        "expert/elec-peak",
-        "energy/electricity-monitor",
-        "energy/storage-monitor",
-        "energy/air-monitor",
-        "energy/storage-detail",
-        "energy/device-monitor",
-        "energy/water-monitor",
-        "energy/air-station-monitor",
-        "energy/electricity-analysis",
-        "energy/sewage-station-monitor",
-        "energy/centrifuge-monitor"
-      ]
-    },
     {
       "root": "community",
       "pages": [
@@ -51,7 +21,6 @@
         "analysis",
         "report",
         "profile",
-        "charging-detail",
         "system",
         "system-info"
       ]
@@ -86,27 +55,20 @@
         "help",
         "about"
       ]
-    },
-    {
-      "root": "charging",
-      "pages": [
-        "index",
-        "home",
-        "scan",
-        "charging-process",
-        "records",
-        "my"
-      ]
     }
   ],
   "window": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "GIEMS云",
     "navigationBarBackgroundColor": "#fff",
-    "backgroundColor": "#103071",
+    "backgroundColor": "#fff",
     "navigationStyle": "custom",
     "enablePullDownRefresh": false,
-    "pageOrientation": "auto"
+    "pageOrientation": "auto",
+    "safeArea": {
+      "paddingTop": "auto",
+      "paddingBottom": "auto"
+    }
   },
   "networkTimeout": {
     "request": 40000

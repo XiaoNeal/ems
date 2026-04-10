@@ -1,9 +1,0 @@
-{
-  "navigationBarTitleText": "充电中",
-  "navigationStyle": "custom",
-  "enablePullDownRefresh": false,
-  "usingComponents": {
-    "uni-icons": "/uni_modules/uni-icons/components/uni-icons/uni-icons",
-    "custom-nav-bar": "/charging/components/custom-nav-bar"
-  }
-}

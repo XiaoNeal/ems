@@ -24,8 +24,8 @@
         <ArchitectureDiagram v-if="currentTab === 0" />
         <PvManagement v-if="currentTab === 1" />
         <EnergyStorage v-if="currentTab === 2" />
-        <LoadManagement v-if="currentTab === 3" />
-        <GridManagement v-if="currentTab === 4" />
+        <GridManagement v-if="currentTab === 3" />
+        <LoadManagement v-if="currentTab === 4" />
       </view>
     </view>
 
@@ -51,7 +51,7 @@ export default {
   data() {
     return {
       currentTab: 0,
-      tabList: ['架构图', '光伏', '储能', '负荷', '电网'],
+      tabList: ['架构图', '光伏', '储能', '电网', '负荷'],
     };
   },
   computed: {

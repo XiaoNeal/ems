@@ -101,10 +101,10 @@ var components
 try {
   components = {
     uToast: function () {
-      return __webpack_require__.e(/*! import() | uni_modules/uview-ui/components/u-toast/u-toast */ "uni_modules/uview-ui/components/u-toast/u-toast").then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-toast/u-toast.vue */ 1182))
+      return __webpack_require__.e(/*! import() | uni_modules/uview-ui/components/u-toast/u-toast */ "uni_modules/uview-ui/components/u-toast/u-toast").then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-toast/u-toast.vue */ 742))
     },
     uniEasyinput: function () {
-      return __webpack_require__.e(/*! import() | uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput */ "uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput").then(__webpack_require__.bind(null, /*! @/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue */ 1189))
+      return __webpack_require__.e(/*! import() | uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput */ "uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput").then(__webpack_require__.bind(null, /*! @/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput.vue */ 749))
     },
   }
 } catch (e) {
@@ -364,7 +364,7 @@ var _default = {
     setLoginInfo: function setLoginInfo(res) {
       var _this3 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
-        var allowedIds, systems, systemConfig1, systemType1, targetPath, _yield$request, code, data, result, userInfo, roleId;
+        var allowedIds, systems, systemConfig1, systemType1, targetPath, result, userInfo, roleId;
         return _regenerator.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -381,7 +381,7 @@ var _default = {
                 _this3.$u.vuex('userId', res.data.code);
                 // 解析并过滤系统列表
                 // const allowedIds = [5, 14, 25];
-                allowedIds = [25];
+                allowedIds = [25, 27];
                 systems = Object.entries(res.data.plugininfo).filter(function (_ref) {
                   var _ref2 = (0, _slicedToArray2.default)(_ref, 1),
                     key = _ref2[0];
@@ -400,13 +400,16 @@ var _default = {
                   };
                 });
                 systemConfig1 = Object.values(res.data.plugininfo)[0];
-                systemType1 = systemConfig1.match(/systemType=(\d+)/)[1]; // 系统跳转逻辑
+                systemType1 = systemConfig1.match(/systemType=(\d+)/)[1];
+                console.log(systems, "systems--------------");
+
+                // 系统跳转逻辑
                 if (!(systems.length === 1)) {
-                  _context.next = 38;
+                  _context.next = 29;
                   break;
                 }
                 if (!(systems[0].type == 1)) {
-                  _context.next = 14;
+                  _context.next = 15;
                   break;
                 }
                 // 珠海能源管理系统 
@@ -414,39 +417,21 @@ var _default = {
                 uni.navigateTo({
                   url: targetPath
                 });
-                _context.next = 35;
+                _context.next = 26;
                 break;
-              case 14:
+              case 15:
                 if (!(systems[0].type == 2)) {
-                  _context.next = 34;
+                  _context.next = 25;
                   break;
                 }
-                _context.next = 17;
-                return (0, _request.default)({
-                  url: '/ApihomecommunityKoa/login',
-                  method: 'POST',
-                  data: {
-                    username: _this3.username,
-                    password: (0, _md5Min.default)(_this3.password)
-                  }
-                });
-              case 17:
-                _yield$request = _context.sent;
-                code = _yield$request.code;
-                data = _yield$request.data;
-                if (!(code == 10000)) {
-                  _context.next = 31;
-                  break;
-                }
-                _this3.$u.vuex('token', "Bearer " + data.token);
-                uni.setStorageSync('token', "Bearer " + data.token);
-                _context.next = 25;
+                _context.next = 18;
                 return (0, _user.loginPermission)({
                   userid: res.data.code,
-                  systemId: 25
+                  systemId: systems[0].id
                 });
-              case 25:
+              case 18:
                 result = _context.sent;
+                console.log(result, "result--------------");
                 userInfo = {
                   _id: result.data.homecommunityRole.roleId,
                   username: result.data.username,
@@ -486,14 +471,13 @@ var _default = {
                     _this3.showToast('error', '登录失败:服务器繁忙 ');
                   }
                 });
-                _context.next = 32;
+
+                // } else {
+                //     this.showToast('error', '登录失败:服务器繁忙 ');
+                // }
+                _context.next = 26;
                 break;
-              case 31:
-                _this3.showToast('error', '登录失败:服务器繁忙 ');
-              case 32:
-                _context.next = 35;
-                break;
-              case 34:
+              case 25:
                 if (systems[0].type == 3) {
                   // IEMS光储直柔云控平台
                   targetPath = '/pages/cloud-system/index';
@@ -501,13 +485,13 @@ var _default = {
                     url: targetPath
                   });
                 }
-              case 35:
+              case 26:
                 return _context.abrupt("return");
-              case 38:
+              case 29:
                 uni.navigateTo({
                   url: '/pages/system-selector/system-selector?systems=' + encodeURIComponent(JSON.stringify(systems)) + '&username=' + encodeURIComponent(_this3.username) + '&password=' + encodeURIComponent((0, _md5Min.default)(_this3.password).toString()) + '&userId=' + encodeURIComponent(res.data.code) + '&sessionId=' + encodeURIComponent(res.sessionId)
                 });
-              case 39:
+              case 30:
               case "end":
                 return _context.stop();
             }

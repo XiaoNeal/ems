@@ -6,74 +6,118 @@
     
     <view class="content">
       <!-- 电网数据卡片 -->
-      <view class="data-cards">
-        <view class="card-row">
-          <view class="card-item">
-            <text class="item-label">电网实时功率</text>
-            <text class="item-value negative">-3.7 kW</text>
+      <view class="stats-container">
+        <view class="stat-row">
+          <view class="stat-item vertical">
+            <view class="stat-subitem">
+              <text class="stat-label">电网实时功率</text>
+              <view>
+                <text class="stat-value negative">-3.7</text>
+                <text class="stat-unit">kW</text>
+              </view>
+            </view>
           </view>
-          <view class="card-item">
-            <text class="item-label">电网今日馈电量</text>
-            <text class="item-value">157.12 kWh</text>
+          <view class="stat-divider"></view>
+          <view class="stat-item vertical">
+            <view class="stat-subitem">
+              <text class="stat-label">电网今日馈电量</text>
+              <view>
+                <text class="stat-value">157.12</text>
+                <text class="stat-unit">kWh</text>
+              </view>
+            </view>
           </view>
         </view>
-        <view class="card-row">
-          <view class="card-item">
-            <text class="item-label">电网频率</text>
-            <text class="item-value">0.0 Hz</text>
+        <view class="stat-row">
+          <view class="stat-item vertical">
+            <view class="stat-subitem">
+              <text class="stat-label">电网频率</text>
+              <view>
+                <text class="stat-value">0.0</text>
+                <text class="stat-unit">Hz</text>
+              </view>
+            </view>
           </view>
-          <view class="card-item">
-            <text class="item-label">电网累计馈电量</text>
-            <text class="item-value">157.12 kWh</text>
+          <view class="stat-divider"></view>
+          <view class="stat-item vertical">
+            <view class="stat-subitem">
+              <text class="stat-label">电网累计馈电量</text>
+              <view>
+                <text class="stat-value">157.12</text>
+                <text class="stat-unit">kWh</text>
+              </view>
+            </view>
           </view>
         </view>
-        <view class="card-row">
-          <view class="card-item">
-            <text class="item-label">电网今日供电</text>
-            <text class="item-value">157.12 kWh</text>
+        <view class="stat-row">
+          <view class="stat-item vertical">
+            <view class="stat-subitem">
+              <text class="stat-label">电网今日供电</text>
+              <view>
+                <text class="stat-value">157.12</text>
+                <text class="stat-unit">kWh</text>
+              </view>
+            </view>
           </view>
-          <view class="card-item">
-            <text class="item-label">电网累计供电</text>
-            <text class="item-value">157.12 kWh</text>
+          <view class="stat-divider"></view>
+          <view class="stat-item vertical">
+            <view class="stat-subitem">
+              <text class="stat-label">电网累计供电</text>
+              <view>
+                <text class="stat-value">157.12</text>
+                <text class="stat-unit">kWh</text>
+              </view>
+            </view>
           </view>
         </view>
       </view>
       
-      <!-- 日期选择 -->
-      <view class="date-selector">
-        <view class="date-tabs">
-          <view class="date-tab">日</view>
-          <view class="date-tab">月</view>
-          <view class="date-tab active">年</view>
-        </view>
-        <view class="year-selector">
-          <text>2025年</text>
-        </view>
-      </view>
-      
-      <!-- 电网功率曲线 -->
-      <view class="chart-section">
-        <view class="chart-header">
-          <text class="chart-title">电网功率曲线</text>
-          <view class="fullscreen-button" @click="toggleFullScreen('power')">
-            <text>全屏</text>
+      <!-- 电网数据区块 -->
+      <view class="grid-data-section">
+        <!-- 日期选择 -->
+        <view class="date-selector">
+          <view class="date-tabs">
+            <view class="date-tab" :class="activeDateTab === '日' ? 'active' : ''" @click="handleDateTypeChange('日')">日</view>
+            <view class="date-tab" :class="activeDateTab === '月' ? 'active' : ''" @click="handleDateTypeChange('月')">月</view>
+            <view class="date-tab" :class="activeDateTab === '年' ? 'active' : ''" @click="handleDateTypeChange('年')">年</view>
+          </view>
+          <view class="year-selector">
+            <dy-date v-if="timeTypeIndex === 0" timeType="day" @getData="handleDatePicker" v-model="selectedDate" class="date-picker" />
+            <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker" v-model="selectedDate" class="date-picker" />
+            <dy-date v-else timeType="year" @getData="handleDatePicker" v-model="selectedDate" class="date-picker" />
           </view>
         </view>
-        <view class="chart-placeholder power-chart">
-          <text>电网功率曲线图表</text>
-        </view>
-      </view>
-      
-      <!-- 供馈电量统计 -->
-      <view class="chart-section">
-        <view class="chart-header">
-          <text class="chart-title">供馈电量统计</text>
-          <view class="fullscreen-button" @click="toggleFullScreen('energy')">
-            <text>全屏</text>
+        
+        <view class="divider"></view>
+        
+        <!-- 电网功率曲线 -->
+        <view class="chart-section">
+          <view class="chart-header">
+            <text class="chart-title">电网功率曲线</text>
+            <view class="fullscreen-button" @click="toggleFullScreen('power')">
+              <text>全屏</text>
+            </view>
+          </view>
+          <view class="chart-body">
+            <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
+              :canvas2d="canvas2d" class="power-chart" />
           </view>
         </view>
-        <view class="chart-placeholder energy-chart">
-          <text>供馈电量统计图表</text>
+
+        <view class="divider"></view>
+
+        <!-- 供馈电量统计 -->
+        <view class="chart-section">
+          <view class="chart-header">
+            <text class="chart-title">供馈电量统计</text>
+            <view class="fullscreen-button" @click="toggleFullScreen('energy')">
+              <text>全屏</text>
+            </view>
+          </view>
+          <view class="chart-body">
+            <qiun-data-charts type="column" :chartData="energyData" :opts="energyOptions" :ontouch="true"
+              :canvas2d="canvas2d" class="energy-chart" />
+          </view>
         </view>
       </view>
     </view>
@@ -93,7 +137,86 @@ export default {
       totalFeedEnergy: "157.12",
       todaySupplyEnergy: "157.12",
       totalSupplyEnergy: "157.12",
-      isFullScreen: false
+      isFullScreen: false,
+      activeDateTab: '年',
+      timeTypeIndex: 2,
+      selectedDate: '',
+      canvas2d: this.$Config?.ISCANVAS2D ?? false,
+      // 电网功率曲线数据
+      powerCurveData: {
+        categories: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+        series: [
+          {
+            name: '电网功率',
+            data: [15, 18, 25, 35, 28, 22, 16],
+            color: '#1890FF'
+          }
+        ]
+      },
+      powerCurveOptions: {
+        padding: [15, 15, 0, 5],
+        enableScroll: false,
+        legend: {
+          show: true,
+          position: 'top',
+          float: 'right'
+        },
+        xAxis: {
+          disableGrid: true
+        },
+        yAxis: {
+          gridType: 'dash',
+          dashLength: 2
+        },
+        extra: {
+          area: {
+            type: 'straight',
+            opacity: 0.2,
+            addLine: true,
+            width: 2
+          }
+        }
+      },
+      // 供馈电量统计数据
+      energyData: {
+        categories: ['1月', '2月', '3月', '4月', '5月', '6月'],
+        series: [
+          {
+            name: '供电量',
+            data: [120, 132, 101, 134, 90, 230],
+            color: '#52C41A'
+          },
+          {
+            name: '馈电量',
+            data: [220, 182, 191, 234, 290, 330],
+            color: '#FAAD14'
+          }
+        ]
+      },
+      energyOptions: {
+        padding: [15, 15, 0, 5],
+        enableScroll: false,
+        legend: {
+          show: true,
+          position: 'top',
+          float: 'right'
+        },
+        xAxis: {
+          disableGrid: true
+        },
+        yAxis: {
+          gridType: 'dash',
+          dashLength: 2
+        },
+        extra: {
+          column: {
+            type: 'group',
+            width: 20,
+            activeBgColor: '#000000',
+            activeBgOpacity: 0.08
+          }
+        }
+      }
     };
   },
   methods: {
@@ -128,6 +251,21 @@ export default {
         duration: 1500
       });
       // #endif
+    },
+    handleDateTypeChange(type) {
+      this.activeDateTab = type;
+      if (type === '日') {
+        this.timeTypeIndex = 0;
+      } else if (type === '月') {
+        this.timeTypeIndex = 1;
+      } else if (type === '年') {
+        this.timeTypeIndex = 2;
+      }
+      console.log('日期类型切换为:', type);
+    },
+    handleDatePicker(date) {
+      console.log('选择的日期:', date);
+      this.selectedDate = date;
     }
   }
 };
@@ -183,36 +321,65 @@ export default {
   }
 }
 
-.data-cards {
+/* 统计数据 */
+.stats-container {
   margin-bottom: 20rpx;
-  .card-row {
-    display: flex;
-    gap: 20rpx;
-    margin-bottom: 20rpx;
-    &:last-child {
-      margin-bottom: 0;
-    }
+}
+.stat-row {
+  display: flex;
+  margin-bottom: 10rpx;
+  background: #fff;
+  padding: 16rpx 20rpx;
+  border-radius: 16rpx;
+}
+.stat-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.stat-item.vertical {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.stat-divider {
+  width: 1rpx;
+  height: 60rpx;
+  background-color: #e8e8e8;
+  margin: 0 16rpx;
+  align-self: center;
+}
+.stat-subitem {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 8rpx;
+}
+.stat-subitem:last-child {
+  margin-bottom: 0;
+}
+.stat-label {
+  font-size: 14px;
+  color: #666;
+  margin-right: 8rpx;
+}
+.stat-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #4488FB;
+  &.negative {
+    color: #EB3341;
   }
-  .card-item {
-    flex: 1;
-    background: #fff;
-    border-radius: 16rpx;
-    padding: 24rpx;
-    .item-label {
-      display: block;
-      font-size: 24rpx;
-      color: #666;
-      margin-bottom: 12rpx;
-    }
-    .item-value {
-      font-size: 32rpx;
-      font-weight: bold;
-      color: #333;
-      &.negative {
-        color: #EB3341;
-      }
-    }
-  }
+}
+.stat-value.small {
+  font-size: 10px;
+  font-weight: normal;
+}
+.stat-unit {
+  font-size: 12px;
+  color: #666;
+  margin-left: 4rpx;
 }
 
 .date-selector {
@@ -222,7 +389,7 @@ export default {
   background: #fff;
   border-radius: 16rpx;
   padding: 16rpx 24rpx;
-  margin-bottom: 20rpx;
+  margin-bottom: 0;
   .date-tabs {
     display: flex;
     gap: 12rpx;
@@ -244,11 +411,24 @@ export default {
   }
 }
 
-.chart-section {
+.grid-data-section {
   background: #fff;
   border-radius: 16rpx;
   padding: 24rpx;
   margin-bottom: 20rpx;
+}
+
+.divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 24rpx 0;
+}
+
+.chart-section {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin-bottom: 0;
   .chart-header {
     display: flex;
     justify-content: space-between;
@@ -270,7 +450,7 @@ export default {
     align-items: center;
     justify-content: center;
     background: #f5f5f5;
-    border-radius: 8rpx;
+    border-radius: 12rpx;
     text {
       font-size: 24rpx;
       color: #999;
