@@ -64986,15 +64986,7 @@ function debounce(func) {
 /* 728 */,
 /* 729 */,
 /* 730 */,
-/* 731 */,
-/* 732 */,
-/* 733 */,
-/* 734 */,
-/* 735 */,
-/* 736 */,
-/* 737 */,
-/* 738 */,
-/* 739 */
+/* 731 */
 /*!*******************************************************************************!*\
   !*** D:/ems/node_modules/@dcloudio/uni-ui/lib/uni-icons/uniicons_file_vue.js ***!
   \*******************************************************************************/
@@ -65497,6 +65489,14 @@ var fontData = [{
 exports.fontData = fontData;
 
 /***/ }),
+/* 732 */,
+/* 733 */,
+/* 734 */,
+/* 735 */,
+/* 736 */,
+/* 737 */,
+/* 738 */,
+/* 739 */,
 /* 740 */,
 /* 741 */,
 /* 742 */,
@@ -65510,15 +65510,7 @@ exports.fontData = fontData;
 /* 750 */,
 /* 751 */,
 /* 752 */,
-/* 753 */,
-/* 754 */,
-/* 755 */,
-/* 756 */,
-/* 757 */,
-/* 758 */,
-/* 759 */,
-/* 760 */,
-/* 761 */
+/* 753 */
 /*!****************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-navbar/props.js ***!
   \****************************************************************/
@@ -65620,14 +65612,14 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 762 */,
-/* 763 */,
-/* 764 */,
-/* 765 */,
-/* 766 */,
-/* 767 */,
-/* 768 */,
-/* 769 */
+/* 754 */,
+/* 755 */,
+/* 756 */,
+/* 757 */,
+/* 758 */,
+/* 759 */,
+/* 760 */,
+/* 761 */
 /*!************************************************************************************!*\
   !*** ./node_modules/@dcloudio/vue-cli-plugin-uni/packages/uni-cloud/dist/index.js ***!
   \************************************************************************************/
@@ -65652,10 +65644,10 @@ var _defineProperty2 = _interopRequireDefault(__webpack_require__(/*! @babel/run
 var _inherits2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/inherits */ 81));
 var _possibleConstructorReturn2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/possibleConstructorReturn */ 82));
 var _getPrototypeOf2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/getPrototypeOf */ 83));
-var _wrapNativeSuper2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/wrapNativeSuper */ 770));
+var _wrapNativeSuper2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/wrapNativeSuper */ 762));
 var _classCallCheck2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ 23));
 var _createClass2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/createClass */ 24));
-var _pages = _interopRequireDefault(__webpack_require__(/*! @/pages.json */ 772));
+var _pages = _interopRequireDefault(__webpack_require__(/*! @/pages.json */ 764));
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e34) { throw _e34; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e35) { didErr = true; err = _e35; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
@@ -66166,7 +66158,7 @@ var b = "development" === "development",
   x = true;
 var N = "";
 try {
-  N = (__webpack_require__(/*! uni-stat-config */ 773).default || __webpack_require__(/*! uni-stat-config */ 773)).appid;
+  N = (__webpack_require__(/*! uni-stat-config */ 765).default || __webpack_require__(/*! uni-stat-config */ 765)).appid;
 } catch (e) {}
 var R,
   L = {};
@@ -74036,7 +74028,7 @@ exports.default = er;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../../webpack/buildin/global.js */ 3), __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"], __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/wx.js */ 1)["default"]))
 
 /***/ }),
-/* 770 */
+/* 762 */
 /*!****************************************************************!*\
   !*** ./node_modules/@babel/runtime/helpers/wrapNativeSuper.js ***!
   \****************************************************************/
@@ -74045,7 +74037,7 @@ exports.default = er;
 
 var getPrototypeOf = __webpack_require__(/*! ./getPrototypeOf.js */ 83);
 var setPrototypeOf = __webpack_require__(/*! ./setPrototypeOf.js */ 16);
-var isNativeFunction = __webpack_require__(/*! ./isNativeFunction.js */ 771);
+var isNativeFunction = __webpack_require__(/*! ./isNativeFunction.js */ 763);
 var construct = __webpack_require__(/*! ./construct.js */ 15);
 function _wrapNativeSuper(Class) {
   var _cache = typeof Map === "function" ? new Map() : undefined;
@@ -74076,7 +74068,7 @@ function _wrapNativeSuper(Class) {
 module.exports = _wrapNativeSuper, module.exports.__esModule = true, module.exports["default"] = module.exports;
 
 /***/ }),
-/* 771 */
+/* 763 */
 /*!*****************************************************************!*\
   !*** ./node_modules/@babel/runtime/helpers/isNativeFunction.js ***!
   \*****************************************************************/
@@ -74093,7 +74085,7 @@ function _isNativeFunction(fn) {
 module.exports = _isNativeFunction, module.exports.__esModule = true, module.exports["default"] = module.exports;
 
 /***/ }),
-/* 772 */
+/* 764 */
 /*!******************************************************!*\
   !*** D:/ems/pages.json?{"type":"origin-pages-json"} ***!
   \******************************************************/
@@ -74326,7 +74318,7 @@ var _default = {
 exports.default = _default;
 
 /***/ }),
-/* 773 */
+/* 765 */
 /*!*****************************************!*\
   !*** D:/ems/pages.json?{"type":"stat"} ***!
   \*****************************************/
@@ -74346,7 +74338,7 @@ var _default = {
 exports.default = _default;
 
 /***/ }),
-/* 774 */
+/* 766 */
 /*!***********************************************************************!*\
   !*** D:/ems/uni_modules/qiun-data-charts/js_sdk/u-charts/u-charts.js ***!
   \***********************************************************************/
@@ -82006,7 +81998,7 @@ var _default = uCharts;
 exports.default = _default;
 
 /***/ }),
-/* 775 */
+/* 767 */
 /*!*****************************************************************************!*\
   !*** D:/ems/uni_modules/qiun-data-charts/js_sdk/u-charts/config-ucharts.js ***!
   \*****************************************************************************/
@@ -82627,14 +82619,14 @@ var _default = cfu;
 exports.default = _default;
 
 /***/ }),
-/* 776 */,
-/* 777 */,
-/* 778 */,
-/* 779 */,
-/* 780 */,
-/* 781 */,
-/* 782 */,
-/* 783 */
+/* 768 */,
+/* 769 */,
+/* 770 */,
+/* 771 */,
+/* 772 */,
+/* 773 */,
+/* 774 */,
+/* 775 */
 /*!******************************************************************!*\
   !*** D:/ems/uni_modules/uni-icons/components/uni-icons/icons.js ***!
   \******************************************************************/
@@ -83655,6 +83647,14 @@ var _default = {
 exports.default = _default;
 
 /***/ }),
+/* 776 */,
+/* 777 */,
+/* 778 */,
+/* 779 */,
+/* 780 */,
+/* 781 */,
+/* 782 */,
+/* 783 */,
 /* 784 */,
 /* 785 */,
 /* 786 */,
@@ -83761,15 +83761,7 @@ exports.default = _default;
 /* 887 */,
 /* 888 */,
 /* 889 */,
-/* 890 */,
-/* 891 */,
-/* 892 */,
-/* 893 */,
-/* 894 */,
-/* 895 */,
-/* 896 */,
-/* 897 */,
-/* 898 */
+/* 890 */
 /*!*******************************************************************************!*\
   !*** D:/ems/uni_modules/uni-load-more/components/uni-load-more/i18n/index.js ***!
   \*******************************************************************************/
@@ -83784,9 +83776,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-var _en = _interopRequireDefault(__webpack_require__(/*! ./en.json */ 899));
-var _zhHans = _interopRequireDefault(__webpack_require__(/*! ./zh-Hans.json */ 900));
-var _zhHant = _interopRequireDefault(__webpack_require__(/*! ./zh-Hant.json */ 901));
+var _en = _interopRequireDefault(__webpack_require__(/*! ./en.json */ 891));
+var _zhHans = _interopRequireDefault(__webpack_require__(/*! ./zh-Hans.json */ 892));
+var _zhHant = _interopRequireDefault(__webpack_require__(/*! ./zh-Hant.json */ 893));
 var _default = {
   en: _en.default,
   'zh-Hans': _zhHans.default,
@@ -83795,7 +83787,7 @@ var _default = {
 exports.default = _default;
 
 /***/ }),
-/* 899 */
+/* 891 */
 /*!******************************************************************************!*\
   !*** D:/ems/uni_modules/uni-load-more/components/uni-load-more/i18n/en.json ***!
   \******************************************************************************/
@@ -83805,7 +83797,7 @@ exports.default = _default;
 module.exports = JSON.parse("{\"uni-load-more.contentdown\":\"Pull up to show more\",\"uni-load-more.contentrefresh\":\"loading...\",\"uni-load-more.contentnomore\":\"No more data\"}");
 
 /***/ }),
-/* 900 */
+/* 892 */
 /*!***********************************************************************************!*\
   !*** D:/ems/uni_modules/uni-load-more/components/uni-load-more/i18n/zh-Hans.json ***!
   \***********************************************************************************/
@@ -83815,7 +83807,7 @@ module.exports = JSON.parse("{\"uni-load-more.contentdown\":\"Pull up to show mo
 module.exports = JSON.parse("{\"uni-load-more.contentdown\":\"上拉显示更多\",\"uni-load-more.contentrefresh\":\"正在加载...\",\"uni-load-more.contentnomore\":\"没有更多数据了\"}");
 
 /***/ }),
-/* 901 */
+/* 893 */
 /*!***********************************************************************************!*\
   !*** D:/ems/uni_modules/uni-load-more/components/uni-load-more/i18n/zh-Hant.json ***!
   \***********************************************************************************/
@@ -83825,14 +83817,14 @@ module.exports = JSON.parse("{\"uni-load-more.contentdown\":\"上拉显示更多
 module.exports = JSON.parse("{\"uni-load-more.contentdown\":\"上拉顯示更多\",\"uni-load-more.contentrefresh\":\"正在加載...\",\"uni-load-more.contentnomore\":\"沒有更多數據了\"}");
 
 /***/ }),
-/* 902 */,
-/* 903 */,
-/* 904 */,
-/* 905 */,
-/* 906 */,
-/* 907 */,
-/* 908 */,
-/* 909 */
+/* 894 */,
+/* 895 */,
+/* 896 */,
+/* 897 */,
+/* 898 */,
+/* 899 */,
+/* 900 */,
+/* 901 */
 /*!***************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-image/props.js ***!
   \***************************************************************/
@@ -83934,6 +83926,14 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
+/* 902 */,
+/* 903 */,
+/* 904 */,
+/* 905 */,
+/* 906 */,
+/* 907 */,
+/* 908 */,
+/* 909 */,
 /* 910 */,
 /* 911 */,
 /* 912 */,
@@ -83966,15 +83966,7 @@ exports.default = _default;
 /* 939 */,
 /* 940 */,
 /* 941 */,
-/* 942 */,
-/* 943 */,
-/* 944 */,
-/* 945 */,
-/* 946 */,
-/* 947 */,
-/* 948 */,
-/* 949 */,
-/* 950 */
+/* 942 */
 /*!*****************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-overlay/props.js ***!
   \*****************************************************************/
@@ -84016,14 +84008,14 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 951 */,
-/* 952 */,
-/* 953 */,
-/* 954 */,
-/* 955 */,
-/* 956 */,
-/* 957 */,
-/* 958 */
+/* 943 */,
+/* 944 */,
+/* 945 */,
+/* 946 */,
+/* 947 */,
+/* 948 */,
+/* 949 */,
+/* 950 */
 /*!**********************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-loading-icon/props.js ***!
   \**********************************************************************/
@@ -84100,14 +84092,14 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 959 */,
-/* 960 */,
-/* 961 */,
-/* 962 */,
-/* 963 */,
-/* 964 */,
-/* 965 */,
-/* 966 */
+/* 951 */,
+/* 952 */,
+/* 953 */,
+/* 954 */,
+/* 955 */,
+/* 956 */,
+/* 957 */,
+/* 958 */
 /*!**************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-icon/icons.js ***!
   \**************************************************************/
@@ -84338,7 +84330,7 @@ var _default = {
 exports.default = _default;
 
 /***/ }),
-/* 967 */
+/* 959 */
 /*!**************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-icon/props.js ***!
   \**************************************************************/
@@ -84445,14 +84437,14 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 968 */,
-/* 969 */,
-/* 970 */,
-/* 971 */,
-/* 972 */,
-/* 973 */,
-/* 974 */,
-/* 975 */
+/* 960 */,
+/* 961 */,
+/* 962 */,
+/* 963 */,
+/* 964 */,
+/* 965 */,
+/* 966 */,
+/* 967 */
 /*!*************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-gap/props.js ***!
   \*************************************************************/
@@ -84494,14 +84486,14 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 976 */,
-/* 977 */,
-/* 978 */,
-/* 979 */,
-/* 980 */,
-/* 981 */,
-/* 982 */,
-/* 983 */
+/* 968 */,
+/* 969 */,
+/* 970 */,
+/* 971 */,
+/* 972 */,
+/* 973 */,
+/* 974 */,
+/* 975 */
 /*!********************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-status-bar/props.js ***!
   \********************************************************************/
@@ -84527,6 +84519,14 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
+/* 976 */,
+/* 977 */,
+/* 978 */,
+/* 979 */,
+/* 980 */,
+/* 981 */,
+/* 982 */,
+/* 983 */,
 /* 984 */,
 /* 985 */,
 /* 986 */,
@@ -84566,15 +84566,7 @@ exports.default = _default;
 /* 1020 */,
 /* 1021 */,
 /* 1022 */,
-/* 1023 */,
-/* 1024 */,
-/* 1025 */,
-/* 1026 */,
-/* 1027 */,
-/* 1028 */,
-/* 1029 */,
-/* 1030 */,
-/* 1031 */
+/* 1023 */
 /*!********************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-transition/props.js ***!
   \********************************************************************/
@@ -84616,7 +84608,7 @@ exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 1032 */
+/* 1024 */
 /*!*************************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-transition/transition.js ***!
   \*************************************************************************/
@@ -84633,7 +84625,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 123));
 var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 125));
-var _nvueAniMap = _interopRequireDefault(__webpack_require__(/*! ./nvue.ani-map.js */ 1033));
+var _nvueAniMap = _interopRequireDefault(__webpack_require__(/*! ./nvue.ani-map.js */ 1025));
 // 定义一个一定时间后自动成功的promise，让调用nextTick方法处，进入下一个then方法
 var nextTick = function nextTick() {
   return new Promise(function (resolve) {
@@ -84725,7 +84717,7 @@ var _default = {
 exports.default = _default;
 
 /***/ }),
-/* 1033 */
+/* 1025 */
 /*!***************************************************************************!*\
   !*** D:/ems/uni_modules/uview-ui/components/u-transition/nvue.ani-map.js ***!
   \***************************************************************************/

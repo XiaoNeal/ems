@@ -301,7 +301,7 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ 586:
+/***/ 578:
 /*!****************************************************!*\
   !*** D:/ems/main.js?{"page":"community%2Fsystem"} ***!
   \****************************************************/
@@ -322,5 +322,5 @@ createPage(_system.default);
 
 /***/ })
 
-},[[586,"common/runtime","common/vendor"]]]);
+},[[578,"common/runtime","common/vendor"]]]);
 //# sourceMappingURL=../../.sourcemap/mp-weixin/community/system.js.map

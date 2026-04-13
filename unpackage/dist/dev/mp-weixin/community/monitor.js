@@ -122,27 +122,27 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 var ArchitectureDiagram = function ArchitectureDiagram() {
   Promise.all(/*! require.ensure | community/components/architecture-diagram */[__webpack_require__.e("common/vendor"), __webpack_require__.e("community/common/vendor"), __webpack_require__.e("community/components/architecture-diagram")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/architecture-diagram.vue */ 786));
+    return resolve(__webpack_require__(/*! ./components/architecture-diagram.vue */ 778));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var PvManagement = function PvManagement() {
   __webpack_require__.e(/*! require.ensure | community/components/pv-management */ "community/components/pv-management").then((function () {
-    return resolve(__webpack_require__(/*! ./components/pv-management.vue */ 796));
+    return resolve(__webpack_require__(/*! ./components/pv-management.vue */ 788));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var EnergyStorage = function EnergyStorage() {
   Promise.all(/*! require.ensure | community/components/energy-storage */[__webpack_require__.e("common/vendor"), __webpack_require__.e("community/common/vendor"), __webpack_require__.e("community/components/energy-storage")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/energy-storage.vue */ 803));
+    return resolve(__webpack_require__(/*! ./components/energy-storage.vue */ 795));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var LoadManagement = function LoadManagement() {
   Promise.all(/*! require.ensure | community/components/load-management */[__webpack_require__.e("common/vendor"), __webpack_require__.e("community/common/vendor"), __webpack_require__.e("community/components/load-management")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/load-management.vue */ 811));
+    return resolve(__webpack_require__(/*! ./components/load-management.vue */ 803));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var GridManagement = function GridManagement() {
   __webpack_require__.e(/*! require.ensure | community/components/grid-management */ "community/components/grid-management").then((function () {
-    return resolve(__webpack_require__(/*! ./components/grid-management.vue */ 821));
+    return resolve(__webpack_require__(/*! ./components/grid-management.vue */ 813));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var _default = {

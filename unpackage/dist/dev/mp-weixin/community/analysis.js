@@ -143,27 +143,27 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 var economicAnalysis = function economicAnalysis() {
   Promise.all(/*! require.ensure | community/components/economic-analysis */[__webpack_require__.e("common/vendor"), __webpack_require__.e("community/common/vendor"), __webpack_require__.e("community/components/economic-analysis")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/economic-analysis.vue */ 828));
+    return resolve(__webpack_require__(/*! ./components/economic-analysis.vue */ 820));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var electricityAnalyze = function electricityAnalyze() {
   Promise.all(/*! require.ensure | community/components/electricity-analyze */[__webpack_require__.e("common/vendor"), __webpack_require__.e("community/components/electricity-analyze")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/electricity-analyze.vue */ 835));
+    return resolve(__webpack_require__(/*! ./components/electricity-analyze.vue */ 827));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var powerEfficiencyAnalyze = function powerEfficiencyAnalyze() {
   Promise.all(/*! require.ensure | community/components/power-efficiency-analysis */[__webpack_require__.e("common/vendor"), __webpack_require__.e("community/common/vendor"), __webpack_require__.e("community/components/power-efficiency-analysis")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/power-efficiency-analysis.vue */ 842));
+    return resolve(__webpack_require__(/*! ./components/power-efficiency-analysis.vue */ 834));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var weatherAnalyze = function weatherAnalyze() {
   Promise.all(/*! require.ensure | community/components/weather */[__webpack_require__.e("common/vendor"), __webpack_require__.e("community/common/vendor"), __webpack_require__.e("community/components/weather")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/weather.vue */ 850));
+    return resolve(__webpack_require__(/*! ./components/weather.vue */ 842));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var alarmAnalyze = function alarmAnalyze() {
   Promise.all(/*! require.ensure | community/components/alarm-analysis */[__webpack_require__.e("common/vendor"), __webpack_require__.e("community/common/vendor"), __webpack_require__.e("community/components/alarm-analysis")]).then((function () {
-    return resolve(__webpack_require__(/*! ./components/alarm-analysis.vue */ 859));
+    return resolve(__webpack_require__(/*! ./components/alarm-analysis.vue */ 851));
   }).bind(null, __webpack_require__)).catch(__webpack_require__.oe);
 };
 var _default = {
