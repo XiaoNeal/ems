@@ -329,7 +329,7 @@ export default {
   display: flex;
   margin-bottom: 10rpx;
   background: #fff;
-  padding: 16rpx 20rpx;
+  padding: 16rpx 10rpx;
   border-radius: 16rpx;
 }
 .stat-item {
@@ -360,7 +360,7 @@ export default {
   margin-bottom: 0;
 }
 .stat-label {
-  font-size: 14px;
+  font-size: 12px;
   color: #666;
   margin-right: 8rpx;
 }
@@ -377,7 +377,7 @@ export default {
   font-weight: normal;
 }
 .stat-unit {
-  font-size: 12px;
+  font-size: 8px;
   color: #666;
   margin-left: 4rpx;
 }
