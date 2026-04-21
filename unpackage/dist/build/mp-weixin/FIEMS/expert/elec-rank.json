@@ -1,9 +1,0 @@
-{
-  "navigationBarTitleText": "",
-  "usingComponents": {
-    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar",
-    "biaofun-datetime-picker": "/components/biaofun-datetime-picker/biaofun-datetime-picker",
-    "u-line": "/uni_modules/uview-ui/components/u-line/u-line",
-    "progress-bar": "/components/progress-bar/progress-bar"
-  }
-}

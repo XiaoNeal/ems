@@ -238,7 +238,7 @@ export default {
 
         async setLoginInfo(res) {
 
-           
+
             // uni.navigateTo({ url: '/charging/index' });
             // return;
 
@@ -252,7 +252,7 @@ export default {
             this.$u.vuex('userId', res.data.code);
             // 解析并过滤系统列表
             // const allowedIds = [5, 14, 25];
-            const allowedIds = [25,27];
+            const allowedIds = [25, 27];
             const systems = Object.entries(res.data.plugininfo)
                 .filter(([key]) => {
                     const id = key.replace('system', '');
@@ -280,73 +280,44 @@ export default {
                     targetPath = '/pages/FIEMS/index';
                     uni.navigateTo({ url: targetPath });
                 } else if (systems[0].type == 2) {
-                    // 珠海能源管理系统 
-                    // const { code, data } = await request({
-                    //     url: '/ApihomecommunityKoa/login',
-                    //     method: 'POST',
-                    //     data: {
-                    //         username: this.username,
-                    //         password: md5(this.password)
-                    //     }
-                    // });
-                    // if (code == 10000) {
-                        // this.$u.vuex('token', "Bearer " + data.token);
-                        // uni.setStorageSync('token', "Bearer " + data.token);
-
-                        const result = await loginPermission({
-                            userid: res.data.code,
-                            systemId: systems[0].id
-                        })
-                        console.log(result, "result--------------");
-                        const userInfo = {
-                            _id: result.data.homecommunityRole.roleId,
-                            username: result.data.username,
-                            name: result.data.username,
-                            __v: 0,
-                            role: {
-                                _id: result.data.homecommunityRole.roleId,
-                                name: result.data.homecommunityRole.roleName,
-                                description: result.data.homecommunityRole.roleDescription
-                            },
-                            level: result.data.homecommunityRole.roleName
-                        }
-
-                        // const userInfo = {
-                        //     _id: "60054086019dcc42e41c91f7",
-                        //     username: "homeAdmin",
-                        //     name: "NEIIC 国创联能",
-                        //     __v: 0,
-                        //     role: {
-                        //         _id: "60068a98fa3cf1513b206a74",
-                        //         name: "admin",
-                        //         description: "管理员"
-                        //     },
-                        //     level: "admin"
-                        // }
-                        const roleId = userInfo.role._id
-                        sapi.getCenterList({ roleId }).then(res => {
-                            if (res.code == 10000) {
-                                this.showToast('success', "登录成功");
-                                this.$u.vuex('centerList', res.data);
-                                this.$store.commit('UPDATE_CENTERLIST', res.data)
-                                targetPath = '/community/index';
-                                uni.navigateTo({ url: targetPath });
-                            } else {
-                                this.showToast('error', '登录失败:服务器繁忙 ');
-                            }
-                        })
 
 
-                    
-                    
-                    // } else {
-                    //     this.showToast('error', '登录失败:服务器繁忙 ');
-                    // }
-                } else if (systems[0].type == 3) {
-
-                    // IEMS光储直柔云控平台
-                    targetPath = '/pages/cloud-system/index';
+                    const result = await loginPermission({
+                        userid: res.data.code,
+                        systemId: systems[0].id
+                    })
+                    console.log(result, "result--------------");
+                    targetPath = '/pages/index/index';
                     uni.navigateTo({ url: targetPath });
+                    // const userInfo = {
+                    //     _id: result.data.homecommunityRole.roleId,
+                    //     username: result.data.username,
+                    //     name: result.data.username,
+                    //     __v: 0,
+                    //     role: {
+                    //         _id: result.data.homecommunityRole.roleId,
+                    //         name: result.data.homecommunityRole.roleName,
+                    //         description: result.data.homecommunityRole.roleDescription
+                    //     },
+                    //     level: result.data.homecommunityRole.roleName
+                    // }
+
+
+                    // const roleId = userInfo.role._id
+                    // sapi.getCenterList({ roleId }).then(res => {
+                    //     if (res.code == 10000) {
+                    //         this.showToast('success', "登录成功");
+                    //         this.$u.vuex('centerList', res.data);
+                    //         this.$store.commit('UPDATE_CENTERLIST', res.data)
+                    //         targetPath = '/pages/index/index';
+                    //         uni.navigateTo({ url: targetPath });
+                    //     } else {
+                    //         this.showToast('error', '登录失败:服务器繁忙 ');
+                    //     }
+                    // })
+
+
+
 
                 }
 

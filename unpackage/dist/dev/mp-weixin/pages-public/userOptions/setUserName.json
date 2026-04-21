@@ -1,9 +1,0 @@
-{
-  "navigationBarTitleText": "",
-  "usingComponents": {
-    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar",
-    "u-toast": "/uni_modules/uview-ui/components/u-toast/u-toast",
-    "uni-icons": "/uni_modules/uni-icons/components/uni-icons/uni-icons",
-    "uni-load-more": "/uni_modules/uni-load-more/components/uni-load-more/uni-load-more"
-  }
-}

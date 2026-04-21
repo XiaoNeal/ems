@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "登录",
-  "usingComponents": {
-    "u-toast": "/uni_modules/uview-ui/components/u-toast/u-toast",
-    "uni-easyinput": "/uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput"
-  }
-}

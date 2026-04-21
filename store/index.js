@@ -89,105 +89,8 @@ const store = new Vuex.Store({
 		//登录信息
 
 		vuex_wxCode: '',
-		storageBaseList: [{
-			id: 1,
-			name: '总部',
-			areaInfoId: 149,
-			areaId: 149,
-			urlPrefix: ''
-		},
-		{
-			id: 2,
-			name: '中山',
-			areaInfoId: 151
-		},
-		{
-			id: 2,
-			name: '新元',
-			areaInfoId: 129,
-			areaId: 129
-		},
-		{
-			id: 2,
-			name: '广昌',
-			areaInfoId: 152
-		},
-		{
-			id: 2,
-			name: '洛阳',
-			areaInfoId: 159,
-			areaId: 2,
-			urlPrefix: '/luoyang'
-		},
-		{
-			id: 2,
-			name: '凯邦',
-			areaInfoId: 154,
-			areaId: 300,
-			urlPrefix: ''
-		},
-		{
-			id: 2,
-			name: '杭州',
-			areaInfoId: 167
-		},
-		{
-			id: 2,
-			name: '合肥',
-			areaInfoId: 164,
-			urlPrefix: '/hefei'
-		},
-		{
-			id: 2,
-			name: '长沙',
-			areaInfoId: 161
-		},
-		{
-			id: 2,
-			name: '武汉',
-			areaInfoId: 160
-		},
-		{
-			id: 2,
-			name: '郑州',
-			areaInfoId: 162
-		},
-		{
-			id: 2,
-			name: '马鞍山',
-			areaInfoId: 165
-		},
-		{
-			id: 2,
-			name: '芜湖',
-			areaInfoId: 166
-		}
-		],
-		templateList: [
-			[
-				// {templateName:'默认商城', templateId:'0'},
-				{
-					templateName: '逆变器',
-					templateId: '1'
-				},
-				{
-					templateName: '家居/社区能源管理系统',
-					templateId: '2'
-				},
-				{
-					templateName: '工厂/园区能源管理系统',
-					templateId: '3'
-				},
-				{
-					templateName: '储能PCS',
-					templateId: '4'
-				},
-				{
-					templateName: '退出登录',
-					templateId: '0'
-				}
-			]
-		],
+		
+		
 		currentTemplate: lifeData.currentTemplate ? lifeData.currentTemplate : "0",
 		deviceCategoryId: lifeData.deviceCategoryId ? lifeData.deviceCategoryId : '',
 		areaInfoId: lifeData.areaInfoId ? lifeData.areaInfoId : '',
@@ -219,100 +122,12 @@ const store = new Vuex.Store({
 			{ name: '光伏未来屋智能光储机', esId: 5 },
 			{ name: '十千瓦级光储直柔微能源站', esId: 6 }
 		],
-		esConfig: [
-			{ name: '上海交大能源站', esId: 1, photovoltaicCapacity: 12, supplyRatedPower: 70, loadRatedPower: 28, flexibleRatedPower: 0, adjustablePower: 0, hasControl: 0, location: '上海' },
-			{ name: '光伏未来屋能源站', esId: 2, photovoltaicCapacity: 60, supplyRatedPower: 110, loadRatedPower: 100, flexibleRatedPower: 16.7, adjustablePower: 15, hasControl: 1, location: '珠海' },
-			{ name: '清华节能楼能源站', esId: 3, photovoltaicCapacity: 0, supplyRatedPower: 50, loadRatedPower: 20 + 34.2, flexibleRatedPower: 0, adjustablePower: 0, hasControl: 0, location: '北京' },
-			{ name: '杭州格力能源站', esId: 4, photovoltaicCapacity: 0, supplyRatedPower: 50, loadRatedPower: 0, flexibleRatedPower: 0, adjustablePower: 0, hasControl: 0, location: '杭州' },
-			{ name: '光伏未来屋智能光储机', esId: 5, photovoltaicCapacity: 0, supplyRatedPower: 100, loadRatedPower: 0, flexibleRatedPower: 0, adjustablePower: 0, hasControl: 0, location: '珠海' },
-			{ name: '十千瓦级光储直柔微能源站', esId: 6, photovoltaicCapacity: 0, supplyRatedPower: 100, loadRatedPower: 0, flexibleRatedPower: 0, adjustablePower: 0, hasControl: 0, location: '珠海' },
-			{ name: '上交大水熊虫', esId: 7, photovoltaicCapacity: 12, supplyRatedPower: 70, loadRatedPower: 28, flexibleRatedPower: 0, adjustablePower: 0, hasControl: 0, location: '上海' },],
+		
 		storageRealData: [],
 		powerStationsId: lifeData.powerStationsId ? lifeData.powerStationsId : undefined,
 		homeSelectedEsId: lifeData.homeSelectedEsId ? lifeData.homeSelectedEsId : undefined,
 		centerList: lifeData.centerList ? lifeData.centerList : [],
-		systems: [
-			{
-				id: 387,
-				name: '珠海·光伏未来屋社区',
-				//首页背景图
-				backgroundImages: {
-					// bg: require('../pages/front/home/images/bg-new.png'),
-					// house: require('../pages/front/home/images/homecommunity-new.png'),
-				},
-				startDate: '2025-07-18', // 表示系统开始运行的时间
-				ammeterList: nyzDeviceListbySystem1,
-				//首页查询储能剩余电量
-				storageDeviceid: 3435852,
-
-				boxidsbyYear: [381, 382, 383, 388, 389, 401, 402, 403, 502, 503, 504, 505, 506, 384, 385, 386, 387, 545, 372, 399, 400, 566, 567, 568, 569, 564, 787],
-				boxidsbyDay: [381, 382, 383, 388, 389, 401, 402, 403, 502, 503, 506, 384, 386, 387, 545, 372, 399, 400, 566, 567, 568, 569, 564, 787],
-				menuItems: menuItemsSystem1,
-				//储能管理充放电功率
-				storageammeterDeviceids: [3353090, 3353091],
-				analysisSubMenu: analysisSubMenuSystem1,
-				esId: 2,//能源站Id
-				//架构图
-				architecture_diagram: {
-					// bg: require('../assets/img/system-architecture-new-2.png'),
-				},
-				FlexibilityLoadidcode: "F2 00 12 00 00 00 00 00 00 00 00 00 00 00 00", //柔性网关
-			},
-			{
-				id: 393,
-				name: '蒲江·光合创谷',
-				//首页背景图
-				backgroundImages: {
-					// bg: require('../pages/front/home/images/bg-new.png'),
-					// house: require('../pages/front/home/images/pj.png')
-				},
-				startDate: '2025-07-01',// 表示系统开始运行的时间
-				// ammeterList: nyzDeviceListbySystem2,
-				// //首页查询储能剩余电量
-				// storageDeviceid:9999999,
-				// boxidsbyYear:[],
-				// boxidsbyDay:[],
-				menuItems: menuItemsSystem2,
-				//储能管理充放电功率
-				//storageammeterDeviceids:[],
-				analysisSubMenu: analysisSubMenuSystem2,
-				//架构图
-				architecture_diagram: {
-					// bg: require('../assets/img/pj_architecture.png'),
-				},
-				// apiService: pjnyzapi,//接口
-				esId: 8,//能源站Id
-				FlexibilityLoadidcode: '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00', //柔性网关
-				nyzbarcode: '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00',//能源站网关
-
-			},
-			{
-				id: 3,
-				name: '南京工业大学',
-				//首页背景图
-				backgroundImages: {
-					// bg: require('../pages/front/home/images/bg-new.png'),
-					// house: require('../pages/front/home/images/nj.png')
-				},
-				startDate: '2025-07-01',// 表示系统开始运行的时间
-				// ammeterList: nyzDeviceListbySystem2,
-				// //首页查询储能剩余电量
-				// storageDeviceid:9999999,
-				// boxidsbyYear:[],
-				// boxidsbyDay:[],
-				// menuItems: menuItemsSystem3,
-				//储能管理充放电功率
-				//storageammeterDeviceids:[],
-				analysisSubMenu: analysisSubMenuSystem2,
-				//架构图
-				architecture_diagram: {
-					// bg: require('../assets/img/nj_architecture.png'),
-				},
-				// apiService: pjnyzapi,//接口
-				esId: 8
-
-			}
-		],
+		
 		currentSystemId: 1,
 		currentSystemId: 387
 	},

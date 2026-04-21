@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "充电记录",
-  "navigationStyle": "custom",
-  "enablePullDownRefresh": true,
-  "usingComponents": {
-    "custom-nav-bar": "/charging/components/custom-nav-bar"
-  }
-}

@@ -1,6 +1,40 @@
 {
 	"pages": [
 		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"app-plus": {
+					"bounce": "none"
+				}
+			}
+		},
+		{
+			"path": "pages/monitor",
+			"style": {
+				"navigationBarTitleText": "首页",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": true
+			}
+		},
+		{
+			"path": "pages/system",
+			"style": {
+				"navigationBarTitleText": "系统",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/profile",
+			"style": {
+				"navigationBarTitleText": "我的",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": true
+			}
+		},
+		
+		{
 			"path": "pages/login/login",
 			"style": {
 				"navigationBarTitleText": "登录",
@@ -18,107 +52,64 @@
 				}
 			}
 		},
-		{
-			"path": "pages/alarm/alarm",
-			"style": {
-				"navigationBarTitleText": "报警记录"
-			}
-		},
-		{
-			"path": "pages/operation-record/operation-record",
-			"style": {
-				"navigationBarTitleText": "操作记录"
-			}
-		},
-		{
-			"path": "pages/strategy-config/strategy-config",
-			"style": {
-				"navigationBarTitleText": "策略配置"
-			}
-		},
-		{
-			"path": "pages/monitor-data/monitor-data",
-			"style": {
-				"navigationBarTitleText": "监控数据"
-			}
-		},
-		{
-			"path": "pages/quick-control/quick-control",
-			"style": {
-				"navigationBarTitleText": "快捷控制"
-			}
-		},
-		{
-			"path": "pages/settings/settings",
-			"style": {
-				"navigationBarTitleText": "设置参数"
-			}
-		},
-		{
-			"path": "pages/access-setting/access-setting",
-			"style": {
-				"navigationBarTitleText": "接入设置"
-			}
-		},
-		{
-			"path": "pages/device-detail/device-detail",
-			"style": {
-				"navigationBarTitleText": "设备详情"
-			}
-		}
+		
+					{
+					"path": "pages/ai-service/ai-service",
+					"style": {
+						"navigationBarTitleText": "AI客服"
+					}
+				}
 	],
 	"subPackages": [
 		{
 			"root": "community",
 			"pages": [
 				{
-					"path": "index",
+					"path": "alarm/alarm",
 					"style": {
-						"navigationBarTitleText": "",
-						"enablePullDownRefresh": false
+						"navigationBarTitleText": "报警记录"
 					}
 				},
 				{
-					"path": "home",
+					"path": "operation-record/operation-record",
 					"style": {
-						"navigationBarTitleText": "",
-						"enablePullDownRefresh": false
+						"navigationBarTitleText": "操作记录"
 					}
 				},
 				{
-					"path": "monitor",
+					"path": "strategy-config/strategy-config",
 					"style": {
-						"navigationBarTitleText": "",
-						"enablePullDownRefresh": false
+						"navigationBarTitleText": "策略配置"
 					}
 				},
 				{
-					"path": "analysis",
+					"path": "monitor-data/monitor-data",
 					"style": {
-						"navigationBarTitleText": "",
-						"enablePullDownRefresh": false
+						"navigationBarTitleText": "监控数据"
 					}
 				},
 				{
-					"path": "report",
+					"path": "quick-control/quick-control",
 					"style": {
-						"navigationBarTitleText": "",
-						"enablePullDownRefresh": false
+						"navigationBarTitleText": "快捷控制"
 					}
 				},
 				{
-					"path": "profile",
+					"path": "settings/settings",
 					"style": {
-						"navigationBarTitleText": "",
-						"enablePullDownRefresh": false
+						"navigationBarTitleText": "设置参数"
 					}
 				},
-				
 				{
-					"path": "system",
+					"path": "access-setting/access-setting",
 					"style": {
-						"navigationBarTitleText": "系统配置",
-						"enablePullDownRefresh": false
+						"navigationBarTitleText": "接入设置"
+					}
+				},
+				{
+					"path": "device-detail/device-detail",
+					"style": {
+						"navigationBarTitleText": "设备详情"
 					}
 				},
 				{
@@ -130,6 +121,7 @@
 				}
 			]
 		},
+	
 		{
 			"root": "pages-public",
 			"pages": [
