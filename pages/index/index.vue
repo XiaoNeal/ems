@@ -6,34 +6,35 @@
       <view class="header-content">
         <view class="header-left">
           <image v-if="currentTab === 0" src="/static/images/logo.png" class="header-icon"></image>
-          <text class="title">光储直柔能源站EMS</text>
+          <text class="title">{{ currentTitle }}</text>
         </view>
-        <view class="chart-actions">
-          <button class="refresh-btn" @click="refreshData" hover-class="btn-hover">
-            <uni-icons type="refresh" size="24" color="#666"></uni-icons>
-          </button>
+        <!-- 返回按钮 - 从设备列表进入时显示 -->
+        <view v-if="showBackBtn" class="back-btn" @click="goBackToList">
+          <uni-icons type="back" size="28" color="#333"></uni-icons>
         </view>
       </view>
     </view>
 
     <!-- 内容区域 -->
-    <scroll-view
-      class="content-scroll"
-      scroll-y
-      enable-back-to-top
-      @scrolltolower="tabbarPageScrollLower"
-      :scroll-top="scrollTop"
-      ref="contentScroll"
-      :bounces="false"
-      @scroll="onScroll"
-    >
+    <scroll-view class="content-scroll" scroll-y enable-back-to-top @scrolltolower="tabbarPageScrollLower"
+      :scroll-top="scrollTop" ref="contentScroll" :bounces="false" @scroll="onScroll">
       <view class="content-pages">
-        <view v-if="currentTab === 0" class="page-item">
+        <!-- 设备列表页面 -->
+        <view v-if="currentTab === 0 && showDeviceList" class="page-item">
+          <DeviceList ref="deviceList" @selectDevice="handleDeviceSelect"></DeviceList>
+        </view>
+        
+        <!-- 监测页面 -->
+        <view v-if="currentTab === 0 && !showDeviceList" class="page-item">
           <Monitor ref="monitor"></Monitor>
         </view>
+        
+        <!-- 系统页面 -->
         <view v-if="currentTab === 1" class="page-item">
           <System ref="system"></System>
         </view>
+        
+        <!-- 个人中心 -->
         <view v-if="currentTab === 2" class="page-item">
           <Profile ref="profile"></Profile>
         </view>
@@ -43,8 +44,8 @@
     <!-- 底部TabBar -->
     <view class="tab-bar-container">
       <view class="tab-bar">
-        <view v-for="(tab, index) in tabs" :key="index" class="tab-item"
-          :class="{ 'active': currentTab === index }" @click="switchTab(index)">
+        <view v-for="(tab, index) in tabs" :key="index" class="tab-item" :class="{ 'active': currentTab === index }"
+          @click="switchTab(index)">
           <view class="tab-icon">
             <image :src="currentTab === index ? activeIcons[index] : inactiveIcons[index]" mode="widthFix" />
           </view>
@@ -57,15 +58,61 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import Monitor from '../monitor.vue'
 import Profile from '../profile.vue'
 import System from '../system.vue'
+import DeviceList from '../components/device-list.vue'
 
 export default {
   components: {
     Monitor,
     Profile,
-    System
+    System,
+    DeviceList
+  },
+  computed: {
+    ...mapState(['userInfo']),
+    
+    // 获取 esIds 数组
+    esIds() {
+      if (this.userInfo && this.userInfo.esIds) {
+        return Array.isArray(this.userInfo.esIds) ? this.userInfo.esIds : []
+      }
+      return []
+    },
+    
+    // 是否显示设备列表
+    showDeviceList() {
+      // 如果设备数量不为1（空或>=2），显示设备列表
+      return this.esIds.length !== 1
+    },
+    
+    // 是否显示返回按钮
+    showBackBtn() {
+      // 从设备列表选择设备后显示返回按钮
+      return this.showDeviceList && this.selectedDeviceId !== null
+    },
+    
+    // 当前页面标题
+    currentTitle() {
+      // if (this.showBackBtn && this.selectedDeviceId) {
+      //   const station = this.$store.state.powerStationNames.find(s => s.esId === Number(this.selectedDeviceId))
+      //   const stationName = station ? station.name : '设备'
+      //   console.log('stationName', stationName,this.currentTab )
+      
+      // }
+
+        // 根据当前 tab 显示不同标题
+        if (this.currentTab === 0) {
+          return '光储直柔能源站EMS'
+        } else if (this.currentTab === 1) {
+          return '系统管理'
+        } else if (this.currentTab === 2) {
+          return '我的'
+        }
+      return '光储直柔能源站EMS'
+    }
   },
   data() {
     return {
@@ -86,9 +133,11 @@ export default {
       scrollPositions: { 0: 0, 1: 0, 2: 0 },
       scrollTop: 0,
       realScrollTop: 0,
+      selectedDeviceId: null // 当前选中的设备ID
     }
   },
-  onMounted() {
+  mounted() {
+    console.log('onMounted----------------------------------------------------------')
     this.checkLoginStatus()
   },
   onReady() {
@@ -96,15 +145,35 @@ export default {
   },
   methods: {
     checkLoginStatus() {
-      // 检查登录状态，这里假设使用 uni.getStorageSync 获取 token
-      const token = uni.getStorageSync('token')
-      if (!token) {
+      console.log('checkLoginStatus', this.userInfo)
+      // 检查登录状态，使用 userInfo 判断
+      if (!this.userInfo || !this.userInfo.isLogin) {
         // 未登录，跳转到登录页面
         uni.redirectTo({
           url: '/pages/login/login'
         })
       }
     },
+    
+    // 处理设备选择
+    handleDeviceSelect(esId) {
+      this.selectedDeviceId = esId
+      // 设置当前选中的设备ID到全局状态
+      this.$store.commit('changePowerStationId', esId)
+      uni.setStorageSync('currentEsId', esId)
+      // 触发监测页面刷新
+      this.$nextTick(() => {
+        this.$refs.monitor?.refresh?.()
+      })
+    },
+    
+    // 返回设备列表
+    goBackToList() {
+      this.selectedDeviceId = null
+      this.$store.commit('changePowerStationId', undefined)
+      uni.removeStorageSync('currentEsId')
+    },
+    
     onScroll(e) {
       this.realScrollTop = e.detail.scrollTop
     },
@@ -178,12 +247,14 @@ page {
   right: 0;
   z-index: 100;
   background-color: #fff;
-   margin-top:20px
+    margin-top:20px
 }
+
 .header-safe-area {
   height: var(--status-bar-height);
   background-color: #fff;
 }
+
 .header-content {
   height: 44px;
   display: flex;
@@ -192,16 +263,24 @@ page {
   padding: 0 15px;
   box-sizing: border-box;
 }
+
 .header-left {
   display: flex;
   align-items: center;
   flex: 1;
 }
+
+.back-btn {
+  padding: 8px;
+  margin-left: -8px;
+}
+
 .header-icon {
   width: 30px;
   height: 17px;
   margin-right: 8px;
 }
+
 .title {
   font-size: 16px;
   font-weight: bold;
@@ -213,6 +292,7 @@ page {
   display: flex;
   align-items: center;
 }
+
 .refresh-btn {
   width: 40px;
   height: 40px;
@@ -226,7 +306,7 @@ page {
 
 /* 内容区域 */
 .content-scroll {
-  position: absolute;
+  position: fixed;
   left: 0;
   right: 0;
   top: calc(var(--status-bar-height) + 44px);
@@ -234,9 +314,12 @@ page {
   box-sizing: border-box;
   -webkit-overflow-scrolling: touch;
 }
+
 .content-pages {
   width: 100%;
+  margin-top: 20px;
 }
+
 .page-item {
   width: 100%;
   min-height: 100%;
@@ -252,6 +335,7 @@ page {
   z-index: 100;
   background-color: #fff;
 }
+
 .tab-bar {
   height: 50px;
   border-top: 1px solid #e5e5e5;
@@ -259,6 +343,7 @@ page {
   justify-content: space-around;
   align-items: center;
 }
+
 .tab-item {
   flex: 1;
   display: flex;
@@ -267,29 +352,41 @@ page {
   justify-content: center;
   padding: 5px 0;
 }
+
 .tab-icon {
   width: 24px;
   height: 24px;
   margin-bottom: 2px;
 }
+
 .tab-icon image {
   width: 100%;
   height: 100%;
 }
+
 .tab-text {
   font-size: 10px;
   color: #8a8a8a;
 }
+
 .active .tab-text {
   color: #007aff;
 }
+
 .safe-area-bottom {
   height: env(safe-area-inset-bottom);
   background-color: #fff;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

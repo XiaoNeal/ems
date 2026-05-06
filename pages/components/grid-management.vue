@@ -121,6 +121,7 @@
 
 <script>
 import dyDate from '@/components/dy-Date/dy-Date.vue';
+import { queryDayGeneratedPower } from '@/api/power';
 export default {
   components: {
     dyDate,
@@ -142,16 +143,8 @@ export default {
       selectedDate: new Date().toISOString().split('T')[0],
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
       // 电网功率曲线数据
-      powerCurveData: {
-        categories: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
-        series: [
-          {
-            name: '电网功率',
-            data: [15, 18, 25, 35, 28, 22, 16],
-            color: '#1890FF'
-          }
-        ]
-      },
+      powerCurveSeries: [],
+      powerCurveCategories: [],
       powerCurveOptions: {
         padding: [15, 15, 0, 5],
         enableScroll: false,
@@ -182,12 +175,12 @@ export default {
         series: [
           {
             name: '供电量',
-            data: [120, 132, 101, 134, 90, 230],
+            data: [0, 0, 0, 0, 0, 0],
             color: '#52C41A'
           },
           {
             name: '馈电量',
-            data: [220, 182, 191, 234, 290, 330],
+            data: [0, 0, 0, 0, 0, 0],
             color: '#FAAD14'
           }
         ]
@@ -218,10 +211,56 @@ export default {
       }
     };
   },
+  computed: {
+    powerCurveData() {
+      return {
+        categories: this.powerCurveCategories.length > 0 ? this.powerCurveCategories : [],
+        series: [{
+          name: '电网功率',
+          data: this.powerCurveSeries.length > 0 ? this.powerCurveSeries : [],
+          color: '#1890FF'
+        }]
+      }
+    }
+  },
   methods: {
+    // 获取电网功率曲线数据
+    async getPowerCurveData() {
+      try {
+        const esId = this.$store.state.powerStationsId || 8;
+        const areaLevelIds = this.$store.state.areaInfoId || 940;
+        const params = {
+          esId: esId,
+          date: this.selectedDate,
+          areaLevelIds: areaLevelIds
+        };
+        const res = await queryDayGeneratedPower(params);
+        if (res && res.data) {
+          // 处理接口返回数据
+          const data = res.data;
+          if (data.list && data.list.length > 0) {
+            this.powerCurveCategories = data.list.map(item => {
+              const time = item.time || item.datetime || '';
+              return time.substring(11, 16) || time; // 提取时间部分
+            });
+            this.powerCurveSeries = data.list.map(item => {
+              return Number(item.value || item.power || 0);
+            });
+          } else {
+            this.powerCurveCategories = [];
+            this.powerCurveSeries = [];
+          }
+        }
+      } catch (error) {
+        console.error('获取电网功率曲线数据失败:', error);
+        this.powerCurveCategories = [];
+        this.powerCurveSeries = [];
+      }
+    },
     refresh() {
       // 刷新数据
       console.log('刷新电网管理数据');
+      this.getPowerCurveData();
     },
     toggleFullScreen(type) {
       this.isFullScreen = !this.isFullScreen;
@@ -265,7 +304,11 @@ export default {
     handleDatePicker(date) {
       console.log('选择的日期:', date);
       this.selectedDate = date;
+      this.getPowerCurveData();
     }
+  },
+  mounted() {
+    this.getPowerCurveData();
   }
 };
 </script>

@@ -171,6 +171,12 @@ const store = new Vuex.Store({
 			state.centerList = value
 			console.log('------------------122', value)
 			saveLifeData('centerList', value)
+		},
+		SET_LOGIN(state, userInfo) {
+			state.userInfo = userInfo
+			state.hasLogin = true
+			saveLifeData('userInfo', userInfo)
+			saveLifeData('hasLogin', true)
 		}
 	},
 	actions: {

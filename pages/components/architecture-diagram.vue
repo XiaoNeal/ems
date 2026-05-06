@@ -21,7 +21,7 @@
 
     <!-- 系统架构图 -->
     <view class="system-img">
-      <image src="../../community/static/images/system-architecture-new.png" style="width:100%; height:96%; position: absolute; top:0; left:0; z-index: 1;"></image>
+      <image src="/static/images/system-architecture-new.png" style="width:100%; height:96%; position: absolute; top:0; left:0; z-index: 1;"></image>
       <view class="detail-storage">
         <p>{{ storageStatus }}</p>
         <p>{{ storageData.power }}kW</p>
@@ -60,7 +60,7 @@
             <text class="card-title">今日发电</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ totalProvideQ }} </text>
+            <text class="card-value">{{ device170F && device170F.energyData && device170F.energyData.B32 ? device170F.energyData.B32.value : '--' }} </text>
             <text class="card-unit"> kWh</text>
           </view>
         </view>
@@ -70,7 +70,7 @@
             <text class="card-title">今日用电</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ totalConsumptionQ.consumptionQData }} </text>
+            <text class="card-value">{{ device170F && device170F.energyData && device170F.energyData.B36 ? device170F.energyData.B36.value : '--' }} </text>
             <text class="card-unit"> kWh</text>
           </view>
         </view>
@@ -82,7 +82,7 @@
             <text class="card-title">储能剩余</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ nyzData.SOC }}</text>
+            <text class="card-value">{{ device170F && device170F.energyData && device170F.energyData.B66 ? device170F.energyData.B66.value : '--' }}</text>
             <text class="card-unit">%</text>
           </view>
         </view>
@@ -92,7 +92,7 @@
             <text class="card-title">电网供电</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ dayEnergyData.totalGridForwardQ }} </text>
+            <text class="card-value">{{ device170F && device170F.energyData && device170F.energyData.B40 ? device170F.energyData.B40.value : '--' }} </text>
             <text class="card-unit"> kWh</text>
           </view>
         </view>
@@ -199,6 +199,7 @@ import { dateStandardFormat } from "@/utils/date-format";
 import sapi from '@/store/sapi';
 import energy from '@/api/energy';
 import energy_new from '@/api/energy_new';
+import { getPowerData } from '@/api/power';
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 import { realtimeDataProvider } from '@/service/websocket';
 
@@ -226,6 +227,8 @@ export default {
         totalGridReverseQ: 0,
         totalConsumeElectricityQ: 0,
       },
+      deviceList: [],
+      dcdc170FData: null,
       nyzData: { SOC: "--" },
       electricityOpts: {
         color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666"],
@@ -262,35 +265,38 @@ export default {
     chartCardStyle() {
       return this.isFullScreen ? 'height: 60vh;' : '';
     },
-    storageData() {
-      const power1 = parseFloat(this.nyzData.storagePower1 || 0);
-      const power2 = parseFloat(this.nyzData.storagePower2 || 0);
-      const power = isNaN(power1) ? 0 : power1 + (isNaN(power2) ? 0 : power2);
-      const status = power == 0 ? "不充不放" : power > 0 ? "充电中" : "放电中";
-      return { power: Math.abs(power).toFixed(2), status }
+    device170F() {
+      return this.deviceList.find(item => item && item.deviceType === '170F_V1_2');
     },
-    totalLoadData() {
-      const power1 = this.nyzData.loadPower1 == '--' ? '--' : (parseFloat(this.nyzData.loadPower1) || 0);
-      const power2 = this.nyzData.loadPower2 == '--' ? '--' : (parseFloat(this.nyzData.loadPower2) || 0);
-      const power3 = this.gridPower == '--' ? '--' : (parseFloat(this.gridPower) || 0);
-      const power = this.getSum([power1, power2, power3]);
-      return { power };
-    },
-    totalConsumptionQ() {
-      const provideQ = parseFloat(this.totalProvideQ || 0) || 0;
-      const storageDisChargeQ = parseFloat(this.totalStorageDisChargeQ || 0) || 0;
-      const gridForwardQ = parseFloat(this.dayEnergyData.totalGridForwardQ || 0) || 0;
-      const gridReverseQ = parseFloat(this.dayEnergyData.totalGridReverseQ || 0) || 0;
-      const storageChargeQ = parseFloat(this.totalStorageChargeQ || 0) || 0;
-      const consumptionQData = provideQ + storageDisChargeQ + gridForwardQ - gridReverseQ - storageChargeQ;
-      return { consumptionQData: consumptionQData.toFixed(2) };
-    },
-    totalSolarData() {
-      const power1 = this.nyzData.photovoltaicPower1 == '--' ? '--' : Math.abs(parseFloat(this.nyzData.photovoltaicPower1) || 0);
-      const power2 = this.nyzData.photovoltaicPower2 == '--' ? '--' : Math.abs(parseFloat(this.nyzData.photovoltaicPower2) || 0);
-      const power = this.getSum([power1, power2]);
-      return { power };
-    },
+    // storageData() {
+    //   const power1 = parseFloat(this.nyzData.storagePower1 || 0);
+    //   const power2 = parseFloat(this.nyzData.storagePower2 || 0);
+    //   const power = isNaN(power1) ? 0 : power1 + (isNaN(power2) ? 0 : power2);
+    //   const status = power == 0 ? "不充不放" : power > 0 ? "充电中" : "放电中";
+    //   return { power: Math.abs(power).toFixed(2), status }
+    // },
+    // totalLoadData() {
+    //   const power1 = this.nyzData.loadPower1 == '--' ? '--' : (parseFloat(this.nyzData.loadPower1) || 0);
+    //   const power2 = this.nyzData.loadPower2 == '--' ? '--' : (parseFloat(this.nyzData.loadPower2) || 0);
+    //   const power3 = this.gridPower == '--' ? '--' : (parseFloat(this.gridPower) || 0);
+    //   const power = this.getSum([power1, power2, power3]);
+    //   return { power };
+    // },
+    // totalConsumptionQ() {
+    //   const provideQ = parseFloat(this.totalProvideQ || 0) || 0;
+    //   const storageDisChargeQ = parseFloat(this.totalStorageDisChargeQ || 0) || 0;
+    //   const gridForwardQ = parseFloat(this.dayEnergyData.totalGridForwardQ || 0) || 0;
+    //   const gridReverseQ = parseFloat(this.dayEnergyData.totalGridReverseQ || 0) || 0;
+    //   const storageChargeQ = parseFloat(this.totalStorageChargeQ || 0) || 0;
+    //   const consumptionQData = provideQ + storageDisChargeQ + gridForwardQ - gridReverseQ - storageChargeQ;
+    //   return { consumptionQData: consumptionQData.toFixed(2) };
+    // },
+    // totalSolarData() {
+    //   const power1 = this.nyzData.photovoltaicPower1 == '--' ? '--' : Math.abs(parseFloat(this.nyzData.photovoltaicPower1) || 0);
+    //   const power2 = this.nyzData.photovoltaicPower2 == '--' ? '--' : Math.abs(parseFloat(this.nyzData.photovoltaicPower2) || 0);
+    //   const power = this.getSum([power1, power2]);
+    //   return { power };
+    // },
   },
   onLoad() {
     // 获取设备状态栏高度
@@ -299,7 +305,8 @@ export default {
     console.log('statusBarHeight', this.statusBarHeight);
   },
   mounted() {
-    realtimeDataProvider.createScoket(uni.getStorageSync('currentTemplate'), uni.getStorageSync('urlPrefix'));
+    // realtimeDataProvider.createScoket(uni.getStorageSync('currentTemplate'), uni.getStorageSync('urlPrefix'));
+    this.init170CDevice();
     this.getSqRealTimeData();
     this.getNyzRealTimeData();
     this.initPage();
@@ -320,6 +327,54 @@ export default {
     // #endif
   },
   methods: {
+    init170CDevice() {
+      const device170C = {
+        deviceType: '170C_V1_1',
+        address: '1F',
+        barCode: '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00',
+        deviceId: '170C001',
+        name: 'DCDC设备'
+      };
+
+      const device170F = {
+        deviceType: '170F_V1_2',
+        address: '01',
+        barCode: '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00',
+        deviceId: '170F001',
+        name: 'DCDC设备170F'
+      };
+
+      
+      realtimeDataProvider.initDeviceList([device170C, device170F]);
+      this.deviceList = realtimeDataProvider.getDeviceList();
+      console.log('deviceList', this.deviceList);
+
+      // realtimeDataProvider.on('IEMS_' + '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00', (jsonData) => {
+      //   try {
+      //     if (typeof jsonData == 'string') {
+      //       let index = jsonData.lastIndexOf("}");
+      //       if (index >= 0) {
+      //         jsonData = jsonData.substring(0, index + 1);
+      //       }
+      //       if (jsonData.includes('"dataType"' + ':' + '"1"') || jsonData.includes('gateway'))
+      //         return
+      //       jsonData = JSON.parse(jsonData);
+      //       if (jsonData.deviceType === '170F_V1_2' && jsonData.address === '01') {
+      //         this.handle170FData(jsonData);
+      //       }
+      //     }
+      //   } catch (error) {
+      //     console.error('170F数据解析错误:', error);
+      //   }
+      // });
+    },
+    handle170FData(jsonData) {
+      console.log('170F设备数据:', jsonData);
+      this.dcdc170FData = jsonData;
+    },
+    handle170CData(jsonData) {
+      console.log('170C设备数据:', jsonData);
+    },
     async handleFullScreen() {
       this.isFullScreen = !this.isFullScreen;
 
@@ -350,10 +405,10 @@ export default {
       // #endif
     },
     initPage() {
-      this.getAreaData();
-      this.getStatisticData();
-      this.getProvideCurve();
-      this.findDayStorageQAndPower();
+      // this.getAreaData();
+      // this.getStatisticData();
+      // this.getProvideCurve();
+      // this.findDayStorageQAndPower();
       this.getPowerData2();
     },
     handleDateTypeChange(tab) {
@@ -375,71 +430,82 @@ export default {
       else if (this.type === "day") this.findMonthEnergyAndIncome();
       else if (this.type === "month") this.findYearEnergyAndIncome();
     },
-    getAreaData() {
-      this.areaData = this.$store.state.centerList.filter(item => item.level == 0 || item.level == 2);
-    },
+    // getAreaData() {
+    //   this.areaData = this.$store.state.centerList.filter(item => item.level == 0 || item.level == 2);
+    // },
     getProvideCurve() {
-      upgrade.findDayProvideQAndPower({ day: dateStandardFormat(new Date()) }).then(result => {
-        const totallyProvideQ = result.data.provideQMap.reduce((acc, cur) => acc + cur.provideQ, 0);
-        const solarIds = this.nyzDeviceList?.filter(item => item.type == 2).map(item => item.deviceId) || [];
-        energy_new.findEveryHourByDeviceIds({ deviceIds: solarIds, day: dateStandardFormat(new Date()) }).then(res => {
-          this.totalProvideQ = parseFloat(totallyProvideQ).toFixed(2);
-        });
-      });
+      // upgrade.findDayProvideQAndPower({ day: dateStandardFormat(new Date()) }).then(result => {
+      //   const totallyProvideQ = result.data.provideQMap.reduce((acc, cur) => acc + cur.provideQ, 0);
+      //   const solarIds = this.nyzDeviceList?.filter(item => item.type == 2).map(item => item.deviceId) || [];
+      //   energy_new.findEveryHourByDeviceIds({ deviceIds: solarIds, day: dateStandardFormat(new Date()) }).then(res => {
+      //     this.totalProvideQ = parseFloat(totallyProvideQ).toFixed(2);
+      //   });
+      // });
     },
     findDayStorageQAndPower() {
-      const storageIds = [352, 354];
-      nyz.findEveryHourByDeviceIds({ deviceIds: storageIds, day: dateStandardFormat(new Date()) }).then(result => {
-        let storageQ = result.data.reduce((acc, item) => {
-          acc.charge += item.total_storage_forward_q;
-          acc.discharge += item.total_storage_reverse_q;
-          return acc;
-        }, { charge: 0, discharge: 0 });
-        this.totalStorageChargeQ = storageQ.charge;
-        this.totalStorageDisChargeQ = storageQ.discharge;
-      });
+      // const storageIds = [352, 354];
+      // nyz.findEveryHourByDeviceIds({ deviceIds: storageIds, day: dateStandardFormat(new Date()) }).then(result => {
+      //   let storageQ = result.data.reduce((acc, item) => {
+      //     acc.charge += item.total_storage_forward_q;
+      //     acc.discharge += item.total_storage_reverse_q;
+      //     return acc;
+      //   }, { charge: 0, discharge: 0 });
+      //   this.totalStorageChargeQ = storageQ.charge;
+      //   this.totalStorageDisChargeQ = storageQ.discharge;
+      // });
     },
     getSqRealTimeData() {
-      realtimeDataProvider.on("center", (data) => { this.currentStatus = data; });
-      realtimeDataProvider.on("Grid", (data) => { this.gridPower = data.data.B56 ? (data.data.B56 / 1000).toFixed(3) : "--"; });
+      // realtimeDataProvider.on("center", (data) => { this.currentStatus = data; });
+      // realtimeDataProvider.on("Grid", (data) => { this.gridPower = data.data.B56 ? (data.data.B56 / 1000).toFixed(3) : "--"; });
     },
     getNyzRealTimeData() {
-      realtimeDataProvider.on("nyzData", (jsonData) => {
-        const { deviceType, address, data } = jsonData;
-        if (deviceType === "1804_V2_2") {
-          if (address === "18") this.nyzData.storagePower1 = parseFloat(data.B8).toFixed(2);
-          else if (address === "19") this.nyzData.storagePower2 = parseFloat(data.B8).toFixed(2);
-          else if (address === "1A") this.nyzData.photovoltaicPower1 = parseFloat(data.B8).toFixed(2);
-          else if (address === "1B") this.nyzData.photovoltaicPower2 = parseFloat(data.B8).toFixed(2);
-          else if (address === "31") this.nyzData.loadPower1 = parseFloat(data.B8).toFixed(2);
-          else if (address === "32") this.nyzData.loadPower2 = parseFloat(data.B8).toFixed(2);
-        } else if (deviceType === "1704_V1_2" && address === "02") {
-          const socValue = parseFloat(data.B4);
-          this.nyzData.SOC = isNaN(socValue) ? "--" : Math.max(0, Math.min(100, socValue)).toFixed(2);
-          this.storageStatus = this.enumStorageStatus(data.B2);
-        }
-      });
+      // realtimeDataProvider.on("nyzData", (jsonData) => {
+      //   const { deviceType, address, data } = jsonData;
+      //   if (deviceType === "1804_V2_2") {
+      //     if (address === "18") this.nyzData.storagePower1 = parseFloat(data.B8).toFixed(2);
+      //     else if (address === "19") this.nyzData.storagePower2 = parseFloat(data.B8).toFixed(2);
+      //     else if (address === "1A") this.nyzData.photovoltaicPower1 = parseFloat(data.B8).toFixed(2);
+      //     else if (address === "1B") this.nyzData.photovoltaicPower2 = parseFloat(data.B8).toFixed(2);
+      //     else if (address === "31") this.nyzData.loadPower1 = parseFloat(data.B8).toFixed(2);
+      //     else if (address === "32") this.nyzData.loadPower2 = parseFloat(data.B8).toFixed(2);
+      //   } else if (deviceType === "1704_V1_2" && address === "02") {
+      //     const socValue = parseFloat(data.B4);
+      //     this.nyzData.SOC = isNaN(socValue) ? "--" : Math.max(0, Math.min(100, socValue)).toFixed(2);
+      //     this.storageStatus = this.enumStorageStatus(data.B2);
+      //   }
+      // });
     },
     enumStorageStatus(status) {
       const statusMap = { 0: "初始化", 1: "充电", 2: "放电", 3: "静置" };
       return statusMap[status] || "--";
     },
-    getStatisticData() {
-      sapi.findHomeCommunityCapacitySumByLevelIds({
-        areaLevelIds: this.$store.state.centerList[0]?.origin || '',
-        date: dateStandardFormat(new Date())
-      }).then(res => {
-        this.dayEnergyData = res.data || {};
-      });
-    },
+    // getStatisticData() {
+    //   sapi.findHomeCommunityCapacitySumByLevelIds({
+    //     areaLevelIds: this.$store.state.centerList[0]?.origin || '',
+    //     date: dateStandardFormat(new Date())
+    //   }).then(res => {
+    //     this.dayEnergyData = res.data || {};
+    //   });
+    // },
     getPowerData2() {
-      upgrade.findDayEnergyAndIncome({ day: dateStandardFormat(new Date()) }).then(result => {
+      // 准备接口参数
+      const params = {
+        esId: 8,
+        date: dateStandardFormat(new Date()),
+        areaLevelIds: 950
+      };
+      
+      // 调用新接口
+      getPowerData(params).then(result => {
         if (result.data) {
           const generationData = [], loadData = [], xAxisData = [];
           result.data.forEach(item => {
-            generationData.push(item.provideQ);
-            loadData.push(item.consumptionQ);
-            xAxisData.push(item.hour);
+            // 确保数据为Number格式
+            generationData.push(Number(item.generatedPower) || 0);
+            loadData.push(Number(item.loadPower) || 0);
+            // 从dateTime中提取小时部分
+            const hour = item.dateTime ? item.dateTime.split(' ')[1].split(':')[0] : '';
+            xAxisData.push(hour);
           });
           this.electricityData = {
             categories: xAxisData,

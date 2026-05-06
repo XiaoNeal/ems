@@ -2,9 +2,9 @@
   <view class="container">
     <!-- 内容区域 -->
     <view class="content">
-      <view class="system-header">
+      <!-- <view class="system-header">
         <text class="system-title">系统管理</text>
-      </view>
+      </view> -->
 
       <!-- 运行日志 -->
       <view class="section">
@@ -141,7 +141,7 @@ export default {
     // 跳转到AI客服页面
     goToAIService() {
       uni.navigateTo({
-        url: '/pages/ai-service/ai-service'
+        url: '/community/ai-service/ai-service'
       });
     },
     

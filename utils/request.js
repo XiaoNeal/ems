@@ -48,9 +48,9 @@ const request = (options) => {
     dataType: 'json',
     responseType: 'text',
     sslVerify: false,
-    params: {
-      _t: Date.now() // 添加时间戳参数
-    },
+    // params: {
+    //   _t: Date.now() // 添加时间戳参数
+    // },
     maxRetries: 3,
     retryDelay: 1000,
     ...options

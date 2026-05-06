@@ -151,6 +151,7 @@ $card-hover-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   background: #EFF4FB;
+  margin-top: 20px;
 }
 
 .tab-bar {

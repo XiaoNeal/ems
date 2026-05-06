@@ -83,6 +83,7 @@ import {
   getSocketinstance
 } from "@/service/websocket";
 import energy from '@/api/energy_new'
+import { queryDayGeneratedPower } from '@/api/power'
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 const commonArcbarOptions = {
   padding: [15,15,0,15],
@@ -195,15 +196,27 @@ export default {
       })
     },
     async findFlexibilityLoadPowerTotal() {
-      const result = await energy.findFlexibilityLoadPowerTotal({
-        idcode: "F2 00 12 00 00 00 00 00 00 00 00 00 00 00 00",
-        start: this.selectedDate + ' 00:00:00',
-        end: this.selectedDate + ' 23:59:59',
-        intervalMinutes: 1, aggregationType: 'MAX'
+      const esId = this.$store.state.powerStationsId || 8;
+      const areaLevelIds = this.$store.state.areaInfoId || 940;
+      const result = await queryDayGeneratedPower({
+        esId: esId,
+        date: this.selectedDate,
+        areaLevelIds: areaLevelIds
       });
-      if (result.data) {
-        this.loadChartData.categories = result.data.map(item => item.time.split(' ')[1].substring(0, 5));
-        this.loadChartData.series[0].data = result.data.map(item => item.power)
+      if (result && result.data) {
+        const data = result.data;
+        if (data.list && data.list.length > 0) {
+          this.loadChartData.categories = data.list.map(item => {
+            const time = item.time || item.datetime || '';
+            return time.substring(11, 16) || time;
+          });
+          this.loadChartData.series[0].data = data.list.map(item => {
+            return Number(item.value || item.power || 0);
+          });
+        } else {
+          this.loadChartData.categories = [];
+          this.loadChartData.series[0].data = [];
+        }
       }
     },
     async getDeviceCount() {

@@ -19,7 +19,7 @@
     </view> -->
 
     <view class="user-info">
-      <image class="avatar" :src="user.avatar || '/static/logo_n.png'"></image>
+      <image class="avatar" :src="user.avatar && user.avatar.trim() ? user.avatar : '/static/logo_n.png'"></image>
       <view class="item-title">
         <view class="user-name">{{ user.userName }}</view>
         <view class="phone">
@@ -31,6 +31,7 @@
       <!-- </view> -->
 
     </view>
+
 
 
 
@@ -93,17 +94,27 @@ export default {
     }
   },
   computed: {
-    ...mapState(['user']),
+    ...mapState(['user', 'userInfo']),
   },
   mounted() {
+    console.log(this.user,"this.user")
+    
   },
   async created() {
     try {
+      // 获取用户ID，优先从 userInfo（根 store）中获取，其次从 user 模块中获取
+      const userId = this.$store.state.userInfo?.userId || this.$store.state.user?.id || '';
+      
+      if (!userId) {
+        console.warn('用户ID为空，跳过获取用户信息');
+        return;
+      }
+      
       let res = await uni.request({
-        url: 'https://iems.neiic.com/SsoServer/FindUserInfoByCodeId',
+        url: 'https://iems.neiic.com/SsoServer/es/FindUserInfoByCodeId',
         method: 'GET',
         data: {
-          CodeId: this.$store.state.userId || this.user.id
+          CodeId: userId
         },
         header: {
           'Content-Type': 'application/json'
@@ -116,11 +127,11 @@ export default {
         // 替换原有赋值方式
         this.$store.commit('user/UPDATE_USER', {
           // systemName: res.data.baseName,
-          avatar: 'https://iems.neiic.com/' + res.data.imageFile,
+          avatar: res.data.imageFile && res.data.imageFile.trim() ? 'https://iems.neiic.com/' + res.data.imageFile : undefined,
           mobile: res.data.mobile_phone,
           userName: res.data.user_name,
           email: res.data.email,
-          imageFile: 'https://iems.neiic.com/' + res.data.imageFile.replace(/`/g, '') // 去除接口返回的冗余反引号
+          imageFile: res.data.imageFile && res.data.imageFile.trim() ? 'https://iems.neiic.com/' + res.data.imageFile.replace(/`/g, '') : undefined, // 去除接口返回的冗余反引号
         });
       } else {
         throw new Error(res.data.msg || '请求失败')
@@ -146,6 +157,7 @@ export default {
 
 
 
+
     navigateToU(url) {
       uni.navigateTo({
         url: url,
@@ -163,6 +175,12 @@ export default {
 </script>
 
 <style scoped lang="scss">
+
+.profile-container {
+  margin-top: 30px;
+}
+
+
 .flex-container {
   display: flex;
   align-items: center;

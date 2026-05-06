@@ -26,6 +26,8 @@ import { Model0318v1_1 } from "./0318v1_1-model.js";
 import { Model010C } from "./010C-model.js";
 import { Model1312v1_1 } from "./1312v1_1-model.js";
 import { Model131Cv2 } from './131Cv2-model.js'
+import { Model170C_V1_1Model } from './170C_V1_1-model.js'
+import { Model170F } from './170F-model.js'
 
 export class DeviceFactory {
 	static create(jsonData, gateway) {
@@ -55,12 +57,12 @@ export class DeviceFactory {
 				dev = new Model170Cv1();
 				break;
 			}
+			// case '170C_V1_1': {
+			// 	dev = new Model170C();
+			// 	break;
+			// }
 			case '170C_V1_1': {
-				dev = new Model170C();
-				break;
-			}
-			case '170C_V1_2': {
-				dev = new Model170C();
+				dev = new Model170C_V1_1Model();
 				break;
 			}
 			case '170A_V2': {
@@ -165,6 +167,15 @@ export class DeviceFactory {
 				dev = new Model131Cv2()
 				break;
 			}
+			case '170F':{
+				dev = new Model170F()
+				break;
+			}
+			case '170F_V1_2':{
+				dev = new Model170F()
+				break;
+			}
+
 			default:
 				// dev = new DeviceBase();
 				break;

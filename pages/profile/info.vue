@@ -7,7 +7,7 @@
     <view class="section">
       <view class="list" :style="'color:' + fontColor">
         <text style="flex: 1;">个人头像</text>
-        <image :src="avatar" mode="aspectFill" style="margin-right: 10px;border-radius: 50%;" @click="changeAvatar">
+        <image :src="avatar || '/static/logo_n.png'" mode="aspectFill" style="margin-right: 10px;border-radius: 50%;width: 60rpx;height: 60rpx;" @click="changeAvatar">
         </image>
         <uni-icons type="right" :color="fontColor"></uni-icons>
       </view>
@@ -128,69 +128,70 @@ export default {
       //   return
       // }
       let that = this
-
-      uni.chooseImage({
-  success: (res) => {
-    const tempFilePaths = res.tempFilePaths
-    uni.uploadFile({
-      url: 'https://serviceiems.gree.com/SsoServer/upload/imageByCodeId',
-      filePath: tempFilePaths[0],
-      name: 'file',
-      formData: {
-        CodeId: this.$store.state.user.codeId || this.$store.state.user.userId
-      },
-      header: {
-        'Content-Type': 'multipart/form-data',
-        token: this.$store.state.token
-      },
-      success: (res) => {
-        const data = JSON.parse(res.data)
-        if (data.code === 200) {
-          this.$store.commit('UPDATE_USER', { avatar: data.data.imageUrl })
-        }
+      
+      // 获取用户ID
+      const userId = this.$store.state.userInfo?.userId || this.$store.state.user?.id || ''
+      const token = this.$store.state.token || this.$store.state.user?.token || ''
+      
+      if (!userId) {
+        uni.showToast({
+          title: '用户信息未加载',
+          icon: 'none'
+        })
+        return
       }
-    })
-  }
-})
-  return
-
-
 
       uni.chooseImage({
         count: 1,
-        success(res) {
-          let tempFilePaths = res.tempFilePaths
-          that.imgSrc = tempFilePaths[0]
-          let form = JSON.stringify({
-            userId: that.memberId,
-            xPoint: 200,
-            yPoint: 200
-          })
-          const formData = new FormData();
-          formData.append("file", tempFilePaths[0]);
-          // formData.append("userName", store.state.username || localStorage.getItem('username'));
-          formData.append("CodeId", this.$store.state.user.id);
-
+        success: (res) => {
+          const tempFilePaths = res.tempFilePaths
           uni.uploadFile({
-            url: 'https://serviceiems.gree.com/SsoServer/upload/imageByCodeId',
+            url: 'https://iems.nelic.com/SsoServer/es/upload/imageByCodeId',
+            filePath: tempFilePaths[0],
             name: 'file',
+            formData: {
+              CodeId: userId
+            },
             header: {
               'Content-Type': 'multipart/form-data',
-              // token: store.state.token
+              token: token
             },
-           
-            success: (uploadFileRes) => {
-              let data = JSON.parse(uploadFileRes.data)
-
-              if (uploadFileRes) {
-                that.showToast('success', '上传成功')
-                that.$u.vuex('avatar', data.data.imagePath);
+            success: (res) => {
+              try {
+                const data = JSON.parse(res.data)
+                if (data.code === 200) {
+                  that.$store.commit('UPDATE_USER', { avatar: data.data.imageUrl })
+                  uni.setStorageSync('userInfo', { ...that.$store.state.user, avatar: data.data.imageUrl })
+                  uni.showToast({
+                    title: '上传成功',
+                    icon: 'success'
+                  })
+                } else {
+                  uni.showToast({
+                    title: data.msg || '上传失败',
+                    icon: 'none'
+                  })
+                }
+              } catch (e) {
+                console.error('解析响应失败:', e)
+                uni.showToast({
+                  title: '解析失败',
+                  icon: 'none'
+                })
               }
             },
-            fail(err) { }
-          });
+            fail: (err) => {
+              console.error('上传失败:', err)
+              uni.showToast({
+                title: '上传失败',
+                icon: 'none'
+              })
+            }
+          })
+        },
+        fail: (err) => {
+          console.error('选择图片失败:', err)
         }
-
       })
     },
     showToast(type, title) {

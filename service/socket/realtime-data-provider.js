@@ -3,30 +3,32 @@ import RealTimeWebSokcetProtocolHandler from '@/service/socket/realtime-websocke
 
 import io from '@hyoga/uni-socket.io';
 var socket = undefined;
+// let realtimeDataProvider = new RealtimeDataProviderService();
 
-
-export class RealtimeDataProviderService {
+ export class RealtimeDataProviderService {
 	// upgradeProgramResponseFrame: EventEmitter<any>;
 	deviceList = [];
 	barCode = new Set()
 	realTimeWebSocketProtocolHandler = new RealTimeWebSokcetProtocolHandler()
 
-	constructor() {}
+	constructor() {
+		this.createScoket()
+	}
 
 
-	createScoket(currentTemplate, _urlPrefix) {
-		let urlPrefix = ""
-		if (currentTemplate == 3) {
-			urlPrefix = _urlPrefix
-		}
+	createScoket() {
+		// let urlPrefix = ""
+		// if (currentTemplate == 3) {
+		// 	urlPrefix = _urlPrefix
+		// }
 		if (socket) return
-		socket = io.connect('wss://serviceiems.gree.com', {
+		socket = io.connect('wss://iems.neiic.com', {
 			secure: true,
 			query: 'areaInfoId=' + 1,
 			transports: ['websocket'],
 			// path: '/socket.io',
 			//  path: '/hangzhou/socket.io',
-			path: `${urlPrefix}/socket.io`, //'/luoyang/socket.io',
+			path: `/socket.io`, //'/luoyang/socket.io',
 			reconnectionAttempts: 20,
 			reconnectionDelay: 10000,
 			reconnectionDelayMax: 30000
@@ -40,10 +42,18 @@ export class RealtimeDataProviderService {
 	initDeviceList(deviceList) {
 		this.deviceList = [];
 		this.barCode = new Set()
+
+// 		address: "1F"
+// barCode: "IEMS_00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00"
+// deviceId: "170C001"
+// deviceType: "170C_V1_1"
+// name: "DCDC设备"
 		for (let i = 0; deviceList && i < deviceList.length; i++) {
 			let barCode = deviceList[i].barCode || deviceList[i].barcode
 			let findData = this.deviceList.find(ele => ele.address == deviceList[i].address && ele.barCode ==
 				barCode && ele.deviceType == deviceList[i].typeCode)
+				console.log('findData',findData);
+
 			if (findData) continue;
 			else {
 				let device = {
@@ -51,15 +61,18 @@ export class RealtimeDataProviderService {
 					name: deviceList[i].name != '' ? deviceList[i].name : '未命名',
 					address: deviceList[i].address,
 					barCode: barCode,
-					deviceType: deviceList[i].typeCode,
+					deviceType: deviceList[i].typeCode||deviceList[i].deviceType,
 					// parentId:deviceList[i].parentId,
 				}
 
 				this.realTimeWebSocketProtocolHandler.initDevice(device, barCode, this.deviceList)
+				console.log('device',device,this.deviceList);
 				this.barCode.add(barCode)
 			}
 
 		}
+
+		console.log('barCode',this.deviceList,deviceList);
 		this.barCode && this.barCode.forEach((value, key) => {
 			this.bindDevicesRealtimeData(value)
 		})

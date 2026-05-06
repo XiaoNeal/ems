@@ -317,3 +317,46 @@ export const loginPermission = (data) => {
 		data: data,
 	})
 }
+
+// 微信登录
+export const loginByWechat = (code) => {
+	return request({
+		url: '/SsoServer/app/LoginByWechatJson',
+		method: 'POST',
+		header: {
+			'Content-Type': 'application/json'
+		},
+		data: JSON.stringify({
+			code: code
+		})
+	})
+}
+
+// 新微信登录接口
+export const wechatLogin = (code, key = 1) => {
+	return request({
+		url: '/SsoServer/wechatLogin',
+		method: 'GET',
+		data: {
+			code: code,
+			key: key
+		}
+	})
+}
+
+// 获取用户区域等级
+export const getUserAreaLevel = (userId) => {
+	return request({
+		url: `/api/Homecommunity/getLevelsOfUser?userId=${userId}`,
+		method: 'GET'
+	})
+}
+
+export const wxLoginApi = (code, key = 0) => {
+	// let deviceId = 0
+	// let type = 0
+	return request({
+		url: `/SsoServer/es/wechatLogin?code=${code}&key=${key}`,
+		method: 'get'
+	})
+}

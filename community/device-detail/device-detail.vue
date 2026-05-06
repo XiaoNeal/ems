@@ -84,10 +84,12 @@
     <view class="chart-card">
       <view class="chart-header">
         <text class="chart-title">充放电功率</text>
-        <view class="chart-action">
-          <text class="action-text">2025.06.18</text>
-          <text class="action-icon">▼</text>
-        </view>
+        <picker mode="date" :value="selectedDate" :start-date="startDate" :end-date="endDate" @change="onDateChange">
+          <view class="chart-action">
+            <text class="action-text">{{ selectedDate }}</text>
+            <text class="action-icon">▼</text>
+          </view>
+        </picker>
       </view>
       <view class="chart-container">
         <!-- 这里可以放置充放电功率图表 -->
@@ -100,17 +102,7 @@
       </view>
     </view>
 
-    <!-- 底部导航 -->
-    <view class="bottom-nav">
-      <view class="nav-item">
-        <text class="nav-icon">🏠</text>
-        <text class="nav-text">主页</text>
-      </view>
-      <view class="nav-item">
-        <text class="nav-icon">⚙️</text>
-        <text class="nav-text">系统管理</text>
-      </view>
-    </view>
+    
   </view>
 </template>
 
@@ -129,7 +121,10 @@ export default {
         deviceFlexibility: 0.01,
         deviceLoadRatio: 0.04,
         deviceEnergyEfficiencyLevel: 1
-      }
+      },
+      selectedDate: new Date().toISOString().split('T')[0],
+      startDate: '2020-01-01',
+      endDate: new Date().toISOString().split('T')[0]
     };
   },
   onLoad(options) {
@@ -142,6 +137,10 @@ export default {
     goBack() {
       // 返回上一页
       uni.navigateBack();
+    },
+    onDateChange(e) {
+      this.selectedDate = e.detail.value;
+      console.log('选择的日期:', this.selectedDate);
     }
   }
 };

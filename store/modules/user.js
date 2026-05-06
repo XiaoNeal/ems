@@ -98,11 +98,21 @@ const mutations = {
 
 	UPDATE_USER(state, payload) {
 		// state.user = {
-
-		state.avatar = payload.imageFile;
-		state.email = payload.email;
-		state.userName = payload.userName
-		state.mobile = payload.mobile;
+		if (payload.avatar !== undefined) {
+			state.avatar = payload.avatar;
+		}
+		if (payload.imageFile !== undefined) {
+			state.avatar = payload.imageFile;
+		}
+		if (payload.email !== undefined) {
+			state.email = payload.email;
+		}
+		if (payload.userName !== undefined) {
+			state.userName = payload.userName;
+		}
+		if (payload.mobile !== undefined) {
+			state.mobile = payload.mobile;
+		}
 		// };
 	}
 }

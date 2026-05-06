@@ -1,7 +1,18 @@
 {
 	"pages": [
+		
+		
 		{
 			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"app-plus": {
+					"bounce": "none"
+				}
+			}
+		},
+		{
+			"path": "pages/login/login",
 			"style": {
 				"navigationBarTitleText": "登录",
 				"app-plus": {
@@ -17,6 +28,7 @@
 				"enablePullDownRefresh": true
 			}
 		},
+
 		{
 			"path": "pages/system",
 			"style": {
@@ -33,16 +45,6 @@
 				"enablePullDownRefresh": true
 			}
 		},
-		
-		{
-			"path": "pages/login/login",
-			"style": {
-				"navigationBarTitleText": "登录",
-				"app-plus": {
-					"bounce": "none"
-				}
-			}
-		},
 		{
 			"path": "pages/system-selector/system-selector",
 			"style": {
@@ -51,14 +53,8 @@
 					"bounce": "none"
 				}
 			}
-		},
+		}
 		
-					{
-					"path": "pages/ai-service/ai-service",
-					"style": {
-						"navigationBarTitleText": "AI客服"
-					}
-				}
 	],
 	"subPackages": [
 		{
@@ -118,10 +114,15 @@
 						"navigationBarTitleText": "系统信息",
 						"enablePullDownRefresh": false
 					}
+				},
+				{
+					"path": "ai-service/ai-service",
+					"style": {
+						"navigationBarTitleText": "AI客服"
+					}
 				}
 			]
 		},
-	
 		{
 			"root": "pages-public",
 			"pages": [
