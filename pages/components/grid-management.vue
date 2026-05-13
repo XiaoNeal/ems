@@ -95,7 +95,7 @@
           </view>
           <view class="chart-body">
             <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
-              :canvas2d="canvas2d" class="power-chart" />
+              :canvas2d="canvas2d" class="power-chart" :canvas-id="chartId + '-power'" />
           </view>
         </view>
 
@@ -111,7 +111,7 @@
           </view>
           <view class="chart-body">
             <qiun-data-charts type="column" :chartData="energyData" :opts="energyOptions" :ontouch="true"
-              :canvas2d="canvas2d" class="energy-chart" />
+              :canvas2d="canvas2d" class="energy-chart" :canvas-id="chartId + '-energy'" />
           </view>
         </view>
       </view>
@@ -121,7 +121,7 @@
 
 <script>
 import dyDate from '@/components/dy-Date/dy-Date.vue';
-import { queryDayGeneratedPower } from '@/api/power';
+import { queryDayGeneratedPower } from '../../api/power';
 export default {
   components: {
     dyDate,
@@ -129,6 +129,7 @@ export default {
   name: "GridManagement",
   data() {
     return {
+      chartId: 'grid-' + Math.random().toString(36).substr(2, 9),
       gridStatus: "正常",
       gridVoltage: "220",
       gridFrequency: "0.0",

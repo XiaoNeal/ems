@@ -44,15 +44,6 @@
 				"navigationStyle": "custom",
 				"enablePullDownRefresh": true
 			}
-		},
-		{
-			"path": "pages/system-selector/system-selector",
-			"style": {
-				"navigationBarTitleText": "系统选择",
-				"app-plus": {
-					"bounce": "none"
-				}
-			}
 		}
 		
 	],

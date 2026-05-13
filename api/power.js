@@ -1,13 +1,13 @@
 /**
  * 电力相关api
  */
-import request from '@/utils/request'
-import { URL } from '@/utils/forSpringBoot'
+import request from '../utils/request'
+import { URL } from '../utils/forSpringBoot'
 
 // 获取电力数据
 export const getPowerData = (params) => {
 	return request({
-		url: '/api/energyStation/v3/queryDayGeneratedPower',
+		url: '/api/energyStation/v2/queryDayGeneratedPower',
 		method: 'GET',
 		data: params
 	})
@@ -25,7 +25,7 @@ export const queryHighestChargeAndPower = (data) => {
 // 查询日发电功率数据
 export const queryDayGeneratedPower = (params) => {
 	return request({
-		url: '/api/energyStation/v3/queryDayGeneratedPower',
+		url: '/api/energyStation/v2/queryDayGeneratedPower',
 		method: 'GET',
 		params
 	})

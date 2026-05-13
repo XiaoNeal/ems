@@ -102,8 +102,8 @@
             <dy-date timeType="day" @getData="onPowerDateChange" v-model="powerDate" class="compact-date-picker" />
           </view>
           <view class="chart-view">
-            <qiun-data-charts v-show="showChart" type="line" :chartData="storageChartData" :opts="storagePowerOptions"
-              canvasId="electricity" :ontouch="false" :canvas2d="false" />
+            <qiun-data-charts  type="line" :chartData="storageChartData" :opts="storagePowerOptions"
+              canvasId="CamoFLVBqPYEJXtAEDIxdbLdHpZAvPitPOEWER" :ontouch="false" :canvas2d="canvas2d" />
           </view>
         </view>
 
@@ -128,8 +128,8 @@
           </view>
 
           <view class="chart-view">
-            <qiun-data-charts v-show="showChart" type="column" :chartData="storageQData" :opts="storageQOptions"
-              canvasId="storageQ-chart" :ontouch="false" :canvas2d="false" />
+            <qiun-data-charts  type="column" :chartData="storageQData" :opts="storageQOptions"
+              :canvasId="chartId + '-q'" :ontouch="false" :canvas2d="canvas2d" />
           </view>
         </view>
       </view>
@@ -144,15 +144,18 @@ import { realtimeDataProvider } from '@/service/websocket';
 // import nyz_new from "@/api/nyz_new";
 // import dyDate from "@/components/dy-Date/dy-Date.vue";
 // import nyz from "@/api/nyz";
-import energy_new from "@/api/energy_new";
+// import energy_new from "@/api/energy_new";
 // import { mapGetters } from "vuex";
-import { queryHighestChargeAndPower, queryDayGeneratedPower, queryDayElectricityStatistic, queryMonthElectricityStatistic, queryYearElectricityStatistic } from "@/api/power";
+import { queryHighestChargeAndPower, queryDayGeneratedPower, queryDayElectricityStatistic, queryMonthElectricityStatistic, queryYearElectricityStatistic } from "../../api/power";
 
 export default {
   // components: { dyDate },
   name: "Storage-Management",
   data() {
     return {
+      canvas2d: this.$Config?.ISCANVAS2D ?? false,
+      
+      chartId: 'storage-' + Math.random().toString(36).substr(2, 9),
       showChart: false,
       activeChartTab: "日",
       current: "Storage-Management",

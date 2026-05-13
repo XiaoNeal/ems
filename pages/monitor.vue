@@ -20,13 +20,11 @@
 
     <!-- 内容区域 -->
     <view class="device-content">
-      <view class="content-wrapper">
-        <ArchitectureDiagram v-if="currentTab === 0" />
-        <PvManagement v-if="currentTab === 1" />
-        <EnergyStorage v-if="currentTab === 2" />
-        <GridManagement v-if="currentTab === 3" />
-        <LoadManagement v-if="currentTab === 4" />
-      </view>
+      <ArchitectureDiagram v-if="currentTab === 0" />
+      <PvManagement v-else-if="currentTab === 1" />
+      <EnergyStorage v-else-if="currentTab === 2" />
+      <GridManagement v-else-if="currentTab === 3" />
+      <LoadManagement v-else-if="currentTab === 4" />
     </view>
 
   </view>
@@ -62,12 +60,17 @@ export default {
   },
   methods: {
     switchTab(tab) {
-      this.currentTab = tab;
+      if (tab !== this.currentTab) {
+        this.currentTab = tab;
+        uni.vibrateShort({ type: 'light' });
+      }
     },
     handleTabChange(e) {
-      this.currentTab = Number(e.currentIndex);
-      // 可以添加切换动画效果
-      uni.vibrateShort({ type: 'light' });
+      const newIndex = Number(e.detail.current);
+      if (newIndex !== this.currentTab) {
+        this.currentTab = newIndex;
+        uni.vibrateShort({ type: 'light' });
+      }
     },
     // 监听屏幕旋转事件
     onOrientationChange() {
@@ -145,13 +148,12 @@ $card-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
 $card-hover-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.12);
 
 .container {
+  width: 100%;
   min-height: 100vh;
-  // background-color: #FFF;
-  // padding-bottom: 40rpx;
   display: flex;
   flex-direction: column;
   background: #EFF4FB;
-  margin-top: 20px;
+  box-sizing: border-box;
 }
 
 .tab-bar {
@@ -180,27 +182,13 @@ $card-hover-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.12);
 
 // 内容区域
 .device-content {
-  // padding: 0 20rpx;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+}
 
-  // 横屏优化
-  @media (orientation: landscape) {
-    display: flex;
-    justify-content: center;
-  }
-
-  .content-wrapper {
-    width: 100%;
-    // background-color: #fff;
-    // border-radius: 24rpx;
-    // box-shadow: $card-shadow;
-    //overflow: hidden;
-    //transition: all 0.3s ease;
-
-    // 横屏优化
-    @media (orientation: landscape) {
-      max-width: 800rpx;
-    }
-  }
-
+.content-swiper {
+  width: 100%;
+  height: 100%;
 }
 </style>

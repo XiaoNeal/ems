@@ -71,11 +71,83 @@
           @input="handleSearch"
           placeholder="请输入告警名称"
         />
+        <uni-icons 
+          v-if="searchKeyword" 
+          type="clear" 
+          size="16" 
+          color="#999" 
+          @click="clearSearch"
+        ></uni-icons>
       </view>
-      <view class="filter-btn" @click="handleFilter">
-        <uni-icons type="filter" size="20" color="#4488FB"></uni-icons>
+      <view class="filter-btn" :class="{ active: hasActiveFilter }" @click="handleFilter">
+        <uni-icons type="filter" size="20" :color="hasActiveFilter ? '#4488FB' : '#999'"></uni-icons>
       </view>
     </view>
+
+    <!-- 筛选弹窗 -->
+    <u-popup v-model="showFilter" mode="bottom" :border-radius="20" :closeable="true">
+      <view class="filter-popup">
+        <view class="popup-header">
+          <text class="popup-title">筛选条件</text>
+          <text class="popup-reset" @click="resetFilter">重置</text>
+        </view>
+        
+        <view class="filter-section">
+          <view class="section-title">报警等级</view>
+          <view class="level-options">
+            <view 
+              class="level-option" 
+              :class="{ active: filterLevel === -1 }"
+              @click="filterLevel = -1"
+            >全部</view>
+            <view 
+              class="level-option urgent" 
+              :class="{ active: filterLevel === 0 }"
+              @click="filterLevel = 0"
+            >紧急</view>
+            <view 
+              class="level-option important" 
+              :class="{ active: filterLevel === 1 }"
+              @click="filterLevel = 1"
+            >重要</view>
+            <view 
+              class="level-option minor" 
+              :class="{ active: filterLevel === 2 }"
+              @click="filterLevel = 2"
+            >次要</view>
+            <view 
+              class="level-option prompt" 
+              :class="{ active: filterLevel === 3 }"
+              @click="filterLevel = 3"
+            >提示</view>
+          </view>
+        </view>
+
+        <view class="filter-section">
+          <view class="section-title">时间范围</view>
+          <view class="time-range">
+            <picker mode="date" @change="onStartTimeChange" :value="filterStartTime">
+              <view class="time-picker">
+                <text>{{ filterStartTime || '开始时间' }}</text>
+                <uni-icons type="arrowdown" size="14" color="#999"></uni-icons>
+              </view>
+            </picker>
+            <text class="time-separator">至</text>
+            <picker mode="date" @change="onEndTimeChange" :value="filterEndTime">
+              <view class="time-picker">
+                <text>{{ filterEndTime || '结束时间' }}</text>
+                <uni-icons type="arrowdown" size="14" color="#999"></uni-icons>
+              </view>
+            </picker>
+          </view>
+        </view>
+
+        <view class="popup-footer">
+          <view class="popup-btn cancel" @click="showFilter = false">取消</view>
+          <view class="popup-btn confirm" @click="applyFilter">确定</view>
+        </view>
+      </view>
+    </u-popup>
 
     <!-- 列表切换 -->
     <view class="table-tab">
@@ -175,6 +247,7 @@
 
 <script>
 import { debounce } from '@/utils/tools'
+import { findDayAlarmRecord } from '@/api/alarm.js'
 
 export default {
   data() {
@@ -182,6 +255,10 @@ export default {
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
       tableType: 0,
       searchKeyword: '',
+      showFilter: false,
+      filterLevel: -1,
+      filterStartTime: '',
+      filterEndTime: '',
 
       alarmTimes: { total: 0, ended: 0, proceed: 0 },
       alarmLevelCount: { urgent: 0, important: 0, minor: 0, prompt: 0 },
@@ -210,6 +287,8 @@ export default {
     }
   },
   mounted() {
+
+    
     this.getNyzAlarmData()
   },
   methods: {
@@ -236,59 +315,14 @@ export default {
       if (this.listLoading) return
       this.listLoading = true
       try {
-        // 使用模拟数据替代API请求
-        const mockData = [
-          {
-            id: 1,
-            deviceName: '紧急：电池温度过高',
-            area: '储能系统',
-            createTime: '2024-01-15 10:30:00',
-            recoverTime: '2024-01-15 10:45:00',
-            status: 0
-          },
-          {
-            id: 2,
-            deviceName: '重要：光伏逆变器故障',
-            area: '光伏系统',
-            createTime: '2024-01-15 09:20:00',
-            recoverTime: '2024-01-15 09:50:00',
-            status: 0
-          },
-          {
-            id: 3,
-            deviceName: '次要：电网电压波动',
-            area: '电网系统',
-            createTime: '2024-01-15 11:10:00',
-            recoverTime: '',
-            status: 1
-          },
-          {
-            id: 4,
-            deviceName: '提示：储能SOC过低',
-            area: '储能系统',
-            createTime: '2024-01-15 12:00:00',
-            recoverTime: '',
-            status: 1
-          },
-          {
-            id: 5,
-            deviceName: '紧急：消防系统报警',
-            area: '安全系统',
-            createTime: '2024-01-14 18:30:00',
-            recoverTime: '2024-01-14 19:00:00',
-            status: 0
-          },
-          {
-            id: 6,
-            deviceName: '重要：负载过载',
-            area: '负载系统',
-            createTime: '2024-01-14 20:15:00',
-            recoverTime: '2024-01-14 20:45:00',
-            status: 0
-          }
-        ]
-        
-        const list = mockData.map(it => this.formatAlarmItem(it))
+        console.log(this.$Config, "-------111-----------------",this.listLoading)
+        const res = await findDayAlarmRecord({
+          day: '2026-05-13',
+          areaLevelId: '883',
+          esId: '2'
+        })
+        console.log(res, "------------------------")
+        const list = (res.data || []).map(it => this.formatAlarmItem(it))
         this.apiData = list
         this.totalCount = list.length
         this.alarmTimes.total = list.length
@@ -317,6 +351,27 @@ export default {
         if (this.tableType === 2) return item.status === 0
         return true
       })
+      
+      if (this.filterLevel !== -1) {
+        data = data.filter(it => it.alarmLevel === this.filterLevel)
+      }
+      
+      if (this.filterStartTime) {
+        data = data.filter(it => {
+          const itemDate = new Date(it.startTime).getTime()
+          const startDate = new Date(this.filterStartTime).getTime()
+          return itemDate >= startDate
+        })
+      }
+      
+      if (this.filterEndTime) {
+        data = data.filter(it => {
+          const itemDate = new Date(it.startTime).getTime()
+          const endDate = new Date(this.filterEndTime + ' 23:59:59').getTime()
+          return itemDate <= endDate
+        })
+      }
+      
       if (this.searchKeyword) {
         const kw = this.searchKeyword.toLowerCase()
         data = data.filter(it => (it.alarmMsg || '').toLowerCase().includes(kw))
@@ -382,8 +437,39 @@ export default {
       this.filterListData()
     },
 
+    clearSearch() {
+      this.searchKeyword = ''
+      this.pageNumber = 1
+      this.filterListData()
+    },
+
     handleFilter() {
-      uni.showToast({ title: '筛选', icon: 'none' })
+      this.showFilter = true
+    },
+
+    resetFilter() {
+      this.filterLevel = -1
+      this.filterStartTime = ''
+      this.filterEndTime = ''
+    },
+
+    applyFilter() {
+      this.pageNumber = 1
+      this.showFilter = false
+      this.filterListData()
+    },
+
+    onStartTimeChange(e) {
+      this.filterStartTime = e.detail.value
+    },
+
+    onEndTimeChange(e) {
+      this.filterEndTime = e.detail.value
+    }
+  },
+  computed: {
+    hasActiveFilter() {
+      return this.filterLevel !== -1 || this.filterStartTime || this.filterEndTime
     }
   }
 }
@@ -480,27 +566,41 @@ export default {
   align-items: center;
   gap: 16rpx;
   margin-bottom: 20rpx;
+  padding: 0 20rpx;
+  
   .search-input {
     flex: 1;
     display: flex;
     align-items: center;
     background: #fff;
     border-radius: 40rpx;
-    padding: 16rpx 24rpx;
+    padding: 20rpx 28rpx;
+    box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+    border: 1rpx solid #f0f0f0;
+    
     input {
       margin-left: 12rpx;
       font-size: 28rpx;
       flex: 1;
     }
   }
+  
   .filter-btn {
-    width: 70rpx;
-    height: 70rpx;
+    width: 76rpx;
+    height: 76rpx;
     background: #fff;
     border-radius: 16rpx;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+    border: 1rpx solid #f0f0f0;
+    transition: all 0.3s ease;
+    
+    &.active {
+      background: #f0f5ff;
+      border-color: #4488FB;
+    }
   }
 }
 
@@ -580,5 +680,113 @@ export default {
   padding: 30rpx 0;
   color: #999;
   font-size: 24rpx;
+}
+
+/* 筛选弹窗 */
+.filter-popup {
+  padding: 30rpx;
+  background: #fff;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.popup-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #222;
+}
+
+.popup-reset {
+  font-size: 28rpx;
+  color: #4488FB;
+}
+
+.filter-section {
+  margin-bottom: 30rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 20rpx;
+}
+
+.level-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.level-option {
+  padding: 16rpx 32rpx;
+  border-radius: 40rpx;
+  background: #f5f5f5;
+  font-size: 28rpx;
+  color: #666;
+  
+  &.active {
+    background: #4488FB;
+    color: #fff;
+  }
+  
+  &.urgent.active { background: #EB3341; }
+  &.important.active { background: #FF7A2E; }
+  &.minor.active { background: #4D7BF1; }
+  &.prompt.active { background: #3CCF6E; }
+}
+
+.time-range {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.time-picker {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  
+  text {
+    font-size: 28rpx;
+    color: #666;
+  }
+}
+
+.time-separator {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.popup-footer {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 40rpx;
+}
+
+.popup-btn {
+  flex: 1;
+  padding: 28rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  
+  &.cancel {
+    background: #f5f5f5;
+    color: #666;
+  }
+  
+  &.confirm {
+    background: #4488FB;
+    color: #fff;
+  }
 }
 </style>

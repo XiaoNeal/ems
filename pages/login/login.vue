@@ -606,7 +606,7 @@ export default {
                     balance: res.accountBalance,
                     // avatarUrl: res.wxAvaterUrl && res.wxAvaterUrl.trim() !== '' ? "https://iems.neiic.com" + res.wxAvaterUrl : undefined,
                     areaLevelId: res.areaLevelId,
-                    esIds: res.esIds
+                    esIds: res.energyStations
                 };
                 this.$store.commit("SET_LOGIN", userInfo);
             } catch (e) {

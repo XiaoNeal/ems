@@ -128,6 +128,12 @@ const request = (options) => {
 
           // 解密处理
           try {
+            // 如果data已经是对象，直接使用
+            if (typeof data === 'object') {
+              result = data;
+              resolve(result);
+              return;
+            }
             // 检查data是否存在且不为空
             if (!data || typeof data !== 'string') {
               console.error('数据为空或格式错误:', data);

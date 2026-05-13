@@ -33,7 +33,7 @@
         <dy-date timeType="day" @getData="handleDatePicker" v-model="selectedDate" class="custom-picker date-picker" />
       </view>
       <view class="chart-container">
-        <qiun-data-charts type="line" :chartData="loadChartData" :opts="loadChartOptions" canvasId="load-chart"
+        <qiun-data-charts type="line" :chartData="loadChartData" :opts="loadChartOptions" :canvasId="chartId"
           class="main-chart" :ontouch="true" :canvas2d="canvas2d" />
       </view>
     </view>
@@ -42,10 +42,10 @@
     <view class="card device-list">
       <view class="list-header">
         <text class="list-title">负荷列表</text>
-        <view class="access-setting-btn" @click="goToAccessSetting">
+        <!-- <view class="access-setting-btn" @click="goToAccessSetting">
           <text class="setting-icon">⚙️</text>
           <text class="setting-text">接入设置</text>
-        </view>
+        </view> -->
       </view>
 
       <!-- 卡片网格容器 -->
@@ -82,8 +82,7 @@
 import {
   getSocketinstance
 } from "@/service/websocket";
-import energy from '@/api/energy_new'
-import { queryDayGeneratedPower } from '@/api/power'
+import { queryDayGeneratedPower } from '../../api/power'
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 const commonArcbarOptions = {
   padding: [15,15,0,15],
@@ -104,6 +103,7 @@ export default {
   name: 'load-management',
   data() {
     return {
+      chartId: 'load-' + Math.random().toString(36).substr(2, 9),
       datetimesingle: '',
       canvas2d: this.$Config.ISCANVAS2D,
       dljTotalDeviceCount: "2",
@@ -221,8 +221,8 @@ export default {
     },
     async getDeviceCount() {
       try {
-        const result = await energy.findAllDeviceInfo();
-        if (result.data) this.deviceCount = result.data.deviceInfoMap;
+        // const result = await energy.findAllDeviceInfo();
+        // if (result.data) this.deviceCount = result.data.deviceInfoMap;
       } catch (err) { console.error(err); }
     },
     getDeviceStatus(idx) {
@@ -230,52 +230,52 @@ export default {
       return map[idx]
     },
     async getDeviceInfo() {
-      try {
-        const result = await energy.queryFlexibility({ 
-          barCode: "F2 00 12 00 00 00 00 00 00 00 00 00 00 00 00", 
-          typeCode: "1712_V2" 
-        });
-        if (result.data) {
-          const filterData = result.data.filter(item => item.deviceType != '0000')
-          this.deviceList = filterData.map((item, index) => {
-            item.deviceName = this.getDeviceName(item.deviceType)
-            item.deviceStatusName = this.getDeviceStatus(item.networkStatus)
-            item.deviceStatus = item.networkStatus
-            item.type = item.deviceType
-            item.power = Math.round(1000 + Math.random() * 4000)
-            item.energyConsumption = (5 + Math.random() * 15).toFixed(2)
-            return item
-          });
-          const generateDevice = (id, flexibility, loadRatio, efficiencyLevel) => ({
-            deviceType: '2',
-            networkStatus: 0,
-            devId: `AC-${String(id).padStart(3, '0')}`,
-            deviceFlexibility: flexibility,
-            deviceLoadRatio: loadRatio.toFixed(2),
-            deviceEnergyEfficiencyLevel: efficiencyLevel,
-            power: Math.round(1000 + Math.random() * 4000),
-            energyConsumption: (5 + Math.random() * 15).toFixed(2)
-          });
-          const newAirConditioners = [
-            { ...generateDevice(1, 0.7, 0.5, 2), deviceType: '3' },
-            ...Array.from({ length: 17 }, (_, i) => {
-              const base = i % 3;
-              return generateDevice(i + 2, 0.6 + base * 0.1, 0.4 + base * 0.1, base + 1);
-            })
-          ];
-          const newAirConditionersProcessed = newAirConditioners.map((item, index) => {
-            const newIndex = this.deviceList.length + index;
-            item.deviceName = this.getDeviceName(item.deviceType);
-            item.deviceStatusName = this.getDeviceStatus(item.networkStatus);
-            item.deviceStatus = item.networkStatus;
-            item.type = item.deviceType;
-            item.projectAddress = (newIndex % 4) + 1;
-            return item;
-          });
-          this.deviceList = [...this.deviceList, ...newAirConditionersProcessed];
-          this.dljTotalDeviceCount = this.deviceList.filter(item => item.deviceType === '0305' || item.deviceType === '2').length;
-        }
-      } catch (err) { console.error(err); }
+      // try {
+      //   const result = await energy.queryFlexibility({ 
+      //     barCode: "F2 00 12 00 00 00 00 00 00 00 00 00 00 00 00", 
+      //     typeCode: "1712_V2" 
+      //   });
+      //   if (result.data) {
+      //     const filterData = result.data.filter(item => item.deviceType != '0000')
+      //     this.deviceList = filterData.map((item, index) => {
+      //       item.deviceName = this.getDeviceName(item.deviceType)
+      //       item.deviceStatusName = this.getDeviceStatus(item.networkStatus)
+      //       item.deviceStatus = item.networkStatus
+      //       item.type = item.deviceType
+      //       item.power = Math.round(1000 + Math.random() * 4000)
+      //       item.energyConsumption = (5 + Math.random() * 15).toFixed(2)
+      //       return item
+      //     });
+      //     const generateDevice = (id, flexibility, loadRatio, efficiencyLevel) => ({
+      //       deviceType: '2',
+      //       networkStatus: 0,
+      //       devId: `AC-${String(id).padStart(3, '0')}`,
+      //       deviceFlexibility: flexibility,
+      //       deviceLoadRatio: loadRatio.toFixed(2),
+      //       deviceEnergyEfficiencyLevel: efficiencyLevel,
+      //       power: Math.round(1000 + Math.random() * 4000),
+      //       energyConsumption: (5 + Math.random() * 15).toFixed(2)
+      //     });
+      //     const newAirConditioners = [
+      //       { ...generateDevice(1, 0.7, 0.5, 2), deviceType: '3' },
+      //       ...Array.from({ length: 17 }, (_, i) => {
+      //         const base = i % 3;
+      //         return generateDevice(i + 2, 0.6 + base * 0.1, 0.4 + base * 0.1, base + 1);
+      //       })
+      //     ];
+      //     const newAirConditionersProcessed = newAirConditioners.map((item, index) => {
+      //       const newIndex = this.deviceList.length + index;
+      //       item.deviceName = this.getDeviceName(item.deviceType);
+      //       item.deviceStatusName = this.getDeviceStatus(item.networkStatus);
+      //       item.deviceStatus = item.networkStatus;
+      //       item.type = item.deviceType;
+      //       item.projectAddress = (newIndex % 4) + 1;
+      //       return item;
+      //     });
+      //     this.deviceList = [...this.deviceList, ...newAirConditionersProcessed];
+      //     this.dljTotalDeviceCount = this.deviceList.filter(item => item.deviceType === '0305' || item.deviceType === '2').length;
+      //   }
+      // } catch (err) { console.error(err); }
     },
     getDeviceName(idx) {
       const map = {
@@ -313,9 +313,9 @@ export default {
 @media (max-width: 480px) { .device-image { width: 100rpx; height: 100rpx; } }
 
 /* 基础容器 */
-.container { padding: 10rpx; background: #f5f7fa; }
+.container { padding: 10rpx; background: #Eff4fb; }
 .card { background: #fff; border-radius: 12rpx; margin-bottom: 16px; box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05); overflow: hidden; }
-.section-header { border-bottom: 1px solid #f0f0f0; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; }
+.section-header { border-bottom: 1px solid #f0f0f0; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;  }
 .title { font-size: 16px; font-weight: 600; color: #333; min-width: fit-content; }
 .chart-container { height: 300px; padding: 20px; }
 .date-picker { font-size: 14px; color: #666; }

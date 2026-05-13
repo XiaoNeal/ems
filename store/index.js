@@ -1,9 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import getters from './getters'
-import sapi from './sapi'
-import { nyzDeviceListbySystem1, nyzDeviceListbySystem2 } from '../service/config/devices'
-import { menuItemsSystem1, menuItemsSystem2, analysisSubMenuSystem1, analysisSubMenuSystem2 } from '../service/config/memu'
 
 Vue.use(Vuex)
 
@@ -91,7 +88,6 @@ const store = new Vuex.Store({
 		vuex_wxCode: '',
 		
 		
-		currentTemplate: lifeData.currentTemplate ? lifeData.currentTemplate : "0",
 		deviceCategoryId: lifeData.deviceCategoryId ? lifeData.deviceCategoryId : '',
 		areaInfoId: lifeData.areaInfoId ? lifeData.areaInfoId : '',
 
@@ -112,24 +108,13 @@ const store = new Vuex.Store({
 		hasLogin: lifeData.hasLogin ? lifeData.hasLogin : false, // 新增缓存字段
 		userName: lifeData.userName ? lifeData.userName : '', // 新增缓存字段
 
-		// deviceList:lifeData.deviceList?lifeData.deviceList:[],
-		// realTimeService:new RealtimeDataProviderService()
-		powerStationNames: [
-			{ name: '上海交大光储直柔能源站', esId: 1 },
-			{ name: '光伏未来屋光储直柔能源站', esId: 2 },
-			{ name: '清华节能楼光储直柔能源站', esId: 3 },
-			{ name: '杭州格力光储直柔能源站', esId: 4 },
-			{ name: '光伏未来屋智能光储机', esId: 5 },
-			{ name: '十千瓦级光储直柔微能源站', esId: 6 }
-		],
+	
 		
 		storageRealData: [],
 		powerStationsId: lifeData.powerStationsId ? lifeData.powerStationsId : undefined,
 		homeSelectedEsId: lifeData.homeSelectedEsId ? lifeData.homeSelectedEsId : undefined,
 		centerList: lifeData.centerList ? lifeData.centerList : [],
 		
-		currentSystemId: 1,
-		currentSystemId: 387
 	},
 	mutations: {
 		$uStore(state, payload) {
@@ -196,10 +181,7 @@ const store = new Vuex.Store({
 				level: "admin"
 			}
 			const roleId = userInfo.role._id
-			sapi.getCenterList({ roleId }).then(res => {
-				console.log(res, 'centerList')
-				ctx.commit('UPDATE_CENTERLIST', res.data)
-			})
+			
 		}
 	}
 })

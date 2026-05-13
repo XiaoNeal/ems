@@ -126,6 +126,7 @@
           :ontouch="true"
           :canvas2d="canvas2d"
           :opts="electricityOpts"
+          :canvas-id="chartId + '-energy'"
         />
         <view v-else class="empty-chart">
           <text class="empty-text">暂无能源数据</text>
@@ -191,15 +192,9 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
-import upgrade from '@/api/upgrade';
-import nyz from '@/api/nyz'
-import nyz_new from '@/api/nyz_new';
 import { dateStandardFormat } from "@/utils/date-format";
-import sapi from '@/store/sapi';
-import energy from '@/api/energy';
-import energy_new from '@/api/energy_new';
-import { getPowerData } from '@/api/power';
+
+import { getPowerData } from '../../api/power';
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 import { realtimeDataProvider } from '@/service/websocket';
 
@@ -208,6 +203,7 @@ export default {
   name: "ArchitectureDiagram",
   data() {
     return {
+      chartId: 'architecture-' + Math.random().toString(36).substr(2, 9),
       activeChartTab: '日',
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
       timeTypeIndex: 0,
@@ -268,35 +264,6 @@ export default {
     device170F() {
       return this.deviceList.find(item => item && item.deviceType === '170F_V1_2');
     },
-    // storageData() {
-    //   const power1 = parseFloat(this.nyzData.storagePower1 || 0);
-    //   const power2 = parseFloat(this.nyzData.storagePower2 || 0);
-    //   const power = isNaN(power1) ? 0 : power1 + (isNaN(power2) ? 0 : power2);
-    //   const status = power == 0 ? "不充不放" : power > 0 ? "充电中" : "放电中";
-    //   return { power: Math.abs(power).toFixed(2), status }
-    // },
-    // totalLoadData() {
-    //   const power1 = this.nyzData.loadPower1 == '--' ? '--' : (parseFloat(this.nyzData.loadPower1) || 0);
-    //   const power2 = this.nyzData.loadPower2 == '--' ? '--' : (parseFloat(this.nyzData.loadPower2) || 0);
-    //   const power3 = this.gridPower == '--' ? '--' : (parseFloat(this.gridPower) || 0);
-    //   const power = this.getSum([power1, power2, power3]);
-    //   return { power };
-    // },
-    // totalConsumptionQ() {
-    //   const provideQ = parseFloat(this.totalProvideQ || 0) || 0;
-    //   const storageDisChargeQ = parseFloat(this.totalStorageDisChargeQ || 0) || 0;
-    //   const gridForwardQ = parseFloat(this.dayEnergyData.totalGridForwardQ || 0) || 0;
-    //   const gridReverseQ = parseFloat(this.dayEnergyData.totalGridReverseQ || 0) || 0;
-    //   const storageChargeQ = parseFloat(this.totalStorageChargeQ || 0) || 0;
-    //   const consumptionQData = provideQ + storageDisChargeQ + gridForwardQ - gridReverseQ - storageChargeQ;
-    //   return { consumptionQData: consumptionQData.toFixed(2) };
-    // },
-    // totalSolarData() {
-    //   const power1 = this.nyzData.photovoltaicPower1 == '--' ? '--' : Math.abs(parseFloat(this.nyzData.photovoltaicPower1) || 0);
-    //   const power2 = this.nyzData.photovoltaicPower2 == '--' ? '--' : Math.abs(parseFloat(this.nyzData.photovoltaicPower2) || 0);
-    //   const power = this.getSum([power1, power2]);
-    //   return { power };
-    // },
   },
   onLoad() {
     // 获取设备状态栏高度
@@ -349,24 +316,7 @@ export default {
       this.deviceList = realtimeDataProvider.getDeviceList();
       console.log('deviceList', this.deviceList);
 
-      // realtimeDataProvider.on('IEMS_' + '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00', (jsonData) => {
-      //   try {
-      //     if (typeof jsonData == 'string') {
-      //       let index = jsonData.lastIndexOf("}");
-      //       if (index >= 0) {
-      //         jsonData = jsonData.substring(0, index + 1);
-      //       }
-      //       if (jsonData.includes('"dataType"' + ':' + '"1"') || jsonData.includes('gateway'))
-      //         return
-      //       jsonData = JSON.parse(jsonData);
-      //       if (jsonData.deviceType === '170F_V1_2' && jsonData.address === '01') {
-      //         this.handle170FData(jsonData);
-      //       }
-      //     }
-      //   } catch (error) {
-      //     console.error('170F数据解析错误:', error);
-      //   }
-      // });
+
     },
     handle170FData(jsonData) {
       console.log('170F设备数据:', jsonData);

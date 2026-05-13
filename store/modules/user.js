@@ -7,9 +7,6 @@ import {
 	getUserInfoApi
 } from '@/api/user'
 
-import {
-	findByProjectId
-} from '@/api/invert'
 
 
 

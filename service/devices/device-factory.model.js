@@ -28,6 +28,10 @@ import { Model1312v1_1 } from "./1312v1_1-model.js";
 import { Model131Cv2 } from './131Cv2-model.js'
 import { Model170C_V1_1Model } from './170C_V1_1-model.js'
 import { Model170F } from './170F-model.js'
+import { Model171E } from './171E-model.js'
+import { Model171B } from './171B-model.js'
+import { Model171C } from './171C-model.js'
+import { Model171D } from './171D-model.js'
 
 export class DeviceFactory {
 	static create(jsonData, gateway) {
@@ -175,6 +179,23 @@ export class DeviceFactory {
 				dev = new Model170F()
 				break;
 			}
+			case '171B':{
+				dev = new Model171B()
+				break;
+			}
+			case '171C':{
+				dev = new Model171C()
+				break;
+			}
+			case '171D':{
+				dev = new Model171D()
+				break;
+			}
+			case '171E':{
+				dev = new Model171E()
+				break;
+			}
+			
 
 			default:
 				// dev = new DeviceBase();

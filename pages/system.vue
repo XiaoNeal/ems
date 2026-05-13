@@ -221,16 +221,15 @@ export default {
 
 .item-row {
   display: flex;
-  justify-content: space-around;
+  justify-content: flex-start;
   flex-wrap: wrap;
+  gap: 20rpx;
 }
 
 .item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 10rpx 0;
-  width: 30%;
 }
 
 .item-icon {

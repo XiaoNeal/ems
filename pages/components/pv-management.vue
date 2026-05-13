@@ -80,7 +80,7 @@
           </view>
           <view class="chart-body">
             <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
-              :canvas2d="canvas2d" class="power-chart" />
+              :canvas2d="canvas2d" class="power-chart" :canvas-id="chartId + '-power'" />
           </view>
         </view>
 
@@ -96,7 +96,7 @@
           </view>
           <view class="chart-body">
             <qiun-data-charts type="column" :chartData="generationData" :opts="generationOptions" :ontouch="true"
-              :canvas2d="canvas2d" class="generation-chart" />
+              :canvas2d="canvas2d" class="generation-chart" :canvas-id="chartId + '-generation'" />
           </view>
         </view>
       </view>
@@ -112,7 +112,7 @@ import {
   queryDayElectricityStatistic,
   queryMonthElectricityStatistic,
   queryYearElectricityStatistic
-} from '@/api/power';
+} from '../../api/power';
 
 export default {
   components: {
@@ -121,6 +121,7 @@ export default {
   name: "PV-Management",
   data() {
     return {
+      chartId: 'pv-' + Math.random().toString(36).substr(2, 9),
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
       dailyGeneration: "--",
       totalGeneration: "--",
