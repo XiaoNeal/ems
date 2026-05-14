@@ -18,7 +18,7 @@
       </view>
     </view> -->
 
-    <view class="user-info">
+    <view class="user-info" @click="navigateToU('/pages/profile/info')">
       <image class="avatar" :src="user.avatar && user.avatar.trim() ? user.avatar : '/static/logo_n.png'"></image>
       <view class="item-title">
         <view class="user-name">{{ user.userName }}</view>
@@ -27,7 +27,7 @@
         </view>
       </view>
       <!-- <view > -->
-      <uni-icons type="arrowright" size="20" color="#999" @click="navigateToU('/pages/profile/info')"></uni-icons>
+      <uni-icons type="arrowright" size="20" color="#999" ></uni-icons>
       <!-- </view> -->
 
     </view>
@@ -44,7 +44,14 @@
           <uni-icons type="arrowright" size="20" color="#999"></uni-icons>
         </view>
       </view> -->
-       <view class="list-item" @click="navigateToU('/pages/profile/notifications')">
+       <view class="list-item" @click="navigateToDeviceList">
+        <view class="item-content">
+          <uni-icons type="list" size="20" color="#007AFF"></uni-icons>
+          <text class="item-title">设备列表</text>
+          <uni-icons type="arrowright" size="20" color="#999"></uni-icons>
+        </view>
+      </view>
+      <view class="list-item" @click="navigateToU('/pages/profile/notifications')">
         <view class="item-content">
           <uni-icons type="notification" size="20" color="#007AFF"></uni-icons>
           <text class="item-title">消息通知</text>
@@ -121,7 +128,7 @@ export default {
         }
       })
       res = JSON.parse(decrypt(res[1].data));
-
+      console.log(res,"res121212")
       if (res.code === 200) {
 
         // 替换原有赋值方式
@@ -158,6 +165,15 @@ export default {
 
 
 
+    navigateToDeviceList() {
+      uni.setStorageSync('currentEsId', '')
+      this.$store.commit('changePowerStationId', '')
+      uni.setStorageSync('fromProfile', 'true')
+      uni.navigateTo({
+        url: '/pages/index/index'
+      })
+    },
+
     navigateToU(url) {
       uni.navigateTo({
         url: url,
@@ -177,7 +193,7 @@ export default {
 <style scoped lang="scss">
 
 .profile-container {
-  margin-top: 30px;
+  padding: 20rpx;
 }
 
 

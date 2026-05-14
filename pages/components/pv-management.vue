@@ -327,7 +327,7 @@ export default {
 <style scoped>
 /* 基础样式 */
 .container {
-  padding: 10rpx;
+  padding: 20rpx;
   background-color: #f5f7fa;
 }
 
@@ -361,7 +361,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 16rpx 0;
-  background: #f8f9fa;
+  /* background: #f8f9fa; */
   border-radius: 8rpx;
 }
 
@@ -453,7 +453,7 @@ export default {
 .card-divider {
   height: 1rpx;
   background-color: #f0f0f0;
-  margin: 20rpx 0;
+  margin: 10rpx 0;
 }
 
 .chart-section {

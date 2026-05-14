@@ -1262,6 +1262,7 @@ export default {
   color: #3D5A80;
   flex-shrink: 0;
   font-weight: 500;
+  margin-right: 20px;
 }
 
 .param-input {

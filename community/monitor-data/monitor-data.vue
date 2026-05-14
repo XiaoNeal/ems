@@ -1246,20 +1246,20 @@ export default {
     },
     // 刷新数据
     refreshData() {
-      uni.showLoading({
-        title: '刷新中...'
-      });
+      // uni.showLoading({
+      //   title: '刷新中...'
+      // });
 
       // 模拟从后端171B-model.js获取EnergyData数据
       this.fetchPcsDataFromBackend();
 
-      setTimeout(() => {
-        uni.hideLoading();
-        uni.showToast({
-          title: '刷新成功',
-          icon: 'success'
-        });
-      }, 1000);
+      // setTimeout(() => {
+      //   uni.hideLoading();
+      //   uni.showToast({
+      //     title: '刷新成功',
+      //     icon: 'success'
+      //   });
+      // }, 1000);
     },
     // 从后端获取PCS数据（模拟171B-model.js的EnergyData字段映射）
     fetchPcsDataFromBackend() {

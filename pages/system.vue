@@ -211,19 +211,19 @@ export default {
 .section-title {
   font-size: 14px;
   color: #666;
-  padding: 15rpx 20rpx;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 30rpx 30rpx 10rpx 30rpx;
+  // border-bottom: 1px solid #f0f0f0;
 }
 
 .section-content {
-  padding: 20rpx;
+  padding: 30rpx;
 }
 
 .item-row {
   display: flex;
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 20rpx;
+  gap: 120rpx;
 }
 
 .item {

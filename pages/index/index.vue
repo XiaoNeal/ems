@@ -63,6 +63,7 @@ import Monitor from '../monitor.vue'
 import Profile from '../profile.vue'
 import System from '../system.vue'
 import DeviceList from '../components/device-list.vue'
+import { findUserInfoByCodeId } from '@/api/user'
 
 export default {
   components: {
@@ -84,8 +85,8 @@ export default {
     
     // 是否显示设备列表
     showDeviceList() {
-      // 如果设备数量不为1（空或>=2），显示设备列表
-      return this.esIds.length !== 1
+      // 如果设备数量为0，显示设备列表；如果设备数量>=2且未选择设备，也显示设备列表；如果从profile跳转过来，也显示设备列表
+      return this.esIds.length === 0 || (this.esIds.length >= 2 && !this.selectedDeviceId) || this.fromProfile
     },
     
     // 是否显示返回按钮
@@ -133,31 +134,113 @@ export default {
       scrollPositions: { 0: 0, 1: 0, 2: 0 },
       scrollTop: 0,
       realScrollTop: 0,
-      selectedDeviceId: null // 当前选中的设备ID
+      selectedDeviceId: null,
+      fromProfile: false
     }
   },
   mounted() {
     console.log('onMounted----------------------------------------------------------')
     this.checkLoginStatus()
   },
+  onLoad(options) {
+    if (options.esId) {
+      this.handleDeviceSelect(options.esId)
+    }
+    this.checkFromProfile()
+  },
+  onShow() {
+    this.checkFromProfile()
+  },
   onReady() {
     this.forceScrollToTop()
   },
   methods: {
+    checkFromProfile() {
+      const fromProfile = uni.getStorageSync('fromProfile')
+      if (fromProfile === 'true') {
+        this.selectedDeviceId = null
+        this.fromProfile = true
+        uni.removeStorageSync('fromProfile')
+      }
+    },
     checkLoginStatus() {
       console.log('checkLoginStatus', this.userInfo)
+
       // 检查登录状态，使用 userInfo 判断
       if (!this.userInfo || !this.userInfo.isLogin) {
         // 未登录，跳转到登录页面
         uni.redirectTo({
           url: '/pages/login/login'
         })
+        return
+      }
+
+      // 已登录，调用接口获取设备列表
+      if (this.fromProfile) {
+        this.fetchDeviceListWithoutAutoSelect()
+      } else {
+        this.fetchDeviceList()
+      }
+    },
+
+    async fetchDeviceListWithoutAutoSelect() {
+      try {
+        const userId = this.userInfo.userId
+        const res = await findUserInfoByCodeId(userId)
+        console.log('获取设备列表:', res)
+
+        let energyStations = []
+        if (res.code === 200 && res.data) {
+          energyStations = res.data.energyStations || []
+        }
+
+        const userInfo = { ...this.userInfo }
+        userInfo.esIds = energyStations
+        this.$store.commit('SET_LOGIN', userInfo)
+
+        this.selectedDeviceId = null
+      } catch (error) {
+        console.error('获取设备列表失败:', error)
+      }
+    },
+
+    // 获取设备列表
+    async fetchDeviceList() {
+      try {
+        const userId = this.userInfo.userId
+        const res = await findUserInfoByCodeId(userId)
+        console.log('获取设备列表:', res)
+
+        let energyStations = []
+        if (res.code === 200 && res.data) {
+          energyStations = res.data.energyStations || []
+        }
+
+        // 更新 store 中的设备列表
+        const userInfo = { ...this.userInfo }
+        userInfo.esIds = energyStations
+        this.$store.commit('SET_LOGIN', userInfo)
+
+        // 根据设备数量决定显示内容
+        if (energyStations.length === 1) {
+          // 只有一个设备，直接选中并显示监测页面
+          this.selectedDeviceId = energyStations[0]
+          this.$store.commit('changePowerStationId', energyStations[0])
+          uni.setStorageSync('currentEsId', energyStations[0])
+        } else {
+          // 0个或多个设备，显示设备列表
+          this.selectedDeviceId = null
+        }
+      } catch (error) {
+        console.error('获取设备列表失败:', error)
+        // 获取失败时，保持原有逻辑
       }
     },
     
     // 处理设备选择
     handleDeviceSelect(esId) {
       this.selectedDeviceId = esId
+      this.fromProfile = false
       // 设置当前选中的设备ID到全局状态
       this.$store.commit('changePowerStationId', esId)
       uni.setStorageSync('currentEsId', esId)
@@ -181,6 +264,10 @@ export default {
       if (this.currentTab === index) return;
       this.currentTab = index;
       this.forceScrollToTop()
+      // 切换到监测页时，刷新设备列表
+      if (index === 0) {
+        this.fetchDeviceList()
+      }
     },
     forceScrollToTop() {
       this.scrollTop = this.realScrollTop
@@ -226,14 +313,14 @@ export default {
 <style lang="scss" scoped>
 page {
   height: 100%;
-  background-color: #f5f5f5;
+  background-color: #EFF4FB;
   overflow: hidden;
 }
 
 .container {
   width: 100%;
   height: 100vh;
-  background-color: #f5f5f5;
+  background-color: #EFF4FB;
   overflow: hidden;
   position: relative;
   margin-top:20px

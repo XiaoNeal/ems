@@ -596,7 +596,7 @@ export default {
 
         // 统一存储登录状态
         saveLoginState(res) {
-            console.log(res,"res")
+            console.log(res, "res")
             try {
                 const userInfo = {
                     isLogin: true,

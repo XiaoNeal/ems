@@ -62,13 +62,7 @@
     </view>
 
 
-    <!-- </view> -->
-    <view class="list-item logout-item" @click="logout">
-      <!-- <view class="item-left"> -->
-      <!-- <uni-icons type="logout" size="22" color="#ff4444" /> -->
-      <text class="item-title" style="color: #ff4444;">退出登录</text>
-      <!-- </view> -->
-    </view>
+
   </view>
 </template>
 

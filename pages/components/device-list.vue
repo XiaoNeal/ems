@@ -14,7 +14,12 @@
     <view v-else class="device-list">
       <view class="list-header">
         <text class="list-title">我的设备</text>
-        <text class="device-count">{{ esIds.length }} 台设备</text>
+        <view class="header-right">
+          <text class="device-count">{{ esIds.length }} 台设备</text>
+          <button class="add-device-btn" @click="showAddOptions">
+            <uni-icons type="plus" size="24" color="#fff"></uni-icons>
+          </button>
+        </view>
       </view>
       
       <view 
@@ -28,7 +33,7 @@
         </view>
         <view class="device-info">
           <text class="device-name">{{ getDeviceName(esId) }}</text>
-          <text class="device-id">设备ID: {{ esId }}</text>
+          <text class="device-id">设备ID: {{ esId.esId || esId.id }}</text>
         </view>
         <uni-icons type="arrowright" size="24" color="#999"></uni-icons>
       </view>
@@ -38,10 +43,11 @@
 
 <script>
 import { mapState } from 'vuex'
+import { bindEsUserByQrId } from '@/api/user'
 
 export default {
   computed: {
-    ...mapState(['userInfo', 'powerStationNames'])
+    ...mapState(['userInfo'])
   },
   data() {
     return {
@@ -59,16 +65,15 @@ export default {
       } else {
         this.esIds = []
       }
+
+      console.log(this.esIds,"111111122222222222222")
     },
     
     getDeviceName(esId) {
-      const station = this.powerStationNames.find(s => s.esId === esId)
-      return station ? station.name : `设备 ${esId}`
+      return `设备 ${esId.name}`
     },
     
     selectDevice(esId) {
-      // 选择设备后，需要通知父组件切换到 Monitor/System 页面
-      // 并设置当前选中的设备ID
       uni.setStorageSync('currentEsId', esId)
       this.$emit('selectDevice', esId)
     },
@@ -130,13 +135,13 @@ export default {
         scanType: ['qrCode'],
         success: (res) => {
           console.log('扫码结果:', res)
-          // 解析扫码结果，提取设备编号
-          const esId = this.parseScanResult(res.result)
-          if (esId) {
-            this.validateAndAddDevice(esId)
+          // 二维码内容即为 qrId
+          const qrId = res.result.trim()
+          if (qrId) {
+            this.validateAndAddDevice(qrId)
           } else {
             uni.showToast({
-              title: '无法识别设备编号',
+              title: '无法识别二维码',
               icon: 'none'
             })
           }
@@ -200,83 +205,71 @@ export default {
       uni.showModal({
         title: '添加设备',
         editable: true,
-        placeholderText: '请输入设备编号（如：1、2、3）',
+        placeholderText: '请输入设备二维码编号',
         confirmText: '确定',
         cancelText: '取消',
         success: (res) => {
           if (res.confirm && res.content) {
-            const inputEsId = parseInt(res.content.trim())
-            if (isNaN(inputEsId)) {
+            const qrId = res.content.trim()
+            if (!qrId) {
               uni.showToast({
-                title: '请输入有效数字',
+                title: '请输入二维码编号',
                 icon: 'none'
               })
               return
             }
-            this.validateAndAddDevice(inputEsId)
+            this.validateAndAddDevice(qrId)
           }
         }
       })
     },
     
-    validateAndAddDevice(esId) {
-      // 检查是否已添加
-      if (this.esIds.includes(esId)) {
-        uni.showToast({
-          title: '该设备已添加',
-          icon: 'none'
-        })
-        return
-      }
-      
-      // 检查是否为合法设备
-      const station = this.powerStationNames.find(s => s.esId === esId)
-      if (!station) {
-        uni.showToast({
-          title: '设备编号不存在',
-          icon: 'none'
-        })
-        return
-      }
-      
-      // 确认添加
+    validateAndAddDevice(qrId) {
+      // 确认添加设备
       uni.showModal({
         title: '确认添加',
-        content: `确定要添加「${station.name}」吗？`,
+        content: `确定要使用此二维码绑定设备吗？`,
         confirmText: '确定',
         cancelText: '取消',
         success: (res) => {
           if (res.confirm) {
-            this.doAddDevice(esId)
+            this.doAddDevice(qrId)
           }
         }
       })
     },
     
-    doAddDevice(esId) {
-      // 添加设备到列表
-      this.esIds.push(esId)
+    async doAddDevice(qrId) {
+      uni.showLoading({ title: '绑定中...' })
       
-      // 更新 userInfo 中的 esIds
-      const updatedUserInfo = {
-        ...this.userInfo,
-        esIds: this.esIds
+      try {
+        const esUserId = this.userInfo.userId
+        const res = await bindEsUserByQrId(qrId, esUserId)
+        
+        if (res.code === 200) {
+          // 绑定成功，刷新设备列表
+          uni.showToast({
+            title: '绑定成功',
+            icon: 'success'
+          })
+          
+          // 通知父组件刷新设备列表
+          this.$emit('deviceAdded', qrId)
+        } else {
+          uni.showToast({
+            title: res.message || '绑定失败',
+            icon: 'none'
+          })
+        }
+      } catch (error) {
+        console.error('绑定设备失败:', error)
+        uni.showToast({
+          title: '网络异常，绑定失败',
+          icon: 'none'
+        })
+      } finally {
+        uni.hideLoading()
       }
-      
-      // 更新本地存储和 Vuex 状态
-      uni.setStorageSync('userInfo', updatedUserInfo)
-      uni.setStorageSync('lifeData', {
-        ...uni.getStorageSync('lifeData'),
-        userInfo: updatedUserInfo
-      })
-      
-      // 通知父组件刷新
-      this.$emit('deviceAdded', esId)
-      
-      uni.showToast({
-        title: '添加成功',
-        icon: 'success'
-      })
     }
   }
 }
@@ -394,12 +387,37 @@ export default {
   margin-right: 16rpx;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
 .device-count {
   font-size: 26rpx;
   color: #94a3b8;
   background: #f1f5f9;
   padding: 8rpx 20rpx;
   border-radius: 20rpx;
+}
+
+.add-device-btn {
+  width: 56rpx;
+  height: 56rpx;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 0;
+  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+  
+  &:active {
+    transform: scale(0.92);
+    box-shadow: 0 2rpx 6rpx rgba(59, 130, 246, 0.4);
+  }
 }
 
 .device-item {

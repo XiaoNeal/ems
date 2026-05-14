@@ -2,13 +2,13 @@
 	<view>
 		<picker :title="index" @change="bindTimeChange" @columnchange="columnchange" mode="multiSelector" :disabled="disabled" :class="['date-picker', {disabled:disabled}]"
 		 :value="index" :range="array">
-			<view class="uni-input" v-if="showTime" style="display: flex; align-items: center;  height: 40px;">
-				<uni-icons type="calendar" size="16" color="#409eff" style="margin-right: 8px; transform: translateY(1px);"/>
-				<text style="line-height: 40px; font-size: 14px;">{{showTime}}</text>
+			<view class="input-content" v-if="showTime">
+				<uni-icons type="calendar" class="calendar-icon"/>
+				<text class="date-text">{{showTime}}</text>
 			</view>
-			<view v-else class="placeholder" style="display: flex; align-items: center;  height: 40px;">
-				<uni-icons type="calendar" size="16" color="#b5b8c2" style="margin-right: 8px; transform: translateY(1px);"/>
-				<text style="line-height: 40px; font-size: 14px; color: #b5b8c2;">{{placeholder}}</text>
+			<view v-else class="input-content placeholder">
+				<uni-icons type="calendar" class="calendar-icon placeholder-icon"/>
+				<text class="date-text">{{placeholder}}</text>
 			</view>
 		</picker>
 	</view>
@@ -410,40 +410,70 @@
 		transition: all 0.3s ease;
 		position: relative;
 		min-width: fit-content;
-		max-width:128px;
+		max-width: 150px;
+		flex-shrink: 0;
+		box-sizing: border-box;
 
-		
 		&:active {
 			background-color: #f8f9fa;
 			box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.1);
 		}
-		
-		.uni-input {
-			font-size: 14px;
-			color: #303133;
-			line-height: 40px;
-		}
-		
-		.placeholder {
-			color: #b5b8c2;
-			font-size: 14px;
-			line-height: 40px;
-		}
+	}
+
+	.input-content {
+		display: flex;
+		align-items: center;
+		justify-content: flex-start;
+		height: 100%;
+		width: 100%;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.calendar-icon {
+		font-size: 16px;
+		color: #409eff;
+		margin-right: 8px;
+		flex-shrink: 0;
+		vertical-align: middle;
+	}
+
+	.calendar-icon.placeholder-icon {
+		color: #b5b8c2;
+	}
+
+	.date-text {
+		font-size: 14px;
+		color: #303133;
+		line-height: 40px;
+		flex-shrink: 0;
+		vertical-align: middle;
+	}
+
+	.input-content.placeholder .date-text {
+		color: #b5b8c2;
 	}
 	
 	@media screen and (max-width: 480px) {
 		.date-picker {
 			height: 36px;
-			
-			.uni-input, .placeholder {
-				font-size: 13px;
-				line-height: 36px;
-			}
-			
-			// uni-icons {
-			// 	width: 14px;
-			// 	height: 14px;
-			// }
+			max-width: 120px;
+			padding: 0 10px;
+		}
+
+		.input-content {
+			height: 100%;
+		}
+
+		.calendar-icon {
+			font-size: 14px;
+			margin-right: 6px;
+		}
+
+		.date-text {
+			font-size: 12px;
+			line-height: 36px;
 		}
 	}
 	.tx_r {

@@ -119,9 +119,9 @@
                 {{ tab }}
               </view>
             </view>
-            <dy-date v-if="activeChartTab === '日'" timeType="day" @getData="handleDatePicker" v-model="selectedDate"
+            <dy-date v-if="timeTypeIndex === 0" timeType="day" @getData="handleDatePicker" v-model="selectedDate"
               class="custom-picker date-picker" />
-            <dy-date v-else-if="activeChartTab === '月'" timeType="month" @getData="handleDatePicker"
+            <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker"
               v-model="selectedDate" class="custom-picker date-picker" />
             <dy-date v-else timeType="year" @getData="handleDatePicker" v-model="selectedDate"
               class="custom-picker date-picker" />
@@ -142,14 +142,14 @@
 import { realtimeDataProvider } from '@/service/websocket';
 // import upgrade from "@/api/upgrade_new";
 // import nyz_new from "@/api/nyz_new";
-// import dyDate from "@/components/dy-Date/dy-Date.vue";
+import dyDate from "@/components/dy-Date/dy-Date.vue";
 // import nyz from "@/api/nyz";
 // import energy_new from "@/api/energy_new";
 // import { mapGetters } from "vuex";
 import { queryHighestChargeAndPower, queryDayGeneratedPower, queryDayElectricityStatistic, queryMonthElectricityStatistic, queryYearElectricityStatistic } from "../../api/power";
 
 export default {
-  // components: { dyDate },
+  components: { dyDate },
   name: "Storage-Management",
   data() {
     return {
@@ -158,6 +158,7 @@ export default {
       chartId: 'storage-' + Math.random().toString(36).substr(2, 9),
       showChart: false,
       activeChartTab: "日",
+      timeTypeIndex: 0,
       current: "Storage-Management",
       dayMaxChargeQ: "",
       dayMaxChargeQTime: "",
@@ -222,9 +223,10 @@ export default {
     },
     remainingTime() { return 23; },
     statusGradient() {
-      if (this.totalStorageData.status === "充电中") return "#2ecc71";
-      if (this.totalStorageData.status === "放电中") return "#f39c12";
-      return "#95a5a6";
+      // if (this.totalStorageData.status === "充电中") return "#2ecc71";
+      // if (this.totalStorageData.status === "放电中") return "#f39c12";
+      // return "#95a5a6";
+      return "#00c934";
     },
     statList() {
       return [
@@ -270,24 +272,24 @@ export default {
       console.log(this.device170F, "-------------------");
 
     },
-    handleDateTypeChange(e) {
-      this.activeChartTab = e;
-      const now = new Date();
-      const y = now.getFullYear();
-      const m = String(now.getMonth() + 1).padStart(2, "0");
-      if (e === "日") this.selectedDate = now.toISOString().split("T")[0];
-      if (e === "月") this.selectedDate = `${y}-${m}`;
-      if (e === "年") this.selectedDate = `${y}`;
-
-      if (this.updateTimer) clearTimeout(this.updateTimer);
-      this.updateTimer = setTimeout(() => {
-        this.handleDatePicker(this.selectedDate);
-      }, 200);
+    handleDateTypeChange(tab) {
+      this.activeChartTab = tab;
+      const map = { '日': 0, '月': 1, '年': 2 };
+      this.timeTypeIndex = map[tab];
+      const currentDate = new Date();
+      this.selectedDate = {
+        0: currentDate.toISOString().split('T')[0],
+        1: `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`,
+        2: `${currentDate.getFullYear()}`
+      }[this.timeTypeIndex];
+      this.handleDatePicker(this.selectedDate);
     },
     handleDatePicker(value) {
-      if (this.activeChartTab === "日") this.findDayStorageQAndPower();
-      if (this.activeChartTab === "月") this.findMonthStorageQAndPower();
-      if (this.activeChartTab === "年") this.findYearStorageQAndPower();
+      const typeMap = { 0: '日', 1: '月', 2: '年' };
+      const type = typeMap[this.timeTypeIndex];
+      if (type === "日") this.findDayStorageQAndPower();
+      if (type === "月") this.findMonthStorageQAndPower();
+      if (type === "年") this.findYearStorageQAndPower();
     },
 
     getNyzRealTimeData() {
@@ -503,7 +505,7 @@ export default {
 
 <style lang="scss" scoped>
 .container {
-  padding: 10rpx;
+  padding: 20rpx;
   background: #f5f7fa;
 }
 
@@ -513,7 +515,7 @@ export default {
 
 .status-container {
   padding: 20rpx;
-  background: #f8f9fa;
+  background: #fff;
 }
 
 .status-content {
@@ -567,7 +569,7 @@ export default {
 
 .stat-row {
   display: flex;
-  margin-bottom: 10rpx;
+  margin-bottom: 1rpx;
   background: #fff;
   padding: 16rpx 20rpx;
 }
@@ -606,7 +608,7 @@ export default {
 
 .stat-label {
   font-size: 12px;
-  color: #666;
+  color: #000;
   margin-right: 8rpx;
 }
 

@@ -1,38 +1,61 @@
 <template>
-  <view :style="'background-color:' + bGColor" class="container">
+  <view  class="sub-page">
     <u-navbar title="个人信息" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :leftText="null" :autoBack="true"
       :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
 
-    <!-- 个人信息模块 -->
-    <view class="section">
-      <view class="list" :style="'color:' + fontColor">
-        <text style="flex: 1;">个人头像</text>
-        <image :src="avatar || '/static/logo_n.png'" mode="aspectFill" style="margin-right: 10px;border-radius: 50%;width: 60rpx;height: 60rpx;" @click="changeAvatar">
-        </image>
-        <uni-icons type="right" :color="fontColor"></uni-icons>
-      </view>
-      <view class="list" @click="goto(1)">
-        <text style="flex: 1;">用户名</text>
-        <text>{{ userName }}</text>
-        <uni-icons type="right" />
-      </view>
+<!-- 
+      <u-navbar title="系统设置" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :leftText="null" :autoBack="true"
+      :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar> -->
 
-      <view class="list" @click="goto(2)">
-        <text style="flex: 1;">手机号码</text>
-        <text>{{ phone }}</text>
-        <uni-icons type="right" />
+    <!-- 个人信息模块 -->
+    <view class="custom-list">
+      <view class="list-item" @click="changeAvatar">
+        <view class="item-left">
+          <uni-icons type="user" size="24" color="#666" />
+          <text class="item-title">个人头像</text>
+        </view>
+        <view class="item-right">
+          <image :src="avatar || '/static/logo_n.png'" mode="aspectFill" class="avatar-img"></image>
+          <uni-icons type="arrowright" size="18" color="#bbb" />
+        </view>
       </view>
-      <view class="list" @click="goto(3)" :style="'color:' + fontColor">
-        <text style="flex: 1;">邮箱</text>
-        <text>{{ email }}</text>
-        <uni-icons type="right" :color="fontColor"></uni-icons>
+      <view class="list-item" @click="goto(1)">
+        <view class="item-left">
+          <uni-icons type="contact" size="24" color="#666" />
+          <text class="item-title">用户名</text>
+        </view>
+        <view class="item-right">
+          <text class="right-text">{{ userName || '-' }}</text>
+          <uni-icons type="arrowright" size="18" color="#bbb" />
+        </view>
       </view>
-      <!-- <view class="list" :style="'color:' + fontColor">
-        <text style="flex: 1;">注册时间</text>
-        <text>{{ registerDate }}</text>
-      </view> -->
+      <view class="list-item" @click="goto(2)">
+        <view class="item-left">
+          <uni-icons type="phone" size="24" color="#666" />
+          <text class="item-title">手机号码</text>
+        </view>
+        <view class="item-right">
+          <text class="right-text">{{ phone || '-' }}</text>
+          <uni-icons type="arrowright" size="18" color="#bbb" />
+        </view>
+      </view>
+      <view class="list-item" @click="goto(3)">
+        <view class="item-left">
+          <uni-icons type="mail" size="24" color="#666" />
+          <text class="item-title">邮箱</text>
+        </view>
+        <view class="item-right">
+          <text class="right-text">{{ email || '-' }}</text>
+          <uni-icons type="arrowright" size="18" color="#bbb" />
+        </view>
+      </view>
     </view>
 
+    <view class="logout-wrapper">
+      <view class="logout-item" @click="logout">
+        <text class="logout-text">退出登录</text>
+      </view>
+    </view>
 
   </view>
 </template>
@@ -43,7 +66,7 @@ import {
   updateUserInfo
 } from "@/api/user.js"
 import md5 from "@/utils/md5.min.js"
-import { mapState, mapGetters } from 'vuex';
+import { mapState } from 'vuex';
 
 export default {
   data() {
@@ -53,35 +76,22 @@ export default {
       setUserPassword: '',
       isOK: true,
       oldPassword: '',
-      // iconColor:'#000',
-      isAdmin: null,
-      userEmail: 'user@example.com',
-      registerDate: '2023-01-01',
-      userLevel: 'VIP 1'
+      isAdmin: null
     }
-  },
-  mounted() {
-
   },
   computed: {
     ...mapState('user', ['userId', 'userName', 'phone', 'email', 'avatar']),
   },
-  onLoad: function (option) { //option为object类型，会序列化上个页面传递的参数
+  onLoad: function (option) {
     this.isAdmin = option.admin
   },
-
-
   methods: {
     goto(e) {
-      // if (this.isAdmin == "admin") {
-      //   this.showToast('error', '您无权修改该账号个人信息')
-      //   return
-      // }
       uni.navigateTo({
         url: `/pages-public/userOptions/setUserName?type=${e}`
       })
     },
-    save() { //保存
+    save() {
       let that = this
       if (!that.isOK) return
       let obj = {
@@ -99,9 +109,7 @@ export default {
           obj.oldPassword = md5(that.oldPassword).toString()
           obj.newPassword = md5(that.setUserPassword).toString()
         }
-
       }
-
       let formData = JSON.stringify(obj)
       updateUserInfo(formData).then(res => {
         if (res.status == 200) {
@@ -121,18 +129,10 @@ export default {
         }
       })
     },
-
     changeAvatar() {
-      // if (this.isAdmin == "admin") {
-      //   this.showToast('error', '您无权修改该账号个人信息')
-      //   return
-      // }
       let that = this
-      
-      // 获取用户ID
       const userId = this.$store.state.userInfo?.userId || this.$store.state.user?.id || ''
       const token = this.$store.state.token || this.$store.state.user?.token || ''
-      
       if (!userId) {
         uni.showToast({
           title: '用户信息未加载',
@@ -140,7 +140,6 @@ export default {
         })
         return
       }
-
       uni.chooseImage({
         count: 1,
         success: (res) => {
@@ -173,24 +172,13 @@ export default {
                   })
                 }
               } catch (e) {
-                console.error('解析响应失败:', e)
                 uni.showToast({
                   title: '解析失败',
                   icon: 'none'
                 })
               }
-            },
-            fail: (err) => {
-              console.error('上传失败:', err)
-              uni.showToast({
-                title: '上传失败',
-                icon: 'none'
-              })
             }
           })
-        },
-        fail: (err) => {
-          console.error('选择图片失败:', err)
         }
       })
     },
@@ -198,111 +186,114 @@ export default {
       this.$refs.uToast.show({
         type: type,
         icon: false,
-        title: '失败主题',
         message: title
       })
+    },
+    async logout() {
+      uni.showModal({
+        title: '提示',
+        content: '确定要退出登录吗？',
+        success: async (res) => {
+          if (res.confirm) {
+            await this.$store.dispatch('user/logout');
+            uni.reLaunch({
+              url: '/pages/login/login'
+            });
+          }
+        }
+      });
     }
   }
 }
 </script>
 
 <style scoped lang="scss">
-.section {
-  margin: 20px 0;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+
+.sub-page {
+  background: #f5f5f5;
+  min-height: 100vh;
 }
 
-.section-title {
-  padding: 15px;
-  font-size: 16px;
-  font-weight: bold;
-  border-bottom: 1px solid #f5f5f5;
+.custom-list {
+  background: #fff;
+  margin: 15px;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
 }
 
-.container {
-  height: 100%
-}
-
-.list {
+.list-item {
   display: flex;
   align-items: center;
-  padding: 15px;
-  border-bottom: 1px solid #f5f5f5;
+  justify-content: space-between;
+  padding: 32rpx 32rpx;
+  border-bottom: 1rpx solid #f5f6f7;
+  transition: background-color 0.2s ease;
 
   &:last-child {
     border-bottom: none;
   }
 
-  image {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+  &:active {
+    background-color: #fafafa;
   }
 }
 
-.center-list {
-  background-color: #16379A;
-  padding-left: 9vw;
-  padding-right: 9vw;
-  margin: 1rem;
-
-  image {
-    width: 80rpx;
-    height: 80rpx;
-  }
-
-}
-</style>
-
-
-<style scoped lang="scss">
-.section {
-  margin: 20px 0;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.section-title {
-  padding: 15px;
-  font-size: 16px;
-  font-weight: bold;
-  border-bottom: 1px solid #f5f5f5;
-}
-
-.container {
-  height: 100%
-}
-
-.list {
+.item-left {
   display: flex;
   align-items: center;
-  padding: 15px;
-  border-bottom: 1px solid #f5f5f5;
+  gap: 24rpx;
+}
 
-  &:last-child {
-    border-bottom: none;
-  }
+.item-title {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+}
 
-  image {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+.item-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.right-text {
+  font-size: 30rpx;
+  color: #666;
+}
+
+.avatar-img {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #f5f5f5;
+  border: 3rpx solid #eee;
+}
+
+.logout-wrapper {
+  padding: 0 24rpx;
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+}
+
+.logout-item {
+  background: linear-gradient(135deg, #fff5f5 0%, #ffeaea 100%);
+  text-align: center;
+  padding: 28rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 20rpx rgba(255, 68, 68, 0.1);
+  border: 2rpx solid rgba(255, 68, 68, 0.1);
+  transition: all 0.25s ease;
+
+  &:active {
+    background: linear-gradient(135deg, #ffeaea 0%, #ffd5d5 100%);
+    transform: scale(0.98);
   }
 }
 
-.center-list {
-  background-color: #16379A;
-  padding-left: 9vw;
-  padding-right: 9vw;
-  margin: 1rem;
-
-  image {
-    width: 80rpx;
-    height: 80rpx;
-  }
-
+.logout-text {
+  font-size: 32rpx;
+  color: #ff4444;
+  font-weight: 500;
 }
 </style>

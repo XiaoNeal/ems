@@ -313,8 +313,8 @@ export default {
 @media (max-width: 480px) { .device-image { width: 100rpx; height: 100rpx; } }
 
 /* 基础容器 */
-.container { padding: 10rpx; background: #Eff4fb; }
-.card { background: #fff; border-radius: 12rpx; margin-bottom: 16px; box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05); overflow: hidden; }
+.container { padding: 20rpx; background: #Eff4fb; }
+.card { background: #fff; border-radius: 12rpx; margin-bottom: 2px; box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05); overflow: hidden; }
 .section-header { border-bottom: 1px solid #f0f0f0; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;  }
 .title { font-size: 16px; font-weight: 600; color: #333; min-width: fit-content; }
 .chart-container { height: 300px; padding: 20px; }

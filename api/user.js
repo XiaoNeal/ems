@@ -360,3 +360,26 @@ export const wxLoginApi = (code, key = 0) => {
 		method: 'get'
 	})
 }
+
+// 根据用户CodeId获取设备列表信息
+export const findUserInfoByCodeId = (codeId) => {
+	return request({
+		url: `/SsoServer/es/FindUserInfoByCodeId`,
+		method: 'GET',
+		data: {
+			CodeId: codeId
+		}
+	})
+}
+
+// 绑定设备到用户
+export const bindEsUserByQrId = (qrId, esUserId) => {
+	return request({
+		url: `/api/Homecommunity/BindEsUserByQrId`,
+		method: 'GET',
+		data: {
+			qrId: qrId,
+			esUserId: esUserId
+		}
+	})
+}

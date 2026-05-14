@@ -78,13 +78,7 @@ export default {
     },
     // 刷新数据方法
     refresh() {
-      // 显示加载提示
-      uni.showLoading({
-        title: '刷新中...'
-      });
-
       try {
-        // 获取当前显示的子组件
         const currentComponentRefs = [
           'architectureDiagram',
           'pvManagement',
@@ -95,25 +89,13 @@ export default {
         
         const currentComponent = this.$refs[currentComponentRefs[this.currentTab]];
         
-        // 调用子组件的refresh方法（如果存在）
         if (currentComponent && currentComponent.refresh) {
           currentComponent.refresh();
         } else {
           console.log('当前子组件未实现refresh方法');
         }
-        
-        // 刷新成功后隐藏加载提示
-        setTimeout(() => {
-          uni.hideLoading();
-          uni.showToast({
-            title: '刷新成功',
-            icon: 'success',
-            duration: 1500
-          });
-        }, 500);
       } catch (error) {
         console.error('刷新失败:', error);
-        uni.hideLoading();
         uni.showToast({
           title: '刷新失败',
           icon: 'error',
