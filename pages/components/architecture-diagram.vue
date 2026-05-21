@@ -23,44 +23,72 @@
     <view class="system-img">
       <image src="/static/images/system-architecture-new.png"
         style="width:100%; height:96%; position: absolute; top:0; left:0; z-index: 1;"></image>
-      <view class="detail-storage">
-        <p>{{ storageStatus }}</p>
-        <p>{{ storageData.power }}kW</p>
+      <!-- 光伏 -->
+      <view class="device-label-top-left">
+        <text class="device-name">光伏</text>
+        <view class="power-row">
+          <text class="device-power">0.00</text>
+          <text class="power-unit">kW</text>
+        </view>
       </view>
-      <view class="detail-grid">
-        <p>{{ gridStatus }}</p>
-        <p>{{ totalLoadData.power }}kW</p>
+      <!-- 电网 -->
+      <view class="device-label-top-right">
+        <text class="device-name">电网</text>
+        <view class="power-row">
+          <text class="device-power">{{ gridPower }}</text>
+          <text class="power-unit">kW</text>
+        </view>
       </view>
-      <view class="detail-solar">
-        <p>发电</p>
-        <p>{{ totalSolarData.power }}kW</p>
+      <!-- 设备数据标签 -->
+      <view class="device-label" style="left: 3%;top: 75%">
+        <text class="device-name">交流配电柜</text>
+        <view class="power-row">
+          <text class="device-power">{{ ((currentStatus['600a29b2cdf9e30600897f26'] ? currentStatus['600a29b2cdf9e30600897f26'].P : 157530) / 1000).toFixed(2) }}</text>
+          <text class="power-unit">kW</text>
+        </view>
       </view>
-      <view class="power-label" style="left: 18vw;top: 80%">
-        {{ ((currentStatus['600a29b2cdf9e30600897f26'] ? currentStatus['600a29b2cdf9e30600897f26'].P : 157500) /
-          1000).toFixed(1) }}kW
+      <view class="device-label" style="left: 19%;top: 78%">
+        <text class="device-name">储能</text>
+        <view class="power-row">
+          <text class="device-power">{{ ((currentStatus['616e66f584c6e1930fa05917'] ? currentStatus['616e66f584c6e1930fa05917'].P : 157530) / 1000).toFixed(2) }}</text>
+          <text class="power-unit">kW</text>
+        </view>
+        <text class="device-soc">32.5%</text>
       </view>
-      <view class="power-label" style="left: 33vw;top: 80%">
-        {{ ((currentStatus['616e66f584c6e1930fa05917'] ? currentStatus['616e66f584c6e1930fa05917'].P : 157500) /
-          1000).toFixed(1) }}kW
+      <view class="device-label" style="left: 35%;top: 78%">
+        <text class="device-name">空调</text>
+        <view class="power-row">
+          <text class="device-power">{{ ((currentStatus['616e670d84c6e1930fa05919'] ? currentStatus['616e670d84c6e1930fa05919'].P : 157530) / 1000).toFixed(2) }}</text>
+          <text class="power-unit">kW</text>
+        </view>
       </view>
-      <view class="power-label" style="left: 48vw;top: 80%">
-        {{ ((currentStatus['616e670d84c6e1930fa05919'] ? currentStatus['616e670d84c6e1930fa05919'].P : 157500) /
-          1000).toFixed(1) }}kW
+      <view class="device-label" style="left: 50%;top: 78%">
+        <text class="device-name">柔性直流充电桩</text>
+        <view class="power-row">
+          <text class="device-power">{{ ((currentStatus['616e671a84c6e1930fa0591b'] ? currentStatus['616e671a84c6e1930fa0591b'].P : 157530) / 1000).toFixed(2) }}</text>
+          <text class="power-unit">kW</text>
+        </view>
       </view>
-      <view class="power-label" style="left: 63vw;top: 80%">
-        {{ ((currentStatus['616e671a84c6e1930fa0591b'] ? currentStatus['616e671a84c6e1930fa0591b'].P : 157500) /
-          1000).toFixed(1) }}kW
+      <view class="device-label" style="left: 67%;top: 78%">
+        <text class="device-name">照明</text>
+        <view class="power-row">
+          <text class="device-power">{{ ((currentStatus['616e672b84c6e1930fa0591d'] ? currentStatus['616e672b84c6e1930fa0591d'].P : 157530) / 1000).toFixed(2) }}</text>
+          <text class="power-unit">kW</text>
+        </view>
       </view>
-      <view class="power-label" style="left: 78vw;top: 80%">
-        {{ ((currentStatus['616e672b84c6e1930fa0591d'] ? currentStatus['616e672b84c6e1930fa0591d'].P : 157500) /
-          1000).toFixed(1) }}kW
+      <view class="device-label" style="left: 82%;top: 78%">
+        <text class="device-name">其他负荷</text>
+        <view class="power-row">
+          <text class="device-power">{{ ((currentStatus['616e673984c6e1930fa0591f'] ? currentStatus['616e673984c6e1930fa0591f'].P : 157530) / 1000).toFixed(2) }}</text>
+          <text class="power-unit">kW</text>
+        </view>
       </view>
     </view>
 
     <!-- 数据卡片 -->
     <view class="card-section">
       <view class="card-row">
-        <view class="card">
+        <view class="card card-top-left">
           <view class="card-item">
             <image src="/static/images/solar.png" class="card-icon"></image>
             <text class="card-title">今日发电</text>
@@ -72,7 +100,7 @@
           </view>
         </view>
         <view class="card-horizontal-divider"></view>
-        <view class="card">
+        <view class="card card-top-right">
           <view class="card-item">
             <image src="/static/images/consumption.png" class="card-icon"></image>
             <text class="card-title">今日用电</text>
@@ -86,7 +114,7 @@
       </view>
       <view class="card-divider"></view>
       <view class="card-row">
-        <view class="card">
+        <view class="card card-bottom-left">
           <view class="card-item">
             <image src="/static/images/storage.png" class="card-icon"></image>
             <text class="card-title">储能剩余</text>
@@ -98,7 +126,7 @@
           </view>
         </view>
         <view class="card-horizontal-divider"></view>
-        <view class="card">
+        <view class="card card-bottom-right">
           <view class="card-item">
             <image src="/static/images/grid.png" class="card-icon"></image>
             <text class="card-title">电网供电</text>
@@ -142,9 +170,9 @@
         <view v-else class="empty-chart">
           <text class="empty-text">暂无能源数据</text>
         </view>
-        <view class="chart-legend">
+        <!-- <view class="chart-legend">
           <view class="legend-item">
-            <view class="legend-color" style="background-color: #1890FF;"></view>
+            <view class="legend-color" style="background-color: #1810FF;"></view>
             <text>发电</text>
           </view>
           <view class="legend-item">
@@ -152,14 +180,14 @@
             <text>负荷</text>
           </view>
           <view class="legend-item">
-            <view class="legend-color" style="background-color: #FAC858;"></view>
+            <view class="legend-color" style="background-color: #8AC858;"></view>
             <text>充电</text>
           </view>
           <view class="legend-item">
             <view class="legend-color" style="background-color: #EE6666;"></view>
             <text>放电</text>
           </view>
-        </view>
+        </view> -->
       </view>
     </view>
 
@@ -169,14 +197,14 @@
       <image src="/static/images/img-警告.png" class="modal-icon-absolute" />
       <view class="modal-content" @click.stop>
         <view class="modal-header">
-          <text class="modal-title">相关配置将影响系统运行效能和运维安全</text>
+          <text class="modal-title">是否启动策略</text>
         </view>
         <view class="modal-body">
           <text class="modal-text">请确认您是专业人士，已知悉相关影响和责任，并取得授权。</text>
         </view>
         <view class="modal-footer">
           <button class="modal-cancel" @click="closeModal">退出</button>
-          <button class="modal-confirm" @click="confirmStart">已知悉风险</button>
+          <button class="modal-confirm" @click="confirmStart">确认</button>
         </view>
       </view>
     </view>
@@ -238,12 +266,37 @@ export default {
       dcdc170FData: null,
       nyzData: { SOC: "--" },
       electricityOpts: {
-        color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666"],
-        padding: [15, 20, 0, 15],
-        dataLabel: false,
-        xAxis: { labelCount: 6, disableGrid: true },
-        yAxis: { gridType: "dash", showTitle: true, data: [{ position: "left", title: "单位:kWh" }] },
-        extra: { area: { type: "straight", width: 2 } }
+        color: ["#57dd76", "#ffa13c", "#71a6ff", "#a670ff"],
+        // padding: [15, 20, 0, 15],
+        // dataLabel: false,
+        // xAxis: { labelCount: 6, disableGrid: true },
+        // yAxis: { gridType: "dash", showTitle: true, data: [{ position: "left", title: "单位:kW" }] },
+        // extra: { area: { type: "straight", width: 2 } },
+        // yAxis: {
+        //   gridType: "dash",
+        //   dashLength: 2
+        // },
+
+         dataLabel: false,
+        padding: [15, 15, 0, 15],
+        enableScroll: false,
+        legend: {},
+       xAxis: { labelCount: 6, disableGrid: true },
+        yAxis: {
+          gridType: "dash",
+          dashLength: 2
+        },
+        extra: {
+          area: {
+            type: "curve",
+            opacity: 0.2,
+            addLine: true,
+            width: 2,
+            gradient: true,
+            activeType: "hollow"
+          }
+        }
+
       },
       electricityData: { categories: [], series: [{ data: [], name: '发电功率' }] },
       showModal: false,
@@ -459,11 +512,13 @@ export default {
       // 调用新接口
       getPowerData(params).then(result => {
         if (result.data) {
-          const generationData = [], loadData = [], xAxisData = [];
+          const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
           result.data.forEach(item => {
             // 确保数据为Number格式
             generationData.push(Number(item.generatedPower) || 0);
             loadData.push(Number(item.loadPower) || 0);
+            chargeData.push(Number(item.chargePower) || 0);
+            dischargeData.push(Number(item.dischargePower) || 0);
             // 从dateTime中提取小时部分
             const hour = item.dateTime ? item.dateTime.split(' ')[1].split(':')[0] : '';
             xAxisData.push(hour);
@@ -472,7 +527,9 @@ export default {
             categories: xAxisData,
             series: [
               { data: generationData, name: '发电' },
-              { data: loadData, name: '用电' }
+              { data: loadData, name: '用电' },
+              { data: chargeData, name: '充电' },
+              { data: dischargeData, name: '放电' },
             ]
           };
         }
@@ -620,40 +677,103 @@ export default {
   left: 10rpx;
 }
 
-.power-label {
+.device-label {
   position: absolute;
-  color: #4488fb;
-  padding: 2rpx 6rpx;
-  border-radius: 3rpx;
-  font-size: 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   z-index: 2;
 }
 
+.device-label-top-left {
+  position: absolute;
+  top: 7%;
+  left: 31%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+.device-label-top-right {
+  position: absolute;
+  top: 49%;
+  left: 1%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+.device-name {
+  font-size: 20rpx;
+  color: #666;
+  margin-bottom: 4rpx;
+}
+
+.device-power {
+  font-size: 22rpx;
+  color: #4488fb;
+  font-weight: bold;
+}
+
+.device-soc {
+  font-size: 20rpx;
+  color: #52c41a;
+  margin-top: 2rpx;
+}
+
+.power-row {
+  display: flex;
+  align-items: baseline;
+}
+
+.power-unit {
+  font-size: 16rpx;
+  color: #999;
+  margin-left: 2rpx;
+}
+
 .card-section {
-  margin: 20rpx;
+  margin: 0;
 }
 
 .card-row {
   display: flex;
-  /* gap: 20rpx; */
 }
 
 .card-divider {
   height: 1rpx;
   background-color: #eee;
-  /* margin: 20rpx 0; */
+  margin: 0 auto;
+  width: 90%;
 }
 
 .card {
   flex: 1;
   background: #fff;
-  border-radius: 12rpx;
   padding: 20rpx;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-around;
+}
+
+.card-top-left {
+  border-radius: 12rpx 0 0 0;
+}
+
+.card-top-right {
+  border-radius: 0 12rpx 0 0;
+}
+
+.card-bottom-left {
+  border-radius: 0 0 0 12rpx;
+}
+
+.card-bottom-right {
+  border-radius: 0 0 12rpx 0;
 }
 
 .card-item {
@@ -669,7 +789,9 @@ export default {
 
 .card-horizontal-divider {
   width: 1rpx;
-  background-color: #eee;
+  height: 60%;
+  background-color: #e8e8e8;
+  margin: auto 0;
 }
 
 .card-icon {
@@ -854,7 +976,7 @@ export default {
 
 .modal-icon-absolute {
   position: fixed;
-  top: 46%;
+  top: 48%;
   left: 50%;
   transform: translate(-50%, -100%);
   width: 80rpx;

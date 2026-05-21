@@ -5,28 +5,14 @@
       <!-- 电网数据卡片 -->
       <view class="stats-container">
         <view class="stat-row">
-          <view class="stat-item vertical">
+          <view class="stat-item double">
             <view class="stat-subitem">
               <text class="stat-label">电网实时功率</text>
               <view>
                 <text class="stat-value negative">-3.7</text>
-                <text class="stat-unit">kW</text>
-              </view>
-            </view>
-          </view>
-          <view class="stat-divider"></view>
-          <view class="stat-item vertical">
-            <view class="stat-subitem">
-              <text class="stat-label">电网今日馈电量</text>
-              <view>
-                <text class="stat-value">157.12</text>
                 <text class="stat-unit">kWh</text>
               </view>
             </view>
-          </view>
-        </view>
-        <view class="stat-row">
-          <view class="stat-item vertical">
             <view class="stat-subitem">
               <text class="stat-label">电网频率</text>
               <view>
@@ -36,7 +22,14 @@
             </view>
           </view>
           <view class="stat-divider"></view>
-          <view class="stat-item vertical">
+          <view class="stat-item double">
+            <view class="stat-subitem">
+              <text class="stat-label">电网今日馈电量</text>
+              <view>
+                <text class="stat-value">157.12</text>
+                <text class="stat-unit">kWh</text>
+              </view>
+            </view>
             <view class="stat-subitem">
               <text class="stat-label">电网累计馈电量</text>
               <view>
@@ -47,7 +40,7 @@
           </view>
         </view>
         <view class="stat-row">
-          <view class="stat-item vertical">
+          <view class="stat-item double">
             <view class="stat-subitem">
               <text class="stat-label">电网今日供电</text>
               <view>
@@ -55,9 +48,6 @@
                 <text class="stat-unit">kWh</text>
               </view>
             </view>
-          </view>
-          <view class="stat-divider"></view>
-          <view class="stat-item vertical">
             <view class="stat-subitem">
               <text class="stat-label">电网累计供电</text>
               <view>
@@ -384,6 +374,11 @@ export default {
   flex-direction: column;
   align-items: flex-start;
 }
+.stat-item.double {
+  display: flex;
+  flex-direction: column;
+  flex:0.5;
+}
 .stat-divider {
   width: 1rpx;
   height: 60rpx;
@@ -408,7 +403,7 @@ export default {
   margin-right: 8rpx;
 }
 .stat-value {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
   color: #4488FB;
   &.negative {

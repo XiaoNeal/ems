@@ -7,7 +7,8 @@ import { URL } from '../utils/forSpringBoot'
 // 获取电力数据
 export const getPowerData = (params) => {
 	return request({
-		url: '/api/energyStation/v2/queryDayGeneratedPower',
+		// url: '/api/energyStation/v2/queryDayGeneratedPower',
+		url: '/api/energyStation/v1/queryComprehensivePowerByMinute',
 		method: 'GET',
 		data: params
 	})
@@ -25,11 +26,14 @@ export const queryHighestChargeAndPower = (data) => {
 // 查询日发电功率数据
 export const queryDayGeneratedPower = (params) => {
 	return request({
-		url: '/api/energyStation/v2/queryDayGeneratedPower',
+		// url: '/api/energyStation/v2/queryDayGeneratedPower',
+		url: '/api/energyStation/v1/queryComprehensivePowerByMinute',
 		method: 'GET',
 		params
 	})
 }
+
+// energyStation/v1/queryComprehensivePowerByMinute
 
 // 查询日电量统计数据
 export const queryDayElectricityStatistic = (params) => {

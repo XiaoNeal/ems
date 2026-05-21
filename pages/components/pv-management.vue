@@ -21,6 +21,9 @@
           </view>
         </view>
       </view>
+
+      <view class="section-divider"></view>
+      
       <view class="stat-row">
         <view class="stat-item vertical">
           <view class="stat-subitem">
@@ -342,6 +345,13 @@ export default {
   padding: 20rpx 10rpx;
   margin-bottom: 20rpx;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+/* 区块分割线 */
+.section-divider {
+  height: 1rpx;
+  background-color: #eee;
+  margin: 20rpx 0;
 }
 
 .stat-row {

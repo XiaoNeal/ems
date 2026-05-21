@@ -70,7 +70,7 @@
       </view>
 
       <!-- 智能服务 -->
-      <view class="section">
+      <!-- <view class="section">
         <text class="section-title">智能服务</text>
         <view class="section-content">
           <view class="item-row">
@@ -82,7 +82,7 @@
             </view>
           </view>
         </view>
-      </view>
+      </view> -->
 
       <!-- 系统信息 -->
       <view class="section">
@@ -178,7 +178,7 @@ export default {
 
 <style lang="scss" scoped>
 .container {
-  min-height: 100vh;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   background: #EFF4FB;
@@ -206,6 +206,7 @@ export default {
   border-radius: 10rpx;
   margin-bottom: 20rpx;
   overflow: hidden;
+  padding: 20rpx;
 }
 
 .section-title {

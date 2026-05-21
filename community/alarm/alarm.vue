@@ -65,22 +65,16 @@
     <!-- 搜索栏 -->
     <view class="search-wrap">
       <view class="search-input">
-        <uni-icons type="search" size="16" color="#999"></uni-icons>
+        <text class="search-icon">🔍</text>
         <input 
           v-model="searchKeyword" 
           @input="handleSearch"
           placeholder="请输入告警名称"
         />
-        <uni-icons 
-          v-if="searchKeyword" 
-          type="clear" 
-          size="16" 
-          color="#999" 
-          @click="clearSearch"
-        ></uni-icons>
+        <text v-if="searchKeyword" class="clear-icon" @click="clearSearch">✕</text>
       </view>
       <view class="filter-btn" :class="{ active: hasActiveFilter }" @click="handleFilter">
-        <uni-icons type="filter" size="20" :color="hasActiveFilter ? '#4488FB' : '#999'"></uni-icons>
+        <text class="filter-icon">☰</text>
       </view>
     </view>
 
@@ -564,42 +558,63 @@ export default {
 .search-wrap {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 20rpx;
   margin-bottom: 20rpx;
-  padding: 0 20rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
   
   .search-input {
     flex: 1;
     display: flex;
     align-items: center;
-    background: #fff;
+    background: #f5f7fa;
     border-radius: 40rpx;
-    padding: 20rpx 28rpx;
-    box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
-    border: 1rpx solid #f0f0f0;
+    padding: 24rpx 30rpx;
+    min-height: 80rpx;
+    
+    .search-icon {
+      font-size: 28rpx;
+      color: #999;
+    }
     
     input {
-      margin-left: 12rpx;
+      margin-left: 16rpx;
       font-size: 28rpx;
       flex: 1;
+      background: transparent;
+      min-height: 40rpx;
+    }
+    
+    .clear-icon {
+      font-size: 24rpx;
+      color: #999;
+      padding: 8rpx;
+      margin-left: 8rpx;
     }
   }
   
   .filter-btn {
-    width: 76rpx;
-    height: 76rpx;
-    background: #fff;
+    width: 80rpx;
+    height: 80rpx;
+    background: #f5f7fa;
     border-radius: 16rpx;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
-    border: 1rpx solid #f0f0f0;
     transition: all 0.3s ease;
     
+    .filter-icon {
+      font-size: 28rpx;
+      color: #999;
+    }
+    
     &.active {
-      background: #f0f5ff;
-      border-color: #4488FB;
+      background: #e8f0fe;
+      .filter-icon {
+        color: #4488FB;
+      }
     }
   }
 }

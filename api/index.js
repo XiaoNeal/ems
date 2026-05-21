@@ -1,5 +1,5 @@
 import request from '@/utils/request.js'
-import requestOuter from '@/utils/request-outer.js'
+// import requestOuter from '@/utils/request-outer.js'
 
 // 1.查看系统整体的情况
 export const systemOverview = (data) => {
@@ -82,6 +82,6 @@ export const getReliabilityRate = () => {
 }
 
 
-export const getWeather = (url,params) => {
-    return requestOuter.get(url,params)
-}
+// export const getWeather = (url,params) => {
+//     return requestOuter.get(url,params)
+// }

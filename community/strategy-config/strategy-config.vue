@@ -6,27 +6,25 @@
     
     <!-- 内容区域 -->
     <view class="content">
-      <!-- 策略选择标签 -->
-      <view class="strategy-tabs">
-        <view 
-          class="tab-item" 
-          :class="{ active: activeTab === 0 }"
-          @click="switchTab(0)"
-        >峰谷运行</view>
-        <view 
-          class="tab-item" 
-          :class="{ active: activeTab === 1 }"
-          @click="switchTab(1)"
-        >最佳效果</view>
-        <view 
-          class="tab-item" 
-          :class="{ active: activeTab === 2 }"
-          @click="switchTab(2)"
-        >AI策略</view>
-      </view>
-      
-      <!-- 模式选择 -->
+      <!-- 模式选择 - 合并后的统一区域 -->
       <view class="mode-section">
+        <view class="mode-buttons">
+          <view 
+            class="mode-btn" 
+            :class="{ active: activeMode === 'peakValley' }"
+            @click="switchMode('peakValley')"
+          >峰谷运行</view>
+          <view 
+            class="mode-btn" 
+            :class="{ active: activeMode === 'flexControl' }"
+            @click="switchMode('flexControl')"
+          >柔性控制</view>
+          <view 
+            class="mode-btn" 
+            :class="{ active: activeMode === 'aiStrategy' }"
+            @click="switchMode('aiStrategy')"
+          >AI策略</view>
+        </view>
         <view class="mode-buttons">
           <view 
             class="mode-btn" 
@@ -68,121 +66,137 @@
         <text class="section-title">星期选择</text>
         <view class="week-selector" @click.stop="showWeekPicker">
           <text class="week-text">{{ selectedWeekText }}</text>
-          <text class="arrow-icon">></text>
+          <view class="arrow-icon">
+            <view class="arrow-right"></view>
+          </view>
         </view>
       </view>
       
       <!-- 充放电时段设置 -->
       <view class="time-section">
-        <text class="section-title">充、放电时间设置</text>
-        <view class="add-time-btn" @click="addTimeSlot">
-          <text>+ 添加时段</text>
+        <view class="time-section-header">
+          <text class="section-title">充、放电时间设置</text>
+          <text class="add-time-link" @click="addTimeSlot">添加时段</text>
+        </view>
+        
+        <!-- 表格头部 -->
+        <view class="time-table-header">
+          <view class="th-checkbox"></view>
+          <view class="th-name">时段</view>
+          <view class="th-time">起始</view>
+          <view class="th-time">结束</view>
+          <view class="th-action">动作</view>
+          <view class="th-power">功率(kW)</view>
         </view>
         
         <!-- 时段列表 -->
-        <view class="time-slots">
-          <view class="time-slot" v-for="(slot, index) in timeSlots" :key="index">
-            <view class="slot-header" @click.stop>
-              <text class="slot-title">时段{{ index + 1 }}</text>
-              <view class="slot-operate">
-                <view class="checkbox-wrap" @click.stop="toggleSlot(index)">
-                  <view class="checkbox" :class="{ checked: slot.enabled }"></view>
-                </view>
-                <text class="del-btn" @click.stop="deleteTimeSlot(index)">删除</text>
+        <view class="time-table-body">
+          <view class="time-row" v-for="(slot, index) in timeSlots" :key="index">
+            <view class="td-checkbox">
+              <view class="checkbox" :class="{ checked: slot.enabled }" @click="toggleSlot(index)"></view>
+            </view>
+            <view class="td-name">时段{{ index + 1 }}</view>
+            <view class="td-time">
+              <input 
+                type="text" 
+                v-model="slot.startTime" 
+                class="time-input" 
+                placeholder="00:00"
+              />
+            </view>
+            <view class="td-time">
+              <input 
+                type="text" 
+                v-model="slot.endTime" 
+                class="time-input" 
+                placeholder="00:00"
+              />
+            </view>
+            <view class="td-action">
+              <view class="action-select" @click="showActionPicker(index)">
+                <text :class="['action-text', slot.action === 'discharge' ? 'discharge' : 'charge']">
+                  {{ slot.action === 'charge' ? '充电' : '放电' }}
+                </text>
+                <text class="arrow-down">▼</text>
               </view>
             </view>
-            <view class="slot-content" @click.stop>
-              <view class="time-inputs">
-                <view class="time-item">
-                  <text class="time-label">起始</text>
-                  <input 
-                    type="text" 
-                    v-model="slot.startTime" 
-                    class="time-input" 
-                    placeholder="00:00"
-                    @click.stop
-                  />
-                </view>
-                <view class="time-item">
-                  <text class="time-label">结束</text>
-                  <input 
-                    type="text" 
-                    v-model="slot.endTime" 
-                    class="time-input" 
-                    placeholder="00:00"
-                    @click.stop
-                  />
-                </view>
-              </view>
-              <view class="action-selector">
-                <text class="action-label">充放电</text>
-                <view class="action-options">
-                  <view 
-                    class="action-option" 
-                    :class="{ active: slot.action === 'charge' }"
-                    @click.stop="setSlotAction(index, 'charge')"
-                  >充电</view>
-                  <view 
-                    class="action-option" 
-                    :class="{ active: slot.action === 'discharge' }"
-                    @click.stop="setSlotAction(index, 'discharge')"
-                  >放电</view>
-                </view>
-              </view>
-              <view class="power-input">
-                <text class="power-label">功率 (kW)</text>
-                <input 
-                  type="digit" 
-                  v-model="slot.power" 
-                  class="power-input-field" 
-                  placeholder="请输入功率"
-                  @click.stop
-                />
-              </view>
+            <view class="td-power">
+              <input 
+                type="digit" 
+                v-model="slot.power" 
+                class="power-input" 
+                placeholder="0.00"
+              />
             </view>
           </view>
         </view>
       </view>
       
       <!-- 保存按钮 -->
-      <view class="save-btn" @click.stop="saveConfig">
-        <text>✓</text>
+      <view class="save-section">
+        <button class="save-btn" @click="showConfirmModal">保存配置</button>
       </view>
     </view>
     
     <!-- 星期选择弹窗 -->
-    <view class="week-picker" v-if="showWeekPickerDialog" @click.stop="cancelWeekPicker">
-      <view class="picker-content" @click.stop>
-        <view class="picker-header">
-          <text class="picker-title">星期选择</text>
+    <u-popup :show="showWeekPopup" mode="bottom" @close="closeWeekPicker" :round="16">
+      <view class="week-popup">
+        <view class="popup-header-center">
+          <text class="popup-title">星期选择</text>
         </view>
-        <view class="week-list">
+        <view class="week-options">
           <view 
-            class="week-item" 
+            class="week-option" 
             v-for="(day, index) in weekDays" 
             :key="index"
-            @click.stop
+            @click="toggleWeekDay(index)"
           >
-            <text class="week-name">{{ day.name }}</text>
-            <view class="checkbox-wrap" @click.stop="toggleWeekDay(index)">
-              <view class="week-checkbox" :class="{ checked: day.selected }"></view>
+            <text class="week-day-text">{{ day }}</text>
+            <view class="check-box" :class="{ checked: selectedWeekDays.includes(index) }">
+              <text class="check-mark" v-if="selectedWeekDays.includes(index)">✓</text>
             </view>
           </view>
         </view>
-        <view class="picker-footer">
-          <view class="cancel-btn" @click.stop="cancelWeekPicker">取消</view>
-          <view class="confirm-btn" @click.stop="confirmWeekPicker">确定</view>
+        <view class="popup-footer">
+          <text class="footer-btn cancel" @click="closeWeekPicker">取消</text>
+          <text class="footer-btn confirm" @click="closeWeekPicker">确定</text>
         </view>
       </view>
-    </view>
-
-    <!-- 下发指令确认弹窗 -->
-    <view class="confirm-dialog" v-if="showConfirmDialog" @click.stop>
-      <view class="dialog-content">
-        <text class="dialog-title">是否下发当前指令</text>
-        <view class="dialog-buttons">
-          <view class="dialog-btn cancel" @click.stop="closeConfirmDialog">退出</view>
-          <view class="dialog-btn confirm" @click.stop="confirmSendCommand">下发指令</view>
+    </u-popup>
+    
+    <!-- 动作选择弹窗 -->
+    <u-popup :show="showActionPopup" mode="bottom" @close="closeActionPicker" :round="16">
+      <view class="action-popup">
+        <view class="popup-header">
+          <text class="popup-title">选择动作</text>
+          <text class="popup-close" @click="closeActionPicker">取消</text>
+        </view>
+        <view class="action-options">
+          <view 
+            class="action-option" 
+            :class="{ selected: tempAction === 'charge' }"
+            @click="selectAction('charge')"
+          >
+            <text class="action-option-text charge">充电</text>
+          </view>
+          <view 
+            class="action-option" 
+            :class="{ selected: tempAction === 'discharge' }"
+            @click="selectAction('discharge')"
+          >
+            <text class="action-option-text discharge">放电</text>
+          </view>
+        </view>
+      </view>
+    </u-popup>
+    
+    <!-- 确认下发弹窗 -->
+    <view class="confirm-modal" v-if="showConfirmDialog" @click="closeConfirmModal">
+      <view class="confirm-content" @click.stop>
+        <text class="confirm-title">是否下发当前指令</text>
+        <view class="confirm-buttons">
+          <button class="confirm-btn cancel" @click="closeConfirmModal">退出</button>
+          <button class="confirm-btn submit" @click="confirmSave">下发指令</button>
         </view>
       </view>
     </view>
@@ -191,206 +205,176 @@
 
 <script>
 export default {
-  name: "StrategyConfig",
   data() {
     return {
-      activeTab: 0,
-      activeMode: 'selfUse',
-      showWeekPickerDialog: false,
-      showConfirmDialog: false, // 新增：下发指令弹窗控制
-      weekDays: [
-        { name: '星期一', selected: true },
-        { name: '星期二', selected: true },
-        { name: '星期三', selected: true },
-        { name: '星期四', selected: true },
-        { name: '星期五', selected: true },
-        { name: '星期六', selected: true },
-        { name: '星期日', selected: true }
-      ],
-      timeSlots: [
-        { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '15.00' },
-        { enabled: true, startTime: '20:00', endTime: '23:00', action: 'charge', power: '25.00' },
-        { enabled: true, startTime: '23:00', endTime: '00:00', action: 'charge', power: '100.00' }
-      ]
-    };
+      activeMode: 'peakValley',
+      showWeekPopup: false,
+      showActionPopup: false,
+      showConfirmDialog: false,
+      currentSlotIndex: -1,
+      tempAction: '',
+      weekDays: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+      modeData: {
+        peakValley: {
+          selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
+          timeSlots: [
+            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+          ]
+        },
+        flexControl: {
+          selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
+          timeSlots: [
+            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+          ]
+        },
+        aiStrategy: {
+          selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
+          timeSlots: [
+            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+          ]
+        },
+        selfUse: {
+          selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
+          timeSlots: [
+            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+          ]
+        },
+        dischargeFirst: {
+          selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
+          timeSlots: [
+            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+          ]
+        },
+        peakShaving: {
+          selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
+          timeSlots: [
+            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+          ]
+        },
+        sellFirst: {
+          selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
+          timeSlots: [
+            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+          ]
+        },
+        limitLoad: {
+          selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
+          timeSlots: [
+            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+          ]
+        },
+        zeroExport: {
+          selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
+          timeSlots: [
+            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+          ]
+        }
+      }
+    }
   },
   computed: {
+    selectedWeekDays() {
+      return this.modeData[this.activeMode].selectedWeekDays
+    },
+    timeSlots() {
+      return this.modeData[this.activeMode].timeSlots
+    },
     selectedWeekText() {
-      this.$forceUpdate();
-      const selectedDays = this.weekDays.filter(day => day.selected);
-      
-      if (selectedDays.length === 0) {
-        return '请选择星期';
-      }
-      if (selectedDays.length === 7) {
-        return '周一至周日';
-      }
-      
-      const shortNames = selectedDays.map(day => {
-        return day.name.replace('星期', '周');
-      });
-      return shortNames.join('、');
+      const days = this.modeData[this.activeMode].selectedWeekDays
+      if (days.length === 7) return '每天'
+      if (days.length === 0) return '请选择'
+      return days.map(i => this.weekDays[i]).join('、')
     }
   },
   methods: {
-    switchTab(index) {
-      this.activeTab = index;
-    },
     switchMode(mode) {
-      this.activeMode = mode;
+      this.activeMode = mode
     },
     showWeekPicker() {
-      if (this.showWeekPickerDialog) return;
-      this.showWeekPickerDialog = true;
-      this.$nextTick(() => {
-        uni.pageScrollTo({ scrollTop: 0, duration: 0 });
-      });
+      this.showWeekPopup = true
     },
-    cancelWeekPicker() {
-      this.showWeekPickerDialog = false;
-      uni.pageScrollTo({ scrollTop: 0, duration: 0 });
-    },
-    confirmWeekPicker() {
-      this.weekDays = [...this.weekDays];
-      this.showWeekPickerDialog = false;
-      uni.showToast({
-        title: `已选择${this.selectedWeekText}`,
-        icon: 'none',
-        duration: 1500
-      });
+    closeWeekPicker() {
+      this.showWeekPopup = false
     },
     toggleWeekDay(index) {
-      this.$set(this.weekDays, index, {
-        ...this.weekDays[index],
-        selected: !this.weekDays[index].selected
-      });
+      const pos = this.selectedWeekDays.indexOf(index)
+      if (pos > -1) {
+        this.selectedWeekDays.splice(pos, 1)
+      } else {
+        this.selectedWeekDays.push(index)
+        this.selectedWeekDays.sort()
+      }
     },
     addTimeSlot() {
       this.timeSlots.push({
-        enabled: true,
-        startTime: '00:00',
-        endTime: '00:00',
+        enabled: false,
+        startTime: '',
+        endTime: '',
         action: 'charge',
-        power: '0.00'
-      });
+        power: ''
+      })
     },
     deleteTimeSlot(index) {
-      uni.showModal({
-        title: '提示',
-        content: '确定删除此时段吗？',
-        success: (res) => {
-          if (res.confirm) {
-            this.timeSlots.splice(index, 1);
-          }
-        }
-      });
+      this.timeSlots.splice(index, 1)
     },
     toggleSlot(index) {
-      this.$set(this.timeSlots, index, {
-        ...this.timeSlots[index],
-        enabled: !this.timeSlots[index].enabled
-      });
+      this.timeSlots[index].enabled = !this.timeSlots[index].enabled
     },
-    setSlotAction(index, action) {
-      this.$set(this.timeSlots, index, {
-        ...this.timeSlots[index],
-        action: action
-      });
+    showActionPicker(index) {
+      this.currentSlotIndex = index
+      this.tempAction = this.timeSlots[index].action
+      this.showActionPopup = true
     },
-    // 修改：保存配置先验证数据，再弹出下发确认弹窗
-    saveConfig() {
-      // 第一步：数据验证
-      for (let i = 0; i < this.timeSlots.length; i++) {
-        const slot = this.timeSlots[i];
-        if (!slot.startTime || slot.startTime === '00:00' && !slot.endTime) {
-          uni.showToast({ title: `时段${i+1}：请填写完整时间`, icon: 'none' });
-          return;
-        }
-        if (!slot.power || Number(slot.power) <= 0) {
-          uni.showToast({ title: `时段${i+1}：请输入有效功率`, icon: 'none' });
-          return;
-        }
+    closeActionPicker() {
+      this.showActionPopup = false
+      this.currentSlotIndex = -1
+    },
+    selectAction(action) {
+      if (this.currentSlotIndex > -1) {
+        this.timeSlots[this.currentSlotIndex].action = action
       }
-
-      // 第二步：验证通过，显示下发确认弹窗
-      this.showConfirmDialog = true;
+      this.closeActionPicker()
     },
-    // 新增：关闭下发确认弹窗
-    closeConfirmDialog() {
-      this.showConfirmDialog = false;
+    showConfirmModal() {
+      this.showConfirmDialog = true
     },
-    // 新增：确认下发指令
-    confirmSendCommand() {
-      // 1. 关闭弹窗
-      this.showConfirmDialog = false;
-      
-      // 2. 组装配置数据
-      const config = {
-        strategy: this.activeTab,
-        mode: this.activeMode,
-        weeks: this.weekDays,
-        timeSlots: this.timeSlots
-      };
-      
-      // 3. 模拟下发指令（实际项目中替换为真实接口调用）
-      uni.showLoading({ title: '下发中...' });
-      setTimeout(() => {
-        uni.hideLoading();
-        uni.showToast({ 
-          title: '指令下发成功', 
-          icon: 'success',
-          duration: 2000
-        });
-        console.log('下发的配置：', config);
-      }, 1000);
+    closeConfirmModal() {
+      this.showConfirmDialog = false
     },
-    refresh() {
-      uni.showLoading({ title: '刷新中...' });
-      setTimeout(() => {
-        uni.hideLoading();
-        uni.showToast({ title: '刷新成功', icon: 'success' });
-      }, 800);
+    confirmSave() {
+      this.showConfirmDialog = false
+      uni.showToast({ title: '保存成功', icon: 'success' })
     }
   }
-};
+}
 </script>
 
 <style lang="scss" scoped>
 .container {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #EFF4FB;
+  background-color: #f5f7fa;
 }
 
 .content {
-  padding: 30rpx;
-  flex: 1;
-}
-
-/* 策略标签 */
-.strategy-tabs {
-  display: flex;
-  background-color: #fff;
-  border-radius: 16rpx;
-  padding: 16rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
-}
-
-.tab-item {
-  flex: 1;
-  padding: 24rpx 16rpx;
-  text-align: center;
-  font-size: 28rpx;
-  color: #666;
-  border-radius: 12rpx;
-  transition: all 0.2s;
-}
-
-.tab-item.active {
-  background-color: #1890ff;
-  color: #fff;
+  padding: 20rpx;
 }
 
 /* 模式选择 */
@@ -398,14 +382,17 @@ export default {
   background-color: #fff;
   border-radius: 16rpx;
   padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  margin-bottom: 20rpx;
 }
 
 .mode-buttons {
   display: flex;
   gap: 20rpx;
   margin-bottom: 20rpx;
+}
+
+.mode-buttons:last-child {
+  margin-bottom: 0;
 }
 
 .mode-btn {
@@ -429,26 +416,22 @@ export default {
   background-color: #fff;
   border-radius: 16rpx;
   padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  margin-bottom: 20rpx;
 }
 
 .section-title {
-  font-size: 32rpx;
-  font-weight: bold;
+  font-size: 30rpx;
+  font-weight: 500;
   color: #333;
-  margin-bottom: 30rpx;
-  display: block;
 }
 
 .week-selector {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24rpx;
-  background-color: #f9fafc;
-  border-radius: 12rpx;
-  touch-action: manipulation;
+  padding: 24rpx 0;
+  margin-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
 }
 
 .week-text {
@@ -457,8 +440,19 @@ export default {
 }
 
 .arrow-icon {
-  font-size: 32rpx;
-  color: #999;
+  width: 32rpx;
+  height: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arrow-right {
+  width: 12rpx;
+  height: 12rpx;
+  border-top: 2rpx solid #999;
+  border-right: 2rpx solid #999;
+  transform: rotate(45deg);
 }
 
 /* 时间设置 */
@@ -466,55 +460,73 @@ export default {
   background-color: #fff;
   border-radius: 16rpx;
   padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  margin-bottom: 20rpx;
 }
 
-.add-time-btn {
-  background-color: #f0f7ff;
-  border-radius: 12rpx;
-  padding: 24rpx;
-  text-align: center;
-  font-size: 28rpx;
-  color: #1890ff;
-  margin-bottom: 30rpx;
-  border: 1px dashed #1890ff;
-}
-
-.time-slots {
-  margin-top: 20rpx;
-}
-
-.time-slot {
-  border: 1px solid #e5e5e5;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 24rpx;
-  box-sizing: border-box;
-}
-
-.slot-header {
+.time-section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24rpx;
+  margin-bottom: 20rpx;
 }
 
-.slot-title {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #333;
+.add-time-link {
+  font-size: 28rpx;
+  color: #1890ff;
 }
 
-.slot-operate {
+/* 表格头部 */
+.time-table-header {
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+  font-size: 26rpx;
+  color: #999;
 }
 
-.checkbox-wrap {
-  width: 40rpx;
-  height: 40rpx;
+.th-checkbox {
+  width: 60rpx;
+}
+
+.th-name {
+  width: 100rpx;
+  text-align: center;
+}
+
+.th-time {
+  flex: 1;
+  text-align: center;
+}
+
+.th-action {
+  width: 120rpx;
+  text-align: center;
+}
+
+.th-power {
+  width: 140rpx;
+  text-align: center;
+}
+
+/* 表格内容 */
+.time-table-body {
+  margin-top: 10rpx;
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.time-row:last-child {
+  border-bottom: none;
+}
+
+.td-checkbox {
+  width: 60rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -543,220 +555,227 @@ export default {
   font-weight: bold;
 }
 
-.del-btn {
-  font-size: 24rpx;
-  color: #ff4d4f;
+.td-name {
+  width: 100rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #333;
 }
 
-.time-inputs {
-  display: flex;
-  gap: 30rpx;
-  margin-bottom: 24rpx;
-}
-
-.time-item {
+.td-time {
   flex: 1;
-}
-
-.time-label {
-  font-size: 26rpx;
-  color: #666;
-  margin-bottom: 12rpx;
-  display: block;
+  padding: 0 10rpx;
 }
 
 .time-input {
   width: 100%;
-  height: 80rpx;
-  line-height: 80rpx;
-  padding: 0 20rpx;
-  border: 1px solid #e5e5e5;
+  height: 64rpx;
+  line-height: 64rpx;
+  text-align: center;
+  background-color: #f5f7fa;
   border-radius: 8rpx;
   font-size: 28rpx;
-  box-sizing: border-box;
-  pointer-events: auto;
-  touch-action: manipulation;
-  background-color: #fff;
-}
-
-.action-selector {
-  margin-bottom: 24rpx;
-}
-
-.action-label {
-  font-size: 26rpx;
-  color: #666;
-  margin-bottom: 12rpx;
-  display: block;
-}
-
-.action-options {
-  display: flex;
-  gap: 20rpx;
-}
-
-.action-option {
-  flex: 1;
-  padding: 20rpx;
-  text-align: center;
-  border: 1px solid #e5e5e5;
-  border-radius: 8rpx;
-  font-size: 26rpx;
-  color: #666;
-  touch-action: manipulation;
-}
-
-.action-option.active {
-  background-color: #1890ff;
-  color: #fff;
-  border-color: #1890ff;
-}
-
-.power-input {
-  margin-top: 12rpx;
-}
-
-.power-label {
-  font-size: 26rpx;
-  color: #666;
-  margin-bottom: 12rpx;
-  display: block;
-}
-
-.power-input-field {
-  width: 100%;
-  height: 80rpx;
-  line-height: 80rpx;
-  padding: 0 20rpx;
-  border: 1px solid #e5e5e5;
-  border-radius: 8rpx;
-  font-size: 28rpx;
-  box-sizing: border-box;
-  pointer-events: auto;
-  touch-action: manipulation;
-  background-color: #fff;
-}
-
-/* 悬浮保存按钮 */
-.save-btn {
-  position: fixed;
-  bottom: 40rpx;
-  right: 40rpx;
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 50%;
-  background-color: #1890ff;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 44rpx;
-  box-shadow: 0 6rpx 20rpx rgba(24, 144, 255, 0.4);
-  z-index: 10;
-}
-
-/* 星期弹窗 */
-.week-picker {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: flex-end;
-  z-index: 9999;
-  overflow: hidden;
-}
-
-.picker-content {
-  background-color: #fff;
-  border-top-left-radius: 30rpx;
-  border-top-right-radius: 30rpx;
-  width: 100%;
-  padding: 40rpx 30rpx;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.picker-header {
-  text-align: center;
-  padding: 20rpx 0 30rpx;
-  border-bottom: 1rpx solid #f0f0f0;
-}
-
-.picker-title {
-  font-size: 34rpx;
-  font-weight: bold;
   color: #333;
 }
 
-.week-list {
-  padding: 20rpx 0;
+.td-action {
+  width: 120rpx;
+  display: flex;
+  justify-content: center;
 }
 
-.week-item {
+.action-select {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
+  background-color: #f5f7fa;
+  border-radius: 8rpx;
+}
+
+.action-text {
+  font-size: 28rpx;
+}
+
+.action-text.charge {
+  color: #1890ff;
+}
+
+.action-text.discharge {
+  color: #52c41a;
+}
+
+.arrow-down {
+  font-size: 20rpx;
+  color: #999;
+}
+
+.td-power {
+  width: 140rpx;
+  padding: 0 10rpx;
+}
+
+.power-input {
+  width: 100%;
+  height: 64rpx;
+  line-height: 64rpx;
+  text-align: center;
+  background-color: #f5f7fa;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+/* 保存按钮 */
+.save-section {
+  padding: 40rpx 20rpx;
+}
+
+.save-btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background-color: #1890ff;
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 44rpx;
+  border: none;
+}
+
+/* 弹窗样式 */
+.week-popup, .action-popup {
+  background-color: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  // padding-bottom: constant(safe-area-inset-bottom);
+  // padding-bottom: env(safe-area-inset-bottom);
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.popup-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.popup-close {
+  font-size: 28rpx;
+  color: #1890ff;
+}
+
+/* 居中标题头部 */
+.popup-header-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.week-options {
+  padding: 20rpx 30rpx;
+}
+
+.week-option {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 30rpx 0;
-  border-bottom: 1rpx solid #f5f7fa;
+  border-bottom: 1rpx solid #f5f5f5;
 }
 
-.week-name {
+.week-option:last-child {
+  border-bottom: none;
+}
+
+.week-day-text {
   font-size: 30rpx;
   color: #333;
 }
 
-.week-checkbox {
-  width: 36rpx;
-  height: 36rpx;
-  border: 2rpx solid #dcdfe6;
+/* 方框勾选样式 */
+.check-box {
+  width: 40rpx;
+  height: 40rpx;
+  border: 2rpx solid #d9d9d9;
   border-radius: 6rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: #fff;
 }
 
-.week-checkbox.checked {
+.check-box.checked {
   background-color: #1890ff;
   border-color: #1890ff;
 }
 
-.week-checkbox.checked::after {
-  content: '✓';
+.check-mark {
   color: #fff;
   font-size: 24rpx;
+  font-weight: bold;
 }
 
-.picker-footer {
+/* 底部按钮 */
+.popup-footer {
   display: flex;
-  gap: 30rpx;
-  margin-top: 40rpx;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 40rpx 40rpx;
+  border-top: 1rpx solid #f0f0f0;
 }
 
-.cancel-btn {
-  flex: 1;
-  padding: 24rpx;
-  text-align: center;
-  border: 1rpx solid #e5e5e5;
-  border-radius: 12rpx;
+.footer-btn {
   font-size: 30rpx;
-  color: #666;
+  padding: 20rpx 40rpx;
 }
 
-.confirm-btn {
-  flex: 1;
-  padding: 24rpx;
+.footer-btn.cancel {
+  color: #999;
+}
+
+.footer-btn.confirm {
+  color: #1890ff;
+}
+
+.action-options {
+  padding: 20rpx 30rpx;
+}
+
+.action-option {
+  padding: 30rpx;
   text-align: center;
-  background-color: #1890ff;
-  border-radius: 12rpx;
-  font-size: 30rpx;
-  color: #fff;
+  border-bottom: 1rpx solid #f5f5f5;
 }
 
-/* 新增：下发指令确认弹窗样式（匹配截图） */
-.confirm-dialog {
+.action-option:last-child {
+  border-bottom: none;
+}
+
+.action-option.selected {
+  background-color: #f0f7ff;
+}
+
+.action-option-text {
+  font-size: 30rpx;
+}
+
+.action-option-text.charge {
+  color: #1890ff;
+}
+
+.action-option-text.discharge {
+  color: #52c41a;
+}
+
+/* 确认弹窗 */
+.confirm-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -766,44 +785,43 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 99999;
+  z-index: 9999;
 }
 
-.dialog-content {
-  width: 600rpx;
+.confirm-content {
+  width: 560rpx;
   background-color: #fff;
   border-radius: 16rpx;
-  padding: 60rpx 40rpx;
+  padding: 40rpx;
   text-align: center;
 }
 
-.dialog-title {
+.confirm-title {
   font-size: 32rpx;
   color: #333;
-  margin-bottom: 60rpx;
+  margin-bottom: 40rpx;
   display: block;
 }
 
-.dialog-buttons {
+.confirm-buttons {
   display: flex;
-  gap: 40rpx;
-  justify-content: center;
+  gap: 20rpx;
 }
 
-.dialog-btn {
-  width: 200rpx;
-  padding: 20rpx 0;
-  border-radius: 8rpx;
+.confirm-btn {
+  flex: 1;
+  height: 72rpx;
+  line-height: 72rpx;
   font-size: 28rpx;
-}
-
-.dialog-btn.cancel {
-  border: 1px solid #e5e5e5;
+  border-radius: 8rpx;
+  border: 1rpx solid #d9d9d9;
+  background-color: #fff;
   color: #666;
 }
 
-.dialog-btn.confirm {
-  background-color: #1890ff;
-  color: #fff;
+.confirm-btn.submit {
+  background-color: #fff;
+  color: #1890ff;
+  border-color: #1890ff;
 }
 </style>
