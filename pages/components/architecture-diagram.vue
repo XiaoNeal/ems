@@ -203,7 +203,7 @@
           <text class="modal-text">请确认您是专业人士，已知悉相关影响和责任，并取得授权。</text>
         </view>
         <view class="modal-footer">
-          <button class="modal-cancel" @click="closeModal">退出</button>
+          <button class="modal-cancel" @click="closeModal">取消</button>
           <button class="modal-confirm" @click="confirmStart">确认</button>
         </view>
       </view>
@@ -735,7 +735,7 @@ export default {
 }
 
 .card-section {
-  margin: 0;
+  margin: 20rpx;
 }
 
 .card-row {

@@ -87,6 +87,7 @@
           <view class="th-time">结束</view>
           <view class="th-action">动作</view>
           <view class="th-power">功率(kW)</view>
+          <view class="th-delete">操作</view>
         </view>
         
         <!-- 时段列表 -->
@@ -127,6 +128,9 @@
                 class="power-input" 
                 placeholder="0.00"
               />
+            </view>
+            <view class="td-delete">
+              <view class="delete-btn" @click="deleteTimeSlot(index)">删除</view>
             </view>
           </view>
         </view>
@@ -490,22 +494,27 @@ export default {
 }
 
 .th-name {
-  width: 100rpx;
+  width: 80rpx;
   text-align: center;
 }
 
 .th-time {
-  flex: 1;
-  text-align: center;
-}
-
-.th-action {
   width: 120rpx;
   text-align: center;
 }
 
+.th-action {
+  width: 100rpx;
+  text-align: center;
+}
+
 .th-power {
-  width: 140rpx;
+  width: 100rpx;
+  text-align: center;
+}
+
+.th-delete {
+  width: 80rpx;
   text-align: center;
 }
 
@@ -556,15 +565,15 @@ export default {
 }
 
 .td-name {
-  width: 100rpx;
+  width: 80rpx;
   text-align: center;
   font-size: 28rpx;
   color: #333;
 }
 
 .td-time {
-  flex: 1;
-  padding: 0 10rpx;
+  width: 120rpx;
+  padding: 0 5rpx;
 }
 
 .time-input {
@@ -579,7 +588,7 @@ export default {
 }
 
 .td-action {
-  width: 120rpx;
+  width: 100rpx;
   display: flex;
   justify-content: center;
 }
@@ -611,8 +620,8 @@ export default {
 }
 
 .td-power {
-  width: 140rpx;
-  padding: 0 10rpx;
+  width: 100rpx;
+  padding: 0 5rpx;
 }
 
 .power-input {
@@ -624,6 +633,20 @@ export default {
   border-radius: 8rpx;
   font-size: 28rpx;
   color: #333;
+}
+
+.td-delete {
+  width: 100rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.delete-btn {
+  padding: 8rpx 16rpx;
+  font-size: 26rpx;
+  color: #ff4d4f;
+  background-color: #fff2f0;
+  border-radius: 8rpx;
 }
 
 /* 保存按钮 */

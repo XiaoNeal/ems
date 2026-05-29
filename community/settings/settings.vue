@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <view class="container">
     <u-navbar title="设置参数" :autoBack="true" :placeholder="true" :statusBar="true">
     </u-navbar>
@@ -13,906 +13,222 @@
       </view>
     </view>
 
+
+
     <!-- 全局操作按钮 -->
     <view class="global-actions" :class="{ editing: isEditing }">
+      <text class="page-title">参数设置</text>
       <view v-if="!isEditing" class="edit-btn primary" @click="handleEditConfig">
-        <uni-icons type="compose" size="18" color="#fff"></uni-icons>
         <text class="edit-text">修改配置</text>
       </view>
       <view v-else class="action-btns">
-        <view class="edit-btn cancel" @click="cancelEdit">
-          <uni-icons type="close" size="18" color="#666"></uni-icons>
-          <text class="edit-text">取消</text>
-        </view>
-        <view class="edit-btn confirm" @click="handleEditConfig">
-          <uni-icons type="checkmark" size="18" color="#fff"></uni-icons>
-          <text class="edit-text">保存</text>
+        <view class="edit-btn close" @click="closeEdit">
+          <text class="edit-text">关闭编辑</text>
         </view>
       </view>
     </view>
 
     <!-- 网侧PCS -->
     <view v-if="activeTab === 0" class="tab-content">
-      <view class="control-section" :class="{ editing: isEditing }">
-        <text class="section-title">本地/远程设置</text>
-        <view class="control-buttons">
-          <view class="control-btn" :class="[controlMode === 'local' ? 'active' : '', { disabled: !isEditing }]"
-            @click="isEditing && setControlMode('local')">本地
-          </view>
-          <view class="control-btn" :class="[controlMode === 'remote' ? 'active' : '', { disabled: !isEditing }]"
-            @click="isEditing && setControlMode('remote')">
-            远程</view>
-        </view>
-      </view>
-
-      <view class="control-section" :class="{ editing: isEditing }">
-        <text class="section-title">并网网设置</text>
-        <view class="control-buttons">
-          <view class="control-btn" :class="[gridMode === 'grid' ? 'active' : '', { disabled: !isEditing }]"
-            @click="isEditing && setGridMode('grid')">并网</view>
-          <view class="control-btn" :class="[gridMode === 'offGrid' ? 'active' : '', { disabled: !isEditing }]"
-            @click="isEditing && setGridMode('offGrid')">离网
-          </view>
-        </view>
-      </view>
-
-      <view class="control-section" :class="{ editing: isEditing }">
-        <text class="section-title">故障复位</text>
-        <view class="action-buttons">
-          <view class="action-btn" :class="{ disabled: !isEditing }" @click="isEditing && resetSystem">复位</view>
-        </view>
-      </view>
-
-      <view class="control-section" :class="{ editing: isEditing }">
-        <text class="section-title">设备启动</text>
-        <view class="action-buttons">
-          <view class="action-btn" :class="{ disabled: !isEditing }" @click="isEditing && startDevice">启动</view>
-        </view>
-      </view>
-
-      <view class="control-section" :class="{ editing: isEditing }">
-        <text class="section-title">设备停机</text>
-        <view class="action-buttons">
-          <view class="action-btn" :class="{ disabled: !isEditing }" @click="isEditing && stopDevice">停机</view>
-        </view>
-      </view>
-
-      <view class="control-section" :class="{ editing: isEditing }">
-        <text class="section-title">运行模式</text>
-        <view class="control-buttons">
-          <view class="control-btn" :class="[runMode === 'constantVoltage' ? 'active' : '', { disabled: !isEditing }]"
-            @click="isEditing && setRunMode('constantVoltage')">恒压</view>
-        </view>
-      </view>
-
-      <view class="control-section" :class="{ editing: isEditing }">
-        <text class="section-title">参数设置</text>
-        <view class="param-item">
-          <text class="param-label">设置模块工作海拔值</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B0 || "--" }}</text><input v-else type="number" v-model="params.pcs.B0" placeholder="请输入" />
-            <text class="param-unit">m</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置模块地址分配方式</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B8 || "--" }}</text><input v-else type="number" v-model="params.pcs.B8" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置离网模式交流侧欠压复位</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B12 || "--" }}</text><input v-else type="number" v-model="params.pcs.B12" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置整流模式直流侧欠压复位</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B16 || "--" }}</text><input v-else type="number" v-model="params.pcs.B16" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置模块工作模式</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B20 || "--" }}</text><input v-else type="number" v-model="params.pcs.B20" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置模块开关机</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B24 || "--" }}</text><input v-else type="number" v-model="params.pcs.B24" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置模块直流侧过压复位</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B28 || "--" }}</text><input v-else type="number" v-model="params.pcs.B28" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置模块短路复位</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B32 || "--" }}</text><input v-else type="number" v-model="params.pcs.B32" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置直流侧电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B36 || "--" }}</text><input v-else type="number" v-model="params.pcs.B36" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置直流侧电流</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B40 || "--" }}</text><input v-else type="number" v-model="params.pcs.B40" placeholder="请输入" />
-            <text class="param-unit">A</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置交流侧总有功功率</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B44 || "--" }}</text><input v-else type="number" v-model="params.pcs.B44" placeholder="请输入" />
-            <text class="param-unit">kW</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置交流侧总无功功率</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B48 || "--" }}</text><input v-else type="number" v-model="params.pcs.B48" placeholder="请输入" />
-            <text class="param-unit">kVar</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置交流侧功率因素PF</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B52 || "--" }}</text><input v-else type="number" v-model="params.pcs.B52" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置交流侧无功功率类型</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B56 || "--" }}</text><input v-else type="number" v-model="params.pcs.B56" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置交流相电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B60 || "--" }}</text><input v-else type="number" v-model="params.pcs.B60" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置交流频率</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B62 || "--" }}</text><input v-else type="number" v-model="params.pcs.B62" placeholder="请输入" />
-            <text class="param-unit">Hz</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置是否错相</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B64 || "--" }}</text><input v-else type="number" v-model="params.pcs.B64" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置直流欠压保护电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B68 || "--" }}</text><input v-else type="number" v-model="params.pcs.B68" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置直流过压保护电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B72 || "--" }}</text><input v-else type="number" v-model="params.pcs.B72" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置一级交流欠压保护线电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B76 || "--" }}</text><input v-else type="number" v-model="params.pcs.B76" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置一级交流欠压保护时间</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B78 || "--" }}</text><input v-else type="number" v-model="params.pcs.B78" placeholder="请输入" />
-            <text class="param-unit">s</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置一级交流过压保护线电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B80 || "--" }}</text><input v-else type="number" v-model="params.pcs.B80" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置一级交流过压保护时间</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B82 || "--" }}</text><input v-else type="number" v-model="params.pcs.B82" placeholder="请输入" />
-            <text class="param-unit">s</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置一级交流欠频保护频率</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B84 || "--" }}</text><input v-else type="number" v-model="params.pcs.B84" placeholder="请输入" />
-            <text class="param-unit">Hz</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置一级交流欠频保护时间</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B86 || "--" }}</text><input v-else type="number" v-model="params.pcs.B86" placeholder="请输入" />
-            <text class="param-unit">s</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置一级交流过频保护频率</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B88 || "--" }}</text><input v-else type="number" v-model="params.pcs.B88" placeholder="请输入" />
-            <text class="param-unit">Hz</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置一级交流过频保护时间</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B90 || "--" }}</text><input v-else type="number" v-model="params.pcs.B90" placeholder="请输入" />
-            <text class="param-unit">s</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置二级交流过频保护频率</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B96 || "--" }}</text><input v-else type="number" v-model="params.pcs.B96" placeholder="请输入" />
-            <text class="param-unit">Hz</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置二级交流过频保护时间</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B98 || "--" }}</text><input v-else type="number" v-model="params.pcs.B98" placeholder="请输入" />
-            <text class="param-unit">s</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置是否过载输出</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B100 || "--" }}</text><input v-else type="number" v-model="params.pcs.B100" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置二级交流欠压保护线电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B104 || "--" }}</text><input v-else type="number" v-model="params.pcs.B104" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置二级交流欠压保护线时间</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B106 || "--" }}</text><input v-else type="number" v-model="params.pcs.B106" placeholder="请输入" />
-            <text class="param-unit">s</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置二级交流过压保护线电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B108 || "--" }}</text><input v-else type="number" v-model="params.pcs.B108" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置二级交流过压保护线时间</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B110 || "--" }}</text><input v-else type="number" v-model="params.pcs.B110" placeholder="请输入" />
-            <text class="param-unit">s</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">设置是否使能输入电压环</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pcs.B112 || "--" }}</text><input v-else type="number" v-model="params.pcs.B112" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-      </view>
-
-      <view class="control-section" :class="{ editing: isEditing }">
-        <text class="section-title">故障复位(BMS)</text>
-        <view class="action-buttons">
-          <view class="action-btn" :class="{ disabled: !isEditing }" @click="isEditing && resetBms">复位</view>
-        </view>
-      </view>
-
-      <view class="control-section" :class="{ editing: isEditing }">
-        <text class="section-title">负载DC复位</text>
-        <view class="action-buttons">
-          <view class="action-btn" :class="{ disabled: !isEditing }" @click="isEditing && resetLoad">复位</view>
-        </view>
-      </view>
+      <PcsSettings :params="params" :editing-param="editingParam" :is-editing="isEditing"
+        @edit="startEdit" @cancel="cancelParamEdit" />
     </view>
 
     <!-- 储能DC/DC -->
     <view v-if="activeTab === 1" class="tab-content">
-      <view class="control-section" :class="{ editing: isEditing }">
-        <text class="section-title">储能DC/DC1</text>
-        <view class="param-item">
-          <text class="param-label">Can波特率设置</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B0 || "--" }}</text><input v-else type="number" v-model="params.storage.B0" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">认证标准码</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B2 || "--" }}</text><input v-else type="number" v-model="params.storage.B2" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">故障清除</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B4 || "--" }}</text><input v-else type="number" v-model="params.storage.B4" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">运行状态设置</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B6 || "--" }}</text><input v-else type="number" v-model="params.storage.B6" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">系统开关机</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B8 || "--" }}</text><input v-else type="number" v-model="params.storage.B8" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">恢复出厂设置</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B10 || "--" }}</text><input v-else type="number" v-model="params.storage.B10" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">组ID号</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B12 || "--" }}</text><input v-else type="number" v-model="params.storage.B12" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块数量</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B14 || "--" }}</text><input v-else type="number" v-model="params.storage.B14" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池类型</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B16 || "--" }}</text><input v-else type="number" v-model="params.storage.B16" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">直流母线电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B18 || "--" }}</text><input v-else type="number" v-model="params.storage.B18" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">充放电指令</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B20 || "--" }}</text><input v-else type="number" v-model="params.storage.B20" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">充放电功率设定</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B22 || "--" }}</text><input v-else type="number" v-model="params.storage.B22" placeholder="请输入" />
-            <text class="param-unit">kW</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池均充电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B24 || "--" }}</text><input v-else type="number" v-model="params.storage.B24" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">充电电流设置</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B26 || "--" }}</text><input v-else type="number" v-model="params.storage.B26" placeholder="请输入" />
-            <text class="param-unit">A</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池浮充电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B28 || "--" }}</text><input v-else type="number" v-model="params.storage.B28" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">放电电压设置</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B30 || "--" }}</text><input v-else type="number" v-model="params.storage.B30" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">放电电流设置</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B32 || "--" }}</text><input v-else type="number" v-model="params.storage.B32" placeholder="请输入" />
-            <text class="param-unit">A</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池过压关机点</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B34 || "--" }}</text><input v-else type="number" v-model="params.storage.B34" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池低压告警点</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B36 || "--" }}</text><input v-else type="number" v-model="params.storage.B36" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池低压关机点</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B38 || "--" }}</text><input v-else type="number" v-model="params.storage.B38" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池激活功能</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B40 || "--" }}</text><input v-else type="number" v-model="params.storage.B40" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">自动重启功能</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B42 || "--" }}</text><input v-else type="number" v-model="params.storage.B42" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">充电母线电压上限</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B44 || "--" }}</text><input v-else type="number" v-model="params.storage.B44" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">放电母线电压下限</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B46 || "--" }}</text><input v-else type="number" v-model="params.storage.B46" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">告警屏蔽码1</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage.B48 || "--" }}</text><input v-else type="number" v-model="params.storage.B48" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-      </view>
-
-      <view class="control-section" :class="{ editing: isEditing }">
-        <text class="section-title">储能DC/DC2</text>
-        <view class="param-item">
-          <text class="param-label">Can波特率设置</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B0 || "--" }}</text><input v-else type="number" v-model="params.storage2.B0" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">认证标准码</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B2 || "--" }}</text><input v-else type="number" v-model="params.storage2.B2" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">故障清除</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B4 || "--" }}</text><input v-else type="number" v-model="params.storage2.B4" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">运行状态设置</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B6 || "--" }}</text><input v-else type="number" v-model="params.storage2.B6" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">系统开关机</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B8 || "--" }}</text><input v-else type="number" v-model="params.storage2.B8" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">恢复出厂设置</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B10 || "--" }}</text><input v-else type="number" v-model="params.storage2.B10" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">组ID号</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B12 || "--" }}</text><input v-else type="number" v-model="params.storage2.B12" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块数量</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B14 || "--" }}</text><input v-else type="number" v-model="params.storage2.B14" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池类型</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B16 || "--" }}</text><input v-else type="number" v-model="params.storage2.B16" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">直流母线电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B18 || "--" }}</text><input v-else type="number" v-model="params.storage2.B18" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">充放电指令</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B20 || "--" }}</text><input v-else type="number" v-model="params.storage2.B20" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">充放电功率设定</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B22 || "--" }}</text><input v-else type="number" v-model="params.storage2.B22" placeholder="请输入" />
-            <text class="param-unit">kW</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池均充电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B24 || "--" }}</text><input v-else type="number" v-model="params.storage2.B24" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">充电电流设置</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B26 || "--" }}</text><input v-else type="number" v-model="params.storage2.B26" placeholder="请输入" />
-            <text class="param-unit">A</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池浮充电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B28 || "--" }}</text><input v-else type="number" v-model="params.storage2.B28" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">放电电压设置</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B30 || "--" }}</text><input v-else type="number" v-model="params.storage2.B30" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">放电电流设置</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B32 || "--" }}</text><input v-else type="number" v-model="params.storage2.B32" placeholder="请输入" />
-            <text class="param-unit">A</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池过压关机点</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B34 || "--" }}</text><input v-else type="number" v-model="params.storage2.B34" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池低压告警点</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B36 || "--" }}</text><input v-else type="number" v-model="params.storage2.B36" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池低压关机点</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B38 || "--" }}</text><input v-else type="number" v-model="params.storage2.B38" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">电池激活功能</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B40 || "--" }}</text><input v-else type="number" v-model="params.storage2.B40" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">自动重启功能</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B42 || "--" }}</text><input v-else type="number" v-model="params.storage2.B42" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">充电母线电压上限</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B44 || "--" }}</text><input v-else type="number" v-model="params.storage2.B44" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">放电母线电压下限</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B46 || "--" }}</text><input v-else type="number" v-model="params.storage2.B46" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">告警屏蔽码1</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.storage2.B48 || "--" }}</text><input v-else type="number" v-model="params.storage2.B48" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-      </view>
+      <StorageSettings :params="params" :editing-param="editingParam" :is-editing="isEditing"
+        @edit="startEdit" @cancel="cancelParamEdit" />
     </view>
 
     <!-- 光伏DC/DC -->
     <view v-if="activeTab === 2" class="tab-content">
-      <view class="control-section" :class="{ editing: isEditing }">
-        <text class="section-title">光伏DC/DC</text>
-        <view class="param-item">
-          <text class="param-label">模块电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B0 || "--" }}</text><input v-else type="number" v-model="params.pv.B0" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块电流</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B4 || "--" }}</text><input v-else type="number" v-model="params.pv.B4" placeholder="请输入" />
-            <text class="param-unit">A</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块限流点</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B8 || "--" }}</text><input v-else type="number" v-model="params.pv.B8" placeholder="请输入" />
-            <text class="param-unit">A</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块DC板温度</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B12 || "--" }}</text><input v-else type="number" v-model="params.pv.B12" placeholder="请输入" />
-            <text class="param-unit">℃</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块输入相电压（直流输入电压）</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B16 || "--" }}</text><input v-else type="number" v-model="params.pv.B16" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块PFC0电压（正半母线）</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B20 || "--" }}</text><input v-else type="number" v-model="params.pv.B20" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块PFC1电压（负半母线）</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B24 || "--" }}</text><input v-else type="number" v-model="params.pv.B24" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块面板（环境）温度</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B28 || "--" }}</text><input v-else type="number" v-model="params.pv.B28" placeholder="请输入" />
-            <text class="param-unit">℃</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块交流A相电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B32 || "--" }}</text><input v-else type="number" v-model="params.pv.B32" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块交流B相电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B36 || "--" }}</text><input v-else type="number" v-model="params.pv.B36" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块交流C相电压</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B40 || "--" }}</text><input v-else type="number" v-model="params.pv.B40" placeholder="请输入" />
-            <text class="param-unit">V</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块PFC板温度</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B44 || "--" }}</text><input v-else type="number" v-model="params.pv.B44" placeholder="请输入" />
-            <text class="param-unit">℃</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块额定输出功率</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B48 || "--" }}</text><input v-else type="number" v-model="params.pv.B48" placeholder="请输入" />
-            <text class="param-unit">kW</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">模块额定输出电流</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B52 || "--" }}</text><input v-else type="number" v-model="params.pv.B52" placeholder="请输入" />
-            <text class="param-unit">A</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">读取当前告警/状态</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B56 || "--" }}</text><input v-else type="number" v-model="params.pv.B56" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">读取组号和拨码地址</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B60 || "--" }}</text><input v-else type="number" v-model="params.pv.B60" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">读取输入功率</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B64 || "--" }}</text><input v-else type="number" v-model="params.pv.B64" placeholder="请输入" />
-            <text class="param-unit">kW</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">读取当前设定的海拔值</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B68 || "--" }}</text><input v-else type="number" v-model="params.pv.B68" placeholder="请输入" />
-            <text class="param-unit">m</text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">读取当前模块输入工作模式</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B72 || "--" }}</text><input v-else type="number" v-model="params.pv.B72" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">读节点SearialNo号低位（ID号）</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B76 || "--" }}</text><input v-else type="number" v-model="params.pv.B76" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">读节点SearialNo号高位</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B80 || "--" }}</text><input v-else type="number" v-model="params.pv.B80" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">读DCDC版本号</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B84 || "--" }}</text><input v-else type="number" v-model="params.pv.B84" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-        <view class="param-item">
-          <text class="param-label">读PFC版本号</text>
-          <view class="param-input" :class="{ active: isEditing }">
-            <text v-if="!isEditing" class="param-value">{{ params.pv.B88 || "--" }}</text><input v-else type="number" v-model="params.pv.B88" placeholder="请输入" />
-            <text class="param-unit"></text>
-          </view>
-        </view>
-      </view>
+      <PvSettings :params="params" :editing-param="editingParam" @edit="startEdit"
+        @cancel="cancelParamEdit" />
     </view>
 
-
+    <!-- BMS -->
+    <view v-if="activeTab === 3" class="tab-content">
+      <BmsSettings :params="params" :editing-param="editingParam" @edit="startEdit"
+        @cancel="cancelParamEdit" />
+    </view>
   </view>
-</template>
 
+</template>
 <script>
+import PcsSettings from './components/PcsSettings.vue'
+import StorageSettings from './components/StorageSettings.vue'
+import PvSettings from './components/PvSettings.vue'
+import BmsSettings from './components/BmsSettings.vue'
+
 export default {
   name: "SettingParams",
+  components: {
+    PcsSettings,
+    StorageSettings,
+    PvSettings,
+    BmsSettings
+  },
   data() {
     return {
       activeTab: 0,
-      tabs: ['网侧PCS', '储能DC/DC', '光伏DC/DC'],
+      tabs: ['网侧PCS', '储能DC', '光伏DC', 'BMS'],
       isEditing: false,
-      controlMode: 'local',
-      gridMode: 'grid',
-      runMode: 'constantVoltage',
-      storageRunMode: 'offGrid',
-      storageRunMode2: 'offGrid',
-      coolingPower: 'off',
-      coolingMode: 'cool',
+      editingParam: '',
       originalParams: {},
       params: {
         pcs: {
           constantVoltage: '',
           constantCurrent: '',
           gridPower: '',
-          gridVoltage: ''
+          gridVoltage: '',
+          B0: '',
+          B4: '',
+          B8: '',
+          B12: '',
+          B16: '',
+          B20: '',
+          B24: '',
+          B28: '',
+          B32: '',
+          B36: '',
+          B40: '',
+          B44: '',
+          B48: '',
+          B52: '',
+          B56: '',
+          B60: '',
+          B62: '',
+          B64: '',
+          B68: '',
+          B72: '',
+          B76: '',
+          B78: '',
+          B80: '',
+          B82: '',
+          B84: '',
+          B86: '',
+          B88: '',
+          B90: '',
+          B96: '',
+          B98: '',
+          B100: '',
+          B104: '',
+          B106: '',
+          B108: '',
+          B110: '',
+          B112: ''
         },
         storage: {
           busVoltage: '',
           stopCurrent: '',
           busVoltage2: '',
-          stopCurrent2: ''
+          stopCurrent2: '',
+          B0: '',
+          B2: '',
+          B4: '',
+          B6: '',
+          B8: '',
+          B10: '',
+          B12: '',
+          B14: '',
+          B16: '',
+          B18: '',
+          B20: '',
+          B22: '',
+          B24: '',
+          B26: '',
+          B28: '',
+          B30: '',
+          B32: '',
+          B34: '',
+          B36: '',
+          B38: '',
+          B40: '',
+          B42: '',
+          B44: '',
+          B46: '',
+          B48: ''
         },
         cooling: {
           busVoltage: ''
+        },
+        bms: {
+          B0: '',
+          B2: '',
+          B4: '',
+          B6: '',
+          B8: '',
+          B10: '',
+          B12: '',
+          B14: '',
+          B16: '',
+          B18: '',
+          B20: '',
+          B22: '',
+          B24: '',
+          B26: '',
+          B28: '',
+          B30: '',
+          B32: '',
+          B34: '',
+          B36: '',
+          B38: '',
+          B40: '',
+          B42: '',
+          B44: '',
+          B46: '',
+          B48: '',
+          B50: '',
+          B52: '',
+          B54: '',
+          B56: '',
+          B58: '',
+          B60: '',
+          B62: '',
+          B64: '',
+          B66: '',
+          B68: '',
+          B70: '',
+          B72: '',
+          B74: '',
+          B76: '',
+          B78: '',
+          B80: '',
+          B82: '',
+          B84: '',
+          B86: '',
+          B88: '',
+          B90: '',
+          B92: '',
+          B94: '',
+          B96: '',
+          B98: '',
+          B100: '',
+          B102: '',
+          B104: '',
+          B106: '',
+          B108: '',
+          B110: '',
+          B112: '',
+          B114: '',
+          B116: '',
+          B118: '',
+          B120: '',
+          B122: '',
+          B124: '',
+          B126: '',
+          B128: '',
+          B130: '',
+          B132: '',
+          B134: '',
+          B136: '',
+          B138: '',
+          B140: '',
+          B142: '',
+          B144: '',
+          B146: '',
+          B148: '',
+          B150: ''
         }
       }
     }
@@ -926,6 +242,14 @@ export default {
         // 进入编辑模式，保存原始数据
         this.enterEditMode()
       }
+    },
+
+    checkEditMode() {
+      if (!this.isEditing) {
+        uni.showToast({ title: '请先点击修改配置', icon: 'none' })
+        return false
+      }
+      return true
     },
 
     enterEditMode() {
@@ -981,6 +305,17 @@ export default {
       })
     },
 
+    saveEdit() {
+      if (!this.isEditing) return
+      this.saveConfig()
+    },
+
+    closeEdit() {
+      this.isEditing = false
+      // 恢复原始参数
+      Object.assign(this, this.originalParams)
+    },
+
     cancelEdit() {
       if (!this.isEditing) return
 
@@ -998,55 +333,16 @@ export default {
         }
       })
     },
+    startEdit(paramKey) {
+      this.editingParam = paramKey
+    },
+    cancelParamEdit() {
+      this.editingParam = ''
+    },
     switchTab(index) {
       this.activeTab = index
     },
-    setControlMode(mode) {
-      this.controlMode = mode
-    },
-    setGridMode(mode) {
-      this.gridMode = mode
-    },
-    setRunMode(mode) {
-      this.runMode = mode
-    },
-    setStorageRunMode(mode) {
-      this.storageRunMode = mode
-    },
-    setStorageRunMode2(mode) {
-      this.storageRunMode2 = mode
-    },
-    setCoolingPower(power) {
-      this.coolingPower = power
-    },
-    setCoolingMode(mode) {
-      this.coolingMode = mode
-    },
-    resetSystem() {
-      uni.showModal({ title: '系统复位', content: '确定复位系统？', success: (res) => res.confirm && uni.showToast({ title: '复位成功', icon: 'success' }) })
-    },
-    startDevice() {
-      uni.showModal({ title: '设备启动', content: '确定启动设备？', success: (res) => res.confirm && uni.showToast({ title: '启动成功', icon: 'success' }) })
-    },
-    stopDevice() {
-      uni.showModal({ title: '设备停机', content: '确定停机设备？', success: (res) => res.confirm && uni.showToast({ title: '停机成功', icon: 'success' }) })
-    },
-    resetBms() {
-      uni.showModal({ title: 'BMS复位', content: '确定复位BMS？', success: (res) => res.confirm && uni.showToast({ title: 'BMS复位成功', icon: 'success' }) })
-    },
-    resetLoad() {
-      uni.showModal({ title: '负载复位', content: '确定复位负载？', success: (res) => res.confirm && uni.showToast({ title: '负载复位成功', icon: 'success' }) })
-    },
-    resetStorageDc() { uni.showToast({ title: '储能DC/DC复位', icon: 'none' }) },
-    startStorageDc() { uni.showToast({ title: 'BUS侧恒压启动', icon: 'none' }) },
-    startStorage() { uni.showToast({ title: '储能启动', icon: 'none' }) },
-    stopStorage() { uni.showToast({ title: '储能停机', icon: 'none' }) },
-    resetStorage() { uni.showToast({ title: '储能复位', icon: 'none' }) },
-    resetStorageDc2() { uni.showToast({ title: '储能DC/DC2复位', icon: 'none' }) },
-    startStorageDc2() { uni.showToast({ title: 'BUS侧恒压2启动', icon: 'none' }) },
-    startStorage2() { uni.showToast({ title: '储能2启动', icon: 'none' }) },
-    stopStorage2() { uni.showToast({ title: '储能2停机', icon: 'none' }) },
-    resetStorage2() { uni.showToast({ title: '储能2复位', icon: 'none' }) }
+
   }
 }
 </script>
@@ -1054,36 +350,43 @@ export default {
 <style lang="scss" scoped>
 .container {
   min-height: 100vh;
-  background: #F5F7FA;
+  background: linear-gradient(180deg, #EEF2F7 0%, #F5F7FA 100%);
   padding-bottom: 40rpx;
 }
 
 .tab-container {
   background: #fff;
   margin: 24rpx;
-  border-radius: 16rpx;
+  border-radius: 20rpx;
   overflow: hidden;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
 }
 
 .tab-list {
   display: flex;
-  background: #FAFBFC;
+  background: linear-gradient(135deg, #FAFBFC 0%, #F0F2F5 100%);
 }
 
 .tab-item {
   flex: 1;
-  padding: 28rpx 0;
+  padding: 32rpx 0;
   text-align: center;
   font-size: 28rpx;
-  color: #909399;
+  color: #606266;
   position: relative;
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+
+  &:active {
+    transform: scale(0.98);
+    opacity: 0.8;
+  }
 }
 
 .tab-item.active {
   color: #4488FB;
   font-weight: 600;
+  background: #fff;
 }
 
 .tab-item.active::after {
@@ -1092,10 +395,11 @@ export default {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 48rpx;
-  height: 4rpx;
-  background: #4488FB;
-  border-radius: 4rpx;
+  width: 56rpx;
+  height: 6rpx;
+  background: linear-gradient(90deg, #4488FB 0%, #6B9DFF 100%);
+  border-radius: 6rpx;
+  box-shadow: 0 2rpx 8rpx rgba(68, 136, 251, 0.3);
 }
 
 .tab-content {
@@ -1103,9 +407,10 @@ export default {
 }
 
 .global-actions {
-  padding: 0 24rpx 24rpx;
+  padding: 16rpx 24rpx;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
 
   &.editing {
     padding: 16rpx 24rpx;
@@ -1115,6 +420,16 @@ export default {
     box-shadow: none;
     border: none;
   }
+}
+
+.page-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+  background: linear-gradient(135deg, #4488FB 0%, #36B37E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .action-btns {
@@ -1127,64 +442,85 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6rpx;
-  padding: 12rpx 24rpx;
-  border-radius: 8rpx;
-  transition: all 0.3s ease;
+  gap: 8rpx;
+  padding: 16rpx 32rpx;
+  border-radius: 40rpx;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 26rpx;
+  font-weight: 500;
 
   &.primary {
-    background: #4488FB;
+    background: linear-gradient(135deg, #4488FB 0%, #6B9DFF 100%);
+    color: #fff;
+    box-shadow: 0 4rpx 16rpx rgba(68, 136, 251, 0.3);
 
-    .edit-text {
-      color: #fff;
-      font-weight: 500;
+    &:active {
+      transform: scale(0.95);
+      box-shadow: 0 2rpx 8rpx rgba(68, 136, 251, 0.4);
     }
   }
 
   &.cancel {
     background: #fff;
-    border: 2rpx solid #DCDFE6;
+    border: 2rpx solid #E4E7ED;
+    color: #606266;
 
-    .edit-text {
-      color: #666;
+    &:active {
+      background: #F5F7FA;
+      transform: scale(0.95);
     }
   }
 
   &.confirm {
-    background: #4488FB;
+    background: linear-gradient(135deg, #36B37E 0%, #52C41A 100%);
+    color: #fff;
+    box-shadow: 0 4rpx 16rpx rgba(54, 179, 126, 0.3);
 
-    .edit-text {
-      color: #fff;
-      font-weight: 500;
+    &:active {
+      transform: scale(0.95);
+      box-shadow: 0 2rpx 8rpx rgba(54, 179, 126, 0.4);
     }
   }
 
-  .edit-text {
-    font-size: 24rpx;
+  &.close {
+    background: #fff;
+    border: 2rpx solid #4488FB;
+    color: #4488FB;
+
+    &:active {
+      background: rgba(68, 136, 251, 0.1);
+      transform: scale(0.95);
+    }
   }
 }
 
 .control-section {
   background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03);
+  border-radius: 20rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:active {
+    transform: scale(0.995);
+  }
 }
 
 .control-section.editing {
-  border: 2rpx solid #4488FB;
-  box-shadow: 0 4rpx 16rpx rgba(68, 136, 251, 0.12);
+  border: 3rpx solid #4488FB;
+  box-shadow: 0 8rpx 28rpx rgba(68, 136, 251, 0.15);
 }
 
 .section-title {
-  font-size: 28rpx;
-  color: #303133;
+  font-size: 30rpx;
+  color: #1F2937;
   font-weight: 600;
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
   display: block;
-  padding-left: 12rpx;
-  border-left: 4rpx solid #4488FB;
+  padding-left: 16rpx;
+  border-left: 6rpx solid transparent;
+  border-image: linear-gradient(180deg, #4488FB 0%, #6B9DFF 100%) 1;
 }
 
 .control-section.editing .section-title {
@@ -1198,117 +534,458 @@ export default {
 
 .control-buttons {
   display: flex;
-  gap: 16rpx;
+  gap: 20rpx;
+}
+
+.inline-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+}
+
+.inline-section .section-title {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.inline-section .control-buttons,
+.inline-section .action-buttons {
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+
+.inline-section .control-btn {
+  padding: 20rpx 40rpx;
+  flex: none;
+  width: 140rpx;
+}
+
+.inline-section .action-btn {
+  width: auto;
+  padding: 20rpx 56rpx;
 }
 
 .control-btn {
   flex: 1;
-  padding: 20rpx;
+  padding: 24rpx;
   text-align: center;
-  border-radius: 10rpx;
-  font-size: 26rpx;
-  background: #EEF3FA;
-  color: #3055A0;
-  transition: all 0.3s ease;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  background: #F8FAFC;
+  color: #4488FB;
+  border: 2rpx solid #E4E7ED;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 500;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(68, 136, 251, 0.1), transparent);
+    transition: left 0.5s ease;
+  }
+
+  &:active::before {
+    left: 100%;
+  }
 }
 
 .control-btn.active {
-  background: #4488FB;
+  background: linear-gradient(135deg, #4488FB 0%, #6B9DFF 100%);
   color: #fff;
+  border-color: #4488FB;
   font-weight: 600;
+  box-shadow: 0 6rpx 20rpx rgba(68, 136, 251, 0.35);
+
+  &::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  }
 }
 
 .control-btn.disabled {
-  background: #E8ECF0;
-  color: #A0A8B2;
+  background: #F5F7FA;
+  color: #D9D9D9;
+  border-color: #EFEFEF;
+  cursor: not-allowed;
+}
+
+.control-btn.active.disabled {
+  opacity: 0.7;
+  background: linear-gradient(135deg, #4488FB 0%, #6B9DFF 100%);
+  color: #fff;
+  border-color: #4488FB;
+  box-shadow: 0 6rpx 20rpx rgba(68, 136, 251, 0.35);
 }
 
 .action-buttons {
-  margin-bottom: 16rpx;
+  margin-bottom: 20rpx;
 }
 
 .action-btn {
   width: 100%;
-  padding: 20rpx;
+  padding: 24rpx;
   text-align: center;
-  border-radius: 10rpx;
-  font-size: 26rpx;
-  background: #EEF3FA;
-  color: #3055A0;
-  transition: all 0.3s ease;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  background: linear-gradient(135deg, #4488FB 0%, #6B9DFF 100%);
+  color: #fff;
+  border: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 500;
+  box-shadow: 0 6rpx 20rpx rgba(68, 136, 251, 0.3);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 3rpx 10rpx rgba(68, 136, 251, 0.4);
+  }
+
+  &:active::before {
+    left: 100%;
+  }
 }
 
 .action-btn.disabled {
-  background: #E8ECF0;
-  color: #A0A8B2;
+  background: #F5F7FA;
+  color: #C0C4CC;
+  border-color: #E4E7ED;
+  box-shadow: none;
+
+  &::before {
+    display: none;
+  }
+}
+
+.param-section {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
 }
 
 .param-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 20rpx 0;
-  border-bottom: 1rpx solid #F0F0F0;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #F0F2F5;
+  transition: all 0.25s ease;
 
   &:last-child {
     border-bottom: none;
   }
+
+  &.inline-param {
+    justify-content: space-between;
+  }
+
+  &.inline-param .control-buttons {
+    flex-shrink: 0;
+  }
+
+  &.inline-param .control-btn {
+    padding: 16rpx 32rpx;
+    flex: none;
+    min-width: 140rpx;
+  }
+
+  &.vertical {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16rpx;
+  }
+
+  &.vertical .control-buttons {
+    width: 100%;
+  }
+
+  .control-buttons.three-btn {
+    gap: 12rpx;
+  }
+
+  .control-buttons.three-btn .control-btn {
+    padding: 16rpx 24rpx;
+    min-width: 120rpx;
+    font-size: 26rpx;
+  }
+
+  .control-buttons.four-btn {
+    gap: 12rpx;
+    justify-content: space-between;
+  }
+
+  .control-buttons.four-btn .control-btn {
+    padding: 20rpx 12rpx;
+    flex: 1;
+    width: 0;
+    min-width: 140rpx;
+    max-width: 160rpx;
+    height: 72rpx;
+    font-size: 26rpx;
+    border-radius: 12rpx;
+    background: linear-gradient(145deg, #FFFFFF, #F5F7FA);
+    border: 2rpx solid #E8ECF0;
+    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &.active {
+      background: linear-gradient(135deg, #4488FB 0%, #6B9DFF 100%);
+      color: #fff;
+      border-color: #4488FB;
+      box-shadow: 0 8rpx 24rpx rgba(68, 136, 251, 0.35);
+      transform: translateY(-2rpx);
+    }
+
+    &.disabled {
+      background: #F8FAFC;
+      color: #C0C4CC;
+      border-color: #E8ECF0;
+      box-shadow: none;
+    }
+
+    &.active.disabled {
+      background: linear-gradient(135deg, #4488FB 0%, #6B9DFF 100%);
+      color: #fff;
+      border-color: #4488FB;
+      box-shadow: 0 8rpx 24rpx rgba(68, 136, 251, 0.35);
+      transform: translateY(-2rpx);
+    }
+  }
+
+  .param-label-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+  }
+
+  .param-tip {
+    font-size: 24rpx;
+    color: #9CA3AF;
+    padding: 6rpx 16rpx;
+    background: #F3F4F6;
+    border-radius: 20rpx;
+    min-width: fit-content
+  }
+
+  .baud-rate-section {
+    padding: 24rpx;
+    background: linear-gradient(145deg, #FFFFFF, #FAFBFC);
+    border-radius: 20rpx;
+    border: 2rpx solid #F0F2F5;
+    margin-bottom: 24rpx;
+  }
+
+  .baud-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4rpx;
+
+    .btn-value {
+      font-size: 28rpx;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+
+    .btn-unit {
+      font-size: 20rpx;
+      opacity: 0.7;
+    }
+  }
+
+  &:active {
+    background: rgba(68, 136, 251, 0.03);
+    border-radius: 12rpx;
+    margin: 0 -8rpx;
+    padding-left: 8rpx;
+    padding-right: 8rpx;
+  }
 }
 
 .param-label {
-  font-size: 26rpx;
-  color: #3D5A80;
-  flex-shrink: 0;
+  font-size: 28rpx;
+  color: #374151;
+  flex-shrink: 1;
   font-weight: 500;
-  margin-right: 20px;
+  flex: 0 1 300rpx;
+  max-width: 300rpx;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.param-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  flex-shrink: 0;
 }
 
 .param-input {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  min-height: 60rpx;
-  padding: 0;
-  background: transparent;
+  min-height: 72rpx;
+  padding: 0 20rpx;
+  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+  border-radius: 12rpx;
+  min-width: 200rpx;
+  border: 2rpx solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   input {
     width: 100%;
-    height: 60rpx;
-    font-size: 26rpx;
-    color: #303133;
+    height: 72rpx;
+    font-size: 28rpx;
+    color: #1F2937;
     text-align: right;
     background: transparent;
     border: none;
+    font-weight: 500;
+  }
+
+  &:active {
+    background: #fff;
+    border-color: #E4E7ED;
   }
 }
 
-.param-input.active {
-  padding: 0 16rpx;
+.param-input.editing {
   background: #fff;
-  border: 2rpx solid #4488FB;
-  border-radius: 8rpx;
-  box-shadow: 0 2rpx 8rpx rgba(68, 136, 251, 0.15);
+  border: 3rpx solid #4488FB;
+  border-radius: 12rpx;
+  box-shadow: 0 6rpx 20rpx rgba(68, 136, 251, 0.18);
+  min-width: 100rpx;
+  width: 160rpx;
 
   input {
-    text-align: left;
-    color: #303133;
+    text-align: right;
+    color: #1F2937;
+    font-weight: 600;
+    width: 100%;
+    height: 100%;
+    font-size: 28rpx;
   }
+}
+
+.param-value {
+  font-size: 28rpx;
+  color: #1F2937;
+  font-weight: 500;
+  text-align: right;
 }
 
 .param-unit {
-  font-size: 24rpx;
-  color: #909399;
-  margin-left: 8rpx;
+  font-size: 26rpx;
+  color: #9CA3AF;
   flex-shrink: 0;
+  min-width: 48rpx;
+  text-align: left;
+}
+
+.param-actions {
+  display: flex;
+  gap: 12rpx;
+  margin-left: 20rpx;
+  flex-shrink: 0;
+}
+
+.param-btn {
+  padding: 12rpx 24rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.edit {
+    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+    color: #4488FB;
+    border: 2rpx solid #E4E7ED;
+
+    &:active {
+      background: #4488FB;
+      color: #fff;
+      border-color: #4488FB;
+      transform: scale(0.95);
+    }
+  }
+
+  &.confirm {
+    background: linear-gradient(135deg, #36B37E 0%, #52C41A 100%);
+    color: #fff;
+    box-shadow: 0 4rpx 12rpx rgba(54, 179, 126, 0.3);
+
+    &:active {
+      transform: scale(0.95);
+      box-shadow: 0 2rpx 6rpx rgba(54, 179, 126, 0.4);
+    }
+  }
+
+  &.cancel {
+    background: #fff;
+    color: #6B7280;
+    border: 2rpx solid #E4E7ED;
+
+    &:active {
+      background: #F5F7FA;
+      transform: scale(0.95);
+    }
+  }
 }
 
 .empty-tip {
   font-size: 28rpx;
-  color: #909399;
+  color: #9CA3AF;
   text-align: center;
-  padding: 60rpx 0;
+  padding: 80rpx 0;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab-content {
+  animation: slideUp 0.4s ease-out;
 }
 </style>

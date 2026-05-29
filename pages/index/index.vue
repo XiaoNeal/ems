@@ -294,12 +294,13 @@ page {
   background-color: #EFF4FB;
   overflow: hidden;
   position: relative;
+  /* margin-top: 20px; */
 }
 
 /* 头部 */
 .header {
   position: fixed;
-  top: 0;
+  top: 0px;
   left: 0;
   right: 0;
   z-index: 100;
@@ -307,7 +308,7 @@ page {
 }
 
 .header-safe-area {
-  height: var(--status-bar-height);
+  height: calc(var(--status-bar-height) + 20px);
   background-color: #fff;
 }
 
@@ -316,19 +317,8 @@ page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 15px;
+  padding: 0 44px 0 15px;
   box-sizing: border-box;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-.back-btn {
-  padding: 8px;
-  margin-left: -8px;
 }
 
 .header-icon {
@@ -348,7 +338,7 @@ page {
   position: fixed;
   left: 0;
   right: 0;
-  top: calc(var(--status-bar-height) + 44px);
+  top: calc(var(--status-bar-height) + 64px);
   bottom: calc(50px + env(safe-area-inset-bottom));
   box-sizing: border-box;
   -webkit-overflow-scrolling: touch;

@@ -1398,6 +1398,7 @@ export default {
 /* 内容区域 */
 .content-scroll {
   height: calc(100vh - 140rpx);
+  background-color: #EFF4FB;
 }
 
 .content {
@@ -1436,27 +1437,36 @@ export default {
 .data-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 15rpx;
+  border-radius: 8rpx;
+  overflow: hidden;
+  border: 1rpx solid #e8e8e8;
 }
 
 .grid-item {
-  width: calc(33.333% - 10rpx);
-  background-color: #f9f9f9;
-  padding: 15rpx;
-  border-radius: 4rpx;
+  width: calc(33.333%);
+  background-color: #fff;
+  padding: 20rpx 15rpx;
+  display: flex;
+  flex-direction: column;
+  border-right: 1rpx solid #e8e8e8;
+  border-bottom: 1rpx solid #e8e8e8;
+}
+
+.grid-item:nth-child(3n) {
+  border-right: none;
 }
 
 .item-label {
   font-size: 24rpx;
-  color: #666;
+  color: #999;
   display: block;
-  margin-bottom: 5rpx;
+  margin-bottom: 8rpx;
 }
 
 .item-value {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: #333;
-  font-weight: bold;
+  font-weight: 500;
 }
 
 /* 光伏状态按钮样式 - 核心修复 */
