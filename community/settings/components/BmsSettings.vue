@@ -1,26 +1,53 @@
 <template>
   <view class="bms-settings">
-    <view class="control-section">
-      <text class="section-title">BMS参数设置</text>
-
-      <view v-for="param in bmsParams" :key="param.key" class="param-item">
-        <text class="param-label">{{ param.label }}</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === param.key }">
-            <text v-if="editingParam !== param.key" class="param-value">{{ params.bms[param.field] || "--" }}</text>
-            <input v-else type="number" v-model="params.bms[param.field]" placeholder="请输入" focus />
+    <view class="param-card">
+      <view class="card-header">
+        <text class="card-title">BMS参数设置</text>
+      </view>
+      
+      <!-- 开关型参数 -->
+      <view class="switch-section">
+        <view v-for="param in bmsSwitchParams" :key="param.key" class="param-row">
+          <text class="param-name">{{ param.label }}</text>
+          <view class="switch-btns">
+            <view 
+              v-for="option in param.options" 
+              :key="option.value" 
+              class="switch-btn"
+              :class="[
+                getParamValue(param.key) === option.value ? 'btn-active' : '', 
+                !isEditing ? 'btn-disabled' : '',
+                clickedButton === param.key + '-' + option.value ? 'btn-clicked' : ''
+              ]"
+              @click="setSwitchParam(param.key, option.value)"
+            >
+              {{ option.label }}
+            </view>
           </view>
-          <text class="param-unit">{{ param.unit }}</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== param.key" class="param-btn edit" @click="$emit('edit', param.key)">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam(param.key, param.label)">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
         </view>
       </view>
 
+      <!-- 数值型参数 -->
+      <view class="divider"></view>
+      <view class="param-list">
+        <view v-for="param in bmsParams" :key="param.key" class="param-row">
+          <text class="param-name">{{ param.label }}</text>
+          <view class="param-right">
+            <view class="param-value-box" :class="{ editing: editingParam === param.key }">
+              <text v-if="editingParam !== param.key" class="val-text">{{ (params && params.bms && params.bms[param.field]) || "--" }}</text>
+              <input v-else class="val-input" type="number" :value="params && params.bms && params.bms[param.field]" @input="updateParamValue(param.field, $event)" placeholder="请输入" focus />
+            </view>
+            <text class="unit-text">{{ param.unit }}</text>
+          </view>
+          <view class="btn-group">
+            <view v-if="editingParam !== param.key" class="btn btn-edit" @click="$emit('edit', param.key)">编辑</view>
+            <template v-else>
+              <view class="btn btn-sure" @click="submitParam(param.key, param.label)">下发</view>
+              <view class="btn btn-cancel" @click="$emit('cancel')">取消</view>
+            </template>
+          </view>
+        </view>
+      </view>
     </view>
   </view>
 </template>
@@ -38,13 +65,23 @@ export default {
     editingParam: {
       type: String,
       default: ''
+    },
+    isEditing: {
+      type: Boolean,
+      default: false
+    }
+  },
+  computed: {
+    userId() {
+      return this.$store.state.userInfo?.userId || 0
     }
   },
   data() {
     return {
       idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
       deviceAddress: '04',
-      userId: 0,
+      lastSendTime: 0,
+      clickedButton: '',
       bmsParams: [
         { key: 'bms.B0', field: 'B0', label: '组端过压 1 级报警阈值', unit: 'V' },
         { key: 'bms.B2', field: 'B2', label: '组端过压 2 级报警阈值', unit: 'V' },
@@ -121,14 +158,125 @@ export default {
         { key: 'bms.B144', field: 'B144', label: '温升快 1 级报警阈值', unit: '℃/min' },
         { key: 'bms.B146', field: 'B146', label: '温升快 2 级报警阈值', unit: '℃/min' },
         { key: 'bms.B148', field: 'B148', label: '温升快 3 级报警阈值', unit: '℃/min' },
-        { key: 'bms.B150', field: 'B150', label: '温升快报警回差值', unit: '℃/min' }
+        { key: 'bms.B150', field: 'B150', label: '温升快报警回差值', unit: '℃/min' },
+        { key: 'bms.B174', field: 'B174', label: '风扇启动温度', unit: '℃' },
+        { key: 'bms.B176', field: 'B176', label: '风扇关闭温度', unit: '℃' },
+        { key: 'bms.B178', field: 'B178', label: 'SOC/SOH 设置电池序号', unit: '' },
+        { key: 'bms.B180', field: 'B180', label: 'SOC/SOH 设置', unit: '' },
+        { key: 'bms.B184', field: 'B184', label: '可调风扇控制-占空比', unit: '%' },
+        { key: 'bms.B194', field: 'B194', label: '累计充电电量', unit: 'kWh' },
+        { key: 'bms.B198', field: 'B198', label: '累计放电电量', unit: 'kWh' },
+        { key: 'bms.B204', field: 'B204', label: '电池容量', unit: 'Ah' },
+        { key: 'bms.B206', field: 'B206', label: '电传感器量程 1', unit: '' },
+        { key: 'bms.B208', field: 'B208', label: '电传感器量程 2', unit: '' },
+        { key: 'bms.B210', field: 'B210', label: '电传感器量程 3', unit: '' },
+        { key: 'bms.B212', field: 'B212', label: '簇内电池节数', unit: '' },
+        { key: 'bms.B214', field: 'B214', label: '簇内温度个数', unit: '' },
+        { key: 'bms.B218', field: 'B216', label: '簇内从控模块个数', unit: '' },
+        { key: 'bms.B220', field: 'B218', label: '从控 1~48 的电压个数', unit: '' },
+        { key: 'bms.B222', field: 'B220', label: '从控 1~48 的温度个数', unit: '' },
+        { key: 'bms.B222', field: 'B222', label: '从控站址自动分配', unit: '' }
+      ],
+      bmsSwitchParams: [
+        { key: 'bms.B168', label: '控制指令模式', options: [
+          { label: '单簇系统', value: '1' },
+          { label: '并簇系统', value: '2' },
+          { label: '强控模式', value: '3' }
+        ]},
+        { key: 'bms.B170', label: '上下电控制指令', options: [
+          { label: '上电', value: '0x55' },
+          { label: '下电', value: '0xAA' }
+        ]},
+        { key: 'bms.B172', label: 'DO 控制', options: [
+          { label: '闭合', value: '1' },
+          { label: '断开', value: '0' }
+        ]},
+        { key: 'bms.B182', label: '绝缘采集控制', options: [
+          { label: '开启', value: '1' },
+          { label: '关闭', value: '0' },
+          { label: '无效值', value: '2' }
+        ]},
+        { key: 'bms.B186', label: '复归指令', options: [
+          { label: '默认状态', value: '0' },
+          { label: '复归准备', value: '1' }
+        ]},
+        { key: 'bms.B188', label: '跳机指令', options: [
+          { label: '默认状态', value: '0' },
+          { label: '跳机', value: '1' }
+        ]},
+        { key: 'bms.B190', label: '显控检测故障', options: [
+          { label: '无故障', value: '0' },
+          { label: '故障', value: '1' }
+        ]},
+        { key: 'bms.B192', label: '主控均衡控制', options: [
+          { label: '关闭均衡', value: '0' },
+          { label: '开启均衡', value: '1' },
+          { label: '主控自主', value: '2' }
+        ]},
+        { key: 'bms.B202', label: '电池类型', options: [
+          { label: '磷酸铁锂电池', value: '1' },
+          { label: '钛酸锂电池', value: '2' },
+          { label: '锰酸锂电池', value: '3' },
+          { label: '三元电池', value: '4' }
+        ]},
+        { key: 'bms.B224', label: '风扇控制功能', options: [
+          { label: '风扇开启', value: '0x1' },
+          { label: '风扇关闭', value: '0x2' },
+          { label: '退出控制', value: '0x3' }
+        ]}
       ]
     }
   },
   methods: {
+    checkEditMode() {
+      if (!this.isEditing) {
+        uni.showToast({ title: '请先点击修改配置', icon: 'none' })
+        return false
+      }
+      return true
+    },
+    updateParamValue(field, event) {
+      if (this.params && this.params.bms) {
+        this.params.bms[field] = event.detail.value
+      }
+    },
+    getParamValue(paramKey) {
+      const [module, key] = paramKey.split('.')
+      if (!this.params || !this.params[module]) {
+        return ''
+      }
+      return this.params[module][key]
+    },
+    setSwitchParam(paramKey, value) {
+      if (!this.checkEditMode()) return
+      
+      const now = Date.now()
+      if (now - this.lastSendTime < 5000) {
+        uni.showToast({ title: '请间隔5秒后再下发', icon: 'none' })
+        return
+      }
+      
+      const param = this.bmsSwitchParams.find(p => p.key === paramKey)
+      if (param) {
+        this.clickedButton = paramKey + '-' + value
+        this.lastSendTime = now
+        
+        setTimeout(() => {
+          this.clickedButton = ''
+        }, 5000)
+        
+        let hexValue = value
+        if (paramKey === 'bms.B170' || paramKey === 'bms.B226') {
+          hexValue = parseInt(value, 16).toString()
+        }
+        
+        this.submitParam(paramKey, param.label, hexValue)
+      }
+    },
     async submitParam(paramKey, paramName, value) {
       if (value === undefined) {
-        value = this.getParamValue(paramKey)
+        const [module, key] = paramKey.split('.')
+        value = this.params[module][key]
         if (!value && value !== 0) {
           uni.showToast({ title: '请输入参数值', icon: 'none' })
           return
@@ -138,32 +286,41 @@ export default {
       uni.showLoading({ title: '下发中...' })
       try {
         const registerMap = {
-          'bms.B0': '00000000', 'bms.B2': '00000002', 'bms.B4': '00000004',
-          'bms.B6': '00000006', 'bms.B8': '00000008', 'bms.B10': '0000000A',
-          'bms.B12': '0000000C', 'bms.B14': '0000000E', 'bms.B16': '00000010',
-          'bms.B18': '00000012', 'bms.B20': '00000014', 'bms.B22': '00000016',
-          'bms.B24': '00000018', 'bms.B26': '0000001A', 'bms.B28': '0000001C',
-          'bms.B30': '0000001E', 'bms.B32': '00000020', 'bms.B34': '00000022',
-          'bms.B36': '00000024', 'bms.B38': '00000026', 'bms.B40': '00000028',
-          'bms.B42': '0000002A', 'bms.B44': '0000002C', 'bms.B46': '0000002E',
-          'bms.B48': '00000030', 'bms.B50': '00000032', 'bms.B52': '00000034',
-          'bms.B54': '00000036', 'bms.B56': '00000038', 'bms.B58': '0000003A',
-          'bms.B60': '0000003C', 'bms.B62': '0000003E', 'bms.B64': '00000040',
-          'bms.B66': '00000042', 'bms.B68': '00000044', 'bms.B70': '00000046',
-          'bms.B72': '00000048', 'bms.B74': '0000004A', 'bms.B76': '0000004C',
-          'bms.B78': '0000004E', 'bms.B80': '00000050', 'bms.B82': '00000052',
-          'bms.B84': '00000054', 'bms.B86': '00000056', 'bms.B88': '00000058',
-          'bms.B90': '0000005A', 'bms.B92': '0000005C', 'bms.B94': '0000005E',
-          'bms.B96': '00000060', 'bms.B98': '00000062', 'bms.B100': '00000064',
-          'bms.B102': '00000066', 'bms.B104': '00000068', 'bms.B106': '0000006A',
-          'bms.B108': '0000006C', 'bms.B110': '0000006E', 'bms.B112': '00000070',
-          'bms.B114': '00000072', 'bms.B116': '00000074', 'bms.B118': '00000076',
-          'bms.B120': '00000078', 'bms.B122': '0000007A', 'bms.B124': '0000007C',
-          'bms.B126': '0000007E', 'bms.B128': '00000080', 'bms.B130': '00000082',
-          'bms.B132': '00000084', 'bms.B134': '00000086', 'bms.B136': '00000088',
-          'bms.B138': '0000008A', 'bms.B140': '0000008C', 'bms.B142': '0000008E',
-          'bms.B144': '00000090', 'bms.B146': '00000092', 'bms.B148': '00000094',
-          'bms.B150': '00000096'
+          'bms.B0': '0', 'bms.B2': '2', 'bms.B4': '4',
+          'bms.B6': '6', 'bms.B8': '8', 'bms.B10': '10',
+          'bms.B12': '12', 'bms.B14': '14', 'bms.B16': '16',
+          'bms.B18': '18', 'bms.B20': '20', 'bms.B22': '22',
+          'bms.B24': '24', 'bms.B26': '26', 'bms.B28': '28',
+          'bms.B30': '30', 'bms.B32': '32', 'bms.B34': '34',
+          'bms.B36': '36', 'bms.B38': '38', 'bms.B40': '40',
+          'bms.B42': '42', 'bms.B44': '44', 'bms.B46': '46',
+          'bms.B48': '48', 'bms.B50': '50', 'bms.B52': '52',
+          'bms.B54': '54', 'bms.B56': '56', 'bms.B58': '58',
+          'bms.B60': '60', 'bms.B62': '62', 'bms.B64': '64',
+          'bms.B66': '66', 'bms.B68': '68', 'bms.B70': '70',
+          'bms.B72': '72', 'bms.B74': '74', 'bms.B76': '76',
+          'bms.B78': '78', 'bms.B80': '80', 'bms.B82': '82',
+          'bms.B84': '84', 'bms.B86': '86', 'bms.B88': '88',
+          'bms.B90': '90', 'bms.B92': '92', 'bms.B94': '94',
+          'bms.B96': '96', 'bms.B98': '98', 'bms.B100': '100',
+          'bms.B102': '102', 'bms.B104': '104', 'bms.B106': '106',
+          'bms.B108': '108', 'bms.B110': '110', 'bms.B112': '112',
+          'bms.B114': '114', 'bms.B116': '116', 'bms.B118': '118',
+          'bms.B120': '120', 'bms.B122': '122', 'bms.B124': '124',
+          'bms.B126': '126', 'bms.B128': '128', 'bms.B130': '130',
+          'bms.B132': '132', 'bms.B134': '134', 'bms.B136': '136',
+          'bms.B138': '138', 'bms.B140': '140', 'bms.B142': '142',
+          'bms.B144': '144', 'bms.B146': '146', 'bms.B148': '148',
+          'bms.B150': '150', 'bms.B168': '168', 'bms.B170': '170',
+          'bms.B172': '172', 'bms.B174': '174', 'bms.B176': '176',
+          'bms.B178': '178', 'bms.B180': '180', 'bms.B182': '182',
+          'bms.B184': '184', 'bms.B186': '186', 'bms.B188': '188',
+          'bms.B190': '190', 'bms.B192': '192', 'bms.B194': '194',
+          'bms.B198': '198', 'bms.B202': '202', 'bms.B204': '204',
+          'bms.B206': '206', 'bms.B208': '208', 'bms.B210': '210',
+          'bms.B212': '212', 'bms.B214': '214', 'bms.B216': '216',
+          'bms.B218': '218', 'bms.B220': '220', 'bms.B222': '222',
+          'bms.B224': '224'
         }
         const registerAddress = registerMap[paramKey] || '00000000'
 
@@ -174,9 +331,9 @@ export default {
           address: this.deviceAddress,
           userId: this.userId,
           commands: [{
-            deviceCategory: '0105',
+            deviceCategory: '171C',
             addr: this.deviceAddress,
-            deviceId: '0064',
+            deviceId: '1',
             registerAddress: registerAddress,
             registerValue: value.toString().padStart(8, '0'),
             valueType: '01',
@@ -196,10 +353,6 @@ export default {
         uni.showToast({ title: '下发失败', icon: 'none' })
         console.error('命令帧发送失败:', error)
       }
-    },
-    getParamValue(paramKey) {
-      const [module, key] = paramKey.split('.')
-      return this.params[module][key]
     }
   }
 }
@@ -207,130 +360,189 @@ export default {
 
 <style lang="scss" scoped>
 .bms-settings {
-  .control-section {
+  background: #f5f5f5;
+  min-height: 100vh;
+  padding: 20rpx;
+}
+
+.param-card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.param-list {
+  padding: 0 32rpx;
+}
+
+.param-list .param-row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.param-list .param-name {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.param-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-right: 20rpx;
+}
+
+.param-value-box {
+  width: 180rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  background: #f8f9fa;
+  border-radius: 8rpx;
+  text-align: center;
+  
+  &.editing {
     background: #ffffff;
-    border-radius: 20rpx;
-    padding: 28rpx;
-    margin-bottom: 24rpx;
-    box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+    border: 1rpx solid #6699ff;
   }
+}
 
-  .section-title {
-    font-size: 32rpx;
-    color: #1F2937;
-    font-weight: 600;
-    margin-bottom: 28rpx;
-    padding-left: 20rpx;
-    border-left: 6rpx solid #4488FB;
-    display: block;
-  }
+.val-text {
+  font-size: 28rpx;
+  color: #333;
+}
 
-  .param-item {
-    display: flex;
-    align-items: center;
-    padding: 24rpx 0;
-    border-bottom: 1rpx solid #F3F4F6;
-
-    &:last-child {
-      border-bottom: none;
-    }
-  }
-
-  .param-label {
-    font-size: 28rpx;
-    color: #374151;
-    flex-shrink: 0;
-    width: 340rpx;
-    font-weight: 500;
-    word-break: break-all;
-    line-height: 1.4;
-  }
-
-  .param-input-wrap {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8rpx;
-    min-width: 0;
-  }
-
-  .param-input {
-    background: #F8FAFC;
-    border-radius: 12rpx;
-    padding: 12rpx 20rpx;
-    min-width: 120rpx;
-    max-width: 180rpx;
-    text-align: center;
-    border: 2rpx solid transparent;
-    flex-shrink: 0;
-
-    &.editing {
-      background: #E8F0FE;
-      border-color: #4488FB;
-      box-shadow: 0 0 0 4rpx rgba(68, 136, 251, 0.1);
-    }
-  }
-
-  .param-value {
-    font-size: 28rpx;
-    color: #1F2937;
-    font-weight: 500;
-  }
-
-  .param-unit {
-    font-size: 24rpx;
-    color: #9CA3AF;
-    flex-shrink: 0;
-  }
-
-  .param-actions {
-    display: flex;
-    gap: 16rpx;
-    flex-shrink: 0;
-    margin-left: 20rpx;
-  }
-
-  .param-btn {
-    padding: 14rpx 28rpx;
-    border-radius: 10rpx;
-    font-size: 26rpx;
-    font-weight: 500;
-    border: 2rpx solid transparent;
-
-    &.edit {
-      background: #F8FAFC;
-      color: #4488FB;
-      border-color: #E4E7ED;
-    }
-
-    &.confirm {
-      background: linear-gradient(135deg, #4488FB 0%, #6B9DFF 100%);
-      color: #ffffff;
-      box-shadow: 0 4rpx 16rpx rgba(68, 136, 251, 0.3);
-    }
-
-    &.cancel {
-      background: #F3F4F6;
-      color: #6B7280;
-    }
-
-    &:active {
-      transform: scale(0.96);
-    }
-  }
-
-  input {
-    font-size: 28rpx;
-    color: #1F2937;
-    text-align: center;
-    background: transparent;
-    border: none;
+.val-input {
+  width: 100%;
+  height: 100%;
+  font-size: 28rpx;
+  text-align: center;
+  background: transparent;
+  border: none;
+  
+  &:focus {
     outline: none;
   }
+}
 
-  input::placeholder {
-    color: #9CA3AF;
+.unit-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.btn-group {
+  display: flex;
+  gap: 12rpx;
+}
+
+.btn {
+  padding: 10rpx 24rpx;
+  font-size: 24rpx;
+  border-radius: 8rpx;
+}
+
+.btn-edit {
+  color: #6699ff;
+  background: #ffffff;
+  border: 1rpx solid #6699ff;
+}
+
+.btn-sure {
+  color: #ffffff;
+  background: #6699ff;
+}
+
+.btn-cancel {
+  color: #999;
+  background: #f5f5f5;
+}
+
+.divider {
+  height: 16rpx;
+  background: #f8f9fa;
+  margin: 0;
+}
+
+.switch-section {
+  padding: 0 32rpx;
+}
+
+.switch-section .param-row {
+  padding: 20rpx 0;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.switch-section .param-name {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.switch-btns {
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.switch-btn {
+  padding: 12rpx 32rpx;
+  font-size: 26rpx;
+  border: 1rpx solid #6699ff;
+  border-radius: 5px;
+  color: #6699ff;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  
+  &:active {
+    transform: scale(0.95);
+    background: #f0f5ff;
+    border-color: #4a8cff;
+    color: #4a8cff;
   }
+}
+
+.btn-active {
+  border-color: #6699ff;
+  color: #ffffff;
+  background: #6699ff;
+  box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
+  
+  &:active {
+    background: #4a8cff;
+    border-color: #3d7ef0;
+    transform: scale(0.95);
+    box-shadow: 0 2rpx 6rpx rgba(102, 153, 255, 0.3);
+  }
+}
+
+.btn-clicked {
+  border-color: #4488fb !important;
+  color: #ffffff !important;
+  background: #4488fb !important;
+  box-shadow: 0 4rpx 16rpx rgba(68, 136, 251, 0.4) !important;
+}
+
+.btn-disabled {
+  opacity: 0.7;
+  pointer-events: none;
 }
 </style>

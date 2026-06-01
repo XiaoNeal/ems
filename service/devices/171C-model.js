@@ -744,6 +744,39 @@ export class ControlData {
 	B146 = { name: '温升快 2 级报警阈值', value: "--" };
 	B148 = { name: '温升快 3 级报警阈值', value: "--" };
 	B150 = { name: '温升快报警回差值', value: "--" };
+
+
+	
+	B168 = { name: '控制指令模式', value: "--" };
+	B170 = { name: '上下电控制指令', value: "--" };
+	B172 = { name: 'DO 控制', value: "--" };
+	B174 = { name: '风扇启动温度', value: "--" };
+
+	B176 = { name: '风扇关闭温度', value: "--" };
+	B178 = { name: 'SOC/SOH 设置电池序号', value: "--" };
+	B180 = { name: 'SOC/SOH 设置', value: "--" };
+	B182 = { name: '绝缘采集控制', value: "--" };
+	B184 = { name: '可调风扇控制-占空比', value: "--" };
+	B186 = { name: '复归指令', value: "--" };
+	B188 = { name: '跳机指令', value: "--" };
+	B190 = { name: '显控检测故障', value: "--" };
+	B192 = { name: '主控均衡控制', value: "--" };
+	B194 = { name: '累计充电电量', value: "--" };
+	B198 = { name: '累计放电电量', value: "--" };
+	B202 = { name: '电池类型', value: "--" };
+	B204 = { name: '电池容量', value: "--" };
+	B206 = { name: '电传感器量程 1', value: "--" };
+	B208 = { name: '电传感器量程 2', value: "--" };
+	B210 = { name: '电传感器量程 3', value: "--" };
+	B212 = { name: '簇内电池节数', value: "--" };
+	B214 = { name: '簇内温度个数', value: "--" };
+	B216 = { name: '簇内从控模块个数', value: "--" };
+	B218 = { name: '从控 1~48 的电压个数', value: "--" };
+	B220 = { name: '从控 1~48 的温度个数', value: "--" };
+	B222 = { name: '从控站址自动分配', value: "--" };
+	B224 = { name: '风扇控制功能', value: "--" };
+
+	
 	
 
 

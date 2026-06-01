@@ -1,419 +1,51 @@
 <template>
   <view class="pv-settings">
-    <view class="control-section">
-      <text class="section-title">光伏DC/DC</text>
+    <view class="param-card">
+      <view class="card-header">
+        <text class="card-title">光伏DC/DC</text>
+      </view>
       
-      <view class="param-item">
-        <text class="param-label">模块电压</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B0' }">
-            <text v-if="editingParam !== 'pv.B0'" class="param-value">{{ params.pv.B0 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B0" placeholder="请输入" focus />
+      <!-- 开关型参数 -->
+      <view class="switch-section">
+        <view v-for="param in pvSwitchParams" :key="param.key" class="param-row">
+          <text class="param-name">{{ param.label }}</text>
+          <view class="switch-btns">
+            <view 
+              v-for="option in param.options" 
+              :key="option.value" 
+              class="switch-btn"
+              :class="[
+                getParamValue(param.key) === option.value ? 'btn-active' : '', 
+                !isEditing ? 'btn-disabled' : '',
+                clickedButton === param.key + '-' + option.value ? 'btn-clicked' : ''
+              ]"
+              @click="setSwitchParam(param.key, option.value)"
+            >
+              {{ option.label }}
+            </view>
           </view>
-          <text class="param-unit">V</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B0'" class="param-btn edit" @click="$emit('edit', 'pv.B0')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B0', '模块电压')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
         </view>
       </view>
 
-      <view class="param-item">
-        <text class="param-label">模块电流</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B4' }">
-            <text v-if="editingParam !== 'pv.B4'" class="param-value">{{ params.pv.B4 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B4" placeholder="请输入" focus />
+      <!-- 数值型参数 -->
+      <view class="divider"></view>
+      <view class="param-list">
+        <view v-for="param in pvParams" :key="param.key" class="param-row">
+          <text class="param-name">{{ param.label }}</text>
+          <view class="param-right">
+            <view class="param-value-box" :class="{ editing: editingParam === param.key }">
+              <text v-if="editingParam !== param.key" class="val-text">{{ (params && params.pv && params.pv[param.field]) || "--" }}</text>
+              <input v-else class="val-input" type="number" :value="params && params.pv && params.pv[param.field]" @input="updateParamValue(param.field, $event)" placeholder="请输入" focus />
+            </view>
+            <text class="unit-text">{{ param.unit }}</text>
           </view>
-          <text class="param-unit">A</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B4'" class="param-btn edit" @click="$emit('edit', 'pv.B4')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B4', '模块电流')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">模块限流点</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B8' }">
-            <text v-if="editingParam !== 'pv.B8'" class="param-value">{{ params.pv.B8 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B8" placeholder="请输入" focus />
+          <view class="btn-group">
+            <view v-if="editingParam !== param.key" class="btn btn-edit" @click="$emit('edit', param.key)">编辑</view>
+            <template v-else>
+              <view class="btn btn-sure" @click="submitParam(param.key, param.label)">下发</view>
+              <view class="btn btn-cancel" @click="$emit('cancel')">取消</view>
+            </template>
           </view>
-          <text class="param-unit">A</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B8'" class="param-btn edit" @click="$emit('edit', 'pv.B8')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B8', '模块限流点')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">模块DC板温度</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B12' }">
-            <text v-if="editingParam !== 'pv.B12'" class="param-value">{{ params.pv.B12 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B12" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">℃</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B12'" class="param-btn edit" @click="$emit('edit', 'pv.B12')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B12', '模块DC板温度')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">模块输入相电压（直流输入电压）</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B16' }">
-            <text v-if="editingParam !== 'pv.B16'" class="param-value">{{ params.pv.B16 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B16" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">V</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B16'" class="param-btn edit" @click="$emit('edit', 'pv.B16')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B16', '模块输入相电压（直流输入电压）')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">模块PFC0电压（正半母线）</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B20' }">
-            <text v-if="editingParam !== 'pv.B20'" class="param-value">{{ params.pv.B20 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B20" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">V</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B20'" class="param-btn edit" @click="$emit('edit', 'pv.B20')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B20', '模块PFC0电压（正半母线）')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">模块PFC1电压（负半母线）</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B24' }">
-            <text v-if="editingParam !== 'pv.B24'" class="param-value">{{ params.pv.B24 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B24" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">V</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B24'" class="param-btn edit" @click="$emit('edit', 'pv.B24')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B24', '模块PFC1电压（负半母线）')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">模块面板（环境）温度</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B28' }">
-            <text v-if="editingParam !== 'pv.B28'" class="param-value">{{ params.pv.B28 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B28" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">℃</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B28'" class="param-btn edit" @click="$emit('edit', 'pv.B28')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B28', '模块面板（环境）温度')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">模块交流A相电压</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B32' }">
-            <text v-if="editingParam !== 'pv.B32'" class="param-value">{{ params.pv.B32 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B32" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">V</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B32'" class="param-btn edit" @click="$emit('edit', 'pv.B32')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B32', '模块交流A相电压')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">模块交流B相电压</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B36' }">
-            <text v-if="editingParam !== 'pv.B36'" class="param-value">{{ params.pv.B36 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B36" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">V</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B36'" class="param-btn edit" @click="$emit('edit', 'pv.B36')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B36', '模块交流B相电压')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">模块交流C相电压</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B40' }">
-            <text v-if="editingParam !== 'pv.B40'" class="param-value">{{ params.pv.B40 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B40" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">V</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B40'" class="param-btn edit" @click="$emit('edit', 'pv.B40')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B40', '模块交流C相电压')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">模块PFC板温度</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B44' }">
-            <text v-if="editingParam !== 'pv.B44'" class="param-value">{{ params.pv.B44 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B44" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">℃</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B44'" class="param-btn edit" @click="$emit('edit', 'pv.B44')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B44', '模块PFC板温度')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">模块额定输出功率</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B48' }">
-            <text v-if="editingParam !== 'pv.B48'" class="param-value">{{ params.pv.B48 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B48" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">kW</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B48'" class="param-btn edit" @click="$emit('edit', 'pv.B48')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B48', '模块额定输出功率')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">模块额定输出电流</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B52' }">
-            <text v-if="editingParam !== 'pv.B52'" class="param-value">{{ params.pv.B52 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B52" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">A</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B52'" class="param-btn edit" @click="$emit('edit', 'pv.B52')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B52', '模块额定输出电流')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">读取当前告警/状态</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B56' }">
-            <text v-if="editingParam !== 'pv.B56'" class="param-value">{{ params.pv.B56 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B56" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit"></text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B56'" class="param-btn edit" @click="$emit('edit', 'pv.B56')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B56', '读取当前告警/状态')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">读取组号和拨码地址</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B60' }">
-            <text v-if="editingParam !== 'pv.B60'" class="param-value">{{ params.pv.B60 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B60" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit"></text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B60'" class="param-btn edit" @click="$emit('edit', 'pv.B60')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B60', '读取组号和拨码地址')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">读取输入功率</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B64' }">
-            <text v-if="editingParam !== 'pv.B64'" class="param-value">{{ params.pv.B64 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B64" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">kW</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B64'" class="param-btn edit" @click="$emit('edit', 'pv.B64')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B64', '读取输入功率')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">读取当前设定的海拔值</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B68' }">
-            <text v-if="editingParam !== 'pv.B68'" class="param-value">{{ params.pv.B68 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B68" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit">m</text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B68'" class="param-btn edit" @click="$emit('edit', 'pv.B68')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B68', '读取当前设定的海拔值')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">读取当前模块输入工作模式</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B72' }">
-            <text v-if="editingParam !== 'pv.B72'" class="param-value">{{ params.pv.B72 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B72" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit"></text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B72'" class="param-btn edit" @click="$emit('edit', 'pv.B72')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B72', '读取当前模块输入工作模式')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">读节点SearialNo号低位（ID号）</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B76' }">
-            <text v-if="editingParam !== 'pv.B76'" class="param-value">{{ params.pv.B76 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B76" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit"></text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B76'" class="param-btn edit" @click="$emit('edit', 'pv.B76')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B76', '读节点SearialNo号低位（ID号）')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">读节点SearialNo号高位</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B80' }">
-            <text v-if="editingParam !== 'pv.B80'" class="param-value">{{ params.pv.B80 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B80" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit"></text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B80'" class="param-btn edit" @click="$emit('edit', 'pv.B80')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B80', '读节点SearialNo号高位')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">读DCDC版本号</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B84' }">
-            <text v-if="editingParam !== 'pv.B84'" class="param-value">{{ params.pv.B84 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B84" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit"></text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B84'" class="param-btn edit" @click="$emit('edit', 'pv.B84')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B84', '读DCDC版本号')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
-        </view>
-      </view>
-
-      <view class="param-item">
-        <text class="param-label">读PFC版本号</text>
-        <view class="param-input-wrap">
-          <view class="param-input" :class="{ editing: editingParam === 'pv.B88' }">
-            <text v-if="editingParam !== 'pv.B88'" class="param-value">{{ params.pv.B88 || "--" }}</text>
-            <input v-else type="number" v-model="params.pv.B88" placeholder="请输入" focus />
-          </view>
-          <text class="param-unit"></text>
-        </view>
-        <view class="param-actions">
-          <view v-if="editingParam !== 'pv.B88'" class="param-btn edit" @click="$emit('edit', 'pv.B88')">编辑</view>
-          <template v-else>
-            <view class="param-btn confirm" @click="submitParam('pv.B88', '读PFC版本号')">下发</view>
-            <view class="param-btn cancel" @click="$emit('cancel')">取消</view>
-          </template>
         </view>
       </view>
     </view>
@@ -439,14 +71,67 @@ export default {
       default: false
     }
   },
+  computed: {
+    userId() {
+      return this.$store.state.userInfo?.userId || 0
+    }
+  },
   data() {
     return {
       idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
       deviceAddress: '03',
-      userId: 0
+      clickedButton: '',
+      lastSendTime: 0,
+      pvParams: [
+        { key: 'pv.B0', field: 'B0', label: '设置模块工作海拔值', unit: 'm' },
+        { key: 'pv.B4', field: 'B4', label: '设置模块输出电流值', unit: 'A' },
+        { key: 'pv.B8', field: 'B8', label: '设置组号', unit: '' },
+        { key: 'pv.B16', field: 'B16', label: '设置模块输出功率', unit: 'kW' },
+        { key: 'pv.B20', field: 'B20', label: '设置模块输出电压', unit: 'V' },
+        { key: 'pv.B24', field: 'B24', label: '设置模块限流点', unit: 'A' },
+        { key: 'pv.B28', field: 'B28', label: '设置模块输出电压上限值', unit: 'V' }
+      ],
+      pvSwitchParams: [
+        { key: 'pv.B12', label: '设置模块地址分配方式', options: [
+          { label: '自动分配', value: 'auto' },
+          { label: '拨码设置', value: 'dip' }
+        ]},
+        { key: 'pv.B32', label: '开关机', options: [
+          { label: '开机', value: 'on' },
+          { label: '关机', value: 'off' }
+        ]},
+        { key: 'pv.B36', label: '设置模块过压复位', options: [
+          { label: '禁止', value: 'disable' },
+          { label: '复位', value: 'reset' }
+        ]},
+        { key: 'pv.B40', label: '设置模块输出过压保护关联是否允许', options: [
+          { label: '允许', value: 'allow' },
+          { label: '禁止', value: 'forbid' }
+        ]},
+        { key: 'pv.B44', label: '设置模块短路复位', options: [
+          { label: '禁止', value: 'disable' },
+          { label: '复位', value: 'reset' }
+        ]},
+        { key: 'pv.B48', label: '设置模块输入模式', options: [
+          { label: '交流模式', value: 'ac' },
+          { label: '直流模式', value: 'dc' }
+        ]}
+      ]
     }
   },
   methods: {
+    checkEditMode() {
+      if (!this.isEditing) {
+        uni.showToast({ title: '请先点击修改配置', icon: 'none' })
+        return false
+      }
+      return true
+    },
+    updateParamValue(field, event) {
+      if (this.params && this.params.pv) {
+        this.params.pv[field] = event.detail.value
+      }
+    },
     async submitParam(paramKey, paramName, value) {
       if (value === undefined) {
         value = this.getParamValue(paramKey)
@@ -459,14 +144,11 @@ export default {
       uni.showLoading({ title: '下发中...' })
       try {
         const registerMap = {
-          'pv.B0': '00000000', 'pv.B4': '00000004', 'pv.B8': '00000008',
-          'pv.B12': '0000000C', 'pv.B16': '00000010', 'pv.B20': '00000014',
-          'pv.B24': '00000018', 'pv.B28': '0000001C', 'pv.B32': '00000020',
-          'pv.B36': '00000024', 'pv.B40': '00000028', 'pv.B44': '0000002C',
-          'pv.B48': '00000030', 'pv.B52': '00000034', 'pv.B56': '00000038',
-          'pv.B60': '0000003C', 'pv.B64': '00000040', 'pv.B68': '00000044',
-          'pv.B72': '00000048', 'pv.B76': '0000004C', 'pv.B80': '00000050',
-          'pv.B84': '00000054', 'pv.B88': '00000058'
+          'pv.B0': '0', 'pv.B4': '4', 'pv.B8': '8',
+          'pv.B12': '12', 'pv.B16': '16', 'pv.B20': '20',
+          'pv.B24': '24', 'pv.B28': '28', 'pv.B32': '32',
+          'pv.B36': '36', 'pv.B40': '40', 'pv.B44': '44',
+          'pv.B48': '48'
         }
         const registerAddress = registerMap[paramKey] || '00000000'
 
@@ -477,9 +159,9 @@ export default {
           address: this.deviceAddress,
           userId: this.userId,
           commands: [{
-            deviceCategory: '0104',
-            addr: this.deviceAddress,
-            deviceId: '0064',
+            deviceCategory: '171E',
+            addr: 6,
+            deviceId: '6',
             registerAddress: registerAddress,
             registerValue: value.toString().padStart(8, '0'),
             valueType: '01',
@@ -502,7 +184,62 @@ export default {
     },
     getParamValue(paramKey) {
       const [module, key] = paramKey.split('.')
-      return this.params[module][key]
+      if (!this.params || !this.params[module]) {
+        return ''
+      }
+      const hexValue = this.params[module][key]
+      
+      if (paramKey === 'pv.B12') {
+        return hexValue === '0x00030000' ? 'auto' : 'dip'
+      } else if (paramKey === 'pv.B32') {
+        return hexValue === '0x00010000' ? 'on' : 'off'
+      } else if (paramKey === 'pv.B36') {
+        return hexValue === '0x00010000' ? 'reset' : 'disable'
+      } else if (paramKey === 'pv.B40') {
+        return hexValue === '0x00010000' ? 'allow' : 'forbid'
+      } else if (paramKey === 'pv.B44') {
+        return hexValue === '0x00010000' ? 'reset' : 'disable'
+      } else if (paramKey === 'pv.B48') {
+        return hexValue === '0x00000001' ? 'ac' : 'dc'
+      }
+      
+      return hexValue
+    },
+    setSwitchParam(paramKey, value) {
+      if (!this.checkEditMode()) return
+      
+      const now = Date.now()
+      if (now - this.lastSendTime < 5000) {
+        uni.showToast({ title: '请间隔5秒后再下发', icon: 'none' })
+        return
+      }
+      
+      const param = this.pvSwitchParams.find(p => p.key === paramKey)
+      if (param) {
+        let hexValue = '0x00010000'
+        if (value === 'disable' || value === 'forbid' || value === 'off') {
+          hexValue = '0x00000000'
+        } else if (value === 'reset' || value === 'allow' || value === 'on') {
+          hexValue = '0x00010000'
+        } else if (value === 'auto') {
+          hexValue = '0x00030000'
+        } else if (value === 'dip') {
+          hexValue = '0x00010000'
+        } else if (value === 'ac') {
+          hexValue = '0x00000001'
+        } else if (value === 'dc') {
+          hexValue = '0x00000002'
+        }
+        
+        this.clickedButton = paramKey + '-' + value
+        this.lastSendTime = now
+        
+        setTimeout(() => {
+          this.clickedButton = ''
+        }, 5000)
+        
+        this.submitParam(paramKey, param.label, hexValue)
+      }
     }
   }
 }
@@ -510,134 +247,174 @@ export default {
 
 <style lang="scss" scoped>
 .pv-settings {
-  .control-section {
+  background: #f5f5f5;
+  min-height: 100vh;
+  padding: 20rpx;
+}
+
+.param-card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.param-list {
+  padding: 0 32rpx;
+}
+
+.param-row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.param-name {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+  margin-right:2px;
+}
+
+.param-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-right: 20rpx;
+}
+
+.param-value-box {
+  width: 180rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  background: #f8f9fa;
+  border-radius: 8rpx;
+  text-align: center;
+  
+  &.editing {
     background: #ffffff;
-    border-radius: 20rpx;
-    padding: 28rpx;
-    margin-bottom: 24rpx;
-    box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+    border: 1rpx solid #6699ff;
   }
+}
 
-  .section-title {
-    font-size: 32rpx;
-    color: #1F2937;
-    font-weight: 600;
-    margin-bottom: 28rpx;
-    padding-left: 20rpx;
-    border-left: 6rpx solid #4488FB;
-    display: block;
-  }
+.val-text {
+  font-size: 28rpx;
+  color: #333;
+}
 
-  .param-item {
-    display: flex;
-    align-items: center;
-    padding: 24rpx 16rpx;
-    border-bottom: 1rpx solid #F3F4F6;
-    box-sizing: border-box;
-
-    &:last-child {
-      border-bottom: none;
-    }
-  }
-
-  .param-label {
-    font-size: 28rpx;
-    color: #374151;
-    flex-shrink: 0;
-    width: 340rpx;
-    font-weight: 500;
-    word-break: break-all;
-    line-height: 1.4;
-  }
-
-  .param-input-wrap {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8rpx;
-    min-width: 0;
-  }
-
-  .param-input {
-    background: #F8FAFC;
-    border-radius: 12rpx;
-    padding: 12rpx 20rpx;
-    min-width: 120rpx;
-    max-width: 180rpx;
-    text-align: center;
-    border: 2rpx solid transparent;
-    flex-shrink: 0;
-
-    &.editing {
-      background: #E8F0FE;
-      border-color: #4488FB;
-      box-shadow: 0 0 0 4rpx rgba(68, 136, 251, 0.1);
-    }
-  }
-
-  .param-value {
-    font-size: 26rpx;
-    color: #1F2937;
-    font-weight: 500;
-    word-break: break-all;
-  }
-
-  .param-unit {
-    font-size: 22rpx;
-    color: #9CA3AF;
-    flex-shrink: 0;
-    min-width: 40rpx;
-    text-align: left;
-  }
-
-  .param-actions {
-    display: flex;
-    gap: 8rpx;
-    flex-shrink: 0;
-    margin-left: 12rpx;
-  }
-
-  .param-btn {
-    padding: 10rpx 20rpx;
-    border-radius: 8rpx;
-    font-size: 22rpx;
-    font-weight: 500;
-    border: 2rpx solid transparent;
-
-    &.edit {
-      background: #F8FAFC;
-      color: #4488FB;
-      border-color: #E4E7ED;
-    }
-
-    &.confirm {
-      background: linear-gradient(135deg, #4488FB 0%, #6B9DFF 100%);
-      color: #ffffff;
-      box-shadow: 0 4rpx 16rpx rgba(68, 136, 251, 0.3);
-    }
-
-    &.cancel {
-      background: #F3F4F6;
-      color: #6B7280;
-    }
-
-    &:active {
-      transform: scale(0.96);
-    }
-  }
-
-  input {
-    font-size: 28rpx;
-    color: #1F2937;
-    text-align: center;
-    background: transparent;
-    border: none;
+.val-input {
+  width: 100%;
+  height: 100%;
+  font-size: 28rpx;
+  text-align: center;
+  background: transparent;
+  border: none;
+  
+  &:focus {
     outline: none;
   }
+}
 
-  input::placeholder {
-    color: #9CA3AF;
+.unit-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.btn-group {
+  display: flex;
+  gap: 12rpx;
+}
+
+.btn {
+  padding: 10rpx 24rpx;
+  font-size: 24rpx;
+  border-radius: 8rpx;
+}
+
+.btn-edit {
+  color: #6699ff;
+  background: #ffffff;
+  border: 1rpx solid #6699ff;
+}
+
+.btn-sure {
+  color: #ffffff;
+  background: #6699ff;
+}
+
+.btn-cancel {
+  color: #999;
+  background: #f5f5f5;
+}
+
+.divider {
+  height: 16rpx;
+  background: #f8f9fa;
+  margin: 0;
+}
+
+.switch-section {
+  padding: 0 32rpx;
+}
+
+.switch-btns {
+  display: flex;
+  gap: 16rpx;
+}
+
+.switch-btn {
+  padding: 12rpx 32rpx;
+  font-size: 26rpx;
+  border: 1rpx solid #6699ff;
+  border-radius: 5px;
+  color: #6699ff;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  
+  &:active {
+    transform: scale(0.95);
+    background: #f5f5f5;
   }
+}
+
+.btn-active {
+  border-color: #6699ff;
+  color: #ffffff;
+  background: #6699ff;
+  box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
+  
+  &:active {
+    background: #4a8cff;
+    border-color: #3d7ef0;
+    transform: scale(0.95);
+    box-shadow: 0 2rpx 6rpx rgba(102, 153, 255, 0.3);
+  }
+}
+
+.btn-clicked {
+  border-color: #6699ff !important;
+  color: #ffffff !important;
+  background: #6699ff !important;
+  box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.4) !important;
+}
+
+.btn-disabled {
+  opacity: 0.7;
+  pointer-events: none;
 }
 </style>

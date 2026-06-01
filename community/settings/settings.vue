@@ -42,13 +42,13 @@
 
     <!-- 光伏DC/DC -->
     <view v-if="activeTab === 2" class="tab-content">
-      <PvSettings :params="params" :editing-param="editingParam" @edit="startEdit"
+      <PvSettings :params="params" :editing-param="editingParam" @edit="startEdit" :is-editing="isEditing"
         @cancel="cancelParamEdit" />
     </view>
 
     <!-- BMS -->
     <view v-if="activeTab === 3" class="tab-content">
-      <BmsSettings :params="params" :editing-param="editingParam" @edit="startEdit"
+      <BmsSettings :params="params" :editing-param="editingParam" @edit="startEdit" :is-editing="isEditing"
         @cancel="cancelParamEdit" />
     </view>
   </view>
@@ -402,9 +402,9 @@ export default {
   box-shadow: 0 2rpx 8rpx rgba(68, 136, 251, 0.3);
 }
 
-.tab-content {
-  padding: 0 24rpx 24rpx;
-}
+// .tab-content {
+//   padding: 0 24rpx 24rpx;
+// }
 
 .global-actions {
   padding: 16rpx 24rpx;
@@ -444,7 +444,7 @@ export default {
   justify-content: center;
   gap: 8rpx;
   padding: 16rpx 32rpx;
-  border-radius: 40rpx;
+  border-radius: 10rpx;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 26rpx;
   font-weight: 500;

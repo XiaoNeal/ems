@@ -236,28 +236,32 @@ export class ControlData {
 		// 核心字段重命名，匹配协议
 		this.B0.name = 'Can波特率设置';
 		this.B2.name = '认证标准码';
-		this.B4.name = '故障清除';
-		this.B6.name = '运行状态设置';
-		this.B8.name = '系统开关机';
-		this.B10.name = '恢复出厂设置';
-		this.B12.name = '组ID号';
-		this.B14.name = '模块数量';
-		this.B16.name = '电池类型';
-		this.B18.name = '直流母线电压';
-		this.B20.name = '充放电指令';
-		this.B22.name = '充放电功率设定';
-		this.B24.name = '电池均充电压';
-		this.B26.name = '充电电流设置';
-		this.B28.name = '电池浮充电压';
-		this.B30.name = '放电电压设置';
-		this.B32.name = '放电电流设置';
-		this.B34.name = '电池过压关机点';
-		this.B36.name = '电池低压告警点';
-		this.B38.name = '电池低压关机点';
-		this.B40.name = '电池激活功能';
-		this.B42.name = '自动重启功能';
-		this.B44.name = '充电母线电压上限';
-		this.B46.name = '放电母线电压下限';
-		this.B48.name = '告警屏蔽码1';
+		this.B4.name = '机器类型';
+		this.B6.name = '故障清除';
+		this.B8.name = '运行模式设置';
+		this.B10.name = '运行状态设置';
+		this.B12.name = '系统开关机';
+		this.B14.name = '恢复出厂设置';
+		this.B16.name = '组ID号';
+		this.B18.name = '模块数量';
+		this.B20.name = '电池类型';
+		this.B22.name = '直流母线电压';
+		this.B24.name = '充放电指令';
+		this.B26.name = '充放电功率设定';
+		this.B28.name = '电池均充电压';
+		this.B30.name = '充电电流设置';
+		this.B32.name = '电池浮充电压';
+		this.B34.name = '放电电压设置';
+		this.B36.name = '放电电流设置';
+		this.B38.name = '电池过压关机点';
+		this.B40.name = '电池低压告警点';
+		this.B42.name = '电池低压关机点';
+		this.B44.name = '电池激活功能';
+		this.B46.name = '自动重启功能';
+		this.B48.name = '充电母线电压上限';
+		this.B50.name = '放电母线电压下限';
+		this.B53b0.name = 'CAN通讯使能位';
+		this.B53b1.name = '485通讯使能位';
+	
 	}
 }
