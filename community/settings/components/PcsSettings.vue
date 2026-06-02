@@ -3,19 +3,29 @@
     <view class="param-card">
       <view class="card-header">
         <text class="card-title">PCS 参数设置</text>
+        <view v-if="!isEditing" class="edit-btn primary" @click="handleEditConfig">
+          <text class="edit-text">修改配置</text>
+        </view>
+        <view v-else class="action-btns">
+          <view class="edit-btn close" @click="closeEdit">
+            <text class="edit-text">关闭编辑</text>
+          </view>
+        </view>
       </view>
 
       <!-- 开关型参数 -->
       <view class="switch-section">
         <view v-for="param in pcsSwitchParams" :key="param.key" class="param-row">
           <text class="param-name">{{ param.label }}</text>
-          <view class="switch-btns">
-            <view v-for="option in param.options" :key="option.value" class="switch-btn" :class="[
-              getParamValue(param.key) === option.value ? 'btn-active' : '',
-              !isEditing ? 'btn-disabled' : '',
-              clickedButton === param.key + '-' + option.value ? 'btn-clicked' : ''
-            ]" @click="setSwitchParam(param.key, option.value)">
-              {{ option.label }}
+          <view class="switch-btns-wrapper">
+            <view class="switch-btns">
+              <view v-for="option in param.options" :key="option.value" class="switch-btn" :class="[
+                getParamValue(param.key) === option.value ? 'btn-active' : '',
+                !isEditing ? 'btn-disabled' : '',
+                clickedButton === param.key + '-' + option.value ? 'btn-clicked' : ''
+              ]" @click="setSwitchParam(param.key, option.value)">
+                {{ option.label }}
+              </view>
             </view>
           </view>
         </view>
@@ -26,20 +36,22 @@
       <view class="param-list">
         <view v-for="param in pcsParams" :key="param.key" class="param-row">
           <text class="param-name">{{ param.label }}</text>
-          <view class="param-right">
-            <view class="param-value-box" :class="{ editing: editingParam === param.key }">
-              <text v-if="editingParam !== param.key" class="val-text">{{ params.pcs[param.field] || "--" }}</text>
-              <input v-else class="val-input" type="number" v-model="params.pcs[param.field]" :min="param.min"
-                :max="param.max" placeholder="请输入" focus />
+          <view class="param-right-wrapper">
+            <view class="param-right">
+              <view class="param-value-box" :class="{ editing: editingParam === param.key }">
+                <text v-if="editingParam !== param.key" class="val-text">{{ params.pcs[param.field] || "--" }}</text>
+                <input v-else class="val-input" type="number" v-model="params.pcs[param.field]" :min="param.min"
+                  :max="param.max" placeholder="请输入" focus />
+              </view>
+              <text class="unit-text">{{ param.unit || '' }}</text>
             </view>
-            <text class="unit-text">{{ param.unit }}</text>
-          </view>
-          <view class="btn-group">
-            <view v-if="editingParam !== param.key" class="btn btn-edit" @click="$emit('edit', param.key)">编辑</view>
-            <template v-else>
-              <view class="btn btn-sure" @click="submitParam(param.key, param.label)">下发</view>
-              <view class="btn btn-cancel" @click="$emit('cancel')">取消</view>
-            </template>
+            <view class="btn-group">
+              <view v-if="editingParam !== param.key" class="btn btn-edit" @click="handleParamEdit(param.key)">编辑</view>
+              <template v-else-if="editingParam === param.key">
+                <view class="btn btn-sure" @click="submitParam(param.key, param.label)">下发</view>
+                <view class="btn btn-cancel" @click="handleParamCancel()">取消</view>
+              </template>
+            </view>
           </view>
         </view>
       </view>
@@ -52,20 +64,7 @@ import { sendCommandFrame } from '@/api/control.js'
 
 export default {
   name: 'PcsSettings',
-  props: {
-    params: {
-      type: Object,
-      required: true
-    },
-    editingParam: {
-      type: String,
-      default: ''
-    },
-    isEditing: {
-      type: Boolean,
-      default: false
-    }
-  },
+  props: {},
   computed: {
     userId() {
       return this.$store.state.userInfo?.userId || 0
@@ -75,15 +74,20 @@ export default {
     return {
       idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
       deviceAddress: '01',
+      isEditing: false,
       clickedButton: '',
       lastSendTime: 0,
+      editingParam: '',
+      params: {
+        pcs: {}
+      },
       pcsParams: [
         { key: 'pcs.B0', field: 'B0', label: '设置模块工作海拔值', unit: 'm', min: 1000, max: 5000 },
         { key: 'pcs.B4', field: 'B4', label: '设置组号', unit: '', min: 0, max: 7 },
-        { key: 'pcs.B40', field: 'B40', label: '设置直流侧电压', unit: 'V' },
-        { key: 'pcs.B44', field: 'B44', label: '设置直流侧电流', unit: 'A' },
-        { key: 'pcs.B48', field: 'B48', label: '设置交流侧总有功功率(并网模式的功率控制模式)', unit: 'kW' },
-        { key: 'pcs.B50', field: 'B50', label: '设置交流侧总有功功率(交流侧总有功功率值)', unit: 'kW' },
+        { key: 'pcs.B40', field: 'B40', label: '设置直流侧电压', unit: 'mV' },
+        { key: 'pcs.B44', field: 'B44', label: '设置直流侧电流', unit: 'mA', min: -78, max: 73.5 },
+        { key: 'pcs.B48', field: 'B48', label: '设置交流侧总有功功率(并网模式的功率控制模式)', unit: 'W' },
+        { key: 'pcs.B50', field: 'B50', label: '设置交流侧总有功功率(交流侧总有功功率值)', unit: 'W' },
         { key: 'pcs.B52', field: 'B52', label: '设置交流侧总无功功率', unit: 'kVar' },
         { key: 'pcs.B56', field: 'B56', label: '设置交流侧功率因素 PF', unit: '' },
         { key: 'pcs.B64', field: 'B64', label: '设置交流相电压', unit: 'V' },
@@ -266,7 +270,7 @@ export default {
 
         await sendCommandFrame(commandData)
         uni.hideLoading()
-        this.$emit('cancel')
+        // this.$emit('cancelParam')
         uni.showToast({ title: `${paramName}指令已下发`, icon: 'success' })
       } catch (error) {
         uni.hideLoading()
@@ -311,6 +315,19 @@ export default {
 
         this.submitParam(paramKey, param.label, hexValue)
       }
+    },
+    handleEditConfig() {
+      this.isEditing = true
+    },
+    closeEdit() {
+      this.isEditing = false
+      this.editingParam = ''
+    },
+    handleParamEdit(paramKey) {
+      this.editingParam = paramKey
+    },
+    handleParamCancel() {
+      this.editingParam = ''
     }
   }
 }
@@ -330,6 +347,9 @@ export default {
 }
 
 .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 24rpx 32rpx;
   border-bottom: 1rpx solid #f0f0f0;
 }
@@ -340,6 +360,31 @@ export default {
   color: #333;
 }
 
+.action-btns {
+  display: flex;
+  gap: 16rpx;
+}
+
+.edit-btn {
+  padding: 8rpx 24rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  
+  &.primary {
+    background: #6699ff;
+    color: #ffffff;
+  }
+  
+  &.close {
+    background: #f5f5f5;
+    color: #666;
+  }
+}
+
+.edit-text {
+  font-size: 26rpx;
+}
+
 .param-list {
   padding: 0 20rpx;
 }
@@ -347,9 +392,10 @@ export default {
 .param-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 16rpx;
   padding: 24rpx 0;
   border-bottom: 1rpx solid #f5f5f5;
-  flex-wrap: wrap;
 
   &:last-child {
     border-bottom: none;
@@ -357,17 +403,26 @@ export default {
 }
 
 .param-name {
-  flex: 1;
+  flex: 0 0 auto;
   font-size: 28rpx;
   color: #333;
-  margin-bottom: 2px
+  width:40%;
+  max-width: fit-content;
+}
+
+.param-right-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16rpx;
+  flex: 1;
+  min-width: 300rpx;
 }
 
 .param-right {
   display: flex;
   align-items: center;
   gap: 12rpx;
-  margin-right: 20rpx;
 }
 
 .param-value-box {
@@ -405,11 +460,14 @@ export default {
 .unit-text {
   font-size: 26rpx;
   color: #999;
+  width: 80rpx;
+  text-align: left;
 }
 
 .btn-group {
   display: flex;
   gap: 12rpx;
+  flex-direction: column;
 }
 
 .btn {
@@ -444,19 +502,39 @@ export default {
   padding: 0 20rpx;
 }
 
+.switch-btns-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+}
+
 .switch-btns {
   display: flex;
   gap: 16rpx;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .switch-btn {
-  padding: 12rpx 32rpx;
-  font-size: 26rpx;
+  padding: 12rpx 20rpx;
+  font-size: 22rpx;
   border: 1rpx solid #6699ff;
-  border-radius: 5px;
+  border-radius: 6rpx;
   color: #6699ff;
   background: #ffffff;
   transition: all 0.15s ease;
+  white-space: normal;
+  word-break: break-all;
+  text-align: center;
+  width: 100rpx;
+  line-height: 1.5;
+  // min-height: 80rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: fit-content;
 
   &:active {
     transform: scale(0.95);

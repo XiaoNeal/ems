@@ -20,7 +20,12 @@
       :scroll-top="scrollTop" ref="contentScroll" :bounces="false" @scroll="onScroll">
       <view class="content-pages">
         <!-- 设备列表页面 -->
-        <view v-if="showDeviceList" class="page-item device-list-page">
+        <!-- 个人中心 - 优先级最高，始终可以访问 -->
+        <view v-if="currentTab === 2" class="page-item">
+          <Profile ref="profile"></Profile>
+        </view>
+        <!-- 设备列表页面 -->
+        <view v-else-if="showDeviceList" class="page-item device-list-page">
           <DeviceList ref="deviceList" @selectDevice="handleDeviceSelect"></DeviceList>
         </view>
         
@@ -32,11 +37,6 @@
         <!-- 系统页面 -->
         <view v-else-if="currentTab === 1" class="page-item">
           <System ref="system"></System>
-        </view>
-        
-        <!-- 个人中心 -->
-        <view v-else class="page-item">
-          <Profile ref="profile"></Profile>
         </view>
       </view>
     </scroll-view>
@@ -240,6 +240,19 @@ export default {
     
     // 优化：简化tab切换逻辑
     switchTab(index) {
+      // 如果当前显示设备列表（从Profile跳转过来但未选择设备）
+      if (this.showDeviceList && this.fromProfile) {
+        // 切换到"我的"Tab（index=2）允许返回
+        if (index === 2) {
+          // 返回"我的"页面时重置状态
+          this.fromProfile = false
+        } else {
+          // 切换到监测或系统Tab需要先选择设备
+          uni.showToast({ title: '请先选择设备', icon: 'none' })
+          return
+        }
+      }
+      
       // 系统Tab未显示时，不允许切换到系统Tab
       if (index === 1 && !this.selectedDeviceId) {
         return

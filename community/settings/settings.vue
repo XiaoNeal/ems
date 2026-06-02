@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <view class="container">
     <u-navbar title="设置参数" :autoBack="true" :placeholder="true" :statusBar="true">
     </u-navbar>
@@ -15,41 +15,24 @@
 
 
 
-    <!-- 全局操作按钮 -->
-    <view class="global-actions" :class="{ editing: isEditing }">
-      <text class="page-title">参数设置</text>
-      <view v-if="!isEditing" class="edit-btn primary" @click="handleEditConfig">
-        <text class="edit-text">修改配置</text>
-      </view>
-      <view v-else class="action-btns">
-        <view class="edit-btn close" @click="closeEdit">
-          <text class="edit-text">关闭编辑</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 网侧PCS -->
+    <!-- 网侧 PCS -->
     <view v-if="activeTab === 0" class="tab-content">
-      <PcsSettings :params="params" :editing-param="editingParam" :is-editing="isEditing"
-        @edit="startEdit" @cancel="cancelParamEdit" />
+      <PcsSettings />
     </view>
 
-    <!-- 储能DC/DC -->
+    <!-- 储能 DC/DC -->
     <view v-if="activeTab === 1" class="tab-content">
-      <StorageSettings :params="params" :editing-param="editingParam" :is-editing="isEditing"
-        @edit="startEdit" @cancel="cancelParamEdit" />
+      <StorageSettings />
     </view>
 
-    <!-- 光伏DC/DC -->
+    <!-- 光伏 DC/DC -->
     <view v-if="activeTab === 2" class="tab-content">
-      <PvSettings :params="params" :editing-param="editingParam" @edit="startEdit" :is-editing="isEditing"
-        @cancel="cancelParamEdit" />
+      <PvSettings />
     </view>
 
     <!-- BMS -->
     <view v-if="activeTab === 3" class="tab-content">
-      <BmsSettings :params="params" :editing-param="editingParam" @edit="startEdit" :is-editing="isEditing"
-        @cancel="cancelParamEdit" />
+      <BmsSettings />
     </view>
   </view>
 
@@ -75,162 +58,7 @@ export default {
       isEditing: false,
       editingParam: '',
       originalParams: {},
-      params: {
-        pcs: {
-          constantVoltage: '',
-          constantCurrent: '',
-          gridPower: '',
-          gridVoltage: '',
-          B0: '',
-          B4: '',
-          B8: '',
-          B12: '',
-          B16: '',
-          B20: '',
-          B24: '',
-          B28: '',
-          B32: '',
-          B36: '',
-          B40: '',
-          B44: '',
-          B48: '',
-          B52: '',
-          B56: '',
-          B60: '',
-          B62: '',
-          B64: '',
-          B68: '',
-          B72: '',
-          B76: '',
-          B78: '',
-          B80: '',
-          B82: '',
-          B84: '',
-          B86: '',
-          B88: '',
-          B90: '',
-          B96: '',
-          B98: '',
-          B100: '',
-          B104: '',
-          B106: '',
-          B108: '',
-          B110: '',
-          B112: ''
-        },
-        storage: {
-          busVoltage: '',
-          stopCurrent: '',
-          busVoltage2: '',
-          stopCurrent2: '',
-          B0: '',
-          B2: '',
-          B4: '',
-          B6: '',
-          B8: '',
-          B10: '',
-          B12: '',
-          B14: '',
-          B16: '',
-          B18: '',
-          B20: '',
-          B22: '',
-          B24: '',
-          B26: '',
-          B28: '',
-          B30: '',
-          B32: '',
-          B34: '',
-          B36: '',
-          B38: '',
-          B40: '',
-          B42: '',
-          B44: '',
-          B46: '',
-          B48: ''
-        },
-        cooling: {
-          busVoltage: ''
-        },
-        bms: {
-          B0: '',
-          B2: '',
-          B4: '',
-          B6: '',
-          B8: '',
-          B10: '',
-          B12: '',
-          B14: '',
-          B16: '',
-          B18: '',
-          B20: '',
-          B22: '',
-          B24: '',
-          B26: '',
-          B28: '',
-          B30: '',
-          B32: '',
-          B34: '',
-          B36: '',
-          B38: '',
-          B40: '',
-          B42: '',
-          B44: '',
-          B46: '',
-          B48: '',
-          B50: '',
-          B52: '',
-          B54: '',
-          B56: '',
-          B58: '',
-          B60: '',
-          B62: '',
-          B64: '',
-          B66: '',
-          B68: '',
-          B70: '',
-          B72: '',
-          B74: '',
-          B76: '',
-          B78: '',
-          B80: '',
-          B82: '',
-          B84: '',
-          B86: '',
-          B88: '',
-          B90: '',
-          B92: '',
-          B94: '',
-          B96: '',
-          B98: '',
-          B100: '',
-          B102: '',
-          B104: '',
-          B106: '',
-          B108: '',
-          B110: '',
-          B112: '',
-          B114: '',
-          B116: '',
-          B118: '',
-          B120: '',
-          B122: '',
-          B124: '',
-          B126: '',
-          B128: '',
-          B130: '',
-          B132: '',
-          B134: '',
-          B136: '',
-          B138: '',
-          B140: '',
-          B142: '',
-          B144: '',
-          B146: '',
-          B148: '',
-          B150: ''
-        }
-      }
+      params: {}
     }
   },
   methods: {
@@ -334,6 +162,9 @@ export default {
       })
     },
     startEdit(paramKey) {
+      if (!this.isEditing) {
+        this.enterEditMode()
+      }
       this.editingParam = paramKey
     },
     cancelParamEdit() {

@@ -3,25 +3,29 @@
     <view class="param-card">
       <view class="card-header">
         <text class="card-title">光伏DC/DC</text>
+        <view v-if="!isEditing" class="edit-btn primary" @click="handleEditConfig">
+          <text class="edit-text">修改配置</text>
+        </view>
+        <view v-else class="action-btns">
+          <view class="edit-btn close" @click="closeEdit">
+            <text class="edit-text">关闭编辑</text>
+          </view>
+        </view>
       </view>
       
       <!-- 开关型参数 -->
       <view class="switch-section">
         <view v-for="param in pvSwitchParams" :key="param.key" class="param-row">
           <text class="param-name">{{ param.label }}</text>
-          <view class="switch-btns">
-            <view 
-              v-for="option in param.options" 
-              :key="option.value" 
-              class="switch-btn"
-              :class="[
-                getParamValue(param.key) === option.value ? 'btn-active' : '', 
+          <view class="switch-btns-wrapper">
+            <view class="switch-btns">
+              <view v-for="option in param.options" :key="option.value" class="switch-btn" :class="[
+                getParamValue(param.key) === option.value ? 'btn-active' : '',
                 !isEditing ? 'btn-disabled' : '',
                 clickedButton === param.key + '-' + option.value ? 'btn-clicked' : ''
-              ]"
-              @click="setSwitchParam(param.key, option.value)"
-            >
-              {{ option.label }}
+              ]" @click="setSwitchParam(param.key, option.value)">
+                {{ option.label }}
+              </view>
             </view>
           </view>
         </view>
@@ -32,19 +36,21 @@
       <view class="param-list">
         <view v-for="param in pvParams" :key="param.key" class="param-row">
           <text class="param-name">{{ param.label }}</text>
-          <view class="param-right">
-            <view class="param-value-box" :class="{ editing: editingParam === param.key }">
-              <text v-if="editingParam !== param.key" class="val-text">{{ (params && params.pv && params.pv[param.field]) || "--" }}</text>
-              <input v-else class="val-input" type="number" :value="params && params.pv && params.pv[param.field]" @input="updateParamValue(param.field, $event)" placeholder="请输入" focus />
+          <view class="param-right-wrapper">
+            <view class="param-right">
+              <view class="param-value-box" :class="{ editing: editingParam === param.key }">
+                <text v-if="editingParam !== param.key" class="val-text">{{ params.pv[param.field] || "--" }}</text>
+                <input v-else class="val-input" type="number" v-model="params.pv[param.field]" placeholder="请输入" focus />
+              </view>
+              <text class="unit-text">{{ param.unit || '' }}</text>
             </view>
-            <text class="unit-text">{{ param.unit }}</text>
-          </view>
-          <view class="btn-group">
-            <view v-if="editingParam !== param.key" class="btn btn-edit" @click="$emit('edit', param.key)">编辑</view>
-            <template v-else>
-              <view class="btn btn-sure" @click="submitParam(param.key, param.label)">下发</view>
-              <view class="btn btn-cancel" @click="$emit('cancel')">取消</view>
-            </template>
+            <view class="btn-group">
+              <view v-if="editingParam !== param.key" class="btn btn-edit" @click="handleParamEdit(param.key)">编辑</view>
+              <template v-else-if="editingParam === param.key">
+                <view class="btn btn-sure" @click="submitParam(param.key, param.label)">下发</view>
+                <view class="btn btn-cancel" @click="handleParamCancel()">取消</view>
+              </template>
+            </view>
           </view>
         </view>
       </view>
@@ -57,20 +63,7 @@ import { sendCommandFrame } from '@/api/control.js'
 
 export default {
   name: 'PvSettings',
-  props: {
-    params: {
-      type: Object,
-      required: true
-    },
-    editingParam: {
-      type: String,
-      default: ''
-    },
-    isEditing: {
-      type: Boolean,
-      default: false
-    }
-  },
+  props: {},
   computed: {
     userId() {
       return this.$store.state.userInfo?.userId || 0
@@ -80,41 +73,46 @@ export default {
     return {
       idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
       deviceAddress: '03',
+      isEditing: false,
       clickedButton: '',
+      editingParam: '',
+      params: {
+        pv: {}
+      },
       lastSendTime: 0,
       pvParams: [
-        { key: 'pv.B0', field: 'B0', label: '设置模块工作海拔值', unit: 'm' },
+        { key: 'pv.B0', field: 'B0', label: '设置模块工作海拔值', unit: 'm', min: 1000, max: 5000 },
         { key: 'pv.B4', field: 'B4', label: '设置模块输出电流值', unit: 'A' },
-        { key: 'pv.B8', field: 'B8', label: '设置组号', unit: '' },
-        { key: 'pv.B16', field: 'B16', label: '设置模块输出功率', unit: 'kW' },
+        { key: 'pv.B8', field: 'B8', label: '设置组号', unit: '', min: 0, max: 60 },
+        { key: 'pv.B16', field: 'B16', label: '设置模块输出功率', unit: 'kW', min: 0.1, max: 1 },
         { key: 'pv.B20', field: 'B20', label: '设置模块输出电压', unit: 'V' },
         { key: 'pv.B24', field: 'B24', label: '设置模块限流点', unit: 'A' },
         { key: 'pv.B28', field: 'B28', label: '设置模块输出电压上限值', unit: 'V' }
       ],
       pvSwitchParams: [
         { key: 'pv.B12', label: '设置模块地址分配方式', options: [
-          { label: '自动分配', value: 'auto' },
-          { label: '拨码设置', value: 'dip' }
+          { label: '自动分配', value: '0x00000000' },
+          { label: '拨码设置', value: '0x00010000' }
         ]},
         { key: 'pv.B32', label: '开关机', options: [
-          { label: '开机', value: 'on' },
-          { label: '关机', value: 'off' }
+          { label: '开机', value: '0x00010000' },
+          { label: '关机', value: '0x00000000' }
         ]},
         { key: 'pv.B36', label: '设置模块过压复位', options: [
-          { label: '禁止', value: 'disable' },
-          { label: '复位', value: 'reset' }
+          { label: '禁止', value: '0x00000000' },
+          { label: '复位', value: '0x00010000' }
         ]},
         { key: 'pv.B40', label: '设置模块输出过压保护关联是否允许', options: [
-          { label: '允许', value: 'allow' },
-          { label: '禁止', value: 'forbid' }
+          { label: '允许', value: '0x00000000' },
+          { label: '禁止', value: '0x00010000' }
         ]},
         { key: 'pv.B44', label: '设置模块短路复位', options: [
-          { label: '禁止', value: 'disable' },
-          { label: '复位', value: 'reset' }
+          { label: '禁止', value: '0x00000000' },
+          { label: '复位', value: '0x00010000' }
         ]},
         { key: 'pv.B48', label: '设置模块输入模式', options: [
-          { label: '交流模式', value: 'ac' },
-          { label: '直流模式', value: 'dc' }
+          { label: '交流模式', value: '0x00000001' },
+          { label: '直流模式', value: '0x00000002' }
         ]}
       ]
     }
@@ -141,6 +139,11 @@ export default {
         }
       }
 
+      let registerValue = value
+      if (paramKey === 'pv.B16') {
+        registerValue = parseFloat(value) * 20000
+      }
+
       uni.showLoading({ title: '下发中...' })
       try {
         const registerMap = {
@@ -163,7 +166,7 @@ export default {
             addr: 6,
             deviceId: '6',
             registerAddress: registerAddress,
-            registerValue: value.toString().padStart(8, '0'),
+            registerValue: registerValue.toString().padStart(8, '0'),
             valueType: '01',
             registerType: '03',
             extra1: '00',
@@ -174,7 +177,7 @@ export default {
 
         await sendCommandFrame(commandData)
         uni.hideLoading()
-        this.$emit('cancel')
+        // this.$emit('cancelParam')
         uni.showToast({ title: `${paramName}指令已下发`, icon: 'success' })
       } catch (error) {
         uni.hideLoading()
@@ -184,62 +187,56 @@ export default {
     },
     getParamValue(paramKey) {
       const [module, key] = paramKey.split('.')
-      if (!this.params || !this.params[module]) {
-        return ''
-      }
-      const hexValue = this.params[module][key]
-      
-      if (paramKey === 'pv.B12') {
-        return hexValue === '0x00030000' ? 'auto' : 'dip'
-      } else if (paramKey === 'pv.B32') {
-        return hexValue === '0x00010000' ? 'on' : 'off'
-      } else if (paramKey === 'pv.B36') {
-        return hexValue === '0x00010000' ? 'reset' : 'disable'
-      } else if (paramKey === 'pv.B40') {
-        return hexValue === '0x00010000' ? 'allow' : 'forbid'
-      } else if (paramKey === 'pv.B44') {
-        return hexValue === '0x00010000' ? 'reset' : 'disable'
-      } else if (paramKey === 'pv.B48') {
-        return hexValue === '0x00000001' ? 'ac' : 'dc'
-      }
-      
-      return hexValue
+      return this.params[module][key]
     },
     setSwitchParam(paramKey, value) {
       if (!this.checkEditMode()) return
-      
+
       const now = Date.now()
       if (now - this.lastSendTime < 5000) {
         uni.showToast({ title: '请间隔5秒后再下发', icon: 'none' })
         return
       }
-      
+
       const param = this.pvSwitchParams.find(p => p.key === paramKey)
       if (param) {
         let hexValue = '0x00010000'
-        if (value === 'disable' || value === 'forbid' || value === 'off') {
+        if (value === '0x00000000' || value === 'none' || value === 'off') {
           hexValue = '0x00000000'
-        } else if (value === 'reset' || value === 'allow' || value === 'on') {
-          hexValue = '0x00010000'
+        } else if (value === 'grid') {
+          hexValue = '0x00000000'
+        } else if (value === 'offgrid') {
+          hexValue = '0x00020000'
         } else if (value === 'auto') {
-          hexValue = '0x00030000'
-        } else if (value === 'dip') {
+          hexValue = '0x00000000'
+        } else if (value === 'on') {
           hexValue = '0x00010000'
-        } else if (value === 'ac') {
-          hexValue = '0x00000001'
-        } else if (value === 'dc') {
-          hexValue = '0x00000002'
+        } else {
+          hexValue = value
         }
-        
+
         this.clickedButton = paramKey + '-' + value
         this.lastSendTime = now
-        
+
         setTimeout(() => {
           this.clickedButton = ''
         }, 5000)
-        
+
         this.submitParam(paramKey, param.label, hexValue)
       }
+    },
+    handleEditConfig() {
+      this.isEditing = true
+    },
+    closeEdit() {
+      this.isEditing = false
+      this.editingParam = ''
+    },
+    handleParamEdit(paramKey) {
+      this.editingParam = paramKey
+    },
+    handleParamCancel() {
+      this.editingParam = ''
     }
   }
 }
@@ -259,6 +256,9 @@ export default {
 }
 
 .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 24rpx 32rpx;
   border-bottom: 1rpx solid #f0f0f0;
 }
@@ -269,33 +269,71 @@ export default {
   color: #333;
 }
 
-.param-list {
-  padding: 0 32rpx;
+.action-btns {
+  display: flex;
+  gap: 16rpx;
 }
+
+.edit-btn {
+  padding: 8rpx 24rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  
+  &.primary {
+    background: #6699ff;
+    color: #ffffff;
+  }
+  
+  &.close {
+    background: #f5f5f5;
+    color: #666;
+  }
+}
+
+.edit-text {
+  font-size: 26rpx;
+}
+
+.param-list {
+  padding: 0 20rpx;
+}
+
 
 .param-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 16rpx;
   padding: 24rpx 0;
   border-bottom: 1rpx solid #f5f5f5;
-  
+
   &:last-child {
     border-bottom: none;
   }
 }
 
 .param-name {
-  flex: 1;
+  display: block;
   font-size: 28rpx;
   color: #333;
-  margin-right:2px;
+  margin-bottom: 16rpx;
+  width:40%;
+  max-width: fit-content;
+}
+
+.param-right-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16rpx;
+  flex: 1;
+  min-width: 300rpx;
 }
 
 .param-right {
   display: flex;
   align-items: center;
   gap: 12rpx;
-  margin-right: 20rpx;
 }
 
 .param-value-box {
@@ -333,11 +371,14 @@ export default {
 .unit-text {
   font-size: 26rpx;
   color: #999;
+  width: 80rpx;
+  text-align: left;
 }
 
 .btn-group {
   display: flex;
   gap: 12rpx;
+  flex-direction: column;
 }
 
 .btn {
@@ -369,26 +410,48 @@ export default {
 }
 
 .switch-section {
-  padding: 0 32rpx;
+  padding: 0 20rpx;
+}
+
+.switch-btns-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
 }
 
 .switch-btns {
   display: flex;
   gap: 16rpx;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .switch-btn {
-  padding: 12rpx 32rpx;
-  font-size: 26rpx;
+  padding: 12rpx 20rpx;
+  font-size: 22rpx;
   border: 1rpx solid #6699ff;
-  border-radius: 5px;
+  border-radius: 6rpx;
   color: #6699ff;
   background: #ffffff;
   transition: all 0.15s ease;
-  
+  white-space: normal;
+  word-break: break-all;
+  text-align: center;
+  width: 100rpx;
+  line-height: 1.5;
+  // min-height: 80rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: fit-content;
+
   &:active {
     transform: scale(0.95);
-    background: #f5f5f5;
+    background: #f0f5ff;
+    border-color: #4a8cff;
+    color: #4a8cff;
   }
 }
 
@@ -407,10 +470,10 @@ export default {
 }
 
 .btn-clicked {
-  border-color: #6699ff !important;
+  border-color: #4488fb !important;
   color: #ffffff !important;
-  background: #6699ff !important;
-  box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.4) !important;
+  background: #4488fb !important;
+  box-shadow: 0 4rpx 16rpx rgba(68, 136, 251, 0.4) !important;
 }
 
 .btn-disabled {

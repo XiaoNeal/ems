@@ -269,7 +269,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 20rpx;
-  border-bottom: 1px solid #f0f0f0;
+  //border-bottom: 1px solid #f0f0f0;
 }
 
 .info-icon {

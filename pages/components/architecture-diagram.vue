@@ -237,6 +237,8 @@ import { getPowerData } from '../../api/power';
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 import { realtimeDataProvider } from '@/service/websocket';
 
+import { sendCommandFrame } from '@/api/control.js'
+
 export default {
   components: { dyDate },
   name: "ArchitectureDiagram",
@@ -265,6 +267,12 @@ export default {
       deviceList: [],
       dcdc170FData: null,
       nyzData: { SOC: "--" },
+      // 设备配置参数
+      deviceConfig: {
+        idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
+        typeCode: '3401',
+        address: '01'
+      },
       electricityOpts: {
         color: ["#57dd76", "#ffa13c", "#71a6ff", "#a670ff"],
         // padding: [15, 20, 0, 15],
@@ -328,6 +336,9 @@ export default {
     device170F() {
       return this.deviceList.find(item => item && item.deviceType === '170F_V1_2');
     },
+    userId() {
+      return this.$store.state.userInfo?.userId || 0
+    }
   },
   onLoad() {
     // 获取设备状态栏高度
@@ -542,18 +553,108 @@ export default {
     },
     showStartModal() { this.showModal = true; },
     closeModal() { this.showModal = false; },
-    confirmStart() {
-      this.showModal = false;
-      this.systemRunning = true;
-      uni.showToast({ title: '系统已启动', icon: 'success' });
-    },
     openStopModal() { this.showStopModal = true; },
     closeStopModal() { this.showStopModal = false; },
-    confirmStop() {
-      this.showStopModal = false;
-      this.systemRunning = false;
-      uni.showToast({ title: '系统已停止', icon: 'success' });
+    
+    // 通用命令执行方法
+    async executeCommand(options) {
+      const { title, content, apiSufix, commandBuilder, action, stateKey } = options;
+      
+      return new Promise((resolve) => {
+        uni.showModal({
+          title,
+          content,
+          success: async (res) => {
+            if (!res.confirm) {
+              resolve(false);
+              return;
+            }
+            
+            try {
+              uni.showLoading({ title: '下发中...' });
+              const commands = typeof commandBuilder === 'function' ? commandBuilder(action) : commandBuilder;
+              
+              await sendCommandFrame({
+                apiSufix,
+                idCode: this.deviceConfig.idCode,
+                typeCode: this.deviceConfig.typeCode,
+                address: this.deviceConfig.address,
+                userId: this.userId,
+                commands
+              });
+              
+              uni.hideLoading();
+              // 更新选中状态
+              if (stateKey) {
+                this[stateKey] = action;
+              }
+              uni.showToast({
+                title: `${title}成功`,
+                icon: 'success'
+              });
+              resolve(true);
+            } catch (error) {
+              uni.hideLoading();
+              uni.showToast({
+                title: `${title}失败`,
+                icon: 'none'
+              });
+              console.error(`${apiSufix} error:`, error);
+              resolve(false);
+            }
+          }
+        });
+      });
     },
+    
+    // 构建通用命令
+    buildCommand(registerAddress, registerValue) {
+      return [{
+        deviceCategory: '171F',
+        addr: '01',
+        deviceId: '01',
+        registerAddress,
+        registerValue: registerValue.toString(),
+        valueType: '01',
+        registerType: '03',
+        extra1: '00',
+        extra2: '00',
+        extra3: '00'
+      }];
+    },
+    
+    // 确认启动
+    async confirmStart() {
+      this.showModal = false;
+      const success = await this.executeCommand({
+        title: '系统启动',
+        content: '确定要启动系统吗？',
+        apiSufix: 'systemControl',
+        commandBuilder: () => this.buildCommand('100', '1'),
+        action: 'start',
+        stateKey: 'systemRunning'
+      });
+      if (success) {
+        this.systemRunning = true;
+      }
+    },
+    
+    // 确认停止
+    async confirmStop() {
+      this.showStopModal = false;
+      const success = await this.executeCommand({
+        title: '系统停止',
+        content: '确定要停止系统吗？',
+        apiSufix: 'systemControl',
+        commandBuilder: () => this.buildCommand('100', '0'),
+        action: 'stop',
+        stateKey: 'systemRunning'
+      });
+      if (success) {
+        this.systemRunning = false;
+      }
+    },
+    
     handleStartStop() {
       if (this.systemRunning) {
         this.showStopModal = true;

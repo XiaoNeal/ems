@@ -2,26 +2,36 @@
   <view class="storage-settings">
     <view class="param-card">
       <view class="card-header">
-        <text class="card-title">储能DC/DC 参数设置</text>
+        <text class="card-title">储能 DC/DC 参数设置</text>
+        <view v-if="!isEditing" class="edit-btn primary" @click="handleEditConfig">
+          <text class="edit-text">修改配置</text>
+        </view>
+        <view v-else class="action-btns">
+          <view class="edit-btn close" @click="closeEdit">
+            <text class="edit-text">关闭编辑</text>
+          </view>
+        </view>
       </view>
       
       <!-- 开关型参数 -->
       <view class="switch-section">
         <view v-for="param in storageSwitchParams" :key="param.key" class="param-row">
           <text class="param-name">{{ param.label }}</text>
-          <view class="switch-btns">
-            <view 
-              v-for="option in param.options" 
-              :key="option.value" 
-              class="switch-btn"
-              :class="[
-                getParamValue(param.key) === option.value ? 'btn-active' : '', 
-                !isEditing ? 'btn-disabled' : '',
-                clickedButton === param.key + '-' + option.value ? 'btn-clicked' : ''
-              ]"
-              @click="setSwitchParam(param.key, option.value)"
-            >
-              {{ option.label }}
+          <view class="switch-btns-wrapper">
+            <view class="switch-btns">
+              <view 
+                v-for="option in param.options" 
+                :key="option.value" 
+                class="switch-btn"
+                :class="[
+                  getParamValue(param.key) === option.value ? 'btn-active' : '', 
+                  !isEditing ? 'btn-disabled' : '',
+                  clickedButton === param.key + '-' + option.value ? 'btn-clicked' : ''
+                ]"
+                @click="setSwitchParam(param.key, option.value)"
+              >
+                {{ option.label }}
+              </view>
             </view>
           </view>
         </view>
@@ -32,19 +42,21 @@
       <view class="param-list">
         <view v-for="param in storageParams" :key="param.key" class="param-row">
           <text class="param-name">{{ param.label }}</text>
-          <view class="param-right">
-            <view class="param-value-box" :class="{ editing: editingParam === param.key }">
-              <text v-if="editingParam !== param.key" class="val-text">{{ params.storage[param.field] || "--" }}</text>
-              <input v-else class="val-input" type="number" v-model="params.storage[param.field]" placeholder="请输入" />
+          <view class="param-right-wrapper">
+            <view class="param-right">
+              <view class="param-value-box" :class="{ editing: editingParam === param.key }">
+                <text v-if="editingParam !== param.key" class="val-text">{{ params.storage[param.field] || "--" }}</text>
+                <input v-else class="val-input" type="number" v-model="params.storage[param.field]" placeholder="请输入" focus />
+              </view>
+              <text class="unit-text">{{ param.unit || '' }}</text>
             </view>
-            <text class="unit-text">{{ param.unit }}</text>
-          </view>
-          <view class="btn-group">
-            <view v-if="editingParam !== param.key" class="btn btn-edit" @click="$emit('edit', param.key)">编辑</view>
-            <template v-else>
-              <view class="btn btn-sure" @click="submitParam(param.key, param.label)">下发</view>
-              <view class="btn btn-cancel" @click="$emit('cancel')">取消</view>
-            </template>
+            <view class="btn-group">
+              <view v-if="editingParam !== param.key" class="btn btn-edit" @click="handleParamEdit(param.key)">编辑</view>
+              <template v-else-if="editingParam === param.key">
+                <view class="btn btn-sure" @click="submitParam(param.key, param.label)">下发</view>
+                <view class="btn btn-cancel" @click="handleParamCancel()">取消</view>
+              </template>
+            </view>
           </view>
         </view>
       </view>
@@ -57,20 +69,7 @@ import { sendCommandFrame } from '@/api/control.js'
 
 export default {
   name: 'StorageSettings',
-  props: {
-    params: {
-      type: Object,
-      required: true
-    },
-    editingParam: {
-      type: String,
-      default: ''
-    },
-    isEditing: {
-      type: Boolean,
-      default: false
-    }
-  },
+  props: {},
   computed: {
     userId() {
       return this.$store.state.userInfo?.userId || 0
@@ -80,23 +79,28 @@ export default {
     return {
       idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
       deviceAddress: '02',
+      isEditing: false,
       clickedButton: '',
+      editingParam: '',
       lastSendTime: 0,
+      params: {
+        storage: {}
+      },
       storageParams: [
-        { key: 'storage.B16', field: 'B16', label: '组ID号', unit: '' },
-        { key: 'storage.B18', field: 'B18', label: '模块数量', unit: '' },
-        { key: 'storage.B22', field: 'B22', label: '直流母线电压', unit: 'V' },
-        { key: 'storage.B26', field: 'B26', label: '充放电功率设定', unit: 'kW' },
-        { key: 'storage.B28', field: 'B28', label: '电池均充电压', unit: 'V' },
-        { key: 'storage.B30', field: 'B30', label: '充电电流设置', unit: 'A' },
-        { key: 'storage.B32', field: 'B32', label: '电池浮充电压', unit: 'V' },
-        { key: 'storage.B34', field: 'B34', label: '放电电压设置', unit: 'V' },
-        { key: 'storage.B36', field: 'B36', label: '放电电流设置', unit: 'A' },
-        { key: 'storage.B38', field: 'B38', label: '电池过压关机点', unit: 'V' },
-        { key: 'storage.B40', field: 'B40', label: '电池低压告警点', unit: 'V' },
-        { key: 'storage.B42', field: 'B42', label: '电池低压关机点', unit: 'V' },
-        { key: 'storage.B48', field: 'B48', label: '充电母线电压上限', unit: 'V' },
-        { key: 'storage.B50', field: 'B50', label: '放电母线电压下限', unit: 'V' }
+        { key: 'storage.B16', field: 'B16', label: '组ID号', unit: '', min: 1, max: 31, default: 1 },
+        { key: 'storage.B18', field: 'B18', label: '模块数量', unit: '', min: 1, max: 31, default: 1 },
+        { key: 'storage.B22', field: 'B22', label: '直流母线电压', unit: 'V', min: 3500, max: 8500, default: 7200 },
+        { key: 'storage.B26', field: 'B26', label: '充放电功率设定', unit: '%', min: 0, max: 1300, default: 1000 },
+        { key: 'storage.B28', field: 'B28', label: '电池均充电压', unit: 'V', min: 400, max: 3600, default: 600 },
+        { key: 'storage.B30', field: 'B30', label: '充电电流设置', unit: 'A', min: 0, max: 1300, default: 1000 },
+        { key: 'storage.B32', field: 'B32', label: '电池浮充电压', unit: 'V', min: 400, max: 3600, default: 600 },
+        { key: 'storage.B34', field: 'B34', label: '放电电压设置', unit: 'V', min: 400, max: 3600, default: 400 },
+        { key: 'storage.B36', field: 'B36', label: '放电电流设置', unit: 'A', min: 0, max: 1300, default: 1000 },
+        { key: 'storage.B38', field: 'B38', label: '电池过压关机点', unit: 'V', min: 400, max: 3700, default: 3700 },
+        { key: 'storage.B40', field: 'B40', label: '电池低压告警点', unit: 'V', min: 350, max: 3550, default: 450 },
+        { key: 'storage.B42', field: 'B42', label: '电池低压关机点', unit: 'V', min: 350, max: 3550, default: 350 },
+        { key: 'storage.B48', field: 'B48', label: '充电母线电压上限', unit: 'V', min: 3500, max: 8500, default: 6300 },
+        { key: 'storage.B50', field: 'B50', label: '放电母线电压下限', unit: 'V', min: 3500, max: 8500, default: 5700 }
       ],
       storageSwitchParams: [
         { key: 'storage.B0', label: 'Can波特率设置', options: [
@@ -116,27 +120,23 @@ export default {
           { label: 'IBG30060', value: '2' }
         ]},
         { key: 'storage.B8', label: '运行模式设置', options: [
+          { label: '无输出模式', value: '0' },
+          { label: '正常运行模式', value: '1' },
+          { label: '开环调试模式', value: '2' },
+          { label: '发波调试模式', value: '3' }
+        ]},
+        { key: 'storage.B10', label: '运行状态设置', options: [
           { label: '自适应', value: '0' },
           { label: '并网', value: '1' },
           { label: '离网', value: '2' }
         ]},
-        { key: 'storage.B10', label: '运行状态设置', options: [
-          { label: '待机', value: '0' },
-          { label: '充电', value: '1' },
-          { label: '放电', value: '2' },
-          { label: 'BAT自动', value: '3' },
-          { label: 'BUS自动', value: '4' },
-          { label: '关充电', value: '5' },
-          { label: '高压PV', value: '6' },
-          { label: '低压PV', value: '7' }
-        ]},
         { key: 'storage.B12', label: '系统开关机', options: [
-          { label: '开机', value: 'on' },
-          { label: '关机', value: 'off' }
+          { label: '开机', value: '0x0055' },
+          { label: '关机', value: '0x00AA' }
         ]},
         { key: 'storage.B14', label: '恢复出厂设置', options: [
-          { label: '恢复所有值', value: 'all' },
-          { label: '恢复用户值', value: 'user' }
+          { label: '恢复所有值', value: '0x0055' },
+          { label: '恢复用户值', value: '0x00AA' }
         ]},
         { key: 'storage.B20', label: '电池类型', options: [
           { label: '铅酸电池', value: '0' },
@@ -180,6 +180,9 @@ export default {
       return true
     },
     async submitParam(paramKey, paramName, value) {
+      console.log('paramKey:', paramKey)
+      console.log('paramName:', paramName)
+      console.log('value:', value)
       if (value === undefined) {
         value = this.getParamValue(paramKey)
         if (!value && value !== 0) {
@@ -214,7 +217,7 @@ export default {
             addr: 30,
             deviceId: '30',
             registerAddress: registerAddress,
-            registerValue: value.toString().padStart(8, '0'),
+            registerValue: value,
             valueType: '01',
             registerType: '03',
             extra1: '00',
@@ -225,7 +228,7 @@ export default {
 
         await sendCommandFrame(commandData)
         uni.hideLoading()
-        this.$emit('cancel')
+        // this.$emit('cancelParam')
         uni.showToast({ title: `${paramName}指令已下发`, icon: 'success' })
       } catch (error) {
         uni.hideLoading()
@@ -248,33 +251,6 @@ export default {
       
       const param = this.storageSwitchParams.find(p => p.key === paramKey)
       if (param) {
-        let hexValue = '0x00000000'
-        
-        if (paramKey === 'storage.B0') {
-          const baudValues = { '0': '0x00000000', '1': '0x00010000', '2': '0x00020000', '3': '0x00030000' }
-          hexValue = baudValues[value]
-        } else if (paramKey === 'storage.B2') {
-          const codeValues = { '0': '0x00000000', '1': '0x00010000', '2': '0x00020000', '3': '0x00030000' }
-          hexValue = codeValues[value]
-        } else if (paramKey === 'storage.B4') {
-          const typeValues = { '1': '0x00010000', '2': '0x00020000' }
-          hexValue = typeValues[value]
-        } else if (paramKey === 'storage.B8') {
-          const statusValues = { '0': '0x00000000', '1': '0x00010000', '2': '0x00020000' }
-          hexValue = statusValues[value]
-        } else if (paramKey === 'storage.B10' || paramKey === 'storage.B24') {
-          hexValue = `0x000${value}0000`
-        } else if (paramKey === 'storage.B12') {
-          if (value === 'on') hexValue = '0x00010000'
-          else hexValue = '0x00000000'
-        } else if (paramKey === 'storage.B14') {
-          if (value === 'all') hexValue = '0x00000000'
-          else hexValue = '0x00010000'
-        } else if (paramKey === 'storage.B20' || paramKey === 'storage.B44' || paramKey === 'storage.B46' || paramKey === 'storage.B53b0' || paramKey === 'storage.B53b1') {
-          const typeValues = { '0': '0x00000000', '1': '0x00010000' }
-          hexValue = typeValues[value]
-        }
-        
         this.clickedButton = paramKey + '-' + value
         this.lastSendTime = now
         
@@ -282,8 +258,21 @@ export default {
           this.clickedButton = ''
         }, 5000)
         
-        this.submitParam(paramKey, param.label, hexValue)
+        this.submitParam(paramKey, param.label, value)
       }
+    },
+    handleEditConfig() {
+      this.isEditing = true
+    },
+    closeEdit() {
+      this.isEditing = false
+      this.editingParam = ''
+    },
+    handleParamEdit(paramKey) {
+      this.editingParam = paramKey
+    },
+    handleParamCancel() {
+      this.editingParam = ''
     }
   }
 }
@@ -304,6 +293,9 @@ export default {
 }
 
 .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 30rpx 32rpx;
   border-bottom: 1rpx solid #f2f3f5;
   background: #fafbfc;
@@ -313,6 +305,31 @@ export default {
   font-size: 34rpx;
   font-weight: 600;
   color: #1d2129;
+}
+
+.action-btns {
+  display: flex;
+  gap: 16rpx;
+}
+
+.edit-btn {
+  padding: 8rpx 24rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  
+  &.primary {
+    background: #6699ff;
+    color: #ffffff;
+  }
+  
+  &.close {
+    background: #f5f5f5;
+    color: #666;
+  }
+}
+
+.edit-text {
+  font-size: 26rpx;
 }
 
 /* 开关参数区域 */
@@ -336,7 +353,15 @@ export default {
 .param-name {
   font-size: 28rpx;
   color: #333;
-  flex: 0 0 260rpx;
+  width:40%;
+  max-width: fit-content;
+}
+
+.switch-btns-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
 }
 
 .switch-btns {
@@ -400,6 +425,14 @@ export default {
   padding: 0 32rpx;
 }
 
+.param-right-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  gap: 16rpx;
+}
+
 .param-right {
   display: flex;
   align-items: center;
@@ -445,6 +478,7 @@ export default {
 .btn-group {
   display: flex;
   gap: 16rpx;
+  flex-direction: column;
 }
 
 .btn {

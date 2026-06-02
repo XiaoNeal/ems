@@ -994,8 +994,747 @@
 
         </view>
 
-        <!-- 光伏 -->
+        <!-- BMS -->
         <view v-if="activeTab === 2" class="module">
+          <view class="module-title">BMS</view>
+
+          <!-- 告警状态 -->
+          <view class="data-group">
+            <view class="group-title">告警状态</view>
+            <view class="data-grid">
+              <view class="grid-item">
+                <text class="item-label">组端过压1级报警</text>
+                <text class="item-value">{{ bmsData.B0b0 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端过压2级报警</text>
+                <text class="item-value">{{ bmsData.B0b1 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端过压3级报警</text>
+                <text class="item-value">{{ bmsData.B0b2 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端欠压1级报警</text>
+                <text class="item-value">{{ bmsData.B0b3 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端欠压2级报警</text>
+                <text class="item-value">{{ bmsData.B0b4 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端欠压3级报警</text>
+                <text class="item-value">{{ bmsData.B0b5 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端放电过流1级报警</text>
+                <text class="item-value">{{ bmsData.B0b6 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端放电过流2级报警</text>
+                <text class="item-value">{{ bmsData.B0b7 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端放电过流3级报警</text>
+                <text class="item-value">{{ bmsData.B1b0 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端充电过流1级报警</text>
+                <text class="item-value">{{ bmsData.B1b1 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端充电过流2级报警</text>
+                <text class="item-value">{{ bmsData.B1b2 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端充电过流3级报警</text>
+                <text class="item-value">{{ bmsData.B1b3 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端绝缘1级报警</text>
+                <text class="item-value">{{ bmsData.B1b4 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端绝缘2级报警</text>
+                <text class="item-value">{{ bmsData.B1b5 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">组端绝缘3级报警</text>
+                <text class="item-value">{{ bmsData.B1b6 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电池充电过温1级报警</text>
+                <text class="item-value">{{ bmsData.B1b7 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电池充电过温2级报警</text>
+                <text class="item-value">{{ bmsData.B2b0 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电池充电过温3级报警</text>
+                <text class="item-value">{{ bmsData.B2b1 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电池充电欠温1级报警</text>
+                <text class="item-value">{{ bmsData.B2b2 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电池充电欠温2级报警</text>
+                <text class="item-value">{{ bmsData.B2b3 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电池充电欠温3级报警</text>
+                <text class="item-value">{{ bmsData.B2b4 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电压过压1级报警</text>
+                <text class="item-value">{{ bmsData.B2b5 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电压过压2级报警</text>
+                <text class="item-value">{{ bmsData.B2b6 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电压过压3级报警</text>
+                <text class="item-value">{{ bmsData.B2b7 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电压欠压1级报警</text>
+                <text class="item-value">{{ bmsData.B3b0 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电压欠压2级报警</text>
+                <text class="item-value">{{ bmsData.B3b1 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电压欠压3级报警</text>
+                <text class="item-value">{{ bmsData.B3b2 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体压差过高1级报警</text>
+                <text class="item-value">{{ bmsData.B3b3 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体压差过高2级报警</text>
+                <text class="item-value">{{ bmsData.B3b4 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体压差过高3级报警</text>
+                <text class="item-value">{{ bmsData.B3b5 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体温差过高1级报警</text>
+                <text class="item-value">{{ bmsData.B3b6 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体温差过高2级报警</text>
+                <text class="item-value">{{ bmsData.B3b7 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体温差过高3级报警</text>
+                <text class="item-value">{{ bmsData.B4b0 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">SOC过低1级告警</text>
+                <text class="item-value">{{ bmsData.B4b1 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">SOC过低2级告警</text>
+                <text class="item-value">{{ bmsData.B4b2 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">SOC过低3级告警</text>
+                <text class="item-value">{{ bmsData.B4b3 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">动力插箱温度过高1级报警</text>
+                <text class="item-value">{{ bmsData.B4b4 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">动力插箱温度过高2级报警</text>
+                <text class="item-value">{{ bmsData.B4b5 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">动力插箱温度过高3级报警</text>
+                <text class="item-value">{{ bmsData.B4b6 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组过压1级报警</text>
+                <text class="item-value">{{ bmsData.B4b7 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组过压2级报警</text>
+                <text class="item-value">{{ bmsData.B5b0 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组过压3级报警</text>
+                <text class="item-value">{{ bmsData.B5b1 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组欠压1级报警</text>
+                <text class="item-value">{{ bmsData.B5b2 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组欠压2级报警</text>
+                <text class="item-value">{{ bmsData.B5b3 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组欠压3级报警</text>
+                <text class="item-value">{{ bmsData.B5b4 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI1故障</text>
+                <text class="item-value">{{ bmsData.B5b5 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI2故障</text>
+                <text class="item-value">{{ bmsData.B5b6 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI3故障</text>
+                <text class="item-value">{{ bmsData.B5b7 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI4故障</text>
+                <text class="item-value">{{ bmsData.B6b0 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI5故障</text>
+                <text class="item-value">{{ bmsData.B6b1 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI6故障</text>
+                <text class="item-value">{{ bmsData.B6b2 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI7故障</text>
+                <text class="item-value">{{ bmsData.B6b3 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI8故障</text>
+                <text class="item-value">{{ bmsData.B6b4 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">内网通讯失联</text>
+                <text class="item-value">{{ bmsData.B6b5 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电压采集异常</text>
+                <text class="item-value">{{ bmsData.B6b6 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体温度采集异常</text>
+                <text class="item-value">{{ bmsData.B6b7 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">显控检测故障</text>
+                <text class="item-value">{{ bmsData.B7b0 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">簇间压差大</text>
+                <text class="item-value">{{ bmsData.B7b1 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">簇间跳机故障</text>
+                <text class="item-value">{{ bmsData.B7b2 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池极限故障</text>
+                <text class="item-value">{{ bmsData.B7b3 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">项目软件版本参数不一致</text>
+                <text class="item-value">{{ bmsData.B7b4 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">与PCS通讯故障</text>
+                <text class="item-value">{{ bmsData.B7b5 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">PC强控调试模式</text>
+                <text class="item-value">{{ bmsData.B7b6 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">CAN霍尔传感器故障</text>
+                <text class="item-value">{{ bmsData.B7b7 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">CAN霍尔传感器通讯故障</text>
+                <text class="item-value">{{ bmsData.B8b0 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">硬件自检异常</text>
+                <text class="item-value">{{ bmsData.B8b1 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电压线束故障</text>
+                <text class="item-value">{{ bmsData.B8b2 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">均衡故障</text>
+                <text class="item-value">{{ bmsData.B8b3 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">EMS通讯故障</text>
+                <text class="item-value">{{ bmsData.B8b4 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">与三级BMS通讯故障</text>
+                <text class="item-value">{{ bmsData.B8b5 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电池放电过温1级报警</text>
+                <text class="item-value">{{ bmsData.B8b6 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电池放电过温2级报警</text>
+                <text class="item-value">{{ bmsData.B8b7 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电池放电过温3级报警</text>
+                <text class="item-value">{{ bmsData.B9b0 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电池放电欠温1级报警</text>
+                <text class="item-value">{{ bmsData.B9b1 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电池放电欠温2级报警</text>
+                <text class="item-value">{{ bmsData.B9b2 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体电池放电欠温3级报警</text>
+                <text class="item-value">{{ bmsData.B9b3 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">SOC过高1级告警</text>
+                <text class="item-value">{{ bmsData.B9b4 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">SOC过高2级告警</text>
+                <text class="item-value">{{ bmsData.B9b5 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">SOC过高3级告警</text>
+                <text class="item-value">{{ bmsData.B9b6 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">温升快报警1级报警</text>
+                <text class="item-value">{{ bmsData.B9b7 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">温升快报警2级报警</text>
+                <text class="item-value">{{ bmsData.B10b0 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">温升快报警3级报警</text>
+                <text class="item-value">{{ bmsData.B10b1 }}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 电气参数 -->
+          <view class="data-group">
+            <view class="group-title">电气参数</view>
+            <view class="data-grid">
+              <view class="grid-item">
+                <text class="item-label">电池簇电压(V)</text>
+                <text class="item-value">{{ bmsData.B12 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇电流值(A)</text>
+                <text class="item-value">{{ bmsData.B14 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇总SOC(%)</text>
+                <text class="item-value">{{ bmsData.B16 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇总SOH(%)</text>
+                <text class="item-value">{{ bmsData.B18 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇总SOE(kWh)</text>
+                <text class="item-value">{{ bmsData.B20 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇绝缘电阻R+(kΩ)</text>
+                <text class="item-value">{{ bmsData.B22 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇绝缘电阻R-(kΩ)</text>
+                <text class="item-value">{{ bmsData.B24 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇电池状态</text>
+                <text class="item-value">{{ bmsData.B26 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">实际温度采集点数</text>
+                <text class="item-value">{{ bmsData.B32 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池最高温度(℃)</text>
+                <text class="item-value">{{ bmsData.B34 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池最高温度所在模块号</text>
+                <text class="item-value">{{ bmsData.B36 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池最高温度模块内序号</text>
+                <text class="item-value">{{ bmsData.B38 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池最低温度(℃)</text>
+                <text class="item-value">{{ bmsData.B40 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池最低温度所在模块号</text>
+                <text class="item-value">{{ bmsData.B42 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池最低温度模块内序号</text>
+                <text class="item-value">{{ bmsData.B44 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池平均温度(℃)</text>
+                <text class="item-value">{{ bmsData.B46 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池组电池总节数</text>
+                <text class="item-value">{{ bmsData.B48 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体平均电压(V)</text>
+                <text class="item-value">{{ bmsData.B50 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体电压(V)</text>
+                <text class="item-value">{{ bmsData.B52 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体电压所在模块号</text>
+                <text class="item-value">{{ bmsData.B54 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体电压模块内序号</text>
+                <text class="item-value">{{ bmsData.B56 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体电压(V)</text>
+                <text class="item-value">{{ bmsData.B58 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体电压所在模块号</text>
+                <text class="item-value">{{ bmsData.B60 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体电压模块内序号</text>
+                <text class="item-value">{{ bmsData.B62 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体平均SOC(%)</text>
+                <text class="item-value">{{ bmsData.B64 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体SOC(%)</text>
+                <text class="item-value">{{ bmsData.B66 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体SOC所在模块号</text>
+                <text class="item-value">{{ bmsData.B68 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体SOC模块内序号</text>
+                <text class="item-value">{{ bmsData.B70 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体SOC(%)</text>
+                <text class="item-value">{{ bmsData.B72 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体SOC所在模块号</text>
+                <text class="item-value">{{ bmsData.B74 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体SOC模块内序号</text>
+                <text class="item-value">{{ bmsData.B76 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体平均SOH(%)</text>
+                <text class="item-value">{{ bmsData.B78 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体SOH(%)</text>
+                <text class="item-value">{{ bmsData.B80 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体SOH所在模块号</text>
+                <text class="item-value">{{ bmsData.B82 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体SOH模块内序号</text>
+                <text class="item-value">{{ bmsData.B84 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体SOH(%)</text>
+                <text class="item-value">{{ bmsData.B86 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体SOH所在模块号</text>
+                <text class="item-value">{{ bmsData.B88 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体SOH模块内序号</text>
+                <text class="item-value">{{ bmsData.B90 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体平均内阻(mΩ)</text>
+                <text class="item-value">{{ bmsData.B92 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体内阻(mΩ)</text>
+                <text class="item-value">{{ bmsData.B94 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体内阻所在模块号</text>
+                <text class="item-value">{{ bmsData.B96 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体内阻模块内序号</text>
+                <text class="item-value">{{ bmsData.B98 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体内阻(mΩ)</text>
+                <text class="item-value">{{ bmsData.B100 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体内阻所在模块号</text>
+                <text class="item-value">{{ bmsData.B102 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体内阻模块内序号</text>
+                <text class="item-value">{{ bmsData.B104 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱最高温度(℃)</text>
+                <text class="item-value">{{ bmsData.B106 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱最高温度所在模块号</text>
+                <text class="item-value">{{ bmsData.B108 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱最高温度模块内序号</text>
+                <text class="item-value">{{ bmsData.B110 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱最低温度(℃)</text>
+                <text class="item-value">{{ bmsData.B112 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱最低温度所在模块号</text>
+                <text class="item-value">{{ bmsData.B114 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱最低温度模块内序号</text>
+                <text class="item-value">{{ bmsData.B116 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱平均温度(℃)</text>
+                <text class="item-value">{{ bmsData.B118 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组最高电压值(V)</text>
+                <text class="item-value">{{ bmsData.B120 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组最高电压序号</text>
+                <text class="item-value">{{ bmsData.B122 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组最低电压值(V)</text>
+                <text class="item-value">{{ bmsData.B124 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组最低电压序号</text>
+                <text class="item-value">{{ bmsData.B126 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">累计充电电量(kWh)</text>
+                <text class="item-value">{{ bmsData.B128 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">累计放电电量(kWh)</text>
+                <text class="item-value">{{ bmsData.B132 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单次充电电量(kWh)</text>
+                <text class="item-value">{{ bmsData.B136 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单次放电电量(kWh)</text>
+                <text class="item-value">{{ bmsData.B138 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">累计充电次数</text>
+                <text class="item-value">{{ bmsData.B140 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">累计放电次数</text>
+                <text class="item-value">{{ bmsData.B142 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池组负载电压(V)</text>
+                <text class="item-value">{{ bmsData.B144 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池组总电压-备用1(V)</text>
+                <text class="item-value">{{ bmsData.B146 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池组电流值-备用1(A)</text>
+                <text class="item-value">{{ bmsData.B148 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池组电流值-备用2(A)</text>
+                <text class="item-value">{{ bmsData.B150 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">系统运行心跳</text>
+                <text class="item-value">{{ bmsData.B152 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">绝缘采集状态</text>
+                <text class="item-value">{{ bmsData.B154 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">禁充标志</text>
+                <text class="item-value">{{ bmsData.B156b0 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">禁放标志</text>
+                <text class="item-value">{{ bmsData.B156b1 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">告警状态</text>
+                <text class="item-value">{{ bmsData.B156b2 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">充满状态</text>
+                <text class="item-value">{{ bmsData.B156b3 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">放空状态</text>
+                <text class="item-value">{{ bmsData.B156b4 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">系统告警状态</text>
+                <text class="item-value">{{ bmsData.B158 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">系统告警状态-禁充/禁放解除条件</text>
+                <text class="item-value">{{ bmsData.B160 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">系统告警状态-禁充/禁放解除时间</text>
+                <text class="item-value">{{ bmsData.B162 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大允许充电电流(A)</text>
+                <text class="item-value">{{ bmsData.B164 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大允许放电电流(A)</text>
+                <text class="item-value">{{ bmsData.B166 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大允许充电功率(kW)</text>
+                <text class="item-value">{{ bmsData.B168 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大允许放电功率(kW)</text>
+                <text class="item-value">{{ bmsData.B170 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大单体电压节号</text>
+                <text class="item-value">{{ bmsData.B172 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最小单体电压节号</text>
+                <text class="item-value">{{ bmsData.B174 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大单体温度节号</text>
+                <text class="item-value">{{ bmsData.B176 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最小单体温度节号</text>
+                <text class="item-value">{{ bmsData.B178 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大SOC节号</text>
+                <text class="item-value">{{ bmsData.B180 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最小SOC节号</text>
+                <text class="item-value">{{ bmsData.B182 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大SOH节号</text>
+                <text class="item-value">{{ bmsData.B184 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最小SOH节号</text>
+                <text class="item-value">{{ bmsData.B186 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大电池内阻节号</text>
+                <text class="item-value">{{ bmsData.B188 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最小电池内阻节号</text>
+                <text class="item-value">{{ bmsData.B190 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单日累计充电电量(kWh)</text>
+                <text class="item-value">{{ bmsData.B192 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单日累计放电电量(kWh)</text>
+                <text class="item-value">{{ bmsData.B196 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">主控采集NTC温度1(℃)</text>
+                <text class="item-value">{{ bmsData.B200 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">主控采集NTC温度2(℃)</text>
+                <text class="item-value">{{ bmsData.B202 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">主控采集NTC温度3(℃)</text>
+                <text class="item-value">{{ bmsData.B204 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">主控采集NTC温度4(℃)</text>
+                <text class="item-value">{{ bmsData.B206 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">通讯协议版本号主版本</text>
+                <text class="item-value">{{ bmsData.B208 }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">通讯协议版本号子版本</text>
+                <text class="item-value">{{ bmsData.B210 }}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 光伏 -->
+        <view v-if="activeTab === 3" class="module">
           <view class="module-title">光伏</view>
 
           <!-- 运行状态区域 -->
@@ -1113,7 +1852,7 @@ export default {
   data() {
     return {
       activeTab: 0,
-      tabs: ['PCS', '电池组', '光伏'],
+      tabs: ['PCS', '电池组', 'BMS', '光伏'],
       // PCS数据（从171B-model.js的EnergyData字段映射）
       pcsData: {
         // 相电压
@@ -1201,6 +1940,40 @@ export default {
         B123: "--", // BMS最小电芯电压
         B125: "--", // BMS最大电芯温度
         B126: "--"  // BMS最小电芯温度
+      },
+      // BMS数据（从171c-model.js的EnergyData字段映射）
+      bmsData: {
+        // 告警状态
+        B0b0: "--", B0b1: "--", B0b2: "--", B0b3: "--", B0b4: "--", B0b5: "--", B0b6: "--", B0b7: "--",
+        B1b0: "--", B1b1: "--", B1b2: "--", B1b3: "--", B1b4: "--", B1b5: "--", B1b6: "--", B1b7: "--",
+        B2b0: "--", B2b1: "--", B2b2: "--", B2b3: "--", B2b4: "--", B2b5: "--", B2b6: "--", B2b7: "--",
+        B3b0: "--", B3b1: "--", B3b2: "--", B3b3: "--", B3b4: "--", B3b5: "--", B3b6: "--", B3b7: "--",
+        B4b0: "--", B4b1: "--", B4b2: "--", B4b3: "--", B4b4: "--", B4b5: "--", B4b6: "--", B4b7: "--",
+        B5b0: "--", B5b1: "--", B5b2: "--", B5b3: "--", B5b4: "--", B5b5: "--", B5b6: "--", B5b7: "--",
+        B6b0: "--", B6b1: "--", B6b2: "--", B6b3: "--", B6b4: "--", B6b5: "--", B6b6: "--", B6b7: "--",
+        B7b0: "--", B7b1: "--", B7b2: "--", B7b3: "--", B7b4: "--", B7b5: "--", B7b6: "--", B7b7: "--",
+        B8b0: "--", B8b1: "--", B8b2: "--", B8b3: "--", B8b4: "--", B8b5: "--", B8b6: "--", B8b7: "--",
+        B9b0: "--", B9b1: "--", B9b2: "--", B9b3: "--", B9b4: "--", B9b5: "--", B9b6: "--", B9b7: "--",
+        B10b0: "--", B10b1: "--",
+        // 电气参数
+        B12: "--", B14: "--", B16: "--", B18: "--", B20: "--", B22: "--", B24: "--", B26: "--",
+        B28b0: "--", B28b1: "--", B28b2: "--", B28b3: "--", B28b4: "--", B28b5: "--", B28b6: "--", B28b7: "--",
+        B29b0: "--",
+        B30b0: "--", B30b1: "--", B30b2: "--", B30b3: "--", B30b4: "--", B30b5: "--", B30b6: "--", B30b7: "--",
+        B32: "--", B34: "--", B36: "--", B38: "--", B40: "--", B42: "--", B44: "--", B46: "--",
+        B48: "--", B50: "--", B52: "--", B54: "--", B56: "--", B58: "--", B60: "--", B62: "--",
+        B64: "--", B66: "--", B68: "--", B70: "--", B72: "--", B74: "--", B76: "--", B78: "--",
+        B80: "--", B82: "--", B84: "--", B86: "--", B88: "--", B90: "--", B92: "--", B94: "--",
+        B96: "--", B98: "--", B100: "--", B102: "--", B104: "--", B106: "--", B108: "--", B110: "--",
+        B112: "--", B114: "--", B116: "--", B118: "--", B120: "--", B122: "--", B124: "--", B126: "--",
+        B128: "--", B132: "--", B136: "--", B138: "--", B140: "--", B142: "--",
+        B144: "--", B146: "--", B148: "--", B150: "--", B152: "--", B154: "--",
+        B156b0: "--", B156b1: "--", B156b2: "--", B156b3: "--", B156b4: "--",
+        B158: "--", B160: "--", B162: "--", B164: "--", B166: "--", B168: "--",
+        B170: "--", B172: "--", B174: "--", B176: "--", B178: "--", B180: "--",
+        B182: "--", B184: "--", B186: "--", B188: "--", B190: "--",
+        B192: "--", B196: "--",
+        B200: "--", B202: "--", B204: "--", B206: "--", B208: "--", B210: "--"
       },
       // 光伏数据（从171E-model.js的EnergyData字段映射）
       pvData: {

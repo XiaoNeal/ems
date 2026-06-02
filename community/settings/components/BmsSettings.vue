@@ -3,25 +3,35 @@
     <view class="param-card">
       <view class="card-header">
         <text class="card-title">BMS参数设置</text>
+        <view v-if="!isEditing" class="edit-btn primary" @click="handleEditConfig">
+          <text class="edit-text">修改配置</text>
+        </view>
+        <view v-else class="action-btns">
+          <view class="edit-btn close" @click="closeEdit">
+            <text class="edit-text">关闭编辑</text>
+          </view>
+        </view>
       </view>
       
       <!-- 开关型参数 -->
       <view class="switch-section">
         <view v-for="param in bmsSwitchParams" :key="param.key" class="param-row">
           <text class="param-name">{{ param.label }}</text>
-          <view class="switch-btns">
-            <view 
-              v-for="option in param.options" 
-              :key="option.value" 
-              class="switch-btn"
-              :class="[
-                getParamValue(param.key) === option.value ? 'btn-active' : '', 
-                !isEditing ? 'btn-disabled' : '',
-                clickedButton === param.key + '-' + option.value ? 'btn-clicked' : ''
-              ]"
-              @click="setSwitchParam(param.key, option.value)"
-            >
-              {{ option.label }}
+          <view class="switch-btns-wrapper">
+            <view class="switch-btns">
+              <view 
+                v-for="option in param.options" 
+                :key="option.value" 
+                class="switch-btn"
+                :class="[
+                  getParamValue(param.key) === option.value ? 'btn-active' : '', 
+                  !isEditing ? 'btn-disabled' : '',
+                  clickedButton === param.key + '-' + option.value ? 'btn-clicked' : ''
+                ]"
+                @click="setSwitchParam(param.key, option.value)"
+              >
+                {{ option.label }}
+              </view>
             </view>
           </view>
         </view>
@@ -32,19 +42,21 @@
       <view class="param-list">
         <view v-for="param in bmsParams" :key="param.key" class="param-row">
           <text class="param-name">{{ param.label }}</text>
-          <view class="param-right">
-            <view class="param-value-box" :class="{ editing: editingParam === param.key }">
-              <text v-if="editingParam !== param.key" class="val-text">{{ (params && params.bms && params.bms[param.field]) || "--" }}</text>
-              <input v-else class="val-input" type="number" :value="params && params.bms && params.bms[param.field]" @input="updateParamValue(param.field, $event)" placeholder="请输入" focus />
+          <view class="param-right-wrapper">
+            <view class="param-right">
+              <view class="param-value-box" :class="{ editing: editingParam === param.key }">
+                <text v-if="editingParam !== param.key" class="val-text">{{ params.bms[param.field] || "--" }}</text>
+                <input v-else class="val-input" type="number" v-model="params.bms[param.field]" placeholder="请输入" focus />
+              </view>
+              <text class="unit-text">{{ param.unit || '' }}</text>
             </view>
-            <text class="unit-text">{{ param.unit }}</text>
-          </view>
-          <view class="btn-group">
-            <view v-if="editingParam !== param.key" class="btn btn-edit" @click="$emit('edit', param.key)">编辑</view>
-            <template v-else>
-              <view class="btn btn-sure" @click="submitParam(param.key, param.label)">下发</view>
-              <view class="btn btn-cancel" @click="$emit('cancel')">取消</view>
-            </template>
+            <view class="btn-group">
+              <view v-if="editingParam !== param.key" class="btn btn-edit" @click="handleParamEdit(param.key)">编辑</view>
+              <template v-else-if="editingParam === param.key">
+                <view class="btn btn-sure" @click="submitParam(param.key, param.label)">下发</view>
+                <view class="btn btn-cancel" @click="handleParamCancel()">取消</view>
+              </template>
+            </view>
           </view>
         </view>
       </view>
@@ -57,20 +69,7 @@ import { sendCommandFrame } from '@/api/control.js'
 
 export default {
   name: 'BmsSettings',
-  props: {
-    params: {
-      type: Object,
-      required: true
-    },
-    editingParam: {
-      type: String,
-      default: ''
-    },
-    isEditing: {
-      type: Boolean,
-      default: false
-    }
-  },
+  props: {},
   computed: {
     userId() {
       return this.$store.state.userInfo?.userId || 0
@@ -80,92 +79,97 @@ export default {
     return {
       idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
       deviceAddress: '04',
+      isEditing: false,
+      editingParam: '',
       lastSendTime: 0,
+      params: {
+        bms: {}
+      },
       clickedButton: '',
       bmsParams: [
-        { key: 'bms.B0', field: 'B0', label: '组端过压 1 级报警阈值', unit: 'V' },
-        { key: 'bms.B2', field: 'B2', label: '组端过压 2 级报警阈值', unit: 'V' },
-        { key: 'bms.B4', field: 'B4', label: '组端过压 3 级报警阈值', unit: 'V' },
-        { key: 'bms.B6', field: 'B6', label: '组端过压报警回差值', unit: 'V' },
-        { key: 'bms.B8', field: 'B8', label: '组端欠压 1 级报警阈值', unit: 'V' },
-        { key: 'bms.B10', field: 'B10', label: '组端欠压 2 级报警阈值', unit: 'V' },
-        { key: 'bms.B12', field: 'B12', label: '组端欠压 3 级报警阈值', unit: 'V' },
-        { key: 'bms.B14', field: 'B14', label: '组端欠压报警回差值', unit: 'V' },
-        { key: 'bms.B16', field: 'B16', label: '组端放电过流 1 级报警阈值', unit: 'A' },
-        { key: 'bms.B18', field: 'B18', label: '组端放电过流 2 级报警阈值', unit: 'A' },
-        { key: 'bms.B20', field: 'B20', label: '组端放电过流 3 级报警阈值', unit: 'A' },
-        { key: 'bms.B22', field: 'B22', label: '组端放电过流报警回差值', unit: 'A' },
-        { key: 'bms.B24', field: 'B24', label: '组端充电过流 1 级报警阈值', unit: 'A' },
-        { key: 'bms.B26', field: 'B26', label: '组端充电过流 2 级报警阈值', unit: 'A' },
-        { key: 'bms.B28', field: 'B28', label: '组端充电过流 3 级报警阈值', unit: 'A' },
-        { key: 'bms.B30', field: 'B30', label: '组端充电过流报警回差值', unit: 'A' },
-        { key: 'bms.B32', field: 'B32', label: '组端绝缘 1 级报警阈值', unit: 'kΩ' },
-        { key: 'bms.B34', field: 'B34', label: '组端绝缘 2 级报警阈值', unit: 'kΩ' },
-        { key: 'bms.B36', field: 'B36', label: '组端绝缘 3 级报警阈值', unit: 'kΩ' },
-        { key: 'bms.B38', field: 'B38', label: '组端绝缘报警回差值', unit: 'kΩ' },
-        { key: 'bms.B40', field: 'B40', label: '单体充电过温 1 级报警阈值', unit: '℃' },
-        { key: 'bms.B42', field: 'B42', label: '单体充电过温 2 级报警阈值', unit: '℃' },
-        { key: 'bms.B44', field: 'B44', label: '单体充电过温 3 级报警阈值', unit: '℃' },
-        { key: 'bms.B46', field: 'B46', label: '电池充电过温报警回差值', unit: '℃' },
-        { key: 'bms.B48', field: 'B48', label: '单体充电欠温 1 级报警阈值', unit: '℃' },
-        { key: 'bms.B50', field: 'B50', label: '单体充电欠温 2 级报警阈值', unit: '℃' },
-        { key: 'bms.B52', field: 'B52', label: '单体充电欠温 3 级报警阈值', unit: '℃' },
-        { key: 'bms.B54', field: 'B54', label: '单体充电欠温报警回差值', unit: '℃' },
-        { key: 'bms.B56', field: 'B56', label: '单体电压过压 1 级报警阈值', unit: 'mV' },
-        { key: 'bms.B58', field: 'B58', label: '单体电压过压 2 级报警阈值', unit: 'mV' },
-        { key: 'bms.B60', field: 'B60', label: '单体电压过压 3 级报警阈值', unit: 'mV' },
-        { key: 'bms.B62', field: 'B62', label: '单体电压过压报警回差值', unit: 'mV' },
-        { key: 'bms.B64', field: 'B64', label: '单体电压欠压 1 级报警阈值', unit: 'mV' },
-        { key: 'bms.B66', field: 'B66', label: '单体电压欠压 2 级报警阈值', unit: 'mV' },
-        { key: 'bms.B68', field: 'B68', label: '单体电压欠压 3 级报警阈值', unit: 'mV' },
-        { key: 'bms.B70', field: 'B70', label: '单体电压欠压报警回差值', unit: 'mV' },
-        { key: 'bms.B72', field: 'B72', label: '单体电压差压 1 级报警阈值', unit: 'mV' },
-        { key: 'bms.B74', field: 'B74', label: '单体电压差压 2 级报警阈值', unit: 'mV' },
-        { key: 'bms.B76', field: 'B76', label: '单体电压差压 3 级报警阈值', unit: 'mV' },
-        { key: 'bms.B78', field: 'B78', label: '单体电压差压报警回差值', unit: 'mV' },
-        { key: 'bms.B80', field: 'B80', label: '单体温度温差 1 级报警阈值', unit: '℃' },
-        { key: 'bms.B82', field: 'B82', label: '单体温度温差 2 级报警阈值', unit: '℃' },
-        { key: 'bms.B84', field: 'B84', label: '单体温度温差 3 级报警阈值', unit: '℃' },
-        { key: 'bms.B86', field: 'B86', label: '单体温度温差报警回差值', unit: '℃' },
-        { key: 'bms.B88', field: 'B88', label: 'SOC 过低 1 级报警阈值', unit: '%' },
-        { key: 'bms.B90', field: 'B90', label: 'SOC 过低 2 级报警阈值', unit: '%' },
-        { key: 'bms.B92', field: 'B92', label: 'SOC 过低 3 级报警阈值', unit: '%' },
-        { key: 'bms.B94', field: 'B94', label: 'SOC 过低报警回差值', unit: '%' },
-        { key: 'bms.B96', field: 'B96', label: '动力插箱温度过高 1 级报警阈值', unit: '℃' },
-        { key: 'bms.B98', field: 'B98', label: '动力插箱温度过高 2 级报警阈值', unit: '℃' },
-        { key: 'bms.B100', field: 'B100', label: '动力插箱温度过高 3 级报警阈值', unit: '℃' },
-        { key: 'bms.B102', field: 'B102', label: '动力插箱温度过高报警回差值', unit: '℃' },
-        { key: 'bms.B104', field: 'B104', label: '电池模组过压 1 级报警阈值', unit: 'V' },
-        { key: 'bms.B106', field: 'B106', label: '电池模组过压 2 级报警阈值', unit: 'V' },
-        { key: 'bms.B108', field: 'B108', label: '电池模组过压 3 级报警阈值', unit: 'V' },
-        { key: 'bms.B110', field: 'B110', label: '电池模组过压报警回差值', unit: 'V' },
-        { key: 'bms.B112', field: 'B112', label: '电池模组欠压 1 级报警阈值', unit: 'V' },
-        { key: 'bms.B114', field: 'B114', label: '电池模组欠压 2 级报警阈值', unit: 'V' },
-        { key: 'bms.B116', field: 'B116', label: '电池模组欠压 3 级报警阈值', unit: 'V' },
-        { key: 'bms.B118', field: 'B118', label: '电池模组欠压报警回差值', unit: 'V' },
-        { key: 'bms.B120', field: 'B120', label: '单体放电过温 1 级报警阈值', unit: '℃' },
-        { key: 'bms.B122', field: 'B122', label: '单体放电过温 2 级报警阈值', unit: '℃' },
-        { key: 'bms.B124', field: 'B124', label: '单体放电过温 3 级报警阈值', unit: '℃' },
-        { key: 'bms.B126', field: 'B126', label: '单体放电过温报警回差值', unit: '℃' },
-        { key: 'bms.B128', field: 'B128', label: '单体放电欠温 1 级报警阈值', unit: '℃' },
-        { key: 'bms.B130', field: 'B130', label: '单体放电欠温 2 级报警阈值', unit: '℃' },
-        { key: 'bms.B132', field: 'B132', label: '单体放电欠温 3 级报警阈值', unit: '℃' },
-        { key: 'bms.B134', field: 'B134', label: '电池放电欠温报警回差值', unit: '℃' },
-        { key: 'bms.B136', field: 'B136', label: 'SOC 过高 1 级报警阈值', unit: '%' },
-        { key: 'bms.B138', field: 'B138', label: 'SOC 过高 2 级报警阈值', unit: '%' },
-        { key: 'bms.B140', field: 'B140', label: 'SOC 过高 3 级报警阈值', unit: '%' },
-        { key: 'bms.B142', field: 'B142', label: 'SOC 过高报警回差值', unit: '%' },
-        { key: 'bms.B144', field: 'B144', label: '温升快 1 级报警阈值', unit: '℃/min' },
-        { key: 'bms.B146', field: 'B146', label: '温升快 2 级报警阈值', unit: '℃/min' },
-        { key: 'bms.B148', field: 'B148', label: '温升快 3 级报警阈值', unit: '℃/min' },
-        { key: 'bms.B150', field: 'B150', label: '温升快报警回差值', unit: '℃/min' },
-        { key: 'bms.B174', field: 'B174', label: '风扇启动温度', unit: '℃' },
-        { key: 'bms.B176', field: 'B176', label: '风扇关闭温度', unit: '℃' },
-        { key: 'bms.B178', field: 'B178', label: 'SOC/SOH 设置电池序号', unit: '' },
+        { key: 'bms.B0', field: 'B0', label: '组端过压 1 级报警阈值', unit: 'V', min: 0, max: 1000 },
+        { key: 'bms.B2', field: 'B2', label: '组端过压 2 级报警阈值', unit: 'V', min: 0, max: 1000 },
+        { key: 'bms.B4', field: 'B4', label: '组端过压 3 级报警阈值', unit: 'V', min: 0, max: 1000 },
+        { key: 'bms.B6', field: 'B6', label: '组端过压报警回差值', unit: 'V', min: 0, max: 25 },
+        { key: 'bms.B8', field: 'B8', label: '组端欠压 1 级报警阈值', unit: 'V', min: 0, max: 1000 },
+        { key: 'bms.B10', field: 'B10', label: '组端欠压 2 级报警阈值', unit: 'V', min: 0, max: 1000 },
+        { key: 'bms.B12', field: 'B12', label: '组端欠压 3 级报警阈值', unit: 'V', min: 0, max: 1000 },
+        { key: 'bms.B14', field: 'B14', label: '组端欠压报警回差值', unit: 'V', min: 0, max: 25 },
+        { key: 'bms.B16', field: 'B16', label: '组端放电过流 1 级报警阈值', unit: 'A', min: 0, max: 1000 },
+        { key: 'bms.B18', field: 'B18', label: '组端放电过流 2 级报警阈值', unit: 'A', min: 0, max: 1000 },
+        { key: 'bms.B20', field: 'B20', label: '组端放电过流 3 级报警阈值', unit: 'A', min: 0, max: 1000 },
+        { key: 'bms.B22', field: 'B22', label: '组端放电过流报警回差值', unit: 'A', min: 0, max: 25 },
+        { key: 'bms.B24', field: 'B24', label: '组端充电过流 1 级报警阈值', unit: 'A', min: 0, max: 1000 },
+        { key: 'bms.B26', field: 'B26', label: '组端充电过流 2 级报警阈值', unit: 'A', min: 0, max: 1000 },
+        { key: 'bms.B28', field: 'B28', label: '组端充电过流 3 级报警阈值', unit: 'A', min: 0, max: 1000 },
+        { key: 'bms.B30', field: 'B30', label: '组端充电过流报警回差值', unit: 'A', min: 0, max: 25 },
+        { key: 'bms.B32', field: 'B32', label: '组端绝缘 1 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
+        { key: 'bms.B34', field: 'B34', label: '组端绝缘 2 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
+        { key: 'bms.B36', field: 'B36', label: '组端绝缘 3 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
+        { key: 'bms.B38', field: 'B38', label: '组端绝缘报警回差值', unit: 'kΩ', min: 0, max: 255 },
+        { key: 'bms.B40', field: 'B40', label: '单体充电过温 1 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B42', field: 'B42', label: '单体充电过温 2 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B44', field: 'B44', label: '单体充电过温 3 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B46', field: 'B46', label: '电池充电过温报警回差值', unit: '℃', min: 0, max: 100 },
+        { key: 'bms.B48', field: 'B48', label: '单体充电欠温 1 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B50', field: 'B50', label: '单体充电欠温 2 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B52', field: 'B52', label: '单体充电欠温 3 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B54', field: 'B54', label: '单体充电欠温报警回差值', unit: '℃', min: 0, max: 100 },
+        { key: 'bms.B56', field: 'B56', label: '单体电压过压 1 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
+        { key: 'bms.B58', field: 'B58', label: '单体电压过压 2 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
+        { key: 'bms.B60', field: 'B60', label: '单体电压过压 3 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
+        { key: 'bms.B62', field: 'B62', label: '单体电压过压报警回差值', unit: 'mV', min: 0, max: 0.25 },
+        { key: 'bms.B64', field: 'B64', label: '单体电压欠压 1 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
+        { key: 'bms.B66', field: 'B66', label: '单体电压欠压 2 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
+        { key: 'bms.B68', field: 'B68', label: '单体电压欠压 3 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
+        { key: 'bms.B70', field: 'B70', label: '单体电压欠压报警回差值', unit: 'mV', min: 0, max: 0.25 },
+        { key: 'bms.B72', field: 'B72', label: '单体电压差压 1 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
+        { key: 'bms.B74', field: 'B74', label: '单体电压差压 2 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
+        { key: 'bms.B76', field: 'B76', label: '单体电压差压 3 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
+        { key: 'bms.B78', field: 'B78', label: '单体电压差压报警回差值', unit: 'mV', min: 0, max: 0.25 },
+        { key: 'bms.B80', field: 'B80', label: '单体温度温差 1 级报警阈值', unit: '℃', min: 0, max: 100 },
+        { key: 'bms.B82', field: 'B82', label: '单体温度温差 2 级报警阈值', unit: '℃', min: 0, max: 100 },
+        { key: 'bms.B84', field: 'B84', label: '单体温度温差 3 级报警阈值', unit: '℃', min: 0, max: 100 },
+        { key: 'bms.B86', field: 'B86', label: '单体温度温差报警回差值', unit: '℃', min: 0, max: 10 },
+        { key: 'bms.B88', field: 'B88', label: 'SOC 过低 1 级报警阈值', unit: '%', min: 0, max: 100 },
+        { key: 'bms.B90', field: 'B90', label: 'SOC 过低 2 级报警阈值', unit: '%', min: 0, max: 100 },
+        { key: 'bms.B92', field: 'B92', label: 'SOC 过低 3 级报警阈值', unit: '%', min: 0, max: 100 },
+        { key: 'bms.B94', field: 'B94', label: 'SOC 过低报警回差值', unit: '%', min: 0, max: 100 },
+        { key: 'bms.B96', field: 'B96', label: '动力插箱温度过高 1 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B98', field: 'B98', label: '动力插箱温度过高 2 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B100', field: 'B100', label: '动力插箱温度过高 3 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B102', field: 'B102', label: '动力插箱温度过高报警回差值', unit: '℃', min: 0, max: 25 },
+        { key: 'bms.B104', field: 'B104', label: '电池模组过压 1 级报警阈值', unit: 'V', min: 0, max: 1000 },
+        { key: 'bms.B106', field: 'B106', label: '电池模组过压 2 级报警阈值', unit: 'V', min: 0, max: 1000 },
+        { key: 'bms.B108', field: 'B108', label: '电池模组过压 3 级报警阈值', unit: 'V', min: 0, max: 1000 },
+        { key: 'bms.B110', field: 'B110', label: '电池模组过压报警回差值', unit: 'V', min: 0, max: 25 },
+        { key: 'bms.B112', field: 'B112', label: '电池模组欠压 1 级报警阈值', unit: 'V', min: 0, max: 1000 },
+        { key: 'bms.B114', field: 'B114', label: '电池模组欠压 2 级报警阈值', unit: 'V', min: 0, max: 1000 },
+        { key: 'bms.B116', field: 'B116', label: '电池模组欠压 3 级报警阈值', unit: 'V', min: 0, max: 1000 },
+        { key: 'bms.B118', field: 'B118', label: '电池模组欠压报警回差值', unit: 'V', min: 0, max: 25 },
+        { key: 'bms.B120', field: 'B120', label: '单体放电过温 1 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B122', field: 'B122', label: '单体放电过温 2 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B124', field: 'B124', label: '单体放电过温 3 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B126', field: 'B126', label: '单体放电过温报警回差值', unit: '℃', min: 0, max: 100 },
+        { key: 'bms.B128', field: 'B128', label: '单体放电欠温 1 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B130', field: 'B130', label: '单体放电欠温 2 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B132', field: 'B132', label: '单体放电欠温 3 级报警阈值', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B134', field: 'B134', label: '电池放电欠温报警回差值', unit: '℃', min: 0, max: 100 },
+        { key: 'bms.B136', field: 'B136', label: 'SOC 过高 1 级报警阈值', unit: '%', min: 0, max: 100 },
+        { key: 'bms.B138', field: 'B138', label: 'SOC 过高 2 级报警阈值', unit: '%', min: 0, max: 100 },
+        { key: 'bms.B140', field: 'B140', label: 'SOC 过高 3 级报警阈值', unit: '%', min: 0, max: 100 },
+        { key: 'bms.B142', field: 'B142', label: 'SOC 过高报警回差值', unit: '%', min: 0, max: 100 },
+        { key: 'bms.B144', field: 'B144', label: '温升快 1 级报警阈值', unit: '℃/min', min: 0, max: 100 },
+        { key: 'bms.B146', field: 'B146', label: '温升快 2 级报警阈值', unit: '℃/min', min: 0, max: 100 },
+        { key: 'bms.B148', field: 'B148', label: '温升快 3 级报警阈值', unit: '℃/min', min: 0, max: 100 },
+        { key: 'bms.B150', field: 'B150', label: '温升快报警回差值', unit: '℃/min', min: 0, max: 100 },
+        { key: 'bms.B174', field: 'B174', label: '风扇启动温度', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B176', field: 'B176', label: '风扇关闭温度', unit: '℃', min: -40, max: 120 },
+        { key: 'bms.B178', field: 'B178', label: 'SOC/SOH 设置电池序号', unit: '', min: 0, max: 480 },
         { key: 'bms.B180', field: 'B180', label: 'SOC/SOH 设置', unit: '' },
-        { key: 'bms.B184', field: 'B184', label: '可调风扇控制-占空比', unit: '%' },
-        { key: 'bms.B194', field: 'B194', label: '累计充电电量', unit: 'kWh' },
-        { key: 'bms.B198', field: 'B198', label: '累计放电电量', unit: 'kWh' },
+        { key: 'bms.B184', field: 'B184', label: '可调风扇控制-占空比', unit: '%', min: 0, max: 100 },
+        { key: 'bms.B194', field: 'B194', label: '累计充电电量', unit: 'kWh', min: 0, max: 100000 },
+        { key: 'bms.B198', field: 'B198', label: '累计放电电量', unit: 'kWh', min: 0, max: 100000 },
         { key: 'bms.B204', field: 'B204', label: '电池容量', unit: 'Ah' },
         { key: 'bms.B206', field: 'B206', label: '电传感器量程 1', unit: '' },
         { key: 'bms.B208', field: 'B208', label: '电传感器量程 2', unit: '' },
@@ -283,6 +287,18 @@ export default {
         }
       }
 
+      let registerValue = value
+      if (paramKey === 'bms.B0' || paramKey === 'bms.B2' || paramKey === 'bms.B4' || paramKey === 'bms.B6' || paramKey === 'bms.B8' || paramKey === 'bms.B10' || paramKey === 'bms.B12' || paramKey === 'bms.B14' || paramKey === 'bms.B16' || paramKey === 'bms.B18' || paramKey === 'bms.B20' || paramKey === 'bms.B22' || paramKey === 'bms.B24' || paramKey === 'bms.B26' || paramKey === 'bms.B28' || paramKey === 'bms.B30' || paramKey === 'bms.B46' || paramKey === 'bms.B54' || paramKey === 'bms.B80' || paramKey === 'bms.B82' || paramKey === 'bms.B84' || paramKey === 'bms.B86' || paramKey === 'bms.B88' || paramKey === 'bms.B90' || paramKey === 'bms.B92' || paramKey === 'bms.B94' || paramKey === 'bms.B102' || paramKey === 'bms.B104' || paramKey === 'bms.B106' || paramKey === 'bms.B108' || paramKey === 'bms.B110' || paramKey === 'bms.B112' || paramKey === 'bms.B114' || paramKey === 'bms.B116' || paramKey === 'bms.B118' || paramKey === 'bms.B126' || paramKey === 'bms.B134' || paramKey === 'bms.B136' || paramKey === 'bms.B138' || paramKey === 'bms.B140' || paramKey === 'bms.B142' || paramKey === 'bms.B144' || paramKey === 'bms.B146' || paramKey === 'bms.B148' || paramKey === 'bms.B150' || paramKey === 'bms.B194' || paramKey === 'bms.B198') {
+        registerValue = parseFloat(value) * 10
+      } else if (paramKey === 'bms.B40' || paramKey === 'bms.B42' || paramKey === 'bms.B44' || paramKey === 'bms.B48' || paramKey === 'bms.B50' || paramKey === 'bms.B52' || paramKey === 'bms.B96' || paramKey === 'bms.B98' || paramKey === 'bms.B100' || paramKey === 'bms.B120' || paramKey === 'bms.B122' || paramKey === 'bms.B124' || paramKey === 'bms.B128' || paramKey === 'bms.B130' || paramKey === 'bms.B132' || paramKey === 'bms.B174' || paramKey === 'bms.B176') {
+        registerValue = (parseFloat(value) - 40) * 10
+      } else if (paramKey === 'bms.B56' || paramKey === 'bms.B58' || paramKey === 'bms.B60' || paramKey === 'bms.B62' || paramKey === 'bms.B64' || paramKey === 'bms.B66' || paramKey === 'bms.B68' || paramKey === 'bms.B70' || paramKey === 'bms.B72' || paramKey === 'bms.B74' || paramKey === 'bms.B76' || paramKey === 'bms.B78') {
+        registerValue = parseFloat(value) * 1000
+      } else if (paramKey === 'bms.B184') {
+        const val = parseFloat(value)
+        registerValue = val >= 0 && val <= 100 ? val * 10 : 255
+      }
+
       uni.showLoading({ title: '下发中...' })
       try {
         const registerMap = {
@@ -335,7 +351,7 @@ export default {
             addr: this.deviceAddress,
             deviceId: '1',
             registerAddress: registerAddress,
-            registerValue: value.toString().padStart(8, '0'),
+            registerValue: registerValue.toString().padStart(8, '0'),
             valueType: '01',
             registerType: '03',
             extra1: '00',
@@ -346,13 +362,26 @@ export default {
 
         await sendCommandFrame(commandData)
         uni.hideLoading()
-        this.$emit('cancel')
+        // this.$emit('cancelParam')
         uni.showToast({ title: `${paramName}指令已下发`, icon: 'success' })
       } catch (error) {
         uni.hideLoading()
         uni.showToast({ title: '下发失败', icon: 'none' })
         console.error('命令帧发送失败:', error)
       }
+    },
+    handleEditConfig() {
+      this.isEditing = true
+    },
+    closeEdit() {
+      this.isEditing = false
+      this.editingParam = ''
+    },
+    handleParamEdit(paramKey) {
+      this.editingParam = paramKey
+    },
+    handleParamCancel() {
+      this.editingParam = ''
     }
   }
 }
@@ -372,6 +401,9 @@ export default {
 }
 
 .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 24rpx 32rpx;
   border-bottom: 1rpx solid #f0f0f0;
 }
@@ -380,6 +412,31 @@ export default {
   font-size: 32rpx;
   font-weight: 600;
   color: #333;
+}
+
+.action-btns {
+  display: flex;
+  gap: 16rpx;
+}
+
+.edit-btn {
+  padding: 8rpx 24rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  
+  &.primary {
+    background: #6699ff;
+    color: #ffffff;
+  }
+  
+  &.close {
+    background: #f5f5f5;
+    color: #666;
+  }
+}
+
+.edit-text {
+  font-size: 26rpx;
 }
 
 .param-list {
@@ -398,9 +455,19 @@ export default {
 }
 
 .param-list .param-name {
-  flex: 1;
+  // flex: 1;
   font-size: 28rpx;
   color: #333;
+  width:40%;
+  max-width: fit-content;
+}
+
+.param-right-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  gap: 16rpx;
 }
 
 .param-right {
@@ -450,6 +517,7 @@ export default {
 .btn-group {
   display: flex;
   gap: 12rpx;
+  flex-direction: column;
 }
 
 .btn {
@@ -487,20 +555,32 @@ export default {
 .switch-section .param-row {
   padding: 20rpx 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   border-bottom: 1rpx solid #f5f5f5;
 }
 
 .switch-section .param-name {
   font-size: 28rpx;
   color: #333;
-  margin-bottom: 20rpx;
+  flex-shrink: 0;
+  margin-right: 20rpx;
+  min-width: 160rpx;
+}
+
+.switch-btns-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
 }
 
 .switch-btns {
   display: flex;
   gap: 16rpx;
+  justify-content: flex-end;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .switch-btn {
