@@ -1,6 +1,6 @@
 {
     "sassImplementationName" : "node-sass",
-    "name" : "GIEMS云",
+    "name" : "微能站",
     "appid" : "__UNI__D7E714F",
     "description" : "",
     "versionName" : "1.22.0",
@@ -180,7 +180,7 @@
             "base" : "./",
             "mode" : "hash"
         },
-        "title" : "GIEMS云",
+        "title" : "微能站",
         "optimization" : {
             "treeShaking" : {
                 "enable" : true

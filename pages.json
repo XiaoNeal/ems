@@ -162,13 +162,13 @@
 				{
 					"path": "agreement/privacy-policy",
 					"style": {
-						"navigationBarTitleText": "GIEMS云隐私协议政"
+						"navigationBarTitleText": "微能站隐私协议"
 					}
 				},
 				{
 					"path": "agreement/user-agreement",
 					"style": {
-						"navigationBarTitleText": "GIEMS云软件许可及用户服务协议"
+						"navigationBarTitleText": "微能站软件许可及用户服务协议"
 					}
 				}
 			]
@@ -228,7 +228,7 @@
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "GIEMS云",
+		"navigationBarTitleText": "微能站",
 		"navigationBarBackgroundColor": "#fff",
 		"backgroundColor": "#fff",
 		"navigationStyle": "custom",

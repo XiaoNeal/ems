@@ -35,7 +35,7 @@
           <text class="device-name">{{ getDeviceName(esId) }}</text>
           <text class="device-id">设备ID: {{ esId.esId || esId.id }}</text>
         </view>
-        <uni-icons type="arrowright" size="24" color="#999"></uni-icons>
+        <uni-icons class="arrow-icon" type="arrowright" size="24" color="#ccc"></uni-icons>
       </view>
     </view>
   </view>
@@ -492,13 +492,15 @@ export default {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.device-item uni-icons:last-child {
-  font-size: 28rpx;
-  color: #cbd5e1;
-  transition: all 0.3s ease;
+/* 统一箭头样式 */
+.arrow-icon {
+  font-size: 24rpx;
+  color: #ccc;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
   
   .device-item:active & {
-    color: #3b82f6;
+    color: #007AFF;
     transform: translateX(4rpx);
   }
 }

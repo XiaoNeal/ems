@@ -1,4 +1,4 @@
-<script>
+﻿<script>
 import {
 	decrypt
 } from "@/utils/decryptData.js"
@@ -10,7 +10,7 @@ export default {
 		const updateManager = wx.getUpdateManager()
 
 		updateManager.onCheckForUpdate(function (res) {
-			// 请求完新版本信息的回调
+			// 请求完新版本信息的回�?
 			// console.log(res.hasUpdate)
 		})
 
@@ -28,7 +28,7 @@ export default {
 		})
 
 		updateManager.onUpdateFailed(function () {
-			// 新版本下载失败
+			// 新版本下载失�?
 		})
 		// #endif
 
@@ -36,7 +36,7 @@ export default {
 		plus.runtime.getProperty(plus.runtime.appid, (widgetInfo) => {
 			let version = widgetInfo.version
 			let osName = plus.os.name;
-			var server = `https://serviceiems.gree.com/appletAPI/downloadAPK?version=${version}&osName=${osName}&AppName=GIEMS云`; //检查新地址
+			var server = `https://serviceiems.gree.com/appletAPI/downloadAPK?version=${version}&osName=${osName}&AppName=微能站`; //检查新地址
 			uni.request({
 				url: server,
 				// data: req,
@@ -52,7 +52,7 @@ export default {
 						if (this.newVersion === res.data.versione) {
 							return
 						}
-						let downapk = 'https://serviceiems.gree.com/home/springboot_service/mobile_service/mobile_apk/GIEMS云.apk'
+						let downapk = 'https://serviceiems.gree.com/home/springboot_service/mobile_service/mobile_apk/GIEMS�?apk'
 						uni.showModal({ //提醒用户更新  
 							title: "更新提示",
 							content: `${res.data.note}`,

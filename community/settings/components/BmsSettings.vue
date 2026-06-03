@@ -16,7 +16,10 @@
       <!-- 开关型参数 -->
       <view class="switch-section">
         <view v-for="param in bmsSwitchParams" :key="param.key" class="param-row">
-          <text class="param-name">{{ param.label }}</text>
+          <view class="param-info">
+            <text class="param-name">{{ param.label }}</text>
+
+          </view>
           <view class="switch-btns-wrapper">
             <view class="switch-btns">
               <view 
@@ -26,9 +29,10 @@
                 :class="[
                   getParamValue(param.key) === option.value ? 'btn-active' : '', 
                   !isEditing ? 'btn-disabled' : '',
-                  clickedButton === param.key + '-' + option.value ? 'btn-clicked' : ''
+                  clickedButton === param.key + '-' + option.value ? 'btn-clicked' : '',
+                  isDangerousOption(option) ? 'btn-danger' : ''
                 ]"
-                @click="setSwitchParam(param.key, option.value)"
+                @click="handleSwitchClick(param, option)"
               >
                 {{ option.label }}
               </view>
@@ -40,26 +44,72 @@
       <!-- 数值型参数 -->
       <view class="divider"></view>
       <view class="param-list">
-        <view v-for="param in bmsParams" :key="param.key" class="param-row">
-          <text class="param-name">{{ param.label }}</text>
+        <view v-for="param in bmsParams" :key="param.key" class="param-row" :class="{ 'editing-row': editingParam === param.key }">
+          <view class="param-info">
+            <text class="param-name">{{ param.label }}</text>
+            <text v-if="param.min !== undefined && param.max !== undefined" class="param-range">
+              范围: {{ param.min }}~{{ param.max }}{{ param.unit }}
+            </text>
+          </view>
           <view class="param-right-wrapper">
             <view class="param-right">
               <view class="param-value-box" :class="{ editing: editingParam === param.key }">
-                <text v-if="editingParam !== param.key" class="val-text">{{ params.bms[param.field] || "--" }}</text>
-                <input v-else class="val-input" type="number" v-model="params.bms[param.field]" placeholder="请输入" focus />
+                <text v-if="editingParam !== param.key" class="val-text">{{ formatParamValue(param) }}</text>
+                <input v-else class="val-input" type="digit" v-model="tempValue" :min="param.min"
+                  :max="param.max" placeholder="请输入" focus @blur="handleInputBlur(param)" @confirm="handleInputConfirm(param)" />
               </view>
               <text class="unit-text">{{ param.unit || '' }}</text>
             </view>
             <view class="btn-group">
-              <view v-if="editingParam !== param.key" class="btn btn-edit" @click="handleParamEdit(param.key)">编辑</view>
+              <view v-if="editingParam !== param.key" class="btn btn-edit" @click="handleParamEdit(param)">
+                <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
+                <text>编辑</text>
+              </view>
               <template v-else-if="editingParam === param.key">
-                <view class="btn btn-sure" @click="submitParam(param.key, param.label)">下发</view>
-                <view class="btn btn-cancel" @click="handleParamCancel()">取消</view>
+                <view class="btn btn-sure" :class="{ 'btn-loading': isSubmitting }" @click="submitParam(param)">
+                  <text v-if="!isSubmitting">下发</text>
+                  <view v-else class="loading-spinner"></view>
+                </view>
+                <view class="btn btn-cancel" @click="handleParamCancel()">
+                  <uni-icons type="closeempty" size="14" color="#999"></uni-icons>
+                </view>
               </template>
             </view>
           </view>
         </view>
       </view>
+    </view>
+
+    <!-- 操作确认弹窗 -->
+    <uni-popup ref="confirmPopup" type="center">
+      <view class="confirm-popup">
+        <view class="popup-header">
+          <uni-icons v-if="confirmData.isDangerous" type="info-filled" size="48" color="#ff6b6b"></uni-icons>
+          <uni-icons v-else type="help-filled" size="48" color="#6699ff"></uni-icons>
+          <text class="popup-title">{{ confirmData.title }}</text>
+        </view>
+        <view class="popup-content">
+          <text class="popup-desc">{{ confirmData.content }}</text>
+          <view v-if="confirmData.oldValue" class="value-change">
+            <text class="value-old">原值: {{ confirmData.oldValue }}</text>
+            <uni-icons type="arrowright" size="16" color="#999"></uni-icons>
+            <text class="value-new">新值: {{ confirmData.newValue }}</text>
+          </view>
+        </view>
+        <view class="popup-actions">
+          <view class="popup-btn btn-cancel" @click="closeConfirmPopup">取消</view>
+          <view class="popup-btn btn-confirm" :class="{ 'btn-danger': confirmData.isDangerous }" @click="confirmAction">
+            <text v-if="!isSubmitting">确认</text>
+            <view v-else class="loading-spinner small"></view>
+          </view>
+        </view>
+      </view>
+    </uni-popup>
+
+    <!-- 操作结果提示 -->
+    <view v-if="operationLog.visible" class="operation-toast" :class="operationLog.type">
+      <uni-icons :type="operationLog.type === 'success' ? 'checkmarkempty' : 'closeempty'" size="20" :color="operationLog.type === 'success' ? '#52c41a' : '#ff4d4f'"></uni-icons>
+      <text class="toast-text">{{ operationLog.message }}</text>
     </view>
   </view>
 </template>
@@ -81,11 +131,28 @@ export default {
       deviceAddress: '04',
       isEditing: false,
       editingParam: '',
+      tempValue: '',
+      isSubmitting: false,
       lastSendTime: 0,
+      clickedButton: '',
       params: {
         bms: {}
       },
-      clickedButton: '',
+      confirmData: {
+        title: '',
+        content: '',
+        oldValue: '',
+        newValue: '',
+        isDangerous: false,
+        action: null,
+        param: null
+      },
+      operationLog: {
+        visible: false,
+        type: 'success',
+        message: '',
+        timer: null
+      },
       bmsParams: [
         { key: 'bms.B0', field: 'B0', label: '组端过压 1 级报警阈值', unit: 'V', min: 0, max: 1000 },
         { key: 'bms.B2', field: 'B2', label: '组端过压 2 级报警阈值', unit: 'V', min: 0, max: 1000 },
@@ -188,8 +255,8 @@ export default {
           { label: '强控模式', value: '3' }
         ]},
         { key: 'bms.B170', label: '上下电控制指令', options: [
-          { label: '上电', value: '0x55' },
-          { label: '下电', value: '0xAA' }
+          { label: '上电', value: '0x55', dangerous: true },
+          { label: '下电', value: '0xAA', dangerous: true }
         ]},
         { key: 'bms.B172', label: 'DO 控制', options: [
           { label: '闭合', value: '1' },
@@ -206,7 +273,7 @@ export default {
         ]},
         { key: 'bms.B188', label: '跳机指令', options: [
           { label: '默认状态', value: '0' },
-          { label: '跳机', value: '1' }
+          { label: '跳机', value: '1', dangerous: true }
         ]},
         { key: 'bms.B190', label: '显控检测故障', options: [
           { label: '无故障', value: '0' },
@@ -234,73 +301,194 @@ export default {
   methods: {
     checkEditMode() {
       if (!this.isEditing) {
-        uni.showToast({ title: '请先点击修改配置', icon: 'none' })
+        this.showToast('请先点击修改配置', 'warning')
         return false
       }
       return true
     },
-    updateParamValue(field, event) {
-      if (this.params && this.params.bms) {
-        this.params.bms[field] = event.detail.value
+
+    showToast(message, type = 'success') {
+      if (this.operationLog.timer) {
+        clearTimeout(this.operationLog.timer)
       }
-    },
-    getParamValue(paramKey) {
-      const [module, key] = paramKey.split('.')
-      if (!this.params || !this.params[module]) {
-        return ''
+      this.operationLog = {
+        visible: true,
+        type,
+        message,
+        timer: null
       }
-      return this.params[module][key]
+      this.operationLog.timer = setTimeout(() => {
+        this.operationLog.visible = false
+      }, 3000)
     },
-    setSwitchParam(paramKey, value) {
+
+    isDangerousOption(option) {
+      return option.dangerous === true
+    },
+
+    getCurrentOptionLabel(param) {
+      const currentValue = this.getParamValue(param.key)
+      const option = param.options.find(opt => opt.value === currentValue)
+      return option ? option.label : ''
+    },
+
+    handleSwitchClick(param, option) {
       if (!this.checkEditMode()) return
-      
-      const now = Date.now()
-      if (now - this.lastSendTime < 5000) {
-        uni.showToast({ title: '请间隔5秒后再下发', icon: 'none' })
+
+      const currentValue = this.getParamValue(param.key)
+      if (currentValue === option.value) {
+        this.showToast('已经是当前设置', 'warning')
         return
       }
-      
-      const param = this.bmsSwitchParams.find(p => p.key === paramKey)
-      if (param) {
-        this.clickedButton = paramKey + '-' + value
-        this.lastSendTime = now
-        
-        setTimeout(() => {
-          this.clickedButton = ''
-        }, 5000)
-        
-        let hexValue = value
-        if (paramKey === 'bms.B170' || paramKey === 'bms.B226') {
-          hexValue = parseInt(value, 16).toString()
-        }
-        
-        this.submitParam(paramKey, param.label, hexValue)
+
+      const now = Date.now()
+      if (now - this.lastSendTime < 5000) {
+        this.showToast('请间隔5秒后再下发', 'warning')
+        return
+      }
+
+      if (this.isDangerousOption(option)) {
+        this.openConfirmPopup({
+          title: '危险操作确认',
+          content: `确定要执行"${param.label}"的"${option.label}"操作吗？此操作可能影响系统运行。`,
+          oldValue: this.getCurrentOptionLabel(param),
+          newValue: option.label,
+          isDangerous: true,
+          action: () => this.executeSwitchCommand(param, option)
+        })
+      } else {
+        this.executeSwitchCommand(param, option)
       }
     },
-    async submitParam(paramKey, paramName, value) {
-      if (value === undefined) {
-        const [module, key] = paramKey.split('.')
-        value = this.params[module][key]
-        if (!value && value !== 0) {
-          uni.showToast({ title: '请输入参数值', icon: 'none' })
-          return
-        }
-      }
 
-      let registerValue = value
-      if (paramKey === 'bms.B0' || paramKey === 'bms.B2' || paramKey === 'bms.B4' || paramKey === 'bms.B6' || paramKey === 'bms.B8' || paramKey === 'bms.B10' || paramKey === 'bms.B12' || paramKey === 'bms.B14' || paramKey === 'bms.B16' || paramKey === 'bms.B18' || paramKey === 'bms.B20' || paramKey === 'bms.B22' || paramKey === 'bms.B24' || paramKey === 'bms.B26' || paramKey === 'bms.B28' || paramKey === 'bms.B30' || paramKey === 'bms.B46' || paramKey === 'bms.B54' || paramKey === 'bms.B80' || paramKey === 'bms.B82' || paramKey === 'bms.B84' || paramKey === 'bms.B86' || paramKey === 'bms.B88' || paramKey === 'bms.B90' || paramKey === 'bms.B92' || paramKey === 'bms.B94' || paramKey === 'bms.B102' || paramKey === 'bms.B104' || paramKey === 'bms.B106' || paramKey === 'bms.B108' || paramKey === 'bms.B110' || paramKey === 'bms.B112' || paramKey === 'bms.B114' || paramKey === 'bms.B116' || paramKey === 'bms.B118' || paramKey === 'bms.B126' || paramKey === 'bms.B134' || paramKey === 'bms.B136' || paramKey === 'bms.B138' || paramKey === 'bms.B140' || paramKey === 'bms.B142' || paramKey === 'bms.B144' || paramKey === 'bms.B146' || paramKey === 'bms.B148' || paramKey === 'bms.B150' || paramKey === 'bms.B194' || paramKey === 'bms.B198') {
-        registerValue = parseFloat(value) * 10
-      } else if (paramKey === 'bms.B40' || paramKey === 'bms.B42' || paramKey === 'bms.B44' || paramKey === 'bms.B48' || paramKey === 'bms.B50' || paramKey === 'bms.B52' || paramKey === 'bms.B96' || paramKey === 'bms.B98' || paramKey === 'bms.B100' || paramKey === 'bms.B120' || paramKey === 'bms.B122' || paramKey === 'bms.B124' || paramKey === 'bms.B128' || paramKey === 'bms.B130' || paramKey === 'bms.B132' || paramKey === 'bms.B174' || paramKey === 'bms.B176') {
-        registerValue = (parseFloat(value) - 40) * 10
-      } else if (paramKey === 'bms.B56' || paramKey === 'bms.B58' || paramKey === 'bms.B60' || paramKey === 'bms.B62' || paramKey === 'bms.B64' || paramKey === 'bms.B66' || paramKey === 'bms.B68' || paramKey === 'bms.B70' || paramKey === 'bms.B72' || paramKey === 'bms.B74' || paramKey === 'bms.B76' || paramKey === 'bms.B78') {
-        registerValue = parseFloat(value) * 1000
-      } else if (paramKey === 'bms.B184') {
-        const val = parseFloat(value)
-        registerValue = val >= 0 && val <= 100 ? val * 10 : 255
-      }
+    async executeSwitchCommand(param, option) {
+      this.clickedButton = param.key + '-' + option.value
+      this.lastSendTime = Date.now()
 
-      uni.showLoading({ title: '下发中...' })
+      setTimeout(() => {
+        this.clickedButton = ''
+      }, 5000)
+
       try {
+        await this.submitSwitchParam(param, option.value)
+        this.showToast(`${param.label}设置成功`, 'success')
+      } catch (error) {
+        this.showToast(`${param.label}设置失败`, 'error')
+      }
+    },
+
+    openConfirmPopup(data) {
+      this.confirmData = { ...data }
+      this.$refs.confirmPopup.open()
+    },
+
+    closeConfirmPopup() {
+      this.$refs.confirmPopup.close()
+      this.confirmData = {
+        title: '',
+        content: '',
+        oldValue: '',
+        newValue: '',
+        isDangerous: false,
+        action: null,
+        param: null
+      }
+    },
+
+    async confirmAction() {
+      if (this.confirmData.action) {
+        this.isSubmitting = true
+        await this.confirmData.action()
+        this.isSubmitting = false
+      }
+      this.closeConfirmPopup()
+    },
+
+    formatParamValue(param) {
+      const value = this.params.bms[param.field]
+      if (value === undefined || value === null || value === '') {
+        return '--'
+      }
+      return value
+    },
+
+    handleInputBlur(param) {
+      this.validateAndFormatValue(param)
+    },
+
+    handleInputConfirm(param) {
+      this.validateAndFormatValue(param)
+    },
+
+    validateAndFormatValue(param) {
+      let value = parseFloat(this.tempValue)
+      if (isNaN(value)) {
+        return
+      }
+
+      if (param.min !== undefined && value < param.min) {
+        value = param.min
+        this.showToast(`不能小于${param.min}`, 'warning')
+      }
+      if (param.max !== undefined && value > param.max) {
+        value = param.max
+        this.showToast(`不能大于${param.max}`, 'warning')
+      }
+
+      value = Math.round(value)
+      this.tempValue = value.toString()
+    },
+
+    async submitParam(param) {
+      const value = this.tempValue
+      if (!value && value !== '0') {
+        this.showToast('请输入参数值', 'warning')
+        return
+      }
+
+      const numValue = parseFloat(value)
+      if (isNaN(numValue)) {
+        this.showToast('请输入有效的数值', 'warning')
+        return
+      }
+
+      if (param.min !== undefined && numValue < param.min) {
+        this.showToast(`${param.label}不能小于${param.min}`, 'warning')
+        return
+      }
+      if (param.max !== undefined && numValue > param.max) {
+        this.showToast(`${param.label}不能大于${param.max}`, 'warning')
+        return
+      }
+
+      this.openConfirmPopup({
+        title: '参数下发确认',
+        content: `确定要下发"${param.label}"参数吗？`,
+        oldValue: this.params.bms[param.field] || '--',
+        newValue: value + (param.unit || ''),
+        isDangerous: false,
+        param: param,
+        action: () => this.executeSubmitParam(param, value)
+      })
+    },
+
+    async executeSubmitParam(param, value) {
+      this.isSubmitting = true
+
+      try {
+        let registerValue = value
+        
+        if (param.key === 'bms.B0' || param.key === 'bms.B2' || param.key === 'bms.B4' || param.key === 'bms.B6' || param.key === 'bms.B8' || param.key === 'bms.B10' || param.key === 'bms.B12' || param.key === 'bms.B14' || param.key === 'bms.B16' || param.key === 'bms.B18' || param.key === 'bms.B20' || param.key === 'bms.B22' || param.key === 'bms.B24' || param.key === 'bms.B26' || param.key === 'bms.B28' || param.key === 'bms.B30' || param.key === 'bms.B46' || param.key === 'bms.B54' || param.key === 'bms.B80' || param.key === 'bms.B82' || param.key === 'bms.B84' || param.key === 'bms.B86' || param.key === 'bms.B88' || param.key === 'bms.B90' || param.key === 'bms.B92' || param.key === 'bms.B94' || param.key === 'bms.B102' || param.key === 'bms.B104' || param.key === 'bms.B106' || param.key === 'bms.B108' || param.key === 'bms.B110' || param.key === 'bms.B112' || param.key === 'bms.B114' || param.key === 'bms.B116' || param.key === 'bms.B118' || param.key === 'bms.B126' || param.key === 'bms.B134' || param.key === 'bms.B136' || param.key === 'bms.B138' || param.key === 'bms.B140' || param.key === 'bms.B142' || param.key === 'bms.B144' || param.key === 'bms.B146' || param.key === 'bms.B148' || param.key === 'bms.B150' || param.key === 'bms.B194' || param.key === 'bms.B198') {
+          registerValue = parseFloat(value) * 10
+        } else if (param.key === 'bms.B40' || param.key === 'bms.B42' || param.key === 'bms.B44' || param.key === 'bms.B48' || param.key === 'bms.B50' || param.key === 'bms.B52' || param.key === 'bms.B96' || param.key === 'bms.B98' || param.key === 'bms.B100' || param.key === 'bms.B120' || param.key === 'bms.B122' || param.key === 'bms.B124' || param.key === 'bms.B128' || param.key === 'bms.B130' || param.key === 'bms.B132' || param.key === 'bms.B174' || param.key === 'bms.B176') {
+          registerValue = (parseFloat(value) - 40) * 10
+        } else if (param.key === 'bms.B56' || param.key === 'bms.B58' || param.key === 'bms.B60' || param.key === 'bms.B62' || param.key === 'bms.B64' || param.key === 'bms.B66' || param.key === 'bms.B68' || param.key === 'bms.B70' || param.key === 'bms.B72' || param.key === 'bms.B74' || param.key === 'bms.B76' || param.key === 'bms.B78') {
+          registerValue = parseFloat(value) * 1000
+        } else if (param.key === 'bms.B184') {
+          const val = parseFloat(value)
+          registerValue = val >= 0 && val <= 100 ? val * 10 : 255
+        }
+
         const registerMap = {
           'bms.B0': '0', 'bms.B2': '2', 'bms.B4': '4',
           'bms.B6': '6', 'bms.B8': '8', 'bms.B10': '10',
@@ -338,7 +526,7 @@ export default {
           'bms.B218': '218', 'bms.B220': '220', 'bms.B222': '222',
           'bms.B224': '224'
         }
-        const registerAddress = registerMap[paramKey] || '00000000'
+        const registerAddress = registerMap[param.key] || '00000000'
 
         const commandData = {
           apiSufix: 'multiControl',
@@ -361,27 +549,81 @@ export default {
         }
 
         await sendCommandFrame(commandData)
-        uni.hideLoading()
-        // this.$emit('cancelParam')
-        uni.showToast({ title: `${paramName}指令已下发`, icon: 'success' })
+        this.params.bms[param.field] = value
+        this.editingParam = ''
+        this.showToast(`${param.label}下发成功`, 'success')
       } catch (error) {
-        uni.hideLoading()
-        uni.showToast({ title: '下发失败', icon: 'none' })
+        this.showToast('下发失败', 'error')
         console.error('命令帧发送失败:', error)
+      } finally {
+        this.isSubmitting = false
       }
     },
+
+    async submitSwitchParam(param, value) {
+      const registerMap = {
+        'bms.B168': '168', 'bms.B170': '170', 'bms.B172': '172',
+        'bms.B182': '182', 'bms.B186': '186', 'bms.B188': '188',
+        'bms.B190': '190', 'bms.B192': '192', 'bms.B202': '202',
+        'bms.B224': '224'
+      }
+      const registerAddress = registerMap[param.key] || '00000000'
+
+      let hexValue = value
+      if (param.key === 'bms.B170') {
+        hexValue = parseInt(value, 16).toString()
+      }
+
+      const commandData = {
+        apiSufix: 'multiControl',
+        idCode: this.idCode,
+        typeCode: '3401',
+        address: this.deviceAddress,
+        userId: this.userId,
+        commands: [{
+          deviceCategory: '171C',
+          addr: this.deviceAddress,
+          deviceId: '1',
+          registerAddress: registerAddress,
+          registerValue: hexValue,
+          valueType: '01',
+          registerType: '03',
+          extra1: '00',
+          extra2: '00',
+          extra3: '00'
+        }]
+      }
+
+      await sendCommandFrame(commandData)
+
+      const [module, key] = param.key.split('.')
+      this.params[module][key] = value
+    },
+
+    getParamValue(paramKey) {
+      const [module, key] = paramKey.split('.')
+      return this.params[module]?.[key]
+    },
+
     handleEditConfig() {
       this.isEditing = true
+      this.showToast('已进入编辑模式', 'success')
     },
+
     closeEdit() {
       this.isEditing = false
       this.editingParam = ''
+      this.showToast('已退出编辑模式', 'success')
     },
-    handleParamEdit(paramKey) {
-      this.editingParam = paramKey
+
+    handleParamEdit(param) {
+      this.editingParam = param.key
+      this.tempValue = this.params.bms[param.field] || ''
     },
+
     handleParamCancel() {
       this.editingParam = ''
+      this.tempValue = ''
     }
   }
 }
@@ -398,20 +640,36 @@ export default {
   background: #ffffff;
   border-radius: 16rpx;
   overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
 }
 
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24rpx 32rpx;
+  padding: 28rpx 32rpx;
   border-bottom: 1rpx solid #f0f0f0;
+  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
 }
 
 .card-title {
   font-size: 32rpx;
   font-weight: 600;
   color: #333;
+  position: relative;
+  padding-left: 20rpx;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6rpx;
+    height: 28rpx;
+    background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
+    border-radius: 3rpx;
+  }
 }
 
 .action-btns {
@@ -420,18 +678,30 @@ export default {
 }
 
 .edit-btn {
-  padding: 8rpx 24rpx;
+  padding: 12rpx 28rpx;
   border-radius: 8rpx;
   font-size: 26rpx;
+  transition: all 0.2s ease;
   
   &.primary {
-    background: #6699ff;
+    background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
     color: #ffffff;
+    box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
+    
+    &:active {
+      transform: scale(0.95);
+      box-shadow: 0 2rpx 6rpx rgba(102, 153, 255, 0.2);
+    }
   }
   
   &.close {
     background: #f5f5f5;
     color: #666;
+    border: 1rpx solid #e0e0e0;
+    
+    &:active {
+      background: #e8e8e8;
+    }
   }
 }
 
@@ -440,60 +710,97 @@ export default {
 }
 
 .param-list {
-  padding: 0 32rpx;
+  padding: 0 20rpx;
 }
 
-.param-list .param-row {
+.param-row {
   display: flex;
   align-items: center;
-  padding: 24rpx 0;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  padding: 28rpx 0;
   border-bottom: 1rpx solid #f5f5f5;
+  transition: all 0.2s ease;
   
   &:last-child {
     border-bottom: none;
   }
+  
+  &.editing-row {
+    background: #f8fbff;
+    margin: 0 -20rpx;
+    padding: 28rpx 20rpx;
+  }
 }
 
-.param-list .param-name {
-  // flex: 1;
+.param-info {
+  flex: 0 0 auto;
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.param-name {
   font-size: 28rpx;
   color: #333;
-  width:40%;
-  max-width: fit-content;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.param-current {
+  font-size: 22rpx;
+  color: #6699ff;
+  background: rgba(102, 153, 255, 0.1);
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+  display: inline-block;
+  width: fit-content;
+}
+
+.param-range {
+  font-size: 22rpx;
+  color: #999;
 }
 
 .param-right-wrapper {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  flex: 1;
   gap: 16rpx;
+  flex: 1;
+  min-width: 300rpx;
 }
+
+
 
 .param-right {
   display: flex;
   align-items: center;
   gap: 12rpx;
-  margin-right: 20rpx;
 }
 
 .param-value-box {
-  width: 180rpx;
-  height: 60rpx;
-  line-height: 60rpx;
+  width: 160rpx;
+  height: 64rpx;
+  line-height: 64rpx;
   background: #f8f9fa;
   border-radius: 8rpx;
   text-align: center;
-  
+  border: 2rpx solid transparent;
+  transition: all 0.2s ease;
+
   &.editing {
     background: #ffffff;
-    border: 1rpx solid #6699ff;
+    border-color: #6699ff;
+    box-shadow: 0 0 0 4rpx rgba(102, 153, 255, 0.1);
   }
 }
 
 .val-text {
   font-size: 28rpx;
   color: #333;
+  font-weight: 500;
 }
 
 .val-input {
@@ -503,15 +810,18 @@ export default {
   text-align: center;
   background: transparent;
   border: none;
-  
+  color: #333;
+
   &:focus {
     outline: none;
   }
 }
 
 .unit-text {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: #999;
+  min-width: 60rpx;
+  text-align: left;
 }
 
 .btn-group {
@@ -521,25 +831,51 @@ export default {
 }
 
 .btn {
-  padding: 10rpx 24rpx;
+  padding: 12rpx 20rpx;
   font-size: 24rpx;
   border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  transition: all 0.2s ease;
 }
 
 .btn-edit {
   color: #6699ff;
   background: #ffffff;
-  border: 1rpx solid #6699ff;
+  border: 2rpx solid #6699ff;
+  
+  &:active {
+    background: #f0f5ff;
+  }
 }
 
 .btn-sure {
   color: #ffffff;
-  background: #6699ff;
+  background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
+  box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
+  min-width: 100rpx;
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  &.btn-loading {
+    opacity: 0.8;
+    pointer-events: none;
+  }
 }
 
 .btn-cancel {
   color: #999;
   background: #f5f5f5;
+  border: 2rpx solid #e0e0e0;
+  min-width: 60rpx;
+  
+  &:active {
+    background: #e8e8e8;
+  }
 }
 
 .divider {
@@ -549,23 +885,7 @@ export default {
 }
 
 .switch-section {
-  padding: 0 32rpx;
-}
-
-.switch-section .param-row {
-  padding: 20rpx 0;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  border-bottom: 1rpx solid #f5f5f5;
-}
-
-.switch-section .param-name {
-  font-size: 28rpx;
-  color: #333;
-  flex-shrink: 0;
-  margin-right: 20rpx;
-  min-width: 160rpx;
+  padding: 0 20rpx;
 }
 
 .switch-btns-wrapper {
@@ -584,33 +904,47 @@ export default {
 }
 
 .switch-btn {
-  padding: 12rpx 32rpx;
-  font-size: 26rpx;
-  border: 1rpx solid #6699ff;
-  border-radius: 5px;
-  color: #6699ff;
+  padding: 14rpx 24rpx;
+  font-size: 24rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  color: #666;
   background: #ffffff;
-  transition: all 0.15s ease;
-  
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  text-align: center;
+  min-width: 100rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
   &:active {
     transform: scale(0.95);
-    background: #f0f5ff;
-    border-color: #4a8cff;
-    color: #4a8cff;
+    background: #f8f8f8;
   }
 }
 
 .btn-active {
   border-color: #6699ff;
   color: #ffffff;
-  background: #6699ff;
-  box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
-  
+  background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
+  box-shadow: 0 4rpx 16rpx rgba(102, 153, 255, 0.35);
+
   &:active {
-    background: #4a8cff;
-    border-color: #3d7ef0;
-    transform: scale(0.95);
-    box-shadow: 0 2rpx 6rpx rgba(102, 153, 255, 0.3);
+    background: linear-gradient(135deg, #5588ee 0%, #3377ea 100%);
+    box-shadow: 0 2rpx 8rpx rgba(102, 153, 255, 0.25);
+  }
+}
+
+.btn-danger {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+  
+  &.btn-active {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+    border-color: #ff6b6b;
+    color: #ffffff;
+    box-shadow: 0 4rpx 16rpx rgba(255, 107, 107, 0.35);
   }
 }
 
@@ -622,7 +956,169 @@ export default {
 }
 
 .btn-disabled {
-  opacity: 0.7;
+  opacity: 0.5;
   pointer-events: none;
+}
+
+// 确认弹窗样式
+.confirm-popup {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 40rpx;
+  width: 560rpx;
+  max-width: 90vw;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+}
+
+.popup-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.popup-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-top: 16rpx;
+}
+
+.popup-content {
+  margin-bottom: 32rpx;
+}
+
+.popup-desc {
+  font-size: 28rpx;
+  color: #666;
+  text-align: center;
+  line-height: 1.6;
+  display: block;
+}
+
+.value-change {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  margin-top: 24rpx;
+  padding: 20rpx;
+  background: #f8f9fa;
+  border-radius: 8rpx;
+}
+
+.value-old {
+  font-size: 24rpx;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.value-new {
+  font-size: 24rpx;
+  color: #6699ff;
+  font-weight: 600;
+}
+
+.popup-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.popup-btn {
+  flex: 1;
+  padding: 24rpx 0;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  text-align: center;
+  transition: all 0.2s ease;
+  
+  &.btn-cancel {
+    background: #f5f5f5;
+    color: #666;
+    
+    &:active {
+      background: #e8e8e8;
+    }
+  }
+  
+  &.btn-confirm {
+    background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
+    color: #ffffff;
+    
+    &:active {
+      transform: scale(0.98);
+    }
+    
+    &.btn-danger {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+    }
+  }
+}
+
+// 操作提示样式
+.operation-toast {
+  position: fixed;
+  top: 200rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 20rpx 32rpx;
+  border-radius: 8rpx;
+  background: #ffffff;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  animation: slideDown 0.3s ease;
+  
+  &.success {
+    border-left: 4rpx solid #52c41a;
+  }
+  
+  &.error {
+    border-left: 4rpx solid #ff4d4f;
+  }
+  
+  &.warning {
+    border-left: 4rpx solid #faad14;
+  }
+}
+
+.toast-text {
+  font-size: 28rpx;
+  color: #333;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+// 加载动画
+.loading-spinner {
+  width: 28rpx;
+  height: 28rpx;
+  border: 3rpx solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  
+  &.small {
+    width: 24rpx;
+    height: 24rpx;
+    border-width: 2rpx;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

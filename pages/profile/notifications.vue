@@ -11,7 +11,7 @@
         <view class="list-item" @click="navigateTo('/pages/profile/system-notifications')">
           <uni-icons type="sound" size="20" color="#2b9939" />
           <text class="item-title">系统通知</text>
-          <uni-icons type="arrowright" size="16" color="#999" />
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#ccc" />
         </view>
 
         <view class="divider" />
@@ -19,7 +19,7 @@
         <view class="list-item" @click="navigateTo('/pages/profile/message-reminders')">
           <uni-icons type="chat" size="20" color="#007AFF" />
           <text class="item-title">消息提醒</text>
-          <uni-icons type="arrowright" size="16" color="#999" />
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#ccc" />
         </view>
 
         <view class="divider" />
@@ -46,6 +46,7 @@
 .list-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 18px 0;
   position: relative;
 }
@@ -78,39 +79,20 @@
     border-color: #2b9939 !important;
   }
 }
-</style>
-
-<script>
-export default {
-  data() {
-    return {
-      // 新增设置状态
-      soundNotify: true,
-      vibrateNotify: false
-    }
-  },
-  onShow() {
-    uni.getStorage({
-      key: 'notification_settings',
-      success: res => {
-        this.soundNotify = res.data.soundNotify
-        this.vibrateNotify = res.data.vibrateNotify
-      }
-    })
+/* 统一箭头样式 */
+.arrow-icon {
+  font-size: 24rpx;
+  color: #ccc;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  
+  .list-item:active & {
+    color: #007AFF;
+    transform: translateX(4rpx);
   }
 }
-</script>
 
-<style scoped>
-.settings-status {
-  display: flex;
-  gap: 8px;
-}
-
-.status-icon {
-  font-size: 14px;
-}
-
+/* 页面基础样式 */
 .sub-page {
   background: #f5f5f5;
   min-height: 100vh;
@@ -118,6 +100,15 @@ export default {
 
 .content {
   padding: 15px;
+}
+
+.settings-status {
+  display: flex;
+  gap: 8px;
+}
+
+.status-icon {
+  font-size: 14px;
 }
 
 .uni-list {
@@ -147,7 +138,6 @@ export default {
   color: #999;
 }
 
-/* 新增通知徽章样式 */
 .notification-badge {
   background-color: #ff5500;
   color: white;
@@ -157,10 +147,29 @@ export default {
   margin-left: 8px;
 }
 
-/* 新增时间戳样式 */
 .notification-time {
   font-size: 12px;
   color: #999;
   margin-top: 4px;
 }
 </style>
+
+<script>
+export default {
+  data() {
+    return {
+      soundNotify: true,
+      vibrateNotify: false
+    }
+  },
+  onShow() {
+    uni.getStorage({
+      key: 'notification_settings',
+      success: res => {
+        this.soundNotify = res.data.soundNotify
+        this.vibrateNotify = res.data.vibrateNotify
+      }
+    })
+  }
+}
+</script>

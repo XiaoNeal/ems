@@ -1,9 +1,9 @@
-{
+﻿{
     "version" : "1.0.0",
     "prompt" : "template",
-    "title" : "服务协议和隐私政策",
-    "message" : "　尊敬的用户，欢迎使用GIEMS云，我们十分注重用户的隐私保护和个人信息保护。在您使用GIEMS云APP前请务必审慎阅读、充分理解<a href=\"https://www.xxx.cn/textTwo.html\">《服务协议》</a>和<a href=\"https://www.xxx.cn/textOne.html\">《隐私政策》</a>全部条款，了解详细信息。如果您同意，请点击下面按钮开始接受我们的服务。",
-    "buttonAccept" : "同意并接受",
+    "title" : "服务协议和隐私政�?,
+    "message" : "　尊敬的用户，欢迎使用微能站，我们十分注重用户的隐私保护和个人信息保护。在您使用微能站APP前请务必审慎阅读、充分理�?a href=\"https://www.xxx.cn/textTwo.html\">《服务协议�?/a>�?a href=\"https://www.xxx.cn/textOne.html\">《隐私政策�?/a>全部条款，了解详细信息。如果您同意，请点击下面按钮开始接受我们的服务�?,
+    "buttonAccept" : "同意并接�?,
     "buttonRefuse" : "暂不同意",
     "hrefLoader" : "system",
     "disagreeMode" : {

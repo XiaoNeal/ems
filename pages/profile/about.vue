@@ -5,7 +5,7 @@
 		:placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
 		<view class="logo">
 			<image src="https://serviceiems.gree.com/sso/img/logo_blue.56e357ea.svg" mode="widthFix" style="width: 80px; border-radius: 10px;margin-bottom: 10px;height:80px"></image>
-			<text class="title-container" :style="'color:'+ fontColor">GIEMS云</text>
+			<text class="title-container" :style="'color:'+ fontColor">微能站</text>
 			<view style="padding: 1rem;text-indent: 2em;">
 				<text class="text-color" :style="'color:'+ fontColor">
 					光储直柔奋力零碳中国
@@ -35,9 +35,9 @@
 		<!-- #endif -->
 		<!-- #ifdef MP-WEIXIN -->
 		<view class="agreement" :style="{'color':fontColor}">
-			<view style="text-align: center;" @click="goToAgreement('privacy-policy')">《GIEMS云隐私协议政策》</view>
+			<view style="text-align: center;" @click="goToAgreement('privacy-policy')">《微能站隐私协议政策》</view>
 			<view style="text-align: center; margin-top: 0.5rem;" @click="goToAgreement('user-agreement')">
-				《GIEMS云软件许可及用户服务协议》</view>
+				《微能站软件许可及用户服务协议》</view>
 			<view style="text-align: center; margin-top: 0.5rem;" @click="showICP">备案号：粤ICP备2024207422号-1X</view>
 		</view>
 		<!-- #endif -->
@@ -60,7 +60,7 @@
 			return {
 				appVersion: '',
 				isNew: '无新版本',
-				isLoading: false // 新增加载状态
+				isLoading: false
 			}
 		},
 		computed: {
@@ -71,14 +71,11 @@
 			}
 		},
 		onLoad() {
-			// if (this.currentTemplate == 3) {
-			// 	this.fontColor = '#fff'
-			// }
 		},
 		mounted() {
 			// #ifdef APP-PLUS
 			let version = uni.getSystemInfoSync().appWgtVersion;
-			this.appVersion = version.replace(/\./g, '.'); // 格式化版本号
+			this.appVersion = version.replace(/\./g, '.');
 			// #endif
 			// #ifdef APP
 			this.getUpgrade()
@@ -86,13 +83,13 @@
 		},
 		methods: {
 			goUpgread() {
-				if (this.isLoading) return; // 防止重复点击
+				if (this.isLoading) return;
 				this.isLoading = true;
 				uni.showLoading({
 					title: '检查中...'
 				});
 				if (this.isNew == '有新版本可更新') {
-					let downapk = 'https://serviceiems.gree.com/home/springboot_service/mobile_service/mobile_apk/GIEMS云.apk'
+					let downapk = 'https://serviceiems.gree.com/home/springboot_service/mobile_service/mobile_apk/微能站.apk'
 					plus.runtime.openURL(downapk);
 				}
 				setTimeout(() => {
@@ -101,7 +98,7 @@
 				}, 1000);
 			},
 			goToAgreement(e) {
-				if (this.isLoading) return; // 防止重复点击
+				if (this.isLoading) return;
 				this.isLoading = true;
 				uni.showLoading({
 					title: '加载中...'
@@ -119,27 +116,27 @@
 			  plus.runtime.getProperty(plus.runtime.appid, (widgetInfo) => {
 			    let version = widgetInfo.version
 			    let osName = plus.os.name;
-			    var server = `https://serviceiems.gree.com/appletAPI/downloadAPK?version=${version}&osName=${osName}`; //检查新地址
+			    var server = `https://serviceiems.gree.com/appletAPI/downloadAPK?version=${version}&osName=${osName}`;
 			    uni.request({
 			      url: server,
 			      success: (res) => {
 			        if (res.statusCode == 200 && res.data.data.updateStatus == 3) {
 			          that.isNew = '暂无新版本'
-			        } else if (res.statusCode == 200 && res.data.data.updateStatus === 1) {
-			          that.isNew = '有新版本可更新'
-			        }
-			      },
-			      fail: (err) => {
-			        uni.showToast({
-			          title: '网络请求失败，请重试',
-			          icon: 'none'
-			        });
-			      }
-			    })
-			  })
-			}
+		        } else if (res.statusCode == 200 && res.data.data.updateStatus === 1) {
+		          that.isNew = '有新版本可更新'
+		        }
+		      },
+		      fail: (err) => {
+		        uni.showToast({
+		          title: '网络请求失败，请重试',
+		          icon: 'none'
+		        });
+		      }
+		    })
+		  })
 		}
 	}
+}
 </script>
 
 <style scoped lang="scss">
@@ -193,7 +190,6 @@
 			left: 50%;
 			transform: translateX(-50%);
 			width: 100%;
-			// z-index: -100;
 		}
 
 		.agreement {

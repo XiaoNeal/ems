@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<view class="container">
 		<view class="wrapper">
 			<u-toast ref="uToast"></u-toast>
@@ -11,48 +11,48 @@
 				<view class="welcome">欢迎注册</view>
 			</view>
 			<view class="" style="font-size: 14px;color: #a4abb4;padding: 3vw 6vw 0;">
-				温馨提示：如果你想使用本APP完整的功能<text class="point" @click="gotCon">请与我们取得联系</text>，你也可以前往<text class="point" @click="gotoShili">示例电站</text>体验。
+				温馨提示：如果你想使用本APP完整的功�?text class="point" @click="gotCon">请与我们取得联系</text>，你也可以前往<text class="point" @click="gotoShili">示例电站</text>体验�?
 			</view>
 			<view class="input-content">
-				<!-- 用户名 -->
+				<!-- 用户�?-->
 				<view class="input-box">
 					<uni-easyinput trim="all" v-model="username" placeholder="请输入用户名" :inputBorder="false"
 						@blur="checkUsername"></uni-easyinput>
 				</view>
-				<text v-show="usernameCheck" class="warning">用户名不能为空</text>
+				<text v-show="usernameCheck" class="warning">用户名不能为�?/text>
 				<!-- 密码 -->
 				<view class="input-box">
-					<uni-easyinput trim="all" v-model="password" type="password" placeholder="请输入密码"
+					<uni-easyinput trim="all" v-model="password" type="password" placeholder="请输入密�?
 						:inputBorder="false" @blur="checkUpwd"></uni-easyinput>
 				</view>
-				<text v-show="upwdCheck" class="warning">密码长度为8~14位且至少包含一个字母和数字且不能用特殊符号</text>
+				<text v-show="upwdCheck" class="warning">密码长度�?~14位且至少包含一个字母和数字且不能用特殊符号</text>
 				<!-- 再次输入密码 -->
 				<view class="input-box">
-					<uni-easyinput trim="all" v-model="confirmPassword" type="password" placeholder="请再次输入密码"
+					<uni-easyinput trim="all" v-model="confirmPassword" type="password" placeholder="请再次输入密�?
 						:inputBorder="false" @blur="checkConfirm"></uni-easyinput>
 				</view>
 				<text v-show="confirmUpwdCheck" class="warning"
-					style="color: red;font-size: 3vw;padding-left: 3vw;">密码不一致</text>
-				<!-- 手机号 -->
+					style="color: red;font-size: 3vw;padding-left: 3vw;">密码不一�?/text>
+				<!-- 手机�?-->
 				<view class="input-box">
 					<uni-easyinput trim="all" v-model="phoneNum" type="number" placeholder="请输入手机号" :inputBorder="false"
 						@blur="checkPhone"></uni-easyinput>
 				</view>
-				<text v-show="inputText" class="warning">请输入正确的手机号</text>
-				<!-- 验证码 -->
+				<text v-show="inputText" class="warning">请输入正确的手机�?/text>
+				<!-- 验证�?-->
 				<view class="input-box" style="display: flex;align-items: center;justify-content: space-between;">
 					<uni-easyinput type="number" v-model="verificationCode" :inputBorder="false" placeholder="请输入验证码"
 						@blur="checkCode"></uni-easyinput>
 					<view @tap="getCode" style="color: #4488fb;">{{text}}</view>
 				</view>
-				<text v-show="codeText" class="warning">验证码不能为空</text>
+				<text v-show="codeText" class="warning">验证码不能为�?/text>
 
 			</view>
 
 			<view class="privacy-policy" style="margin-top: 15vw;">
 				<radio class="radio-style" color="rgba(26, 165, 241, 0.6)" :checked="isRead" @click="isRead=!isRead" />
-				我已阅读并同意<text style="color: rgb(30, 138, 214);" @click="goToAgreement(1)">《用户协议》</text>和<text
-					style="color: rgb(30, 138, 214);" @click="goToAgreement(2)">《隐私政策》</text>
+				我已阅读并同�?text style="color: rgb(30, 138, 214);" @click="goToAgreement(1)">《用户协议�?/text>�?text
+					style="color: rgb(30, 138, 214);" @click="goToAgreement(2)">《隐私政策�?/text>
 			</view>
 			<view class="privacy-policy">
 				注册成功后将自动跳转登录
@@ -62,7 +62,7 @@
 				:style="{backgroundImage:(isRead==false?'linear-gradient(-90deg, rgba(27,165,241,0.5) 0%, rgba(87,234,172,0.5) 100%)':'linear-gradient(-90deg, rgb(27,165,241) 0%, rgb(87,234,172) 100%)') }">注册</button>
 		</view>
 		<!-- 	<view style="text-align: center;">
-			用户注册代表同意<text style="color:rgba(26, 165, 241, 0.6);">《用户协议》</text>
+			用户注册代表同意<text style="color:rgba(26, 165, 241, 0.6);">《用户协议�?/text>
 		</view> -->
 		<u-toast ref="uToast"></u-toast>
 	</view>
@@ -94,14 +94,14 @@
 				confirmPassword: '', //确认密码
 				verificationCode: '',
 				isConfirm: false,
-				countdown: 60, //重发验证码倒计时
-				text: '获取验证码',
+				countdown: 60, //重发验证码倒计�?
+				text: '获取验证�?,
 				usernameCheck: false,
 				inputText: false,
 				upwdCheck: false,
-				showUpwIcon: false, //密码框的小眼睛
+				showUpwIcon: false, //密码框的小眼�?
 				showPassword: false, //密码是否可见
-				showConfirmUpwIcon: false, //重复密码框的小眼睛
+				showConfirmUpwIcon: false, //重复密码框的小眼�?
 				showConfirmPassword: false, //重复密码是否可见		
 				confirmUpwdCheck: false,
 				codeText: false,
@@ -134,7 +134,7 @@
 					})
 				}
 			},
-			checkCode() { //验证码不能为空
+			checkCode() { //验证码不能为�?
 				if (!this.verificationCode) {
 					this.codeText = true
 					return false
@@ -146,36 +146,36 @@
 
 			async toRegister() { //注册
 				if (!this.isRead) {
-					this.showToast('error', '请先阅读并勾选同意服务条款')
+					this.showToast('error', '请先阅读并勾选同意服务条�?)
 					return
 				}
 				let nameRes = this.checkUsername()
 				if (!nameRes) {
-					this.showToast('error', '用户名不能为空')
+					this.showToast('error', '用户名不能为�?)
 					return
 				}
 				// 验证密码
 				let upwdRes = this.checkUpwd()
 				if (!upwdRes) {
-					this.showToast('error', '请输入正确密码')
+					this.showToast('error', '请输入正确密�?)
 					return
 				}
 				// 验证再次输入密码
 				let confirmUpwdRes = this.checkConfirm()
 				if (!confirmUpwdRes) {
-					this.showToast('error', '两次输入的密码不一致')
+					this.showToast('error', '两次输入的密码不一�?)
 					return
 				}
 				// 验证手机
 				let phoneRes = this.checkPhone()
 				if (!phoneRes) {
-					this.showToast('error', '请输入正确的手机号')
+					this.showToast('error', '请输入正确的手机�?)
 					return
 				}
-				// 验证验证码
+				// 验证验证�?
 				let codeRes = this.checkCode()
 				if (!codeRes) {
-					this.showToast('error', '验证码不能为空')
+					this.showToast('error', '验证码不能为�?)
 					return
 				}
 
@@ -205,7 +205,7 @@
 						id: null,
 						create_time: null,
 						update_time: null,
-						name: `${this.username}的GIEMS云能源信息系统`,
+						name: `${this.username}的微能站能源信息系统`,
 						name_en: null,
 						country_id: null,
 						province_id: null,
@@ -325,7 +325,7 @@
 			},
 			confirm() {
 				uni.showModal({
-					title: '注册成功，点击确认跳转登录',
+					title: '注册成功，点击确认跳转登�?,
 					showCancel: false,
 					complete(res) {
 						if (res.confirm) {
@@ -339,8 +339,8 @@
 			getCode() {
 				let reg = /^1([38]\d|4[579]|5[0-3,5-9]|66|7[0135678]|9[89])\d{8}$/
 				if (!reg.test(this.phoneNum)) {
-					// 弹出提示框
-					this.showToast('error', '请输入正确的手机号')
+					// 弹出提示�?
+					this.showToast('error', '请输入正确的手机�?)
 					// 让字体变红色
 					this.inputText = true
 					return
@@ -348,12 +348,12 @@
 					this.inputText = false
 				}
 				this.isConfirm = true
-				this.showToast('success', "验证码已发送，请查收");
+				this.showToast('success', "验证码已发送，请查�?);
 				// this.text=`${this.countdown}秒后重新获取`
 				let timer = setInterval(() => {
 					if (this.countdown == 0) {
 						clearInterval(timer)
-						this.text = '获取验证码'
+						this.text = '获取验证�?
 						this.isConfirm = false
 						// this.countdown = 
 					} else {
@@ -440,7 +440,7 @@
 	$border-color-dark: #DCDFE6;
 	$border-color-base: #E4E7ED;
 	$border-color-light: #EBEEF5;
-	/* 图片加载中颜色 */
+	/* 图片加载中颜�?*/
 	$image-bg-color: #eee;
 	/* 行为相关颜色 */
 	$uni-color-primary: #fa436a;

@@ -1,9 +1,9 @@
-<template>
+﻿<template>
 	<view class="container" :style="'background-color:'+ bGColor">
 		<u-navbar title="关于我们" leftIconColor="#fff" :titleStyle="{'color':fontColor,'width':'100%'}" :leftText="null" :autoBack="true" :placeholder="true" :bgColor="headerTabBg" ></u-navbar>
 		<view class="logo">
 			<image src="https://serviceiems.gree.com/sso/img/logo_blue.56e357ea.svg" mode="widthFix" style="width: 80px; border-radius: 10px;margin-bottom: 10px;height:80px"></image>
-			<text class="title-container" :style="'color:'+ fontColor">GIEMS云</text>
+			<text class="title-container" :style="'color:'+ fontColor">GIEMS�?/text>
 			<view style="padding: 1rem;text-indent: 2em;">
 				<text class="text-color" :style="'color:'+ fontColor">
 					光储直柔奋力零碳中国
@@ -18,7 +18,7 @@
 				<text style="color: #aaa;">V{{appVersion}}</text>
 			</view>
 			<view class="items">
-				<text>检查更新</text>
+				<text>检查更�?/text>
 				<text style="color: #aaa;" @click="goUpgread">{{isNew}}</text>
 			</view>
 			<view class="items" @click="goToAgreement('privacy-policy')">
@@ -33,10 +33,10 @@
 		<!-- #endif -->
 		<!-- #ifdef MP-WEIXIN -->
 		<view class="agreement" :style="{'color':fontColor}">
-			<view style="text-align: center;" @click="goToAgreement('privacy-policy')">《GIEMS云隐私协议政策》</view>
+			<view style="text-align: center;" @click="goToAgreement('privacy-policy')">《微能站隐私协议政策�?/view>
 			<view style="text-align: center; margin-top: 0.5rem;" @click="goToAgreement('user-agreement')">
-				《GIEMS云软件许可及用户服务协议》</view>
-			<view style="text-align: center; margin-top: 0.5rem;" @click="showICP">备案号：粤ICP备2024207422号-1X</view>
+				《微能站软件许可及用户服务协议�?/view>
+			<view style="text-align: center; margin-top: 0.5rem;" @click="showICP">备案号：粤ICP�?024207422�?1X</view>
 		</view>
 		<!-- #endif -->
 		<!-- #ifdef APP -->
@@ -44,9 +44,9 @@
 			<view style="text-align: center; margin-top: 0.5rem;" @click="showICP">计算机软件著作权登记号：2024SR0089155</view>
 		</view>
 		<!-- #endif -->
-		<!-- 版权所有 -->
+		<!-- 版权所�?-->
 		<view class="copyright">
-			<text>国创能源互联网创新中心（广东）有限公司</text>
+			<text>国创能源互联网创新中心（广东）有限公�?/text>
 			<text>Copyrigt © 2017-{{thisYear}} NEIIC</text>
 			<text>All right reserved</text>
 		</view>
@@ -85,8 +85,8 @@
 		},
 		methods: {
 			goUpgread() {
-				if (this.isNew == '有新版本可更新') {
-					let downapk = 'https://serviceiems.gree.com/home/springboot_service/mobile_service/mobile_apk/GIEMS云.apk'
+				if (this.isNew == '有新版本可更�?) {
+					let downapk = 'https://serviceiems.gree.com/home/springboot_service/mobile_service/mobile_apk/GIEMS�?apk'
 					plus.runtime.openURL(downapk)
 				}
 			},
@@ -100,14 +100,14 @@
 						url: server,
 						success: (res) => {
 							if (res.statusCode == 200 && res.data.data.updateStatus == 3) {
-								that.isNew = '暂无新版本'
+								that.isNew = '暂无新版�?
 								return
 							} else if (res.statusCode == 200 && res.data.data.updateStatus === 1) {
-								that.isNew = '有新版本可更新'
+								that.isNew = '有新版本可更�?
 							}
 							// // 整包更新 
 							// if (res.statusCode == 200 && res.data.data.updateStatus === 1) {
-							// 	let downapk = 'https://serviceiems.gree.com/home/springboot_service/mobile_service/mobile_apk/GIEMS云.apk'
+							// 	let downapk = 'https://serviceiems.gree.com/home/springboot_service/mobile_service/mobile_apk/GIEMS�?apk'
 							// 	uni.showModal({ //提醒用户更新  
 							// 		title: "更新提示",
 							// 		content: `${res.data.data.note}`,
@@ -126,7 +126,7 @@
 			showICP() {
 				uni.showModal({
 					title: "提示",
-					content: "可前往工信部政务服务平台（https://beian.miit.gov.cn）进一步查询备案信息",
+					content: "可前往工信部政务服务平台（https://beian.miit.gov.cn）进一步查询备案信�?,
 					showCancel: false
 				})
 			},

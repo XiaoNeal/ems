@@ -12,7 +12,7 @@
         </view>
         <view class="item-right">
           <text class="right-text">{{ language }}</text>
-          <uni-icons type="arrowright" size="16" color="#999" />
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#ccc" />
         </view>
       </view>
 
@@ -23,7 +23,7 @@
         </view>
         <view class="item-right">
           <text class="right-text">{{ theme }}</text>
-          <uni-icons type="arrowright" size="16" color="#999" />
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#ccc" />
         </view>
       </view>
 
@@ -34,7 +34,7 @@
         </view>
         <view class="item-right">
           <text class="right-text">{{ cacheSize }}</text>
-          <uni-icons type="arrowright" size="16" color="#999" />
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#ccc" />
         </view>
       </view>
 
@@ -44,7 +44,7 @@
           <text class="item-title">字体大小</text>
         </view>
         <view class="item-right">
-          <uni-icons type="arrowright" size="16" color="#999" />
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#ccc" />
         </view>
       </view>
 
@@ -54,7 +54,7 @@
           <text class="item-title">通知设置</text>
         </view>
         <view class="item-right">
-          <uni-icons type="arrowright" size="16" color="#999" />
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#ccc" />
         </view>
       </view>
 
@@ -148,7 +148,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .sub-page {
   background: #f5f5f5;
   min-height: 100vh;
@@ -208,7 +208,6 @@ export default {
   border-radius: 16rpx;
   box-shadow: 0 4rpx 12rpx rgba(255, 68, 68, 0.1);
   transition: all 0.3s ease;
-
 }
 
 .logout-item:active {
@@ -220,5 +219,18 @@ export default {
   font-weight: 500;
   text-align: center;
   width: 100%;
+}
+
+/* 统一箭头样式 */
+.arrow-icon {
+  font-size: 24rpx;
+  color: #ccc;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  
+  .list-item:active & {
+    color: #007AFF;
+    transform: translateX(4rpx);
+  }
 }
 </style>

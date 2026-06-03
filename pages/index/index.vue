@@ -148,6 +148,14 @@ export default {
   onLoad(options) {
     if (options.esId) {
       this.handleDeviceSelect(options.esId)
+    } else {
+      // 恢复上次选择的设备
+      const savedDeviceId = uni.getStorageSync('selectedDeviceId')
+      if (savedDeviceId) {
+        this.selectedDeviceId = savedDeviceId
+        this.$store.commit('changePowerStationId', savedDeviceId)
+        uni.setStorageSync('currentEsId', savedDeviceId)
+      }
     }
     this.checkFromProfile()
   },
@@ -225,6 +233,7 @@ export default {
       this.fromProfile = false
       this.$store.commit('changePowerStationId', esId)
       uni.setStorageSync('currentEsId', esId)
+      uni.setStorageSync('selectedDeviceId', esId)
     },
     
     // 返回设备列表
@@ -232,6 +241,7 @@ export default {
       this.selectedDeviceId = null
       this.$store.commit('changePowerStationId', undefined)
       uni.removeStorageSync('currentEsId')
+      uni.removeStorageSync('selectedDeviceId')
     },
     
     onScroll(e) {

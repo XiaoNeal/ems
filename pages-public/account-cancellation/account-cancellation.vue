@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<view :style="'background-color:' + bGColor" class="container">
 		<u-navbar title=" " :titleStyle="{ 'color': fontColor, 'width': '100%' }" :leftText="null" :autoBack="true"
 			:placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
@@ -13,11 +13,11 @@
 			<view style="font-size: 40rpx;text-align: center;font-weight: bolder;margin: 3vw 0;"
 				:style="{ 'color': fontColor }">注销须知</view>
 			<view :style="{ 'color': fontColor }">
-				<p>注销GIEMS云帐号是不可恢复的操作，你应自行备份GIEMS云帐号相关的信息和数据。操作之前，请确认与GIEMS云帐号相关的所有服务均已进行妥善处理。</p>
-				<p>请谨记：注销GIEMS云帐号，你将无法再使用GIEMS云帐号或找回你添加或绑定的任何内容或信息（即使你使用相同的手机号码再次注册并使用GIEMS云），包括但不限于：</p>
-				<p>（1）你将无法登录、使用本GIEMS云帐号。</p>
-				<p>（2）你GIEMS云帐号的个人资料和历史信息（包含昵称、头像、设备信息、发电报告、用电报告等）都将无法找回。</p>
-				<p>（3）在GIEMS云帐号注销期间，如果你的GIEMS云帐号被他人投诉、被国家机关调查或者正处于诉讼、仲裁程序中，GIEMS云有权自行终止你GIEMS云帐号的注销而无需另行得到你的同意。</p>
+				<p>注销微能站帐号是不可恢复的操作，你应自行备份微能站帐号相关的信息和数据。操作之前，请确认与微能站帐号相关的所有服务均已进行妥善处理�?/p>
+				<p>请谨记：注销微能站帐号，你将无法再使用微能站帐号或找回你添加或绑定的任何内容或信息（即使你使用相同的手机号码再次注册并使用微能站），包括但不限于：</p>
+				<p>�?）你将无法登录、使用本微能站帐号�?/p>
+				<p>�?）你微能站帐号的个人资料和历史信息（包含昵称、头像、设备信息、发电报告、用电报告等）都将无法找回�?/p>
+				<p>�?）在微能站帐号注销期间，如果你的微能站帐号被他人投诉、被国家机关调查或者正处于诉讼、仲裁程序中，微能站有权自行终止你微能站帐号的注销而无需另行得到你的同意�?/p>
 			</view>
 			<view :style="{ 'color': fontColor }"
 				style="display: flex;align-items: center;justify-content: center;margin-top: 20vw;">
@@ -27,7 +27,7 @@
 			<view class="btn-row">
 				<button class="logoutBtn"
 					:style="{ backgroundImage: (isRead == false ? 'linear-gradient(-90deg, rgba(58,64,255,0.5) 0%, rgba(50,199,255,0.5) 100%)' : 'linear-gradient(-90deg, rgb(58,64,255) 0%, rgb(50,199,255) 100%)') }"
-					@click="nextStep">下一步</button>
+					@click="nextStep">下一�?/button>
 			</view>
 		</view>
 		<view v-if="confirmCancellation" :style="{ 'color': fontColor }">
@@ -61,7 +61,7 @@ export default {
 			countdown: 60,
 			isGetCode: true,
 			userPhone: '',
-			verificationCodeText: '获取验证码',
+			verificationCodeText: '获取验证�?,
 		}
 	},
 	mounted() {
@@ -77,22 +77,22 @@ export default {
 					type: 'error',
 					icon: false,
 					title: '失败主题',
-					message: '验证码不能为空',
+					message: '验证码不能为�?,
 					iconUrl: 'https://cdn.uviewui.com/uview/demo/toast/error.png'
 				})
 				return
 			}
 			uni.showModal({
-				content: '点击确认即注销该账号，数据将无法找回',
+				content: '点击确认即注销该账号，数据将无法找�?,
 				title: '温馨提示'
 			})
 		},
-		getCodePassword() { //修改密码时获取的验证码
+		getCodePassword() { //修改密码时获取的验证�?
 			if (!this.isGetCode) return
 			let timer = setInterval(() => {
 				if (this.countdown == 0) {
 					clearInterval(timer)
-					this.verificationCodeText = '获取验证码'
+					this.verificationCodeText = '获取验证�?
 					this.countdown = 60
 					this.isGetCode = true
 				} else {
@@ -111,7 +111,7 @@ export default {
 					type: 'error',
 					icon: false,
 					title: '失败主题',
-					message: '请先阅读并勾选同意服务条款',
+					message: '请先阅读并勾选同意服务条�?,
 					iconUrl: 'https://cdn.uviewui.com/uview/demo/toast/error.png'
 				})
 				return

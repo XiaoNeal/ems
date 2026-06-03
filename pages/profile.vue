@@ -27,7 +27,7 @@
         </view>
       </view>
       <!-- <view > -->
-      <uni-icons type="arrowright" size="20" color="#999" ></uni-icons>
+      <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
       <!-- </view> -->
 
     </view>
@@ -41,28 +41,31 @@
         <view class="item-content">
           <uni-icons type="person" size="20" color="#007AFF"></uni-icons>
           <text class="item-title">个人信息</text>
-          <uni-icons type="arrowright" size="20" color="#999"></uni-icons>
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view> -->
        <view class="list-item" @click="navigateToDeviceList">
         <view class="item-content">
           <uni-icons type="list" size="20" color="#007AFF"></uni-icons>
-          <text class="item-title">设备列表</text>
-          <uni-icons type="arrowright" size="20" color="#999"></uni-icons>
+          <view class="item-title-wrapper">
+            <text class="item-title">设备列表</text>
+            <text v-if="currentDeviceName" class="device-name">{{ currentDeviceName }}</text>
+          </view>
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
       <view class="list-item" @click="navigateToU('/pages/profile/notifications')">
         <view class="item-content">
           <uni-icons type="notification" size="20" color="#007AFF"></uni-icons>
           <text class="item-title">消息通知</text>
-          <uni-icons type="arrowright" size="20" color="#999"></uni-icons>
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
       <view class="list-item" @click="navigateToU('/pages/profile/security')">
         <view class="item-content">
           <uni-icons type="locked" size="20" color="#007AFF"></uni-icons>
           <text class="item-title">安全设置</text>
-          <uni-icons type="arrowright" size="20" color="#999"></uni-icons>
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
      
@@ -70,21 +73,21 @@
         <view class="item-content">
           <uni-icons type="gear" size="20" color="#007AFF"></uni-icons>
           <text class="item-title">系统设置</text>
-          <uni-icons type="arrowright" size="20" color="#999"></uni-icons>
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
       <view class="list-item" @click="navigateToU('/pages/profile/help')" style="margin:20rpx 0 ">
         <view class="item-content">
           <uni-icons type="heart" size="20" color="#007AFF"></uni-icons>
           <text class="item-title">帮助与反馈</text>
-          <uni-icons type="arrowright" size="20" color="#999"></uni-icons>
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
       <view class="list-item" @click="navigateToU('/pages/profile/about')">
         <view class="item-content">
           <uni-icons type="info" size="20" color="#007AFF"></uni-icons>
           <text class="item-title">关于</text>
-          <uni-icons type="arrowright" size="20" color="#999"></uni-icons>
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
     </view>
@@ -102,6 +105,32 @@ export default {
   },
   computed: {
     ...mapState(['user', 'userInfo']),
+    currentDeviceName() {
+      const currentDevice = uni.getStorageSync('currentEsId')
+      if (!currentDevice) {
+        return ''
+      }
+      
+      // 如果 currentDevice 本身是对象且有 name 属性
+      if (typeof currentDevice === 'object' && currentDevice.name) {
+        return currentDevice.name
+      }
+      
+      // 如果 currentDevice 是字符串ID，从 esIds 中查找
+      if (this.userInfo?.esIds && Array.isArray(this.userInfo.esIds)) {
+        const device = this.userInfo.esIds.find(item => {
+          if (typeof item === 'object') {
+            return item.esId === currentDevice || item.id === currentDevice || item === currentDevice
+          }
+          return item === currentDevice
+        })
+        if (device && typeof device === 'object' && device.name) {
+          return device.name
+        }
+      }
+      
+      return ''
+    }
   },
   mounted() {
     console.log(this.user,"this.user")
@@ -379,6 +408,8 @@ export default {
   background-color: #fff;
   border-bottom: 1px solid #eee;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
 }
 
 .list-item:active {
@@ -388,13 +419,31 @@ export default {
 .item-content {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .item-title {
-  flex: 1;
-  margin-left: 15px;
   font-size: 16px;
   color: #2c3e50;
+  flex: 1;
+  margin-left: 15px;
+}
+
+.item-title-wrapper {
+  flex: 1;
+  margin-left: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.device-name {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 button[type="warn"] {
@@ -475,5 +524,19 @@ button[type="warn"] {
   font-size: 12px;
   color: #666;
   margin-left: 4px;
+}
+
+/* 统一箭头样式 */
+.arrow-icon {
+  font-size: 24rpx;
+  color: #ccc;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  
+  .list-item:active &,
+  .user-info:active & {
+    color: #007AFF;
+    transform: translateX(4rpx);
+  }
 }
 </style>
