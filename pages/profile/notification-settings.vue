@@ -1,19 +1,36 @@
 <template>
   <view class="sub-page">
-    <uni-nav-bar title="通知设置" left-icon="back" @clickLeft="back" />
-    <view class="content">
-      <view class="uni-list">
-        <view class="uni-list-item">
-          <text class="uni-list-item-title">接收系统通知</text>
-          <switch :checked="systemNotify" @change="toggleSetting('systemNotify', $event)" />
+    <u-navbar title="通知设置" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :leftText="null" :autoBack="true"
+      :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
+    
+    <view class="custom-list">
+      <view class="list-item">
+        <view class="item-left">
+          <uni-icons type="bell" size="24" color="#007AFF" />
+          <text class="item-title">接收系统通知</text>
         </view>
-        <view class="uni-list-item">
-          <text class="uni-list-item-title">消息提醒声音</text>
-          <switch :checked="soundNotify" @change="toggleSetting('soundNotify', $event)" />
+        <view class="item-right">
+          <switch :checked="systemNotify" @change="toggleSetting('systemNotify', $event)" color="#007AFF" />
         </view>
-        <view class="uni-list-item">
-          <text class="uni-list-item-title">振动提醒</text>
-          <switch :checked="vibrateNotify" @change="toggleSetting('vibrateNotify', $event)" />
+      </view>
+      
+      <view class="list-item">
+        <view class="item-left">
+          <uni-icons type="volume-high" size="24" color="#007AFF" />
+          <text class="item-title">消息提醒声音</text>
+        </view>
+        <view class="item-right">
+          <switch :checked="soundNotify" @change="toggleSetting('soundNotify', $event)" color="#007AFF" />
+        </view>
+      </view>
+      
+      <view class="list-item">
+        <view class="item-left">
+          <uni-icons type="mic" size="24" color="#007AFF" />
+          <text class="item-title">振动提醒</text>
+        </view>
+        <view class="item-right">
+          <switch :checked="vibrateNotify" @change="toggleSetting('vibrateNotify', $event)" color="#007AFF" />
         </view>
       </view>
     </view>
@@ -21,6 +38,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   data() {
     return {
@@ -29,35 +48,41 @@ export default {
       vibrateNotify: false
     }
   },
+  computed: {
+    ...mapState({
+      headerTabBg: state => state.headerTabBg,
+      fontColor: state => state.fontColor
+    })
+  },
   onShow() {
     this.loadSettings()
   },
   methods: {
-    back() {
-      uni.navigateBack()
-    },
     loadSettings() {
-      uni.getStorage({
-        key: 'notification_settings',
-        success: res => {
-          Object.assign(this, res.data)
+      try {
+        const settings = uni.getStorageSync('notification_settings')
+        if (settings) {
+          Object.assign(this, settings)
         }
-      })
+      } catch (e) {
+        console.error('加载通知设置失败:', e)
+      }
     },
     toggleSetting(key, e) {
       this[key] = e.detail.value
       this.saveSettings()
     },
     saveSettings() {
-      uni.setStorage({
-        key: 'notification_settings',
-        data: {
+      try {
+        uni.setStorageSync('notification_settings', {
           systemNotify: this.systemNotify,
           soundNotify: this.soundNotify,
           vibrateNotify: this.vibrateNotify
-        }
-      })
-      this.syncToServer()
+        })
+        this.syncToServer()
+      } catch (e) {
+        console.error('保存通知设置失败:', e)
+      }
     },
     syncToServer() {
       uni.request({
@@ -67,6 +92,9 @@ export default {
           systemNotify: this.systemNotify,
           soundNotify: this.soundNotify,
           vibrateNotify: this.vibrateNotify
+        },
+        fail: () => {
+          console.log('通知设置同步失败')
         }
       })
     }
@@ -74,13 +102,54 @@ export default {
 }
 </script>
 
-<style scoped>
-/* 复用原有样式 */
-.uni-list-item {
+<style lang="scss" scoped>
+.sub-page {
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
+.custom-list {
+  background: #fff;
+  border-radius: 12rpx;
+  margin: 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+}
+
+.list-item {
+  padding: 28rpx 30rpx;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 15px;
-  border-bottom: 1px solid #f5f5f5;
+  justify-content: space-between;
+  border-bottom: 2rpx solid #f5f5f5;
+  transition: background 0.2s ease;
+
+  &:active {
+    background: #fafafa;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.item-left {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.item-title {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.item-right {
+  display: flex;
+  align-items: center;
+}
+
+switch {
+  transform: scale(0.85);
 }
 </style>

@@ -34,6 +34,9 @@
 		</view>
 		<!-- #endif -->
 		<!-- #ifdef MP-WEIXIN -->
+		<view class="version-info" :style="{'color':fontColor}">
+			<text>当前版本：{{versionName}}</text>
+		</view>
 		<view class="agreement" :style="{'color':fontColor}">
 			<view style="text-align: center;" @click="goToAgreement('privacy-policy')">《微能站隐私协议政策》</view>
 			<view style="text-align: center; margin-top: 0.5rem;" @click="goToAgreement('user-agreement')">
@@ -60,7 +63,8 @@
 			return {
 				appVersion: '',
 				isNew: '无新版本',
-				isLoading: false
+				isLoading: false,
+				versionName: 'V1.0.0'
 			}
 		},
 		computed: {
@@ -79,6 +83,14 @@
 			// #endif
 			// #ifdef APP
 			this.getUpgrade()
+			// #endif
+			// #ifdef MP-WEIXIN
+			try {
+				let accountInfo = uni.getAccountInfoSync();
+				this.versionName = accountInfo.miniProgram.version || 'V1.0.0';
+			} catch (e) {
+				this.versionName = 'V1.0.0';
+			}
 			// #endif
 		},
 		methods: {
@@ -177,6 +189,13 @@
 
 		.text-color {
 			margin-right: 10px;
+		}
+
+		.version-info {
+			text-align: center;
+			font-size: 26rpx;
+			color: #999;
+			margin: 20rpx 0;
 		}
 
 		.copyright {

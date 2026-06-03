@@ -155,21 +155,65 @@
 </style>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   data() {
     return {
-      soundNotify: true,
-      vibrateNotify: false
+      doNotDisturb: false
     }
   },
-  onShow() {
-    uni.getStorage({
-      key: 'notification_settings',
-      success: res => {
-        this.soundNotify = res.data.soundNotify
-        this.vibrateNotify = res.data.vibrateNotify
-      }
+  computed: {
+    ...mapState({
+      headerTabBg: state => state.headerTabBg,
+      fontColor: state => state.fontColor
     })
+  },
+  onShow() {
+    this.loadSettings()
+  },
+  methods: {
+    loadSettings() {
+      try {
+        const settings = uni.getStorageSync('notification_settings')
+        if (settings) {
+          this.doNotDisturb = settings.doNotDisturb || false
+        }
+      } catch (e) {
+        console.error('加载通知设置失败:', e)
+      }
+    },
+    toggleDoNotDisturb(e) {
+      this.doNotDisturb = e.detail.value
+      this.saveSettings()
+    },
+    saveSettings() {
+      try {
+        const settings = uni.getStorageSync('notification_settings') || {}
+        uni.setStorageSync('notification_settings', {
+          ...settings,
+          doNotDisturb: this.doNotDisturb
+        })
+        this.syncToServer()
+      } catch (e) {
+        console.error('保存免打扰设置失败:', e)
+      }
+    },
+    syncToServer() {
+      uni.request({
+        url: '/api/notification/do-not-disturb',
+        method: 'POST',
+        data: {
+          doNotDisturb: this.doNotDisturb
+        },
+        fail: () => {
+          console.log('免打扰设置同步失败')
+        }
+      })
+    },
+    navigateTo(url) {
+      uni.navigateTo({ url })
+    }
   }
 }
 </script>

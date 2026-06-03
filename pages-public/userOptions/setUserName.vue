@@ -2,34 +2,30 @@
 	<view class="content" :style="'background-color:' + bGColor">
 		<!-- <u-navbar v-if="type != 4" title=" 1111" leftIconColor="#fff" :titleStyle="{ 'color': fontColor, 'width': '100%' }"
 			:leftText="null" :autoBack="true" :placeholder="true" :bgColor="headerTabBg"></u-navbar> -->
-		<u-navbar title=" " :titleStyle="{ 'color': fontColor, 'width': '100%' }" :leftText="null" :autoBack="true"
+		<u-navbar :title="pageTitle" :titleStyle="{ 'color': fontColor, 'width': '100%', 'font-weight': '600' }" :leftText="null" :autoBack="true"
 			:placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
 		<u-toast ref="uToast"></u-toast>
 		<!-- 改用户名 -->
-		<view class="modify" v-if="type == 1" :style="'color:' + fontColor">
-			<view class="title">更改用户名</view>
-			<view style="margin-bottom: 20rpx;">请输入新用户名，此名称用于登录</view>
-			<input class="input-text" type="text" v-model="setUserName" style="border: 1px solid;">
-			<button @click="modifyUserName">确定</button>
+		<view class="modify" v-if="type == 1">
+			<view class="section-title">更改用户名</view>
+			<view class="section-desc">请输入新用户名，此名称用于登录</view>
+			<input class="input-text" type="text" v-model="setUserName" placeholder="请输入用户名">
+			<button class="primary-btn" @click="modifyUserName">确定</button>
 		</view>
 
 		<!-- 更改手机号 -->
-		<view class="modify" v-if="type == 2" :style="'color:' + fontColor">
-			<view class="title">更改手机号</view>
-			<input class="input-text" type="text" placeholder="请输入新手机号" v-model="setUserPhone"
-				style="border: 1px solid;">
-			<view class="verification-code" style="border: 1px solid;">
-				<input style="flex: 1;" type="text" placeholder="请输入验证码" v-model="verificationCodePhone">
-				<text :style="'color:' + fontColor" @click="getCode">{{ verificationCodeText }}</text>
+		<view class="modify" v-if="type == 2">
+			<view class="section-title">更改手机号</view>
+			<input class="input-text" type="text" placeholder="请输入新手机号" v-model="setUserPhone">
+			<view class="verification-code">
+				<input class="code-input" type="text" placeholder="请输入验证码" v-model="verificationCodePhone">
+				<view class="code-btn" @click="getCode">{{ verificationCodeText }}</view>
 			</view>
-			<button @click="modifyPhone">确定</button>
+			<button class="primary-btn" @click="modifyPhone">确定</button>
 		</view>
 
 		<!-- 更改密码 -->
 		<view class="modify" v-if="type == 3">
-			<view class="page-header">
-				<text class="header-title">修改密码</text>
-			</view>
 			<view class="form-container">
 				<view class="tip-text">验证码将发送至 {{ mobile }}</view>
 
@@ -135,6 +131,18 @@ export default {
 	},
 	computed: {
 		...mapState('user', ['userName', 'mobile', 'id']),
+		pageTitle() {
+			switch (this.type) {
+				case '1':
+					return '更改用户名';
+				case '2':
+					return '更改手机号';
+				case '3':
+					return '修改密码';
+				default:
+					return '设置';
+			}
+		},
 		progressWidth() {
 			const index = ['弱', '中', '良', '强'].indexOf(this.passwordStrength);
 			return `${(index + 1) * 25}%`;
@@ -492,6 +500,372 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+// 主容器样式
+.content {
+	min-height: 100vh;
+	background: linear-gradient(180deg, #f0f5ff 0%, #f5f7fb 30%);
+	padding: 32rpx;
+	padding-top: calc(var(--status-bar-height) + 100rpx);
+	box-sizing: border-box;
+}
+
+// 卡片容器
+.modify {
+	background: #fff;
+	border-radius: 24rpx;
+	padding: 48rpx;
+	box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
+	margin-bottom: 32rpx;
+}
+
+// 区块标题
+.section-title {
+	font-size: 32rpx;
+	font-weight: 600;
+	color: #1a1a1a;
+	margin-bottom: 16rpx;
+	text-align: center;
+}
+
+// 区块描述
+.section-desc {
+	font-size: 26rpx;
+	color: #666;
+	margin-bottom: 32rpx;
+	text-align: center;
+	line-height: 1.6;
+}
+
+// 提示文字
+.tip-text {
+	font-size: 24rpx;
+	color: #555;
+	margin-bottom: 32rpx;
+	text-align: center;
+	padding: 20rpx 28rpx;
+	background: linear-gradient(135deg, #fffbe6 0%, #fff7e6 100%);
+	border-radius: 12rpx;
+	border-left: 6rpx solid #faad14;
+	line-height: 1.5;
+	box-shadow: 0 2rpx 8rpx rgba(250, 173, 20, 0.12);
+}
+
+// 输入框基础样式
+.input-text {
+	width: 100%;
+	height: 88rpx;
+	padding: 0 28rpx;
+	border: 2rpx solid #e0e0e0;
+	border-radius: 16rpx;
+	font-size: 28rpx;
+	background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	box-sizing: border-box;
+	box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04);
+
+	&:focus {
+		border-color: #4a8cff;
+		background: #ffffff;
+		box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04), 0 0 0 4rpx rgba(74, 140, 255, 0.1);
+	}
+}
+
+// 验证码输入区域
+.verification-code {
+	display: flex;
+	align-items: center;
+	gap: 16rpx;
+	margin-bottom: 32rpx;
+
+	.code-input {
+		flex: 1;
+		height: 88rpx;
+		padding: 0 28rpx;
+		border: 2rpx solid #e0e0e0;
+		border-radius: 16rpx;
+		font-size: 28rpx;
+		background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04);
+
+		&:focus {
+			border-color: #4a8cff;
+			background: #ffffff;
+			box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04), 0 0 0 4rpx rgba(74, 140, 255, 0.1);
+		}
+	}
+
+	.code-btn {
+		flex-shrink: 0;
+		width: 180rpx;
+		height: 88rpx;
+		line-height: 88rpx;
+		text-align: center;
+		border-radius: 16rpx;
+		background: linear-gradient(135deg, #f0f5ff 0%, #e6edff 100%);
+		border: 2rpx solid #a3c0f5;
+		color: #4a8cff;
+		font-size: 24rpx;
+		font-weight: 500;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.1);
+
+		&:active {
+			transform: scale(0.97);
+			background: linear-gradient(135deg, #e6edff 0%, #d3deff 100%);
+			box-shadow: 0 2rpx 6rpx rgba(74, 140, 255, 0.1);
+		}
+	}
+}
+
+// 表单容器
+.form-container {
+	background: linear-gradient(180deg, #ffffff 0%, #fefefe 100%);
+	border-radius: 24rpx;
+	padding: 32rpx;
+	box-shadow: 0 6rpx 24rpx rgba(0, 0, 0, 0.06), 0 2rpx 6rpx rgba(0, 0, 0, 0.04);
+	border: 2rpx solid rgba(255, 255, 255, 0.8);
+}
+
+// 输入组
+.input-group {
+	margin-bottom: 36rpx;
+
+	.input-label {
+		display: block;
+		font-size: 26rpx;
+		color: #333;
+		margin-bottom: 16rpx;
+		font-weight: 500;
+	}
+
+	.input-container {
+		position: relative;
+	}
+
+	.input-field {
+		width: 100%;
+		height: 88rpx;
+		padding: 0 28rpx;
+		padding-right: 80rpx;
+		border: 2rpx solid #e0e0e0;
+		border-radius: 16rpx;
+		font-size: 28rpx;
+		background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		box-sizing: border-box;
+		box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04);
+
+		&:focus {
+			border-color: #4a8cff;
+			background: #ffffff;
+			box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04), 0 0 0 4rpx rgba(74, 140, 255, 0.1);
+		}
+	}
+
+	.password-toggle {
+		position: absolute;
+		right: 20rpx;
+		top: 50%;
+		transform: translateY(-50%);
+		color: #999;
+		font-size: 28rpx;
+		transition: color 0.3s ease;
+
+		&:active {
+			color: #4a8cff;
+		}
+	}
+}
+
+// 密码规则提示
+.password-rules {
+	margin: -16rpx 0 32rpx;
+	padding: 24rpx;
+	background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+	border-radius: 12rpx;
+	border: 2rpx solid #e8edf8;
+
+	.rule-item {
+		display: flex;
+		align-items: center;
+		margin: 16rpx 0;
+		font-size: 24rpx;
+		color: #555;
+
+		&.fulfilled {
+			color: #52c41a;
+		}
+
+		uni-icons {
+			margin-right: 16rpx;
+			font-size: 22rpx;
+		}
+	}
+}
+
+// 验证码组
+.code-group {
+	margin-bottom: 36rpx;
+
+	.input-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 16rpx;
+
+		.input-label {
+			font-size: 26rpx;
+			color: #333;
+			font-weight: 500;
+		}
+	}
+
+	.code-wrapper {
+		display: flex;
+		gap: 16rpx;
+		align-items: center;
+	}
+
+	.code-input {
+		flex: 1;
+		height: 88rpx;
+		padding: 0 28rpx;
+		border: 2rpx solid #e0e0e0;
+		border-radius: 16rpx;
+		font-size: 32rpx;
+		letter-spacing: 16rpx;
+		text-align: center;
+		background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04);
+
+		&:focus {
+			border-color: #4a8cff;
+			background: #ffffff;
+			box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04), 0 0 0 4rpx rgba(74, 140, 255, 0.1);
+		}
+	}
+
+	.code-btn {
+		width: 180rpx;
+		height: 88rpx;
+		line-height: 88rpx;
+		background: linear-gradient(135deg, #f0f5ff 0%, #e6edff 100%);
+		border: 2rpx solid #a3c0f5;
+		border-radius: 16rpx;
+		font-size: 24rpx;
+		color: #4a8cff;
+		font-weight: 500;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.1);
+
+		&[disabled] {
+			background: #f5f5f5;
+			border-color: #e0e0e0;
+			color: #999;
+			box-shadow: none;
+		}
+
+		&:active:not([disabled]) {
+			transform: scale(0.97);
+			background: linear-gradient(135deg, #e6edff 0%, #d3deff 100%);
+			box-shadow: 0 2rpx 6rpx rgba(74, 140, 255, 0.1);
+		}
+	}
+}
+
+// 提交按钮
+.submit-btn {
+	width: 100%;
+	height: 88rpx;
+	line-height: 88rpx;
+	background: linear-gradient(135deg, #4a8cff 0%, #6b9dff 50%, #4a8cff 100%);
+	background-size: 200% 100%;
+	color: #fff;
+	border-radius: 44rpx;
+	font-size: 28rpx;
+	font-weight: 500;
+	margin-top: 36rpx;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 8rpx 20rpx rgba(74, 140, 255, 0.3), 0 2rpx 8rpx rgba(74, 140, 255, 0.15);
+	border: 2rpx solid rgba(255, 255, 255, 0.3);
+
+	&[disabled] {
+		background: linear-gradient(180deg, #e0e0e0 0%, #d0d0d0 100%);
+		box-shadow: none;
+		opacity: 0.6;
+		border-color: transparent;
+	}
+
+	&:active:not([disabled]) {
+		transform: scale(0.98);
+		background-position: 100% 0;
+		box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.3), 0 2rpx 4rpx rgba(74, 140, 255, 0.15);
+	}
+}
+
+// 主按钮样式
+.primary-btn {
+	width: 100%;
+	height: 88rpx;
+	line-height: 88rpx;
+	background: linear-gradient(135deg, #4a8cff 0%, #6b9dff 50%, #4a8cff 100%);
+	background-size: 200% 100%;
+	color: #fff;
+	border-radius: 44rpx;
+	font-size: 28rpx;
+	font-weight: 500;
+	margin-top: 36rpx;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 8rpx 20rpx rgba(74, 140, 255, 0.3), 0 2rpx 8rpx rgba(74, 140, 255, 0.15);
+	border: 2rpx solid rgba(255, 255, 255, 0.3);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	&[disabled] {
+		background: linear-gradient(180deg, #e0e0e0 0%, #d0d0d0 100%);
+		box-shadow: none;
+		opacity: 0.6;
+		border-color: transparent;
+	}
+
+	&:active:not([disabled]) {
+		transform: scale(0.98);
+		background-position: 100% 0;
+		box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.3), 0 2rpx 4rpx rgba(74, 140, 255, 0.15);
+	}
+}
+
+// 通用按钮样式
+button {
+	width: 100%;
+	height: 100rpx;
+	line-height: 100rpx;
+	background: linear-gradient(135deg, #4a8cff 0%, #6b9dff 100%);
+	color: #fff;
+	border-radius: 50rpx;
+	font-size: 32rpx;
+	font-weight: 500;
+	margin-top: 32rpx;
+	transition: all 0.3s ease;
+	box-shadow: 0 8rpx 24rpx rgba(74, 140, 255, 0.3);
+	border: none;
+
+	&[disabled] {
+		background: #d9d9d9;
+		box-shadow: none;
+		opacity: 0.6;
+	}
+
+	&:active:not([disabled]) {
+		transform: scale(0.98);
+		box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.3);
+	}
+}
+
+// 页面头部
 .page-header {
 	padding: 24rpx 32rpx;
 	display: flex;
@@ -511,329 +885,11 @@ export default {
 	}
 }
 
-$text-secondary: #606266;
-
-// 容器样式优化
-.content {
-	padding: 40rpx;
-	background: #f5f7fb;
-
-	// 卡片容器
-	.modify {
-		background: #fff;
-		border-radius: 24rpx;
-		padding: 40rpx;
-		box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
-	}
-
-	// 输入框样式
-	// 密码修改区块优化
-	.modify {
-		.title {
-			font-size: 36rpx;
-			font-weight: 600;
-			margin-bottom: 60rpx;
-		}
-
-		.input-text {
-			border: 1px solid $uni-border-color !important;
-			border-radius: 12rpx;
-			padding: 24rpx;
-			margin-bottom: 40rpx;
-			transition: all 0.3s;
-
-			&:focus {
-				border-color: $uni-color-primary !important;
-				box-shadow: 0 0 8rpx rgba($uni-color-primary, 0.2);
-			}
-		}
-
-		.verification-code {
-			display: flex;
-			align-items: center;
-			border-radius: 12rpx;
-			padding: 0 24rpx;
-			margin-bottom: 40rpx;
-
-			input {
-				padding: 24rpx 0;
-			}
-
-			text {
-				padding: 16rpx 32rpx;
-				border-radius: 8rpx;
-				background: linear-gradient(135deg, $uni-color-primary, #7b8bf5);
-				color: #fff !important;
-			}
-		}
-
-		button {
-			background: linear-gradient(135deg, $uni-color-primary, #7b8bf5);
-			color: #fff;
-			border-radius: 12rpx;
-			// padding: 24rpx;
-			transition: transform 0.2s;
-
-			&[disabled] {
-				background: $uni-text-color-grey;
-				opacity: 0.6;
-			}
-
-			&:active {
-				transform: scale(0.98);
-			}
-		}
-	}
-
-	// 动画定义
-	@keyframes shake {
-
-		0%,
-		100% {
-			transform: translateX(0);
-		}
-
-		25% {
-			transform: translateX(-8rpx);
-		}
-
-		75% {
-			transform: translateX(8rpx);
-		}
-	}
-
-	// 账户注销列表
-	.list {
-		padding: 32rpx;
-		border-radius: 16rpx;
-		background: #f5f7fb;
-		margin: 24rpx 0;
-	}
-}
-
-.modify {
-	padding: 40rpx;
-}
-
-.input-field {
-	border: 1px solid #e5e5e5;
-	border-radius: 12rpx;
-	padding: 24rpx;
-	margin-bottom: 30rpx;
-	transition: border-color 0.3s;
-	height: 100rpx;
-	/* 增加输入框高度 */
-	line-height: 1.4;
-	padding: 20rpx 24rpx;
-}
-
-.input-field:focus {
-	border-color: v-bind(fontColor);
-}
-
-.code-container {
-	display: flex;
-	align-items: center;
-	border: 1px solid #e5e5e5;
-	border-radius: 12rpx;
-	padding: 24rpx;
-	margin-bottom: 40rpx;
-}
-
-.code-btn {
-	height: 88rpx;
-	min-width: 200rpx;
-	font-size: 28rpx;
-	margin-left: 20rpx;
-	background: #f8f9fa;
-	border: 2rpx solid #e9ecef;
-	border-radius: 12rpx;
-	transition: all 0.3s;
-	color: #495057;
-}
-
-.tip-text {
-	padding: 12px 0;
-}
-
-.submit-btn {
-	height: 96rpx;
-	font-size: 32rpx;
-	background: linear-gradient(45deg, #4dabf7, #339af0);
-	color: white;
-	border-radius: 16rpx;
-	box-shadow: 0 4rpx 12rpx rgba(51, 154, 240, 0.2);
-	margin-top: 60rpx;
-}
-
-
-
-
-
-
-
-.strength-labels {
-	display: flex;
-	justify-content: space-between;
-	margin-top: 20rpx;
-
-	text {
-		font-size: 24rpx;
-		color: #999;
-		transition: color 0.3s ease;
-
-		&.active {
-			color: #333;
-			font-weight: 500;
-		}
-	}
-}
-
-.modify {
-	padding: 24rpx;
-
-	.form-container {
-		background: #fff;
-		border-radius: 16rpx;
-		padding: 32rpx;
-		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
-	}
-
-	.input-group {
-		margin-bottom: 40rpx;
-
-		.input-label {
-			display: block;
-			font-size: 28rpx;
-			color: #333;
-			margin-bottom: 16rpx;
-		}
-
-		.input-field {
-			height: 96rpx;
-			padding: 0 24rpx;
-			border: 2rpx solid #e8e8e8;
-			border-radius: 8rpx;
-			font-size: 28rpx;
-			transition: border-color 0.3s;
-
-			&:focus {
-				border-color: #1890ff;
-				box-shadow: 0 0 8rpx rgba(24, 144, 255, 0.2);
-			}
-		}
-	}
-
-	.password-rules {
-		margin: 24rpx 0;
-		padding: 16rpx;
-		background: #f8f8f8;
-		border-radius: 8rpx;
-
-		.rule-item {
-			display: flex;
-			align-items: center;
-			margin: 12rpx 0;
-			font-size: 24rpx;
-
-			&.fulfilled {
-				color: #52c41a;
-			}
-
-			uni-icons {
-				margin-right: 12rpx;
-			}
-		}
-	}
-
-	.code-group {
-		margin: 40rpx 0;
-
-		.input-header {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			margin-bottom: 20rpx;
-
-			.hint-text {
-				font-size: 24rpx;
-				color: #999;
-			}
-		}
-
-		.code-wrapper {
-			display: flex;
-			gap: 20rpx;
-			align-items: center;
-
-			.code-input {
-				flex: 1;
-				height: 96rpx;
-				padding: 0 24rpx;
-				border: 2rpx solid #e8e8e8;
-				border-radius: 8rpx;
-				font-size: 36rpx;
-				letter-spacing: 8rpx;
-				text-align: center;
-				transition: border-color 0.3s;
-
-				&:focus {
-					border-color: #1890ff;
-				}
-			}
-
-			.code-btn {
-				width: 220rpx;
-				height: 96rpx;
-				line-height: 96rpx;
-				background: #f0f2f5;
-				border-radius: 8rpx;
-				font-size: 28rpx;
-				color: #1890ff;
-				transition: all 0.3s;
-
-				&.disabled {
-					background: #f5f5f5;
-					color: #999;
-					cursor: not-allowed;
-				}
-
-				&.loading {
-					background: #f5f5f5;
-				}
-			}
-		}
-	}
-
-	.submit-btn {
-		height: 96rpx;
-		line-height: 96rpx;
-		background: linear-gradient(135deg, #1890ff, #096dd9);
-		color: #fff;
-		border-radius: 48rpx;
-		font-size: 32rpx;
-		margin-top: 64rpx;
-
-		&.disabled {
-			opacity: 0.6;
-			background: #ccc;
-		}
-	}
-}
-
-.password-toggle {
-	position: absolute;
-	right: 20rpx;
-	top: 50%;
-	transform: translateY(-50%);
+// 版本号样式
+.version-info {
+	text-align: center;
+	font-size: 26rpx;
 	color: #999;
-}
-
-.input-container {
-	position: relative;
-}
-
-.input-field {
-	padding-right: 80rpx !important;
+	margin: 20rpx 0;
 }
 </style>

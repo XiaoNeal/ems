@@ -76,10 +76,10 @@
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
-      <view class="list-item" @click="navigateToU('/pages/profile/help')" style="margin:20rpx 0 ">
+      <view class="list-item" @click="navigateToU('/pages/profile/service')" style="margin:20rpx 0 ">
         <view class="item-content">
-          <uni-icons type="heart" size="20" color="#007AFF"></uni-icons>
-          <text class="item-title">帮助与反馈</text>
+          <uni-icons type="headphones" size="20" color="#007AFF"></uni-icons>
+          <text class="item-title">智能客服</text>
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>

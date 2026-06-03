@@ -1,58 +1,50 @@
 <template>
-  <view  class="sub-page">
-    <u-navbar title="个人信息" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :leftText="null" :autoBack="true"
+  <view class="sub-page">
+    <u-navbar title="个人信息" :titleStyle="{ 'color': fontColor, 'width': '100%', 'font-weight': '600' }" :leftText="null" :autoBack="true"
       :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
 
-<!-- 
-      <u-navbar title="系统设置" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :leftText="null" :autoBack="true"
-      :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar> -->
 
-    <!-- 个人信息模块 -->
-    <view class="custom-list">
-      <view class="list-item" @click="changeAvatar">
-        <view class="item-left">
-          <uni-icons type="user" size="24" color="#666" />
-          <text class="item-title">个人头像</text>
+
+    <!-- 功能列表 -->
+    <view class="function-section">
+      <view class="section-title">账户设置</view>
+      <view class="function-list">
+        <view class="list-item" @click="goto(1)">
+          <view class="item-icon">
+            <uni-icons type="contact" size="28" color="#4a8cff" />
+          </view>
+          <text class="item-label">用户名</text>
+          <view class="item-value">
+            <text class="value-text">{{ userName || '未设置' }}</text>
+            <uni-icons class="arrow-right" type="arrowright" size="24" color="#ccc" />
+          </view>
         </view>
-        <view class="item-right">
-          <image :src="avatar || '/static/logo_n.png'" mode="aspectFill" class="avatar-img"></image>
-          <uni-icons type="arrowright" size="18" color="#bbb" />
+        <view class="list-item" @click="goto(2)">
+          <view class="item-icon">
+            <uni-icons type="phone" size="28" color="#52c41a" />
+          </view>
+          <text class="item-label">手机号码</text>
+          <view class="item-value">
+            <text class="value-text">{{ displayPhone }}</text>
+            <uni-icons class="arrow-right" type="arrowright" size="24" color="#ccc" />
+          </view>
         </view>
-      </view>
-      <view class="list-item" @click="goto(1)">
-        <view class="item-left">
-          <uni-icons type="contact" size="24" color="#666" />
-          <text class="item-title">用户名</text>
-        </view>
-        <view class="item-right">
-          <text class="right-text">{{ userName || '-' }}</text>
-          <uni-icons type="arrowright" size="18" color="#bbb" />
-        </view>
-      </view>
-      <view class="list-item" @click="goto(2)">
-        <view class="item-left">
-          <uni-icons type="phone" size="24" color="#666" />
-          <text class="item-title">手机号码</text>
-        </view>
-        <view class="item-right">
-          <text class="right-text">{{ phone || '-' }}</text>
-          <uni-icons type="arrowright" size="18" color="#bbb" />
-        </view>
-      </view>
-      <view class="list-item" @click="goto(3)">
-        <view class="item-left">
-          <uni-icons type="mail" size="24" color="#666" />
-          <text class="item-title">邮箱</text>
-        </view>
-        <view class="item-right">
-          <text class="right-text">{{ email || '-' }}</text>
-          <uni-icons type="arrowright" size="18" color="#bbb" />
+        <view class="list-item" @click="goto(3)">
+          <view class="item-icon">
+            <uni-icons type="email" size="28" color="#fa8c16" />
+          </view>
+          <text class="item-label">邮箱</text>
+          <view class="item-value">
+            <text class="value-text">{{ email || '未绑定' }}</text>
+            <uni-icons class="arrow-right" type="arrowright" size="24" color="#ccc" />
+          </view>
         </view>
       </view>
     </view>
 
-    <view class="logout-wrapper">
-      <view class="logout-item" @click="logout">
+    <!-- 退出登录 -->
+    <view class="logout-section">
+      <view class="logout-btn" @click="logout">
         <text class="logout-text">退出登录</text>
       </view>
     </view>
@@ -80,7 +72,13 @@ export default {
     }
   },
   computed: {
-    ...mapState('user', ['userId', 'userName', 'phone', 'email', 'avatar']),
+    ...mapState('user', ['userId', 'userName', 'mobile', 'email', 'avatar']),
+    displayPhone() {
+      return this.mobile || uni.getStorageSync('phone') || '未绑定'
+    },
+    displayEmail() {
+      return this.email || '未绑定'
+    },
   },
   onLoad: function (option) {
     this.isAdmin = option.admin
@@ -208,92 +206,116 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
-
 .sub-page {
-  background: #f5f5f5;
   min-height: 100vh;
+  background: #f5f6f8;
 }
 
-.custom-list {
+/* 功能区域 */
+.function-section {
+  padding: 24rpx 32rpx 0;
+  margin-bottom: 32rpx;
+}
+
+.section-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #999;
+  margin-bottom: 20rpx;
+  padding-left: 8rpx;
+}
+
+.function-list {
   background: #fff;
-  margin: 15px;
-  border-radius: 20rpx;
+  border-radius: 24rpx;
   overflow: hidden;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.06);
 }
 
 .list-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 32rpx 32rpx;
-  border-bottom: 1rpx solid #f5f6f7;
-  transition: background-color 0.2s ease;
+  padding: 32rpx;
+  border-bottom: 2rpx solid #f5f6f7;
+  transition: all 0.2s ease;
 
   &:last-child {
     border-bottom: none;
   }
 
   &:active {
-    background-color: #fafafa;
+    background-color: #fafbfc;
   }
 }
 
-.item-left {
+.item-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 16rpx;
+  background: #f5f7fa;
   display: flex;
   align-items: center;
-  gap: 24rpx;
+  justify-content: center;
+  margin-right: 24rpx;
+  flex-shrink: 0;
 }
 
-.item-title {
-  font-size: 32rpx;
-  color: #333;
+.item-label {
+  flex: 1;
+  font-size: 30rpx;
+  color: #1a1a1a;
   font-weight: 500;
 }
 
-.item-right {
+.item-value {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 12rpx;
 }
 
-.right-text {
-  font-size: 30rpx;
-  color: #666;
+.value-text {
+  font-size: 28rpx;
+  color: #999;
 }
 
-.avatar-img {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 50%;
-  background: #f5f5f5;
-  border: 3rpx solid #eee;
-}
+.arrow-right {
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 
-.logout-wrapper {
-  padding: 0 24rpx;
-  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
-}
-
-.logout-item {
-  background: linear-gradient(135deg, #fff5f5 0%, #ffeaea 100%);
-  text-align: center;
-  padding: 28rpx;
-  border-radius: 16rpx;
-  box-shadow: 0 4rpx 20rpx rgba(255, 68, 68, 0.1);
-  border: 2rpx solid rgba(255, 68, 68, 0.1);
-  transition: all 0.25s ease;
-
-  &:active {
-    background: linear-gradient(135deg, #ffeaea 0%, #ffd5d5 100%);
-    transform: scale(0.98);
+  .list-item:active & {
+    color: #4a8cff;
+    transform: translateX(4rpx);
   }
 }
 
-.logout-text {
-  font-size: 32rpx;
-  color: #ff4444;
+/* 退出登录 */
+.logout-section {
+  padding: 48rpx 32rpx;
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  background: #fff;
+  border-radius: 8rpx;
+  text-align: center;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  border: 2rpx solid #f0f0f0;
+  transition: all 0.3s ease;
+
+  &:active {
+    background: #f8fafc;
+    transform: scale(0.99);
+    box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  }
+}
+
+.logout-btn .logout-text {
+  font-size: 30rpx;
+  color: #999;
   font-weight: 500;
 }
 </style>

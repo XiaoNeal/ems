@@ -206,17 +206,29 @@
 					}
 				},
 				{
+					"path": "system-notifications",
+					"style": {
+						"navigationBarTitleText": "系统通知"
+					}
+				},
+				{
+					"path": "message-reminders",
+					"style": {
+						"navigationBarTitleText": "消息提醒"
+					}
+				},
+				{
 					"path": "settings",
 					"style": {
 						"navigationBarTitleText": "系统设置"
 					}
 				},
 				{
-					"path": "help",
-					"style": {
-						"navigationBarTitleText": "帮助与反馈"
-					}
-				},
+				"path": "service",
+				"style": {
+					"navigationBarTitleText": "智能客服"
+				}
+			},
 				{
 					"path": "about",
 					"style": {
