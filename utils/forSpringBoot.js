@@ -10,17 +10,10 @@ function DATA(toData) {
 }
 
 function FORMDATA(toData) {
-    // let formdata = JSON.stringify({
-    //     areaInfoId: toData.areaInfoId,
-    //     barCode: toData.barCode,
-    //     address: toData.address,
-    //     types: toData.types,
-    // })
     let formdata = new FormData();
     for (const key in toData) {
         formdata.append(key, toData[key])
     }
-    // console.log(formdata,'formdata')
     return formdata
 }
 

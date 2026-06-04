@@ -1,90 +1,151 @@
 <template>
-  <view class="container">
+  <view class="quick-control">
     <!-- 顶部导航栏 -->
     <u-navbar title="快捷控制" :autoBack="true" :placeholder="true" />
     
     <!-- 内容区域 -->
     <view class="content">
-      <view class="control-section inline-section">
-        <text class="section-title">PCS一键开机</text>
-        <view class="action-buttons">
-          <view 
-            class="action-btn secondary" 
-            :class="{ selected: selectedPcsAction === 'start' }"
-            @click="pcsAction('start')"
-          >开机</view>
-          <view 
-            class="action-btn secondary" 
-            :class="{ selected: selectedPcsAction === 'stop' }"
-            @click="pcsAction('stop')"
-          >关机</view>
+      <!-- PCS控制 -->
+      <view class="control-card">
+        <view class="card-header">
+          <text class="card-title">PCS一键控制</text>
+        </view>
+        <view class="switch-btns-wrapper">
+          <view class="switch-btns">
+            <view 
+              class="switch-btn" 
+              :class="{ 'btn-active': selectedPcsAction === 'start' }"
+              @click="pcsAction('start')"
+            >
+              开机
+            </view>
+            <view 
+              class="switch-btn" 
+              :class="{ 'btn-active': selectedPcsAction === 'stop' }"
+              @click="pcsAction('stop')"
+            >
+              关机
+            </view>
+          </view>
         </view>
       </view>
       
-      <view class="control-section inline-section">
-        <text class="section-title">光伏DC开机</text>
-        <view class="action-buttons">
-          <view 
-            class="action-btn secondary" 
-            :class="{ selected: selectedPvDcAction === 'start' }"
-            @click="pvDcAction('start')"
-          >开机</view>
-          <view 
-            class="action-btn secondary" 
-            :class="{ selected: selectedPvDcAction === 'stop' }"
-            @click="pvDcAction('stop')"
-          >关机</view>
+      <!-- 光伏DC控制 -->
+      <view class="control-card">
+        <view class="card-header">
+          <text class="card-title">光伏DC控制</text>
+        </view>
+        <view class="switch-btns-wrapper">
+          <view class="switch-btns">
+            <view 
+              class="switch-btn" 
+              :class="{ 'btn-active': selectedPvDcAction === 'start' }"
+              @click="pvDcAction('start')"
+            >
+              开机
+            </view>
+            <view 
+              class="switch-btn" 
+              :class="{ 'btn-active': selectedPvDcAction === 'stop' }"
+              @click="pvDcAction('stop')"
+            >
+              关机
+            </view>
+          </view>
         </view>
       </view>
       
-      <view class="control-section">
-        <text class="section-title">储能DC开关机</text>
-        <view class="action-buttons">
-          <view 
-            class="action-btn secondary" 
-            :class="{ selected: selectedStorageDcAction === 'grid-connect' }"
-            @click="storageDcAction('grid-connect')"
-          >并网一键开机</view>
-          <view 
-            class="action-btn secondary" 
-            :class="{ selected: selectedStorageDcAction === 'stop' }"
-            @click="storageDcAction('stop')"
-          >一键关机</view>
-          <view 
-            class="action-btn secondary" 
-            :class="{ selected: selectedStorageDcAction === 'off-grid' }"
-            @click="storageDcAction('off-grid')"
-          >离网一键开机</view>
+      <!-- 储能DC控制 -->
+      <view class="control-card">
+        <view class="card-header">
+          <text class="card-title">储能DC控制</text>
+        </view>
+        <view class="switch-btns-wrapper">
+          <view class="switch-btns triple">
+            <view 
+              class="switch-btn" 
+              :class="{ 'btn-active': selectedStorageDcAction === 'grid-connect' }"
+              @click="storageDcAction('grid-connect')"
+            >
+              并网开机
+            </view>
+            <view 
+              class="switch-btn" 
+              :class="{ 'btn-active': selectedStorageDcAction === 'stop' }"
+              @click="storageDcAction('stop')"
+            >
+              一键关机
+            </view>
+            <view 
+              class="switch-btn" 
+              :class="{ 'btn-active': selectedStorageDcAction === 'off-grid' }"
+              @click="storageDcAction('off-grid')"
+            >
+              离网开机
+            </view>
+          </view>
         </view>
       </view>
       
-      <view class="control-section inline-section">
-        <text class="section-title">储能充放电选择</text>
-        <view class="action-buttons">
-          <view 
-            class="action-btn secondary" 
-            :class="{ selected: selectedStorageMode === 'charge' }"
-            @click="storageModeAction('charge')"
-          >充电</view>
-          <view 
-            class="action-btn secondary" 
-            :class="{ selected: selectedStorageMode === 'discharge' }"
-            @click="storageModeAction('discharge')"
-          >放电</view>
+      <!-- 储能模式 -->
+      <view class="control-card">
+        <view class="card-header">
+          <text class="card-title">储能模式选择</text>
+        </view>
+        <view class="switch-btns-wrapper">
+          <view class="switch-btns">
+            <view 
+              class="switch-btn charge" 
+              :class="{ 'btn-active': selectedStorageMode === 'charge' }"
+              @click="storageModeAction('charge')"
+            >
+              充电
+            </view>
+            <view 
+              class="switch-btn discharge" 
+              :class="{ 'btn-active': selectedStorageMode === 'discharge' }"
+              @click="storageModeAction('discharge')"
+            >
+              放电
+            </view>
+          </view>
         </view>
       </view>
       
-      <view class="control-section">
-        <text class="section-title">充放电总功率</text>
-        <view class="power-setting">
-          <input type="text" v-model="powerValue" placeholder="请输入功率值(1-10kW)" @input="validatePower" maxlength="2" />
-          <text class="unit">kW</text>
+      <!-- 功率设置 -->
+      <view class="control-card">
+        <view class="card-header">
+          <text class="card-title">充放电总功率</text>
         </view>
-        <view class="action-buttons">
-          <view class="action-btn primary" @click="setPower">确认设置</view>
+        <view class="param-row">
+          <view class="param-info">
+            <text class="param-name">功率值</text>
+            <text class="param-range">范围: 1~10kW</text>
+          </view>
+          <view class="param-right-wrapper">
+            <view class="param-right">
+              <view class="param-value-box" :class="{ editing: powerValue }">
+                <input 
+                  type="digit" 
+                  v-model="powerValue" 
+                  placeholder="请输入" 
+                  @input="validatePower" 
+                  maxlength="2"
+                  class="val-input"
+                />
+              </view>
+              <text class="unit-text">kW</text>
+            </view>
+            <view class="btn btn-sure" @click="setPower">
+              <text>下发</text>
+            </view>
+          </view>
         </view>
       </view>
     </view>
+    
+    <!-- 底部安全区域适配 -->
+    <view class="safe-bottom"></view>
   </view>
 </template>
 
@@ -106,7 +167,9 @@ export default {
       selectedPcsAction: '',
       selectedPvDcAction: '',
       selectedStorageDcAction: '',
-      selectedStorageMode: ''
+      selectedStorageMode: '',
+      // 参数级别发送时间记录
+      lastSendTimes: {}
     };
   },
   computed: {
@@ -117,7 +180,18 @@ export default {
   methods: {
     // 通用命令执行方法
     async executeCommand(options) {
-      const { title, content, apiSufix, commandBuilder, action, stateKey } = options;
+      const { title, content, apiSufix, commandBuilder, action, stateKey, successMsg, failMsg } = options;
+      
+      // 参数级别时间限制检查
+      const now = Date.now();
+      const paramLastSendTime = this.lastSendTimes[apiSufix] || 0;
+      if (now - paramLastSendTime < 5000) {
+        uni.showToast({
+          title: '请间隔5秒后再下发',
+          icon: 'none'
+        });
+        return Promise.resolve(false);
+      }
       
       return new Promise((resolve) => {
         uni.showModal({
@@ -130,6 +204,9 @@ export default {
             }
             
             try {
+              // 记录发送时间
+              this.lastSendTimes[apiSufix] = Date.now();
+              
               uni.showLoading({ title: '下发中...' });
               const commands = typeof commandBuilder === 'function' ? commandBuilder(action) : commandBuilder;
               
@@ -148,14 +225,14 @@ export default {
                 this[stateKey] = action;
               }
               uni.showToast({
-                title: `${title}成功`,
+                title: successMsg || `${title}成功`,
                 icon: 'success'
               });
               resolve(true);
             } catch (error) {
               uni.hideLoading();
               uni.showToast({
-                title: `${title}失败`,
+                title: failMsg || `${title}失败`,
                 icon: 'none'
               });
               console.error(`${apiSufix} error:`, error);
@@ -186,12 +263,14 @@ export default {
     pcsAction(action) {
       const actionText = action === 'start' ? '开机' : '关机';
       this.executeCommand({
-        title: 'PCS一键开机',
+        title: 'PCS一键控制',
         content: `确定要执行PCS${actionText}操作吗？`,
         apiSufix: 'pcsControl',
         commandBuilder: () => this.buildCommand('100', action === 'start' ? '1' : '0'),
         action,
-        stateKey: 'selectedPcsAction'
+        stateKey: 'selectedPcsAction',
+        successMsg: `PCS${actionText}成功`,
+        failMsg: `PCS${actionText}失败`
       });
     },
     
@@ -199,12 +278,14 @@ export default {
     pvDcAction(action) {
       const actionText = action === 'start' ? '开机' : '关机';
       this.executeCommand({
-        title: '光伏DC开机',
+        title: '光伏DC控制',
         content: `确定要执行光伏DC${actionText}操作吗？`,
         apiSufix: 'pvDcControl',
         commandBuilder: () => this.buildCommand('102', action === 'start' ? '1' : '0'),
         action,
-        stateKey: 'selectedPvDcAction'
+        stateKey: 'selectedPvDcAction',
+        successMsg: `光伏DC${actionText}成功`,
+        failMsg: `光伏DC${actionText}失败`
       });
     },
     
@@ -221,12 +302,14 @@ export default {
         'off-grid': '3'
       };
       this.executeCommand({
-        title: '储能DC开关机',
+        title: '储能DC控制',
         content: `确定要执行储能DC${actionMap[action]}操作吗？`,
         apiSufix: 'storageDcControl',
         commandBuilder: () => this.buildCommand('104', valueMap[action] || '0'),
         action,
-        stateKey: 'selectedStorageDcAction'
+        stateKey: 'selectedStorageDcAction',
+        successMsg: `储能DC${actionMap[action]}成功`,
+        failMsg: `储能DC${actionMap[action]}失败`
       });
     },
     
@@ -234,12 +317,14 @@ export default {
     storageModeAction(mode) {
       const modeText = mode === 'charge' ? '充电' : '放电';
       this.executeCommand({
-        title: '储能充放电选择',
+        title: '储能模式选择',
         content: `确定要设置储能为${modeText}模式吗？`,
         apiSufix: 'storageModeControl',
         commandBuilder: () => this.buildCommand('106', mode === 'charge' ? '1' : '2'),
         mode,
-        stateKey: 'selectedStorageMode'
+        stateKey: 'selectedStorageMode',
+        successMsg: `储能${modeText}模式设置成功`,
+        failMsg: `储能${modeText}模式设置失败`
       });
     },
     
@@ -284,7 +369,9 @@ export default {
         content: `确定要设置充放电总功率为${power}kW吗？`,
         apiSufix: 'powerControl',
         commandBuilder: () => this.buildCommand('108', power * 10),
-        stateKey: null
+        stateKey: null,
+        successMsg: `充放电总功率设置为${power}kW成功`,
+        failMsg: '充放电总功率设置失败'
       }).then((success) => {
         if (success) {
           this.powerValue = '';
@@ -296,106 +383,255 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.container {
+.quick-control {
+  background: linear-gradient(180deg, #f0f4f8 0%, #f5f7fa 100%);
   min-height: 100vh;
-  background: #F5F7FA;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .content {
   padding: 24rpx;
+  padding-bottom: 48rpx;
 }
 
-.control-section {
+.control-card {
   background: #ffffff;
   border-radius: 20rpx;
-  padding: 32rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
   margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
-
-  &.inline-section {
-    .action-buttons {
-      margin-top: 24rpx;
-    }
-  }
-}
-
-.section-title {
-  font-size: 28rpx;
-  color: #1F2937;
-  font-weight: 600;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 24rpx;
-  margin-top: 32rpx;
-}
-
-.action-btn {
-  flex: 1;
-  padding: 24rpx;
-  border-radius: 16rpx;
-  text-align: center;
-  font-size: 30rpx;
-  font-weight: 600;
   transition: all 0.3s ease;
-
-  &.primary {
-    background: linear-gradient(135deg, #4488FB 0%, #6B9DFF 100%);
-    color: #ffffff;
-    box-shadow: 0 8rpx 24rpx rgba(68, 136, 251, 0.3);
-  }
-
-  &.secondary {
-    background: #F3F4F6;
-    color: #6B7280;
-    border: 2rpx solid #E4E7ED;
-
-    &.selected {
-      background: linear-gradient(135deg, #4488FB 0%, #6B9DFF 100%);
-      color: #ffffff;
-      border-color: #4488FB;
-      box-shadow: 0 8rpx 24rpx rgba(68, 136, 251, 0.3);
-    }
-  }
-
-  &.tertiary {
-    background: linear-gradient(135deg, #00D4AA 0%, #00B894 100%);
-    color: #ffffff;
-    box-shadow: 0 8rpx 24rpx rgba(0, 212, 170, 0.3);
-  }
-
+  
   &:active {
-    transform: scale(0.96);
+    transform: scale(0.99);
+    box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
   }
 }
 
-.power-setting {
+.card-header {
   display: flex;
   align-items: center;
-  margin-top: 24rpx;
-  padding: 20rpx 24rpx;
-  background: #F8FAFC;
-  border-radius: 12rpx;
-  border: 2rpx solid #E5E7EB;
+  justify-content: space-between;
+  padding: 32rpx 36rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+}
 
-  input {
-    flex: 1;
-    font-size: 30rpx;
-    color: #1F2937;
-    border: none;
-    outline: none;
-    background: transparent;
+.card-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #2c3e50;
+  position: relative;
+  padding-left: 24rpx;
+  letter-spacing: 1rpx;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8rpx;
+    height: 32rpx;
+    background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
+    border-radius: 4rpx;
+    box-shadow: 0 0 12rpx rgba(102, 153, 255, 0.4);
   }
+}
 
-  .unit {
-    font-size: 28rpx;
-    color: #6B7280;
-    margin-left: 16rpx;
+// 开关按钮样式
+.switch-btns-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 24rpx;
+}
+
+.switch-btns {
+  display: flex;
+  gap: 20rpx;
+  width: 100%;
+  
+  &.triple {
+    & > .switch-btn {
+      flex: 1;
+      min-width: calc(33.33% - 14rpx);
+    }
+  }
+}
+
+.switch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 32rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+  border-radius: 12rpx;
+  border: 2rpx solid #e8eaed;
+  color: #666;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  text-align: center;
+  min-width: 120rpx;
+  
+  &:active {
+    transform: scale(0.96);
+    background: #f0f2f5;
+  }
+  
+  &.btn-active {
+    background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
+    border-color: #6699ff;
+    color: #ffffff;
+    box-shadow: 0 8rpx 24rpx rgba(102, 153, 255, 0.4);
+    transform: translateY(-2rpx);
+    
+    &:active {
+      background: linear-gradient(135deg, #5588ee 0%, #3377ea 100%);
+      box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
+      transform: translateY(0);
+    }
+  }
+  
+  &.charge.btn-active {
+    background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+    border-color: #00d4aa;
+    box-shadow: 0 8rpx 24rpx rgba(0, 212, 170, 0.4);
+  }
+  
+  &.discharge.btn-active {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+    border-color: #ff6b6b;
+    box-shadow: 0 8rpx 24rpx rgba(255, 107, 107, 0.4);
+  }
+}
+
+// 参数行样式
+.param-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  padding: 32rpx 24rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.param-info {
+  flex: 0 0 auto;
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.param-name {
+  font-size: 30rpx;
+  color: #2c3e50;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.param-range {
+  font-size: 24rpx;
+  color: #999;
+  background: #f5f7fa;
+  padding: 6rpx 12rpx;
+  border-radius: 6rpx;
+  display: inline-block;
+  width: fit-content;
+}
+
+.param-right-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20rpx;
+  flex: 1;
+  min-width: 320rpx;
+}
+
+.param-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.param-value-box {
+  width: 180rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%);
+  border-radius: 12rpx;
+  text-align: center;
+  border: 2rpx solid #e8eaed;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &.editing {
+    background: #ffffff;
+    border-color: #6699ff;
+    box-shadow: 0 0 0 6rpx rgba(102, 153, 255, 0.12), 0 4rpx 16rpx rgba(102, 153, 255, 0.15);
+    transform: translateY(-2rpx);
+  }
+}
+
+.val-input {
+  width: 100%;
+  height: 100%;
+  font-size: 32rpx;
+  font-weight: 600;
+  text-align: center;
+  background: transparent;
+  border: none;
+  color: #2c3e50;
+  
+  &:focus {
+    outline: none;
+  }
+}
+
+.unit-text {
+  font-size: 28rpx;
+  color: #666;
+  min-width: 70rpx;
+  text-align: left;
+  font-weight: 500;
+}
+
+.btn {
+  padding: 16rpx 28rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-sure {
+  color: #ffffff;
+  background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
+  box-shadow: 0 8rpx 24rpx rgba(102, 153, 255, 0.4);
+  min-width: 120rpx;
+  
+  &:active {
+    transform: scale(0.96);
+    box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
   }
 }
 
 input::placeholder {
-  color: #9CA3AF;
+  color: #999;
+}
+
+.safe-bottom {
+  height: env(safe-area-inset-bottom);
 }
 </style>

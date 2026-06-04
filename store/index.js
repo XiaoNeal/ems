@@ -32,11 +32,9 @@ try {
 let saveStateKeys = [
 	'vuex_userInfo', 'token', 'currentTemplate',
 	'userName', 'hasLogin', 'memberId', 'deviceCategoryId', 'areaInfoId',
-	'userAvatar', 'userPhone', 'projectCategory', 'currentSystemInfo',
-	'currentStorageArea', 'headerTabBg', 'bGColor', 'fontColor', 'urlPrefix',
-	'dragLists', 'gatewayDetailLists', 'newVersion', 'notUpdated', 'userRole',
-	'areaInfoName', 'createdNewPowerStation', 'powerStationName',
-	'powerStationAuthorization', 'noEncryption', 'clearPasswordToo',
+	'currentSystemInfo', 'currentStorageArea', 'headerTabBg', 'bGColor', 'fontColor', 'urlPrefix',
+	'dragLists', 'gatewayDetailLists', 'newVersion', 'notUpdated',
+	'areaInfoName', 'noEncryption',
 	'powerStationsId', 'userInfo' // 新增缓存字段
 ];
 
@@ -75,18 +73,12 @@ const store = new Vuex.Store({
 	}),
 	state: {
 		userInfo: lifeData.userInfo ? lifeData.userInfo : {},
-		headerTabBg: lifeData.headerTabBg ? lifeData.headerTabBg : '#fff', //背景颜色
+		headerTabBg: lifeData.headerTabBg ? lifeData.headerTabBg : '#fff',
 		bGColor: lifeData.bGColor ? lifeData.bGColor : '#fff',
 		fontColor: lifeData.fontColor ? lifeData.fontColor : '#000',
-		// 如果上面从本地获取的lifeData对象下有对应的属性，就赋值给state中对应的变量
 		vuex_userInfo: lifeData.vuex_userInfo ? lifeData.vuex_userInfo : {},
 		token: lifeData.token ? lifeData.token : '',
-		// 如果vuex_version无需保存到本地永久存储，无需lifeData.vuex_version方式
-		vuex_version: '1.0',
-		//登录信息
-
 		vuex_wxCode: '',
-		
 		
 		deviceCategoryId: lifeData.deviceCategoryId ? lifeData.deviceCategoryId : '',
 		areaInfoId: lifeData.areaInfoId ? lifeData.areaInfoId : '',
@@ -99,22 +91,14 @@ const store = new Vuex.Store({
 		notUpdated: lifeData.notUpdated ? lifeData.notUpdated : false,
 		newVersion: lifeData.newVersion ? lifeData.newVersion : 'v1.6.0',
 		areaInfoName: lifeData.areaInfoName ? lifeData.areaInfoName : '',
-		createdNewPowerStation: lifeData.createdNewPowerStation ? lifeData.createdNewPowerStation : false,
-		powerStationName: lifeData.powerStationName ? lifeData.powerStationName : '',
-		powerStationAuthorization: lifeData.powerStationAuthorization ? lifeData.powerStationAuthorization : [],
 		noEncryption: lifeData.noEncryption ? lifeData.noEncryption : false,
-		clearPasswordToo: lifeData.clearPasswordToo ? lifeData.clearPasswordToo : false,
-		sessionId: lifeData.sessionId ? lifeData.sessionId : '', // 新增缓存字段
-		hasLogin: lifeData.hasLogin ? lifeData.hasLogin : false, // 新增缓存字段
-		userName: lifeData.userName ? lifeData.userName : '', // 新增缓存字段
+		hasLogin: lifeData.hasLogin ? lifeData.hasLogin : false,
+		userName: lifeData.userName ? lifeData.userName : '',
 
-	
-		
 		storageRealData: [],
 		powerStationsId: lifeData.powerStationsId ? lifeData.powerStationsId : undefined,
 		homeSelectedEsId: lifeData.homeSelectedEsId ? lifeData.homeSelectedEsId : undefined,
 		centerList: lifeData.centerList ? lifeData.centerList : [],
-		
 	},
 	mutations: {
 		$uStore(state, payload) {
@@ -142,12 +126,6 @@ const store = new Vuex.Store({
 		},
 		/**
 		 * 修改存储实时数据
-		 * 
-		 * 此函数用于更新状态对象中的存储实时数据该函数接受两个参数：
-		 * - state: 任意类型，代表当前的状态对象
-		 * - data: 任意类型，代表要更新的实时数据
-		 * 
-		 * 函数没有返回值其作用是将状态对象中的 storageRealData 属性更新为传入的 data
 		 */
 		changeStorageRealData(state, data) {
 			state.storageRealData = data
@@ -165,9 +143,8 @@ const store = new Vuex.Store({
 		}
 	},
 	actions: {
-		// 自定义action
+		// 自定义 action
 		getCenterList(ctx) {
-			// const userInfo = JSON.parse(localStorage.getItem('userInfo'))
 			const userInfo = {
 				_id: "60054086019dcc42e41c91f7",
 				username: "homeAdmin",
@@ -180,9 +157,7 @@ const store = new Vuex.Store({
 				},
 				level: "admin"
 			}
-			const roleId = userInfo.role._id
-			
-		}
+			}
 	}
 })
 

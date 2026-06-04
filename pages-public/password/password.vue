@@ -54,9 +54,9 @@
 <script>
 	import {
 		sendSmsCode,
-		userRegister
+		userRegister,
+		UpdatePasswordBySms
 	} from '@/api/user.js'
-	import {UpdatePassword} from "@/api/new-app/user.js"
 	import {
 		Md5
 	} from 'ts-md5'
@@ -127,7 +127,7 @@
 				})
 				console.log(formdata);
 		
-				UpdatePassword(formdata).then(res=>{
+				UpdatePasswordBySms(formdata).then(res=>{
 					console.log(res);
 					if(res.status==200){
 						this.password = ''

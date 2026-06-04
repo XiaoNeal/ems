@@ -111,22 +111,32 @@ export default {
         return ''
       }
       
+      // 如果用户没有设备列表，直接返回空
+      if (!this.userInfo?.esIds || !Array.isArray(this.userInfo.esIds) || this.userInfo.esIds.length === 0) {
+        return ''
+      }
+      
       // 如果 currentDevice 本身是对象且有 name 属性
       if (typeof currentDevice === 'object' && currentDevice.name) {
-        return currentDevice.name
+        // 验证该设备是否存在于用户设备列表中
+        const exists = this.userInfo.esIds.some(item => {
+          if (typeof item === 'object') {
+            return item.esId === currentDevice.esId || item.id === currentDevice.id
+          }
+          return item === currentDevice.esId || item === currentDevice.id
+        })
+        return exists ? currentDevice.name : ''
       }
       
       // 如果 currentDevice 是字符串ID，从 esIds 中查找
-      if (this.userInfo?.esIds && Array.isArray(this.userInfo.esIds)) {
-        const device = this.userInfo.esIds.find(item => {
-          if (typeof item === 'object') {
-            return item.esId === currentDevice || item.id === currentDevice || item === currentDevice
-          }
-          return item === currentDevice
-        })
-        if (device && typeof device === 'object' && device.name) {
-          return device.name
+      const device = this.userInfo.esIds.find(item => {
+        if (typeof item === 'object') {
+          return item.esId === currentDevice || item.id === currentDevice || item === currentDevice
         }
+        return item === currentDevice
+      })
+      if (device && typeof device === 'object' && device.name) {
+        return device.name
       }
       
       return ''

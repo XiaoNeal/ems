@@ -4,39 +4,7 @@
 import request from '@/utils/request'
 import store from '@/store'
 import md5 from "@/utils/md5.min.js";
-export const userLogin1 = (userName, password) => {
-	let paramData = JSON.stringify({
-		"userName": userName,
-		"password": password
-	});
-	return new Promise((resolve, reject) => {
-		uni.request({
-			url: 'https://serviceiems.gree.com/appletAPI/user/login',
-			// url: 'http://172.17.160.46/homecommunity/login',
-			method: 'POST',
-			header: {
-				'Content-Type': 'application/json'
-			},
-			data: {
-				"userName": userName,
-				"password": password
-			},
-			success: res => {
-				resolve(res.data);
-			},
-			fail: res => {
-				reject(res);
-			}
-		});
-	});
-};
-
-
 export const userLogin = (userName, password) => {
-	let paramData = JSON.stringify({
-		"userName": userName,
-		"password": password
-	});
 	const systemInfo = uni.getSystemInfoSync();
 	let deviceId = `${systemInfo.brand}-${systemInfo.model}-${systemInfo.screenWidth}x${systemInfo.screenHeight}`;
 	let deviceHash = md5(deviceId);
@@ -53,26 +21,6 @@ export const userLogin = (userName, password) => {
 		header: {
 			'Content-Type': 'application/json'
 		}
-	})
-
-
-
-	return new Promise((resolve, reject) => {
-		uni.request({
-			url: 'https://serviceiems.gree.com/SsoServer/app/LoginByJson',
-			// url: 'http://172.17.160.46/homecommunity/login',
-			method: 'POST',
-			header: {
-				'Content-Type': 'application/json'
-			},
-			data: JSON.stringify(requestData),
-			success: res => {
-				resolve(res.data);
-			},
-			fail: res => {
-				reject(res);
-			}
-		});
 	});
 };
 
@@ -154,16 +102,6 @@ export function login(username, password) {
 }
 
 
-export function logout() {
-	return uni.request({
-		url: '/youlai-auth/oauth/logout',
-		method: 'delete',
-		headers: {
-			'auth': true // 需要认证，通过
-		}
-	})
-}
-
 export function getUserInfo() {
 	return uni.request({
 		url: 'https://serviceiems.gree.com/api/userLogin2',
@@ -177,26 +115,6 @@ export function getUserInfo() {
 	})
 }
 
-export function loginByPhone1(phone, verificationCode) {
-	let paramData = JSON.stringify({
-		"phone": phone,
-		"verificationCode": verificationCode
-	})
-	return request({
-		// url: '/youlai-auth/oauth/token',
-		url: `/appletAPI/user/loginByPhone`,
-		method: 'POST',
-		data: {
-			data: paramData
-		},
-		header: {
-			'content-type': 'application/json;charset:utf-8'
-		}
-	})
-}
-
-
-
 export function loginByPhone(phone, verificationCode) {
 	const systemInfo = uni.getSystemInfoSync();
 	let deviceId = `${systemInfo.brand}-${systemInfo.model}-${systemInfo.screenWidth}x${systemInfo.screenHeight}`;
@@ -206,7 +124,6 @@ export function loginByPhone(phone, verificationCode) {
 		code: verificationCode,
 		hashIP: deviceHash
 	};
-	// return new Promise((resolve, reject) => {
 	return request({
 		url: '/SsoServer/app/LoginByTelJson',
 		method: 'POST',
@@ -214,14 +131,6 @@ export function loginByPhone(phone, verificationCode) {
 			'Content-Type': 'application/json'
 		},
 		data: JSON.stringify(requestData),
-	});
-
-
-
-	return request.post('https://serviceiems.gree.com/SsoServer/app/LoginByTel', params, {
-		headers: {
-			"Content-Type": 'application/x-www-form-urlencoded'
-		}
 	});
 }
 
@@ -234,19 +143,6 @@ export function loginByPhone(phone, verificationCode) {
 // 		}
 // 	})
 // }
-// export function sendSmsCode(phoneNumber) { //获取验证码
-// 	return request({
-// 		url: `/appletAPI/user/getVerificationCode?phone=${phoneNumber}`,
-// 		method: 'GET',
-// 	})
-// }
-
-// export function sendSmsCode(phoneNumber) { //获取验证码
-// 	return request({
-// 		url: `/appletAPI/GetVerificationCode?phone=${phoneNumber}`,
-// 		method: 'GET',
-// 	})
-// }
 
 export function sendSmsCode(phoneNumber) { //获取验证码
 	return request({
@@ -255,42 +151,23 @@ export function sendSmsCode(phoneNumber) { //获取验证码
 	})
 }
 
-export function updateUserInfo(formData) { //更改用户信息
-
-	if (store.state.currentTemplate == 2) {
-		return request({
-			// url: '/youlai-auth/oauth/token',
-			url: `/user/updateUserInfo`,
-			method: 'POST',
-			data: {
-				data: formData
-			},
-			header: {
-				'content-type': 'application/json;charset:utf-8'
-			}
-		})
-	} else {
-		return request({
-			// url: '/youlai-auth/oauth/token',
-			url: `/appletAPI/user/updateUserInfo`,
-			method: 'POST',
-			data: {
-				data: formData
-			},
-			header: {
-				'content-type': 'application/json;charset:utf-8'
-			}
-		})
-	}
-
+export function updateUserInfo(formData) {
+	return request({
+		url: `/appletAPI/user/updateUserInfo`,
+		method: 'POST',
+		data: {
+			data: formData
+		},
+		header: {
+			'content-type': 'application/json;charset:utf-8'
+		}
+	})
 }
 
 
 export const downloadAPK = (version, osName) => {
-	// let deviceId = 0
-	// let type = 0
 	return request({
-		url: `/appletAPI/downloadAPK?version=${deviceId}&osName=${type}`,
+		url: `/appletAPI/downloadAPK?version=${version}&osName=${osName}`,
 		method: 'get'
 	})
 }
@@ -304,7 +181,6 @@ export const UpdatePasswordBySms = (data) => {
 		},
 		data: data,
 	});
-	// return request.post('/SsoServer/app/ForgetPasswordByTel', data)
 }
 
 export const loginPermission = (data) => {

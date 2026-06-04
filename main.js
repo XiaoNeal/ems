@@ -6,10 +6,9 @@ import { uniIcons } from '@dcloudio/uni-ui'
 import store from './store'
 import uView from '@/uni_modules/uview-ui'
 import Config from './static/js/config.js'
-// vuex管理全局变量 vuex状态交给uview的模式管理
+// vuex 管理全局变量
 let vuexStore = require("@/store/$u.mixin.js");
 Vue.mixin(vuexStore);
-// import '@/assets/css/subpages.css'
 import api from './api'
 import Moment from 'moment'
 
@@ -30,14 +29,3 @@ const app = new Vue({
 })
 app.$mount()
 // #endif
-
-// // #ifdef VUE3
-// import { createSSRApp } from 'vue'
-// import App from './App.vue'
-// export function createApp() {
-//   const app = createSSRApp(App)
-//   return {
-//     app
-//   }
-// }
-// // #endif

@@ -73,9 +73,6 @@
 	} from '@/api/user.js'
 
 	import {
-		CreateAreaInfo
-	} from "@/api/new-app/index.js"
-	import {
 		Md5
 	} from 'ts-md5'
 

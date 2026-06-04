@@ -1,7 +1,6 @@
 import {
 	login,
 	getUserInfo,
-	logout,
 	userLogin,
 	loginByPhone,
 	getUserInfoApi
@@ -94,7 +93,6 @@ const mutations = {
 	},
 
 	UPDATE_USER(state, payload) {
-		// state.user = {
 		if (payload.avatar !== undefined) {
 			state.avatar = payload.avatar;
 		}
@@ -110,7 +108,6 @@ const mutations = {
 		if (payload.mobile !== undefined) {
 			state.mobile = payload.mobile;
 		}
-		// };
 	}
 }
 
@@ -132,33 +129,6 @@ const actions = {
 			})
 		})
 	},
-
-	loginByPhone1({
-		commit
-	}, data) {
-		const {
-			phone,
-			verificationCode
-		} = data
-		return new Promise((resolve, reject) => {
-			loginByPhone(phone, verificationCode).then(response => {
-				console.log(response, 'loginByPhone');
-				const code = response.status
-				if (code != 200) { resolve(code); return; }
-				const {
-					mobile,
-					userName,
-					token,
-					role,
-					projectCategory
-
-				} = response.data
-				resolve(response)
-
-			})
-		})
-	},
-
 
 	loginByPhone({
 		commit
@@ -228,25 +198,16 @@ const actions = {
 	},
 	// user logout
 	logout({
-		commit,
-		state,
+		commit
 	}) {
-
 		return new Promise((resolve, reject) => {
-			// logout().then(() => {
-			// uni.removeStorageSync("userInfo")
-			// uni.removeStorageSync("token")
 			uni.clearStorageSync();
 			commit('SET_HAS_LOGIN', false)
 			commit('SET_NICKNAME', '')
 			commit('SET_AVATAR', '')
 			commit('SET_BALANCE', '')
 			commit('SET_MEMBERID', '')
-			state.lifeData = null
 			resolve()
-			// }).catch(error => {
-			// 	reject(error)
-			// })
 		})
 	}
 }

@@ -173,17 +173,7 @@
 				}
 			]
 		},
-		{
-			"root": "pages-wifi",
-			"pages": [
-				{
-					"path": "index",
-					"style": {
-						"navigationBarTitleText": "WLAN配置"
-					}
-				}
-			]
-		},
+
 		{
 			"root": "pages/profile",
 			"pages": [

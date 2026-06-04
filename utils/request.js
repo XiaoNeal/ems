@@ -2,24 +2,20 @@ import store from '@/store'
 import { decrypt, aesMinEncrypt } from "@/utils/decryptData.js"
 import { RealtimeDataProviderService } from '@/service/socket/realtime-data-provider'
 
-
-
-
-// 根据不同平台获取baseURL
+/**
+ * 根据平台获取基础 URL
+ * @returns {string} 基础 URL
+ */
 var getBaseURL = () => {
   return "https://iems.neiic.com";
 }
 
-
-
-// #ifdef  H5
-// 根据不同平台获取baseURL
-//  getBaseURL = () => {
-//   return "";
-// }
-// #endif
-
-// 构建完整URL（处理参数拼接）
+/**
+ * 构建完整 URL（处理参数拼接）
+ * @param {string} url - 原始 URL
+ * @param {Object} params - 查询参数
+ * @returns {string} 完整 URL
+ */
 const buildURL = (url, params) => {
   if (!params) return url;
   const paramsArray = [];
@@ -27,7 +23,11 @@ const buildURL = (url, params) => {
   return url.includes('?') ? `${url}&${paramsArray.join('&')}` : `${url}?${paramsArray.join('&')}`;
 }
 
-// 判断是否可重试的错误
+/**
+ * 判断是否为可重试的错误
+ * @param {string} errMsg - 错误消息
+ * @returns {boolean} 是否可重试
+ */
 const isRetryableError = (errMsg) => {
   const retryableErrors = [
     'CONNECTION_RESET',
@@ -39,7 +39,18 @@ const isRetryableError = (errMsg) => {
   return retryableErrors.some(error => errMsg.includes(error));
 }
 
-// 主请求函数
+/**
+ * HTTP 请求封装
+ * @param {Object} options - 请求配置
+ * @param {string} options.url - 请求 URL
+ * @param {string} options.method - 请求方法
+ * @param {Object} options.data - 请求数据
+ * @param {Object} options.params - 查询参数
+ * @param {Object} options.header - 请求头
+ * @param {number} options.timeout - 超时时间
+ * @param {number} options.maxRetries - 最大重试次数
+ * @returns {Promise} 请求结果
+ */
 const request = (options) => {
   // 合并默认配置
   const config = {
@@ -48,21 +59,21 @@ const request = (options) => {
     dataType: 'json',
     responseType: 'text',
     sslVerify: false,
-    // params: {
-    //   _t: Date.now() // 添加时间戳参数
-    // },
     maxRetries: 3,
     retryDelay: 1000,
     ...options
   };
 
-  // 处理基础URL和完整URL
+  // 合并基础 URL 和完整 URL
   const baseURL = getBaseURL();
   const fullURL = buildURL(baseURL + config.url, config.params);
   return new Promise((resolve, reject) => {
     let retryCount = 0;
 
-    // 内部发送请求函数
+    /**
+     * 内部发送请求函数
+     * 支持自动重试和错误处理
+     */
     const sendRequest = () => {
       // 每次请求前重新生成签名（避免签名过期）
       const token = store.state.token || uni.getStorageSync('token');
@@ -209,6 +220,13 @@ const request = (options) => {
 };
 
 // Add HTTP method shortcuts
+/**
+ * GET 请求
+ * @param {string} url - 请求 URL
+ * @param {Object} params - 查询参数
+ * @param {Object} options - 其他配置
+ * @returns {Promise} 请求结果
+ */
 request.get = (url, params, options = {}) => {
   return request({
     url,
@@ -218,6 +236,13 @@ request.get = (url, params, options = {}) => {
   });
 };
 
+/**
+ * POST 请求
+ * @param {string} url - 请求 URL
+ * @param {Object} data - 请求数据
+ * @param {Object} options - 其他配置
+ * @returns {Promise} 请求结果
+ */
 request.post = (url, data, options = {}) => {
   return request({
     url,

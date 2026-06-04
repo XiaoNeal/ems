@@ -125,13 +125,13 @@ export default {
       deviceAddress: '03',
       isEditing: false,
       clickedButton: '',
+      lastSendTimes: {},
       editingParam: '',
       tempValue: '',
       isSubmitting: false,
       params: {
         pv: {}
       },
-      lastSendTime: 0,
       confirmData: {
         title: '',
         content: '',
@@ -227,12 +227,6 @@ export default {
         return
       }
 
-      const now = Date.now()
-      if (now - this.lastSendTime < 5000) {
-        this.showToast('请间隔5秒后再下发', 'warning')
-        return
-      }
-
       if (this.isDangerousOption(option)) {
         this.openConfirmPopup({
           title: '危险操作确认',
@@ -248,8 +242,15 @@ export default {
     },
 
     async executeSwitchCommand(param, option) {
+      const now = Date.now()
+      const paramLastSendTime = this.lastSendTimes[param.key] || 0
+      if (now - paramLastSendTime < 5000) {
+        this.showToast('请间隔5秒后再下发', 'warning')
+        return
+      }
+
       this.clickedButton = param.key + '-' + option.value
-      this.lastSendTime = Date.now()
+      this.lastSendTimes[param.key] = Date.now()
 
       setTimeout(() => {
         this.clickedButton = ''
@@ -257,9 +258,9 @@ export default {
 
       try {
         await this.submitSwitchParam(param, option.value)
-        this.showToast(`${param.label}设置成功`, 'success')
+        this.showToast(`${param.label}: ${option.label}成功`, 'success')
       } catch (error) {
-        this.showToast(`${param.label}设置失败`, 'error')
+        this.showToast(`${param.label}: ${option.label}失败`, 'error')
       }
     },
 
@@ -364,7 +365,16 @@ export default {
     },
 
     async executeSubmitParam(param, value) {
+      const now = Date.now()
+      const paramLastSendTime = this.lastSendTimes[param.key] || 0
+      if (now - paramLastSendTime < 5000) {
+        this.showToast('请间隔5秒后再下发', 'warning')
+        this.isSubmitting = false
+        return
+      }
+
       this.isSubmitting = true
+      this.lastSendTimes[param.key] = Date.now()
 
       try {
         const registerMap = {
@@ -404,9 +414,9 @@ export default {
         await sendCommandFrame(commandData)
         this.params.pv[param.field] = value
         this.editingParam = ''
-        this.showToast(`${param.label}下发成功`, 'success')
+        this.showToast(`${param.label}: ${value}${param.unit || ''}下发成功`, 'success')
       } catch (error) {
-        this.showToast('下发失败', 'error')
+        this.showToast(`${param.label}下发失败`, 'error')
         console.error('命令帧发送失败:', error)
       } finally {
         this.isSubmitting = false
