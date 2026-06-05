@@ -1,5 +1,14 @@
 <template>
-  <view class="pv-monitor container">
+  <view class="pv-monitor container" :class="{ fullscreen: isFullScreen }">
+    
+    <!-- 全屏模式头部 -->
+    <view v-if="isFullScreen" class="fullscreen-header">
+      <text class="fullscreen-title">{{ fullScreenType === 'power' ? '发电功率曲线' : '发电量统计' }}</text>
+      <view class="fullscreen-exit-btn" @click="toggleFullScreen(fullScreenType)">
+        <text>退出全屏</text>
+      </view>
+    </view>
+    
     <!-- 数据卡片区域 -->
     <view class="stats-box">
       <view class="stat-row">
@@ -74,11 +83,14 @@
 
       <!-- 图表区域 -->
       <view class="chart-section">
-        <view class="chart-card">
+        <view class="chart-card" :class="{ 'power-chart-card': isFullScreen && fullScreenType === 'power' }">
           <view class="chart-header">
             <text class="chart-title">发电功率曲线</text>
             <view class="chart-controls">
-              <view class="chart-tab">今日</view>
+              <!-- <view class="chart-tab">今日</view> -->
+              <view class="chart-tab fullscreen-btn" @click="toggleFullScreen('power')">
+                {{ isFullScreen && fullScreenType === 'power' ? '退出全屏' : '全屏' }}
+              </view>
             </view>
           </view>
           <view class="chart-body">
@@ -90,11 +102,13 @@
         <!-- 分割线 -->
         <view class="card-divider"></view>
 
-        <view class="chart-card">
+        <view class="chart-card" :class="{ 'generation-chart-card': isFullScreen && fullScreenType === 'generation' }">
           <view class="chart-header">
             <text class="chart-title">发电量统计</text>
             <view class="chart-controls">
-              <view class="chart-tab">全部</view>
+              <view class="chart-tab fullscreen-btn" @click="toggleFullScreen('generation')">
+                {{ isFullScreen && fullScreenType === 'generation' ? '退出全屏' : '全屏' }}
+              </view>
             </view>
           </view>
           <view class="chart-body">
@@ -138,6 +152,8 @@ export default {
       activeDateTab: "日",
       timeTypeIndex: 0,
       selectedDate: new Date().toISOString().split('T')[0],
+      isFullScreen: false,
+      fullScreenType: '', // 当前全屏的图表类型 'power' | 'generation'
 
       powerCurveSeries: [],
       generationSeries: [],
@@ -290,6 +306,34 @@ export default {
       this.getDayGeneratedPower();
       this.getElectricityStatistic();
       console.log("选中日期：", value, " 类型：", this.activeDateTab);
+    },
+
+    toggleFullScreen(type) {
+      if (this.isFullScreen && this.fullScreenType === type) {
+        // 退出全屏
+        this.isFullScreen = false;
+        this.fullScreenType = '';
+        
+        // #ifdef APP-PLUS
+        plus.screen.lockOrientation('portrait-primary');
+        plus.navigator.setFullscreen(false);
+        // #endif
+      } else {
+        // 进入全屏
+        this.isFullScreen = true;
+        this.fullScreenType = type;
+        
+        // #ifdef APP-PLUS
+        plus.screen.lockOrientation('landscape-primary');
+        plus.navigator.setFullscreen(true);
+        // #endif
+      }
+      
+      uni.showToast({
+        title: this.isFullScreen ? (type === 'power' ? '发电功率曲线全屏' : '发电量统计全屏') : '退出全屏',
+        icon: 'none',
+        duration: 1500
+      });
     }
   },
 
@@ -336,6 +380,115 @@ export default {
 
 .pv-monitor {
   background-color: #f5f7fa;
+}
+
+/* 全屏模式 */
+.pv-monitor.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* 全屏头部 */
+.fullscreen-header {
+  position: fixed;
+  top: env(safe-area-inset-top);
+  left: 0;
+  right: 0;
+  z-index: 1001;
+  height: 88rpx;
+  padding: 0 20rpx;
+  background: #fff;
+  border-bottom: 1rpx solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fullscreen-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.fullscreen-exit-btn {
+  padding: 10rpx 20rpx;
+  background: #4488FB;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+  color: #fff;
+}
+
+/* 全屏内容区域 */
+.pv-monitor.fullscreen .data-chart-section {
+  padding-top: calc(env(safe-area-inset-top) + 88rpx);
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+/* 全屏时隐藏统计卡片 */
+.pv-monitor.fullscreen .stats-box {
+  display: none;
+}
+
+/* 全屏时日期选择器固定 */
+.pv-monitor.fullscreen .date-selector {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 88rpx);
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  margin: 0;
+  border-radius: 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+/* 全屏时图表区域 */
+.pv-monitor.fullscreen .chart-section {
+  padding-top: calc(env(safe-area-inset-top) + 176rpx);
+  height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 176rpx);
+  margin: 0;
+  overflow: hidden;
+}
+
+/* 全屏时只显示当前图表 */
+.pv-monitor.fullscreen .chart-card {
+  display: none;
+}
+
+.pv-monitor.fullscreen .chart-card.power-chart-card,
+.pv-monitor.fullscreen .chart-card.generation-chart-card {
+  display: block;
+  padding: 20rpx;
+  border-radius: 0;
+  height: 100%;
+}
+
+.pv-monitor.fullscreen .chart-card:not(.power-chart-card):not(.generation-chart-card) {
+  display: none;
+}
+
+.pv-monitor.fullscreen .card-divider {
+  display: none;
+}
+
+/* 全屏按钮样式 */
+.fullscreen-btn {
+  cursor: pointer;
+  background: #f0f4ff;
+  color: #4488FB;
+}
+
+.fullscreen-btn:hover {
+  background: #e0e9ff;
 }
 
 /* 数据卡片 */

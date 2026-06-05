@@ -55,24 +55,11 @@
           <uni-icons type="staff" size="32" color="#fff" />
         </view>
         <view class="service-content">
-          <text class="service-title">人工客服</text>
-          <text class="service-desc">在线咨询，工作日 9:00-18:00</text>
+          <text class="service-title">智能客服</text>
+          <text class="service-desc">AI智能助手，随时为您服务</text>
         </view>
         <view class="service-btn">
           <text>立即咨询</text>
-        </view>
-      </view>
-
-      <!-- 底部联系 -->
-      <view class="contact-bar">
-        <view class="contact-item" @click="makePhoneCall('400-123-4567')">
-          <uni-icons type="phone" size="28" color="#52c41a" />
-          <text>拨打电话</text>
-        </view>
-        <view class="contact-divider"></view>
-        <view class="contact-item" @click="sendEmail">
-          <uni-icons type="email" size="28" color="#fa8c16" />
-          <text>发送邮件</text>
         </view>
       </view>
     </view>
@@ -95,14 +82,21 @@
           </view>
         </view>
 
-        <view class="chat-body" id="chatBody">
+        <scroll-view class="chat-body" id="chatBody" scroll-y :scroll-with-animation="true" :scroll-into-view="scrollToId">
           <view class="chat-messages">
-            <view class="chat-message bot">
-              <view class="message-avatar bot">
-                <uni-icons type="headphones" size="24" color="#fff" />
+            <view 
+              v-for="(msg, index) in chatMessages" 
+              :key="index" 
+              :id="'msg-' + index"
+              class="chat-message" 
+              :class="msg.type"
+            >
+              <view class="message-avatar" :class="msg.type">
+                <uni-icons v-if="msg.type === 'bot'" type="headphones" size="24" color="#fff" />
+                <uni-icons v-else type="person" size="24" color="#fff" />
               </view>
-              <view class="message-content bot">
-                <text class="message-text">您好！我是AI智能客服，请问有什么可以帮助您的？</text>
+              <view class="message-content" :class="msg.type">
+                <text class="message-text">{{ msg.text }}</text>
               </view>
             </view>
 
@@ -114,8 +108,22 @@
                 </view>
               </view>
             </view>
+
+            <!-- 加载动画 -->
+            <view class="chat-message bot" v-if="isLoading">
+              <view class="message-avatar bot">
+                <uni-icons type="headphones" size="24" color="#fff" />
+              </view>
+              <view class="message-content bot">
+                <view class="loading-indicator">
+                  <view class="loading-dot"></view>
+                  <view class="loading-dot"></view>
+                  <view class="loading-dot"></view>
+                </view>
+              </view>
+            </view>
           </view>
-        </view>
+        </scroll-view>
 
         <view class="chat-footer">
           <input 
@@ -138,38 +146,105 @@ export default {
   data() {
     return {
       quickQuestions: [
-        { text: '如何注册账号？', icon: 'personadd', color: '#4a8cff', answer: '点击首页"注册"按钮，填写手机号和验证码即可完成注册。' },
-        { text: '如何找回密码？', icon: 'locked', color: '#fa8c16', answer: '在登录页面点击"忘记密码"，通过绑定的手机号验证后重置密码。' },
-        { text: '如何联系人工客服？', icon: 'headphones', color: '#52c41a', answer: '您可以拨打客服热线400-123-4567，或在工作时间内在线咨询人工客服。' },
-        { text: '如何修改个人信息？', icon: 'gear', color: '#722ed1', answer: '进入"我的"-"个人信息"页面，点击相应项目即可修改。' }
+        { text: '如何绑定微能站？', icon: 'plus', color: '#4a8cff', answer: '在"设备管理"页面点击"添加设备"，扫描微能站设备二维码或手动输入设备编号即可完成绑定。' },
+        { text: '微能站数据怎么看？', icon: 'bar-chart', color: '#fa8c16', answer: '进入微能站详情页面，即可查看实时发电数据、能耗统计、历史曲线等信息。' },
+        { text: '设备故障怎么办？', icon: 'alert', color: '#f5222d', answer: '在设备详情页面查看故障告警信息，系统会自动推送通知，也可联系技术支持协助排查。' },
+        { text: '如何分享设备？', icon: 'share', color: '#722ed1', answer: '作为设备管理员，在设备列表中点击分享按钮，生成分享码或二维码即可分享给其他用户。' }
       ],
       faqList: [
         {
-          question: '平台支持哪些功能？',
-          answer: '平台提供光伏监测、储能管理、设备控制、数据分析等功能，帮助您全面管理新能源设备。'
+          question: '微能站支持哪些功能？',
+          answer: '微能站EMS系统提供光伏监测、储能管理、微能站远程控制、能耗分析、数据报表等功能，帮助您全面管理微能站设备。'
         },
         {
-          question: '数据更新频率是多少？',
-          answer: '实时数据每分钟更新一次，历史数据可按日、月、年维度查看。'
+          question: '微能站数据更新频率是多少？',
+          answer: '微能站实时数据每分钟更新一次，历史数据可按日、月、年维度查看和导出。'
         },
         {
-          question: '如何绑定设备？',
-          answer: '在"设备管理"页面点击"添加设备"，扫描设备二维码或手动输入设备编号即可完成绑定。'
+          question: '如何绑定微能站设备？',
+          answer: '在"设备管理"页面点击"添加设备"，扫描微能站设备二维码或手动输入设备编号即可完成绑定。'
         },
         {
-          question: '账户安全如何保障？',
-          answer: '平台采用金融级加密技术，支持密码、验证码多重验证，定期提示修改密码保障账户安全。'
+          question: '微能站故障如何排查？',
+          answer: '在设备详情页面查看实时状态和故障告警信息，系统会自动推送故障通知，也可联系技术支持协助排查。'
         }
       ],
       chatSuggestions: [
-        '如何注册账号？',
-        '如何绑定设备？',
-        '数据如何查看？',
-        '账户安全设置'
+        '如何绑定微能站？',
+        '微能站数据怎么看？',
+        '设备故障怎么办？',
+        '如何分享设备？'
+      ],
+      // 私有知识库
+      knowledgeBase: [
+        {
+          keywords: ['绑定', '添加', '设备', '微能站'],
+          question: '如何绑定微能站设备？',
+          answer: '在"设备管理"页面点击"添加设备"，扫描微能站设备二维码或手动输入设备编号即可完成绑定。绑定成功后，您可以在设备列表中查看微能站的实时状态和数据。'
+        },
+        {
+          keywords: ['数据', '查看', '监测', '报表', '统计'],
+          question: '如何查看微能站数据？',
+          answer: '进入微能站详情页面，即可查看实时发电数据、能耗统计、历史曲线等信息。数据每分钟更新一次，支持按日、月、年维度查看和导出报表。'
+        },
+        {
+          keywords: ['故障', '报警', '异常', '排查', '维修'],
+          question: '设备故障怎么办？',
+          answer: '在设备详情页面查看故障告警信息，系统会自动推送通知。常见故障可参考故障指南排查，如需专业支持，请联系技术支持团队。'
+        },
+        {
+          keywords: ['分享', '权限', '管理员', '协作'],
+          question: '如何分享微能站？',
+          answer: '作为设备管理员，在设备列表中点击分享按钮，生成分享码或二维码即可分享给其他用户。您可以设置分享权限和有效期。'
+        },
+        {
+          keywords: ['光伏', '发电', '效率', '太阳'],
+          question: '光伏发电效率如何提升？',
+          answer: '1. 定期清洁光伏板表面灰尘；2. 确保光伏板朝向最佳角度；3. 检查组件连接是否正常；4. 及时处理阴影遮挡问题；5. 定期维护逆变器设备。'
+        },
+        {
+          keywords: ['储能', '电池', '充放电', '调度'],
+          question: '储能系统如何管理？',
+          answer: '储能系统支持自动和手动两种模式。自动模式下系统根据电价和负荷自动调度充放电；手动模式可手动控制充放电。建议定期检查电池健康状态。'
+        },
+        {
+          keywords: ['注册', '登录', '账号', '密码'],
+          question: '如何注册和登录？',
+          answer: '点击首页"注册"按钮，填写手机号和验证码完成注册。登录时输入手机号和密码，支持短信验证码快捷登录。忘记密码可通过手机号找回。'
+        },
+        {
+          keywords: ['安装', '调试', '部署', '配置'],
+          question: '微能站如何安装调试？',
+          answer: '微能站安装需由专业人员进行。安装流程包括：设备开箱检查、支架安装、组件安装、接线调试、并网测试。安装完成后由技术人员进行系统调试和验收。'
+        },
+        {
+          keywords: ['能耗', '节能', '优化', '管理'],
+          question: '如何优化能耗管理？',
+          answer: '通过EMS系统查看能耗分析报表，识别高耗能设备和时段。合理利用储能系统削峰填谷，优化用电时间。定期进行设备能效评估和维护。'
+        },
+        {
+          keywords: ['报表', '导出', '数据', '分析'],
+          question: '如何导出数据报表？',
+          answer: '在数据统计页面选择时间范围，点击"导出"按钮即可下载Excel格式报表。支持日报、周报、月报和年报导出，包含发电量、能耗、效率等关键指标。'
+        }
       ],
       showSuggestions: true,
       chatMessage: '',
-      chatPopup: null
+      chatPopup: null,
+      // 聊天消息列表
+      chatMessages: [
+        {
+          type: 'bot',
+          text: '您好！我是微能站EMS系统的AI智能客服，很高兴为您服务！请问有什么关于微能站的问题需要咨询吗？'
+        }
+      ],
+      scrollToId: '',
+      // API配置
+      apiKey: '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',
+      baseURL: 'https://integrate.api.nvidia.com/v1',
+      systemPrompt: '您是微能站EMS能源管理系统的专业AI客服助手，专注于微能站相关业务：\n\n1. **微能站管理**：微能站设备绑定、状态监控、远程控制\n2. **光伏系统**：光伏发电监测、效率分析、故障预警\n3. **储能系统**：储能设备管理、充放电控制、能量调度策略\n4. **能源监控**：实时能耗监测、发电量统计、数据分析报表\n5. **系统功能**：用户注册登录、设备分享、权限管理、数据导出\n6. **常见问题**：微能站安装调试、设备故障排查、数据异常处理\n\n请根据用户问题，提供专业、准确、友好的回答，结合微能站EMS系统的实际功能进行解答。',
+      conversationHistory: [],
+      isLoading: false
     }
   },
   onReady() {
@@ -186,6 +261,7 @@ export default {
       })
     },
     openService() {
+      this.loadChatHistory()
       this.$refs.chatPopup.open()
     },
     closeChat() {
@@ -198,33 +274,182 @@ export default {
       this.chatMessage = ''
       this.showSuggestions = false
       
-      // 模拟发送消息后的自动回复
+      // 添加用户消息
+      this.chatMessages.push({
+        type: 'user',
+        text: message
+      })
+      
+      // 更新对话历史
+      this.conversationHistory.push({
+        role: 'user',
+        content: message
+      })
+      
+      // 滚动到底部
       setTimeout(() => {
-        uni.showToast({
-          title: '消息已发送',
-          icon: 'none'
-        })
+        this.scrollToId = 'msg-' + (this.chatMessages.length - 1)
       }, 100)
+      
+      // 调用真实AI API
+      this.callNVIDIAAPI(message)
     },
     sendSuggestion(text) {
       this.chatMessage = text
       this.sendMessage()
     },
-    makePhoneCall(phoneNumber) {
-      uni.makePhoneCall({ phoneNumber })
-    },
-    sendEmail() {
-      uni.showModal({
-        title: '发送邮件',
-        content: '是否发送邮件至 support@example.com？',
-        confirmText: '发送',
-        cancelText: '取消',
-        success: (res) => {
-          if (res.confirm) {
-            uni.showToast({ title: '即将打开邮箱应用', icon: 'none' })
+    // 从知识库查找答案
+    searchKnowledgeBase(question) {
+      const lowerQuestion = question.toLowerCase()
+      let bestMatch = null
+      let maxMatches = 0
+
+      for (const item of this.knowledgeBase) {
+        let matches = 0
+        for (const keyword of item.keywords) {
+          if (lowerQuestion.includes(keyword.toLowerCase())) {
+            matches++
           }
         }
+        
+        if (matches > maxMatches) {
+          maxMatches = matches
+          bestMatch = item
+        }
+      }
+
+      // 如果匹配到至少2个关键词，返回知识库答案
+      if (bestMatch && maxMatches >= 2) {
+        return bestMatch.answer
+      }
+      
+      // 如果只有1个关键词匹配，但问题非常相关，也返回答案
+      if (bestMatch && maxMatches === 1) {
+        const questionLower = question.toLowerCase()
+        const keywordsLower = bestMatch.keywords.map(k => k.toLowerCase())
+        const hasExactMatch = keywordsLower.some(k => questionLower.includes(k))
+        if (hasExactMatch && question.length < 20) {
+          return bestMatch.answer
+        }
+      }
+
+      return null
+    },
+    // 调用NVIDIA API获取AI回复（优先从知识库查找）
+    async callNVIDIAAPI(userMessage) {
+      // 首先从私有知识库查找答案
+      const kbAnswer = this.searchKnowledgeBase(userMessage)
+      if (kbAnswer) {
+        this.addBotMessage(kbAnswer)
+        this.conversationHistory.push({ role: 'assistant', content: kbAnswer })
+        this.saveChatHistory()
+        return
+      }
+
+      // 如果知识库没有匹配，调用外部AI API
+      if (!this.apiKey) {
+        this.addBotMessage('抱歉，我暂时无法回答这个问题，请联系人工客服。')
+        return
+      }
+
+      this.isLoading = true
+      
+      try {
+        const [err, response] = await uni.request({
+          url: `${this.baseURL}/chat/completions`,
+          method: 'POST',
+          header: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Accept': 'application/json'
+          },
+          data: {
+            model: 'deepseek-ai/deepseek-v4-pro',
+            messages: [
+              { role: 'system', content: this.systemPrompt },
+              ...this.conversationHistory
+            ],
+            temperature: 1,
+            top_p: 0.95,
+            max_tokens: 16384,
+            chat_template_kwargs: { thinking: false },
+            stream: false
+          }
+        })
+
+        this.isLoading = false
+
+        if (err) {
+          console.error('API请求失败:', err)
+          this.addBotMessage('抱歉，网络连接失败，请稍后再试。')
+          return
+        }
+
+        if (response.statusCode === 200) {
+          const aiReply = response.data.choices[0]?.message?.content || '抱歉，我没有理解您的问题。'
+          
+          // 添加AI回复
+          this.addBotMessage(aiReply)
+          
+          // 更新对话历史
+          this.conversationHistory.push({
+            role: 'assistant',
+            content: aiReply
+          })
+          
+          // 保存历史记录
+          this.saveChatHistory()
+        } else {
+          console.error('API返回错误:', response.statusCode, response.data)
+          this.addBotMessage('抱歉，AI服务暂时不可用，请稍后再试。')
+        }
+      } catch (error) {
+        this.isLoading = false
+        console.error('API调用异常:', error)
+        this.addBotMessage('抱歉，AI服务暂时不可用，请稍后再试。')
+      }
+    },
+    // 添加机器人消息
+    addBotMessage(text) {
+      this.chatMessages.push({
+        type: 'bot',
+        text: text
       })
+      
+      // 滚动到底部
+      setTimeout(() => {
+        this.scrollToId = 'msg-' + (this.chatMessages.length - 1)
+      }, 100)
+    },
+    // 保存聊天历史
+    saveChatHistory() {
+      try {
+        const history = {
+          chatMessages: this.chatMessages,
+          conversationHistory: this.conversationHistory
+        }
+        uni.setStorageSync('aiChatHistory', JSON.stringify(history))
+      } catch (error) {
+        console.error('保存历史记录失败:', error)
+      }
+    },
+    // 加载聊天历史
+    loadChatHistory() {
+      try {
+        const historyStr = uni.getStorageSync('aiChatHistory')
+        if (historyStr) {
+          const history = JSON.parse(historyStr)
+          this.chatMessages = history.chatMessages || this.chatMessages
+          this.conversationHistory = history.conversationHistory || []
+          
+          // 滚动到底部
+          setTimeout(() => {
+            this.scrollToId = 'msg-' + (this.chatMessages.length - 1)
+          }, 100)
+        }
+      } catch (error) {
+        console.error('加载历史记录失败:', error)
+      }
     }
   }
 }
@@ -509,42 +734,6 @@ export default {
   }
 }
 
-/* 底部联系 */
-.contact-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff;
-  border-radius: 28rpx;
-  padding: 24rpx 0;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.04);
-}
-
-.contact-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20rpx;
-  transition: all 0.25s ease;
-
-  text {
-    font-size: 24rpx;
-    color: #666;
-    margin-top: 10rpx;
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
-.contact-divider {
-  width: 2rpx;
-  height: 60rpx;
-  background: #f0f1f2;
-}
-
 /* 聊天弹窗 */
 .chat-modal {
   background: #fff;
@@ -630,6 +819,12 @@ export default {
 
   &.bot {
     align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  &.user {
+    align-items: flex-start;
+    justify-content: flex-end;
   }
 }
 
@@ -646,6 +841,11 @@ export default {
     background: linear-gradient(135deg, #4a8cff 0%, #6b9dff 100%);
     margin-right: 16rpx;
   }
+
+  &.user {
+    background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+    margin-left: 16rpx;
+  }
 }
 
 .message-content {
@@ -658,12 +858,58 @@ export default {
     border-top-left-radius: 8rpx;
     box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
   }
+
+  &.user {
+    background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+    padding: 24rpx;
+    border-radius: 24rpx;
+    border-top-right-radius: 8rpx;
+
+    .message-text {
+      color: #fff;
+    }
+  }
 }
 
 .message-text {
   font-size: 28rpx;
   color: #333;
   line-height: 1.6;
+}
+
+/* 加载动画 */
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 0;
+}
+
+.loading-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4a8cff 0%, #6b9dff 100%);
+  animation: loading 1.4s infinite ease-in-out both;
+}
+
+.loading-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes loading {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .chat-suggestions {

@@ -18,235 +18,245 @@ export class Model171C extends DeviceBase {
 	getEnergyData(jsonData, jsonData2) {
 		// 能源数据字段赋值（带单位，完全对齐PCS模板格式）
 		// 处理位字段 B0-B10
-		if (jsonData.B0 != null) {
-			const b0 = parseInt(jsonData.B0);
-			this.energyData.B0b0.value = ((b0 >> 0) & 1) ? '是' : '否';
-			this.energyData.B0b1.value = ((b0 >> 1) & 1) ? '是' : '否';
-			this.energyData.B0b2.value = ((b0 >> 2) & 1) ? '是' : '否';
-			this.energyData.B0b3.value = ((b0 >> 3) & 1) ? '是' : '否';
-			this.energyData.B0b4.value = ((b0 >> 4) & 1) ? '是' : '否';
-			this.energyData.B0b5.value = ((b0 >> 5) & 1) ? '是' : '否';
-			this.energyData.B0b6.value = ((b0 >> 6) & 1) ? '是' : '否';
-			this.energyData.B0b7.value = ((b0 >> 7) & 1) ? '是' : '否';
-		}
-		if (jsonData.B1 != null) {
-			const b1 = parseInt(jsonData.B1);
-			this.energyData.B1b0.value = ((b1 >> 0) & 1) ? '是' : '否';
-			this.energyData.B1b1.value = ((b1 >> 1) & 1) ? '是' : '否';
-			this.energyData.B1b2.value = ((b1 >> 2) & 1) ? '是' : '否';
-			this.energyData.B1b3.value = ((b1 >> 3) & 1) ? '是' : '否';
-			this.energyData.B1b4.value = ((b1 >> 4) & 1) ? '是' : '否';
-			this.energyData.B1b5.value = ((b1 >> 5) & 1) ? '是' : '否';
-			this.energyData.B1b6.value = ((b1 >> 6) & 1) ? '是' : '否';
-			this.energyData.B1b7.value = ((b1 >> 7) & 1) ? '是' : '否';
-		}
-		if (jsonData.B2 != null) {
-			const b2 = parseInt(jsonData.B2);
-			this.energyData.B2b0.value = ((b2 >> 0) & 1) ? '是' : '否';
-			this.energyData.B2b1.value = ((b2 >> 1) & 1) ? '是' : '否';
-			this.energyData.B2b2.value = ((b2 >> 2) & 1) ? '是' : '否';
-			this.energyData.B2b3.value = ((b2 >> 3) & 1) ? '是' : '否';
-			this.energyData.B2b4.value = ((b2 >> 4) & 1) ? '是' : '否';
-			this.energyData.B2b5.value = ((b2 >> 5) & 1) ? '是' : '否';
-			this.energyData.B2b6.value = ((b2 >> 6) & 1) ? '是' : '否';
-			this.energyData.B2b7.value = ((b2 >> 7) & 1) ? '是' : '否';
-		}
-		if (jsonData.B3 != null) {
-			const b3 = parseInt(jsonData.B3);
-			this.energyData.B3b0.value = ((b3 >> 0) & 1) ? '是' : '否';
-			this.energyData.B3b1.value = ((b3 >> 1) & 1) ? '是' : '否';
-			this.energyData.B3b2.value = ((b3 >> 2) & 1) ? '是' : '否';
-			this.energyData.B3b3.value = ((b3 >> 3) & 1) ? '是' : '否';
-			this.energyData.B3b4.value = ((b3 >> 4) & 1) ? '是' : '否';
-			this.energyData.B3b5.value = ((b3 >> 5) & 1) ? '是' : '否';
-			this.energyData.B3b6.value = ((b3 >> 6) & 1) ? '是' : '否';
-			this.energyData.B3b7.value = ((b3 >> 7) & 1) ? '是' : '否';
-		}
-		if (jsonData.B4 != null) {
-			const b4 = parseInt(jsonData.B4);
-			this.energyData.B4b0.value = ((b4 >> 0) & 1) ? '是' : '否';
-			this.energyData.B4b1.value = ((b4 >> 1) & 1) ? '是' : '否';
-			this.energyData.B4b2.value = ((b4 >> 2) & 1) ? '是' : '否';
-			this.energyData.B4b3.value = ((b4 >> 3) & 1) ? '是' : '否';
-			this.energyData.B4b4.value = ((b4 >> 4) & 1) ? '是' : '否';
-			this.energyData.B4b5.value = ((b4 >> 5) & 1) ? '是' : '否';
-			this.energyData.B4b6.value = ((b4 >> 6) & 1) ? '是' : '否';
-			this.energyData.B4b7.value = ((b4 >> 7) & 1) ? '是' : '否';
-		}
-		if (jsonData.B5 != null) {
-			const b5 = parseInt(jsonData.B5);
-			this.energyData.B5b0.value = ((b5 >> 0) & 1) ? '是' : '否';
-			this.energyData.B5b1.value = ((b5 >> 1) & 1) ? '是' : '否';
-			this.energyData.B5b2.value = ((b5 >> 2) & 1) ? '是' : '否';
-			this.energyData.B5b3.value = ((b5 >> 3) & 1) ? '是' : '否';
-			this.energyData.B5b4.value = ((b5 >> 4) & 1) ? '是' : '否';
-			this.energyData.B5b5.value = ((b5 >> 5) & 1) ? '是' : '否';
-			this.energyData.B5b6.value = ((b5 >> 6) & 1) ? '是' : '否';
-			this.energyData.B5b7.value = ((b5 >> 7) & 1) ? '是' : '否';
-		}
-		if (jsonData.B6 != null) {
-			const b6 = parseInt(jsonData.B6);
-			this.energyData.B6b0.value = ((b6 >> 0) & 1) ? '是' : '否';
-			this.energyData.B6b1.value = ((b6 >> 1) & 1) ? '是' : '否';
-			this.energyData.B6b2.value = ((b6 >> 2) & 1) ? '是' : '否';
-			this.energyData.B6b3.value = ((b6 >> 3) & 1) ? '是' : '否';
-			this.energyData.B6b4.value = ((b6 >> 4) & 1) ? '是' : '否';
-			this.energyData.B6b5.value = ((b6 >> 5) & 1) ? '是' : '否';
-			this.energyData.B6b6.value = ((b6 >> 6) & 1) ? '是' : '否';
-			this.energyData.B6b7.value = ((b6 >> 7) & 1) ? '是' : '否';
-		}
-		if (jsonData.B7 != null) {
-			const b7 = parseInt(jsonData.B7);
-			this.energyData.B7b0.value = ((b7 >> 0) & 1) ? '是' : '否';
-			this.energyData.B7b1.value = ((b7 >> 1) & 1) ? '是' : '否';
-			this.energyData.B7b2.value = ((b7 >> 2) & 1) ? '是' : '否';
-			this.energyData.B7b3.value = ((b7 >> 3) & 1) ? '是' : '否';
-			this.energyData.B7b4.value = ((b7 >> 4) & 1) ? '是' : '否';
-			this.energyData.B7b5.value = ((b7 >> 5) & 1) ? '是' : '否';
-			this.energyData.B7b6.value = ((b7 >> 6) & 1) ? '是' : '否';
-			this.energyData.B7b7.value = ((b7 >> 7) & 1) ? '是' : '否';
-		}
-		if (jsonData.B8 != null) {
-			const b8 = parseInt(jsonData.B8);
-			this.energyData.B8b0.value = ((b8 >> 0) & 1) ? '是' : '否';
-			this.energyData.B8b1.value = ((b8 >> 1) & 1) ? '是' : '否';
-			this.energyData.B8b2.value = ((b8 >> 2) & 1) ? '是' : '否';
-			this.energyData.B8b3.value = ((b8 >> 3) & 1) ? '是' : '否';
-			this.energyData.B8b4.value = ((b8 >> 4) & 1) ? '是' : '否';
-			this.energyData.B8b5.value = ((b8 >> 5) & 1) ? '是' : '否';
-			this.energyData.B8b6.value = ((b8 >> 6) & 1) ? '是' : '否';
-			this.energyData.B8b7.value = ((b8 >> 7) & 1) ? '是' : '否';
-		}
-		if (jsonData.B9 != null) {
-			const b9 = parseInt(jsonData.B9);
-			this.energyData.B9b0.value = ((b9 >> 0) & 1) ? '是' : '否';
-			this.energyData.B9b1.value = ((b9 >> 1) & 1) ? '是' : '否';
-			this.energyData.B9b2.value = ((b9 >> 2) & 1) ? '是' : '否';
-			this.energyData.B9b3.value = ((b9 >> 3) & 1) ? '是' : '否';
-			this.energyData.B9b4.value = ((b9 >> 4) & 1) ? '是' : '否';
-			this.energyData.B9b5.value = ((b9 >> 5) & 1) ? '是' : '否';
-			this.energyData.B9b6.value = ((b9 >> 6) & 1) ? '是' : '否';
-			this.energyData.B9b7.value = ((b9 >> 7) & 1) ? '是' : '否';
-		}
-		if (jsonData.B10 != null) {
-			const b10 = parseInt(jsonData.B10);
-			this.energyData.B10b0.value = ((b10 >> 0) & 1) ? '是' : '否';
-			this.energyData.B10b1.value = ((b10 >> 1) & 1) ? '是' : '否';
-			this.energyData.B10b2.value = ((b10 >> 2) & 1) ? '是' : '否';
-			this.energyData.B10b3.value = ((b10 >> 3) & 1) ? '是' : '否';
-			this.energyData.B10b4.value = ((b10 >> 4) & 1) ? '是' : '否';
-			this.energyData.B10b5.value = ((b10 >> 5) & 1) ? '是' : '否';
-			this.energyData.B10b6.value = ((b10 >> 6) & 1) ? '是' : '否';
-			this.energyData.B10b7.value = ((b10 >> 7) & 1) ? '是' : '否';
-		}
+		console.log(jsonData,"999999999999999999999999999999");
+		this.energyData.B0b0.value = jsonData.B0b0;
+		this.energyData.B0b1.value = jsonData.B0b1;
+		this.energyData.B0b2.value = jsonData.B0b2;
+		this.energyData.B0b3.value = jsonData.B0b3;
+		this.energyData.B0b4.value = jsonData.B0b4;
+		this.energyData.B0b5.value = jsonData.B0b5;
+		this.energyData.B0b6.value = jsonData.B0b6;
+		this.energyData.B0b7.value = jsonData.B0b7;
+
+		this.energyData.B1b0.value = jsonData.B1b0;
+		this.energyData.B1b1.value = jsonData.B1b1;
+		this.energyData.B1b2.value = jsonData.B1b2;
+		this.energyData.B1b3.value = jsonData.B1b3;
+		this.energyData.B1b4.value = jsonData.B1b4;
+		this.energyData.B1b5.value = jsonData.B1b5;
+		this.energyData.B1b6.value = jsonData.B1b6;
+		this.energyData.B1b7.value = jsonData.B1b7;
+
+		this.energyData.B2b0.value = jsonData.B2b0;
+		this.energyData.B2b1.value = jsonData.B2b1;
+		this.energyData.B2b2.value = jsonData.B2b2;
+		this.energyData.B2b3.value = jsonData.B2b3;
+		this.energyData.B2b4.value = jsonData.B2b4;
+		this.energyData.B2b6.value = jsonData.B2b6;
+		this.energyData.B2b7.value = jsonData.B2b7;
+
+		this.energyData.B3b0.value = jsonData.B3b0;
+		this.energyData.B3b1.value = jsonData.B3b1;
+		this.energyData.B3b2.value = jsonData.B3b2;
+		this.energyData.B3b3.value = jsonData.B3b3;
+		this.energyData.B3b4.value = jsonData.B3b4;
+		this.energyData.B3b5.value = jsonData.B3b5;
+		this.energyData.B3b6.value = jsonData.B3b6;
+		this.energyData.B3b7.value = jsonData.B3b7;
+
+		this.energyData.B4b0.value = jsonData.B4b0;
+		this.energyData.B4b1.value = jsonData.B4b1;
+		this.energyData.B4b2.value = jsonData.B4b2;
+		this.energyData.B4b3.value = jsonData.B4b3;
+		this.energyData.B4b4.value = jsonData.B4b4;
+		this.energyData.B4b6.value = jsonData.B4b6;
+		this.energyData.B4b7.value = jsonData.B4b7;
+
+		this.energyData.B5b0.value = jsonData.B5b0;
+		this.energyData.B5b1.value = jsonData.B5b1;
+		this.energyData.B5b2.value = jsonData.B5b2;
+		this.energyData.B5b3.value = jsonData.B5b3;
+		this.energyData.B5b4.value = jsonData.B5b4;
+		this.energyData.B5b5.value = jsonData.B5b5;
+		this.energyData.B5b6.value = jsonData.B5b6;
+		this.energyData.B5b7.value = jsonData.B5b7;
+
+		this.energyData.B6b0.value = jsonData.B6b0;
+		this.energyData.B6b1.value = jsonData.B6b1;
+		this.energyData.B6b2.value = jsonData.B6b2;
+		this.energyData.B6b3.value = jsonData.B6b3;
+		this.energyData.B6b4.value = jsonData.B6b4;
+		this.energyData.B6b5.value = jsonData.B6b5;
+		this.energyData.B6b6.value = jsonData.B6b6;
+		this.energyData.B6b7.value = jsonData.B6b7;
+
+		this.energyData.B7b0.value = jsonData.B7b0;
+		this.energyData.B7b1.value = jsonData.B7b1;
+		this.energyData.B7b2.value = jsonData.B7b2;
+		this.energyData.B7b3.value = jsonData.B7b3;
+		this.energyData.B7b4.value = jsonData.B7b4;
+		this.energyData.B7b5.value = jsonData.B7b5;
+		this.energyData.B7b6.value = jsonData.B7b6;
+		this.energyData.B7b7.value = jsonData.B7b7;
+
+		this.energyData.B8b0.value = jsonData.B8b0;
+		this.energyData.B8b1.value = jsonData.B8b1;
+		this.energyData.B8b2.value = jsonData.B8b2;
+		this.energyData.B8b3.value = jsonData.B8b3;
+		this.energyData.B8b4.value = jsonData.B8b4;
+		this.energyData.B8b5.value = jsonData.B8b5;
+		this.energyData.B8b6.value = jsonData.B8b6;
+		this.energyData.B8b7.value = jsonData.B8b7;
+		// }
+		// if (jsonData.B9 != null) {
+		// const b9 = parseInt(jsonData.B9);
+		this.energyData.B9b0.value = jsonData.B9b0;
+		this.energyData.B9b1.value = jsonData.B9b1;
+		this.energyData.B9b2.value = jsonData.B9b2;
+		this.energyData.B9b3.value = jsonData.B9b3;
+		this.energyData.B9b4.value = jsonData.B9b4;
+		this.energyData.B9b5.value = jsonData.B9b5;
+		this.energyData.B9b6.value = jsonData.B9b6;
+		this.energyData.B9b7.value = jsonData.B9b7;
+		// }
+		// if (jsonData.B10 != null) {
+		// const b10 = parseInt(jsonData.B10);
+		this.energyData.B10b0.value = jsonData.B10b0;
+		this.energyData.B10b1.value = jsonData.B10b1;
+		// this.energyData.B10b2.value = jsonData.B10b2;
+		// this.energyData.B10b3.value = jsonData.B10b3;
+		// this.energyData.B10b4.value = jsonData.B10b4;
+		// this.energyData.B10b5.value = jsonData.B10b5;
+		// this.energyData.B10b6.value = jsonData.B10b6;
+		// this.energyData.B10b7.value = jsonData.B10b7;
+		// }
 		// 普通字段 B12, B14, B16, B18, B20, B22, B24, B26
-		if (jsonData.B12 != null) this.energyData.B12.value = jsonData.B12;
-		if (jsonData.B14 != null) this.energyData.B14.value = jsonData.B14;
-		if (jsonData.B16 != null) this.energyData.B16.value = jsonData.B16;
-		if (jsonData.B18 != null) this.energyData.B18.value = jsonData.B18;
-		if (jsonData.B20 != null) this.energyData.B20.value = jsonData.B20;
-		if (jsonData.B22 != null) this.energyData.B22.value = jsonData.B22;
-		if (jsonData.B24 != null) this.energyData.B24.value = jsonData.B24;
-		if (jsonData.B26 != null) this.energyData.B26.value = jsonData.B26;
+		this.energyData.B12.value = jsonData.B12;
+		console.log(jsonData.B12,"B12",this.energyData.B12.value,this.energyData.B12);
+		this.energyData.B14.value = jsonData.B14;
+		this.energyData.B16.value = jsonData.B16;
+		this.energyData.B18.value = jsonData.B18;
+		this.energyData.B20.value = jsonData.B20;
+		this.energyData.B22.value = jsonData.B22;
+		this.energyData.B24.value = jsonData.B24;
+		this.energyData.B26.value = jsonData.B26;
 		// 处理 B28 的位字段
-		if (jsonData.B28 != null) {
-			const b28 = parseInt(jsonData.B28);
-			this.energyData.B28b0.value = ((b28 >> 0) & 1) ? '是' : '否';
-			this.energyData.B28b1.value = ((b28 >> 1) & 1) ? '是' : '否';
-			this.energyData.B28b2.value = ((b28 >> 2) & 1) ? '是' : '否';
-			this.energyData.B28b3.value = ((b28 >> 3) & 1) ? '是' : '否';
-			this.energyData.B28b4.value = ((b28 >> 4) & 1) ? '是' : '否';
-			this.energyData.B28b5.value = ((b28 >> 5) & 1) ? '是' : '否';
-			this.energyData.B28b6.value = ((b28 >> 6) & 1) ? '是' : '否';
-			this.energyData.B28b7.value = ((b28 >> 7) & 1) ? '是' : '否';
-		}
+		// if (jsonData.B28 != null) {
+		// 	const b28 = parseInt(jsonData.B28);
+		this.energyData.B28b0.value = jsonData.B28b0;
+		this.energyData.B28b1.value = jsonData.B28b1;
+		this.energyData.B28b2.value = jsonData.B28b2;
+		this.energyData.B28b3.value = jsonData.B28b3;
+		this.energyData.B28b4.value = jsonData.B28b4;
+		this.energyData.B28b5.value = jsonData.B28b5;
+		this.energyData.B28b6.value = jsonData.B28b6;
+		this.energyData.B28b7.value = jsonData.B28b7;
+		// }
 		// 处理 B29 的位字段
-		if (jsonData.B29 != null) {
-			const b29 = parseInt(jsonData.B29);
-			this.energyData.B29b0.value = ((b29 >> 0) & 1) ? '是' : '否';
-		}
+		// if (jsonData.B29 != null) {
+		this.energyData.B29b0.value = jsonData.B29b0;
+		// }
 		// 处理 B30 的位字段
-		if (jsonData.B30 != null) {
-			const b30 = parseInt(jsonData.B30);
-			this.energyData.B30b0.value = ((b30 >> 0) & 1) ? '是' : '否';
-			this.energyData.B30b1.value = ((b30 >> 1) & 1) ? '是' : '否';
-			this.energyData.B30b2.value = ((b30 >> 2) & 1) ? '是' : '否';
-			this.energyData.B30b3.value = ((b30 >> 3) & 1) ? '是' : '否';
-			this.energyData.B30b4.value = ((b30 >> 4) & 1) ? '是' : '否';
-			this.energyData.B30b5.value = ((b30 >> 5) & 1) ? '是' : '否';
-			this.energyData.B30b6.value = ((b30 >> 6) & 1) ? '是' : '否';
-			this.energyData.B30b7.value = ((b30 >> 7) & 1) ? '是' : '否';
-		}
+		// if (jsonData.B30 != null) {
+		// 	const b30 = parseInt(jsonData.B30);
+		this.energyData.B30b0.value = jsonData.B30b0;
+		this.energyData.B30b1.value = jsonData.B30b1;
+		this.energyData.B30b2.value = jsonData.B30b2;
+		this.energyData.B30b3.value = jsonData.B30b3;
+		this.energyData.B30b4.value = jsonData.B30b4;
+		this.energyData.B30b5.value = jsonData.B30b5;
+		this.energyData.B30b6.value = jsonData.B30b6;
+		this.energyData.B30b7.value = jsonData.B30b7;
+		// }
 		// 普通字段 B32, B34, B36, B38, B40, B42, B44, B46, B48, B50, B52, B54, B56, B58, B60, B62, B64, B66, B68, B70, B72, B74, B76, B78, B80, B82, B84, B86, B88, B90, B92, B94, B96, B98, B100, B102, B104, B106, B108, B110, B112, B114, B116, B118, B120, B122, B124, B126, B128, B132, B136, B138, B140, B142, B144, B146, B148, B150, B152, B154
-		if (jsonData.B32 != null) this.energyData.B32.value = jsonData.B32;
-		if (jsonData.B34 != null) this.energyData.B34.value = jsonData.B34;
-		if (jsonData.B36 != null) this.energyData.B36.value = jsonData.B36;
-		if (jsonData.B38 != null) this.energyData.B38.value = jsonData.B38;
-		if (jsonData.B40 != null) this.energyData.B40.value = jsonData.B40;
-		if (jsonData.B42 != null) this.energyData.B42.value = jsonData.B42;
-		if (jsonData.B44 != null) this.energyData.B44.value = jsonData.B44;
-		if (jsonData.B46 != null) this.energyData.B46.value = jsonData.B46;
-		if (jsonData.B48 != null) this.energyData.B48.value = jsonData.B48;
-		if (jsonData.B50 != null) this.energyData.B50.value = jsonData.B50;
-		if (jsonData.B52 != null) this.energyData.B52.value = jsonData.B52;
-		if (jsonData.B54 != null) this.energyData.B54.value = jsonData.B54;
-		if (jsonData.B56 != null) this.energyData.B56.value = jsonData.B56;
-		if (jsonData.B58 != null) this.energyData.B58.value = jsonData.B58;
-		if (jsonData.B60 != null) this.energyData.B60.value = jsonData.B60;
-		if (jsonData.B62 != null) this.energyData.B62.value = jsonData.B62;
-		if (jsonData.B64 != null) this.energyData.B64.value = jsonData.B64;
-		if (jsonData.B66 != null) this.energyData.B66.value = jsonData.B66;
-		if (jsonData.B68 != null) this.energyData.B68.value = jsonData.B68;
-		if (jsonData.B70 != null) this.energyData.B70.value = jsonData.B70;
-		if (jsonData.B72 != null) this.energyData.B72.value = jsonData.B72;
-		if (jsonData.B74 != null) this.energyData.B74.value = jsonData.B74;
-		if (jsonData.B76 != null) this.energyData.B76.value = jsonData.B76;
-		if (jsonData.B78 != null) this.energyData.B78.value = jsonData.B78;
-		if (jsonData.B80 != null) this.energyData.B80.value = jsonData.B80;
-		if (jsonData.B82 != null) this.energyData.B82.value = jsonData.B82;
-		if (jsonData.B84 != null) this.energyData.B84.value = jsonData.B84;
-		if (jsonData.B86 != null) this.energyData.B86.value = jsonData.B86;
-		if (jsonData.B88 != null) this.energyData.B88.value = jsonData.B88;
-		if (jsonData.B90 != null) this.energyData.B90.value = jsonData.B90;
-		if (jsonData.B92 != null) this.energyData.B92.value = jsonData.B92;
-		if (jsonData.B94 != null) this.energyData.B94.value = jsonData.B94;
-		if (jsonData.B96 != null) this.energyData.B96.value = jsonData.B96;
-		if (jsonData.B98 != null) this.energyData.B98.value = jsonData.B98;
-		if (jsonData.B100 != null) this.energyData.B100.value = jsonData.B100;
-		if (jsonData.B102 != null) this.energyData.B102.value = jsonData.B102;
-		if (jsonData.B104 != null) this.energyData.B104.value = jsonData.B104;
-		if (jsonData.B106 != null) this.energyData.B106.value = jsonData.B106;
-		if (jsonData.B108 != null) this.energyData.B108.value = jsonData.B108;
-		if (jsonData.B110 != null) this.energyData.B110.value = jsonData.B110;
-		if (jsonData.B112 != null) this.energyData.B112.value = jsonData.B112;
-		if (jsonData.B114 != null) this.energyData.B114.value = jsonData.B114;
-		if (jsonData.B116 != null) this.energyData.B116.value = jsonData.B116;
-		if (jsonData.B118 != null) this.energyData.B118.value = jsonData.B118;
-		if (jsonData.B120 != null) this.energyData.B120.value = jsonData.B120;
-		if (jsonData.B122 != null) this.energyData.B122.value = jsonData.B122;
-		if (jsonData.B124 != null) this.energyData.B124.value = jsonData.B124;
-		if (jsonData.B126 != null) this.energyData.B126.value = jsonData.B126;
-		if (jsonData.B128 != null) this.energyData.B128.value = jsonData.B128;
-		if (jsonData.B132 != null) this.energyData.B132.value = jsonData.B132;
-		if (jsonData.B136 != null) this.energyData.B136.value = jsonData.B136;
-		if (jsonData.B138 != null) this.energyData.B138.value = jsonData.B138;
-		if (jsonData.B140 != null) this.energyData.B140.value = jsonData.B140;
-		if (jsonData.B142 != null) this.energyData.B142.value = jsonData.B142;
-		if (jsonData.B144 != null) this.energyData.B144.value = jsonData.B144;
-		if (jsonData.B146 != null) this.energyData.B146.value = jsonData.B146;
-		if (jsonData.B148 != null) this.energyData.B148.value = jsonData.B148;
-		if (jsonData.B150 != null) this.energyData.B150.value = jsonData.B150;
-		if (jsonData.B152 != null) this.energyData.B152.value = jsonData.B152;
-		if (jsonData.B154 != null) this.energyData.B154.value = jsonData.B154;
+		this.energyData.B32.value = jsonData.B32;
+		this.energyData.B34.value = jsonData.B34;
+		this.energyData.B36.value = jsonData.B36;
+		this.energyData.B38.value = jsonData.B38;
+		this.energyData.B40.value = jsonData.B40;
+		this.energyData.B42.value = jsonData.B42;
+		this.energyData.B44.value = jsonData.B44;
+		this.energyData.B46.value = jsonData.B46;
+		this.energyData.B48.value = jsonData.B48;
+		 this.energyData.B50.value = jsonData.B50;
+		this.energyData.B52.value = jsonData.B52;
+		this.energyData.B54.value = jsonData.B54;
+		this.energyData.B56.value = jsonData.B56;
+		this.energyData.B58.value = jsonData.B58;
+		this.energyData.B60.value = jsonData.B60;
+		this.energyData.B62.value = jsonData.B62;
+		this.energyData.B64.value = jsonData.B64;
+		this.energyData.B66.value = jsonData.B66;
+		this.energyData.B68.value = jsonData.B68;
+		 this.energyData.B70.value = jsonData.B70;
+		this.energyData.B72.value = jsonData.B72;
+		this.energyData.B74.value = jsonData.B74;
+		this.energyData.B76.value = jsonData.B76;
+		this.energyData.B78.value = jsonData.B78;
+		this.energyData.B80.value = jsonData.B80;
+		this.energyData.B82.value = jsonData.B82;
+		this.energyData.B84.value = jsonData.B84;
+		this.energyData.B86.value = jsonData.B86;
+		this.energyData.B88.value = jsonData.B88;
+		 this.energyData.B90.value = jsonData.B90;
+		this.energyData.B92.value = jsonData.B92;
+		this.energyData.B94.value = jsonData.B94;
+		this.energyData.B96.value = jsonData.B96;
+		this.energyData.B98.value = jsonData.B98;
+		this.energyData.B100.value = jsonData.B100;
+		this.energyData.B102.value = jsonData.B102;
+		this.energyData.B104.value = jsonData.B104;
+		this.energyData.B106.value = jsonData.B106;
+		this.energyData.B108.value = jsonData.B108;
+		 this.energyData.B110.value = jsonData.B110;
+		this.energyData.B112.value = jsonData.B112;
+		this.energyData.B114.value = jsonData.B114;
+		this.energyData.B116.value = jsonData.B116;
+		this.energyData.B118.value = jsonData.B118;
+		this.energyData.B120.value = jsonData.B120;
+		this.energyData.B122.value = jsonData.B122;
+		this.energyData.B124.value = jsonData.B124;
+		this.energyData.B126.value = jsonData.B126;
+		this.energyData.B128.value = jsonData.B128;
+		this.energyData.B132.value = jsonData.B132;
+		this.energyData.B136.value = jsonData.B136;
+		this.energyData.B138.value = jsonData.B138;
+		this.energyData.B140.value = jsonData.B140;
+		this.energyData.B142.value = jsonData.B142;
+		this.energyData.B144.value = jsonData.B144;
+		this.energyData.B146.value = jsonData.B146;
+		this.energyData.B148.value = jsonData.B148;
+		this.energyData.B150.value = jsonData.B150;
+		this.energyData.B152.value = jsonData.B152;
+		this.energyData.B154.value = jsonData.B154;
 		// 处理 B156 的位字段
-		if (jsonData.B156 != null) {
-			const b156 = parseInt(jsonData.B156);
-			this.energyData.B156b0.value = ((b156 >> 0) & 1) ? '是' : '否';
-			this.energyData.B156b1.value = ((b156 >> 1) & 1) ? '是' : '否';
-			this.energyData.B156b2.value = ((b156 >> 2) & 1) ? '是' : '否';
-			this.energyData.B156b3.value = ((b156 >> 3) & 1) ? '是' : '否';
-			this.energyData.B156b4.value = ((b156 >> 4) & 1) ? '是' : '否';
-		}
+		// if (jsonData.B156 != null) {
+		// 	const b156 = parseInt(jsonData.B156);
+		this.energyData.B156b0.value = jsonData.B156b0;
+		this.energyData.B156b1.value = jsonData.B156b1;
+		this.energyData.B156b2.value = jsonData.B156b2;
+		this.energyData.B156b3.value = jsonData.B156b3;
+		this.energyData.B156b4.value = jsonData.B156b4;
+
+
+			this.energyData.B158.value = jsonData.B158;
+	this.energyData.B160.value = jsonData.B160;
+	this.energyData.B162.value = jsonData.B162;
+	this.energyData.B164.value = jsonData.B164;
+	this.energyData.B166.value = jsonData.B166;
+	this.energyData.B168.value = jsonData.B168;	
+	this.energyData.B170.value = jsonData.B170;
+	this.energyData.B172.value = jsonData.B172;
+	this.energyData.B174.value = jsonData.B174;
+	this.energyData.B176.value = jsonData.B176;
+	this.energyData.B178.value = jsonData.B178;
+	this.energyData.B180.value = jsonData.B180;
+	this.energyData.B182.value = jsonData.B182;
+	this.energyData.B184.value = jsonData.B184;
+	this.energyData.B186.value = jsonData.B186;
+	this.energyData.B184.value = jsonData.B184;
+	this.energyData.B186.value = jsonData.B186;
+	this.energyData.B188.value = jsonData.B188;
+	this.energyData.B190.value = jsonData.B190;
+	this.energyData.B192.value = jsonData.B192;
+	this.energyData.B196.value = jsonData.B196;
+	this.energyData.B200.value = jsonData.B200;
+	this.energyData.B202.value = jsonData.B202;
+	this.energyData.B204.value = jsonData.B204;
+	this.energyData.B206.value = jsonData.B206;
+	this.energyData.B208.value = jsonData.B208;
+	this.energyData.B210.value = jsonData.B210;
+		// }
 	}
 
 	// 处理状态数据【按模板规范置空，无有效字段，仅保留基础结构】
@@ -375,12 +385,12 @@ export class Model171C extends DeviceBase {
 
 	// 工具方法：带单位的HTML文本（完全对齐PCS模板）
 	setHtmlText(unit) {
-		return  Math.random()+ `<span style='font-size:.8rem'>  ${unit}</span>`
+		return Math.random() + `<span style='font-size:.8rem'>  ${unit}</span>`
 	}
 
 	// 工具方法：数值固定2位小数（完全对齐PCS模板）
 	toFixed(data) {
-		return parseFloat(data) ? parseFloat(data).toFixed(2) : (Math.random()*100).toFixed(2)
+		return parseFloat(data) ? parseFloat(data).toFixed(2) : (Math.random() * 100).toFixed(2)
 	}
 
 	// 工具方法：通信状态转换（与PCS模板结构完全一致）
@@ -671,10 +681,10 @@ export class EnergyData {
 	B206 = { name: '主控采集 NTC 温度 4', value: "--" };
 	B208 = { name: '通讯协议版本号主版本', value: "--" };
 	B210 = { name: '通讯协议版本号子版本', value: "--" };
-	
 
 
-	
+
+
 
 
 }
@@ -711,7 +721,7 @@ export class StateData {
 	B48 = { name: '预留故障信息', value: "--" };
 	B50 = { name: '预留故障信息', value: "--" };
 	B52 = { name: '预留故障信息', value: "--" };
-	B54 = { name: '预留故障信息', value: "--" };	
+	B54 = { name: '预留故障信息', value: "--" };
 	B56 = { name: '预留故障信息', value: "--" };
 	B58 = { name: '预留故障信息', value: "--" };
 	B60 = { name: '当前故障 2-故障码', value: "--" };
@@ -767,7 +777,7 @@ export class StateData {
 	B152 = { name: '故障信息 16-日', value: "--" };
 	B153 = { name: '故障信息 16-时', value: "--" };
 	B154 = { name: '故障信息 17-分', value: "--" };
-	B155 = { name: '故障信息 17-秒', value: "--" };	
+	B155 = { name: '故障信息 17-秒', value: "--" };
 	B156 = { name: '预留故障信息', value: "--" };
 	B158 = { name: '预留故障信息', value: "--" };
 	B160 = { name: '预留故障信息', value: "--" };
@@ -780,15 +790,21 @@ export class StateData {
 	B174 = { name: '预留故障信息', value: "--" };
 	B176 = { name: '预留故障信息', value: "--" };
 	B178 = { name: '预留故障信息', value: "--" };
-	
 
 
 
 
-	
-	
 
 
 
+
+
+
+}
+
+export class ControlData {
+	constructor() {
+		this.B128 = { name: '电池簇 SOC', value: "--" };
+	}
 }
 

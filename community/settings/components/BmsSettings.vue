@@ -127,7 +127,7 @@ export default {
   },
   data() {
     return {
-      idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
+      idCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
       deviceAddress: '04',
       isEditing: false,
       editingParam: '',
@@ -549,7 +549,7 @@ export default {
             addr: this.deviceAddress,
             deviceId: '1',
             registerAddress: registerAddress,
-            registerValue: registerValue.toString().padStart(8, '0'),
+            registerValue: registerValue.toString(),
             valueType: '01',
             registerType: '03',
             extra1: '00',

@@ -81,7 +81,6 @@
         
         <!-- 表格头部 -->
         <view class="time-table-header">
-          <view class="th-checkbox"></view>
           <view class="th-name">时段</view>
           <view class="th-time">起始</view>
           <view class="th-time">结束</view>
@@ -93,10 +92,7 @@
         <!-- 时段列表 -->
         <view class="time-table-body">
           <view class="time-row" v-for="(slot, index) in timeSlots" :key="index">
-            <view class="td-checkbox">
-              <view class="checkbox" :class="{ checked: slot.enabled }" @click="toggleSlot(index)"></view>
-            </view>
-            <view class="td-name">时段{{ index + 1 }}</view>
+            <view class="td-name">时段{{ slot.timeType }}</view>
             <view class="td-time">
               <input 
                 type="text" 
@@ -208,6 +204,8 @@
 </template>
 
 <script>
+import request from '@/utils/request.js'
+
 export default {
   data() {
     return {
@@ -218,81 +216,96 @@ export default {
       currentSlotIndex: -1,
       tempAction: '',
       weekDays: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+      // 模式到策略类型的映射
+      modeToStrategyType: {
+        peakValley: 1,
+        flexControl: 2,
+        aiStrategy: 3,
+        selfUse: 4,
+        dischargeFirst: 5,
+        peakShaving: 6,
+        sellFirst: 7,
+        limitLoad: 8,
+        zeroExport: 9
+      },
       modeData: {
         peakValley: {
           selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
           timeSlots: [
-            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
-            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
-            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+            { timeType: 1, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { timeType: 2, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { timeType: 3, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
           ]
         },
         flexControl: {
           selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
           timeSlots: [
-            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
-            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
-            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+            { timeType: 1, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { timeType: 2, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { timeType: 3, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
           ]
         },
         aiStrategy: {
           selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
           timeSlots: [
-            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
-            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
-            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+            { timeType: 1, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { timeType: 2, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { timeType: 3, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
           ]
         },
         selfUse: {
           selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
           timeSlots: [
-            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
-            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
-            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+            { timeType: 1, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { timeType: 2, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { timeType: 3, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
           ]
         },
         dischargeFirst: {
           selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
           timeSlots: [
-            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
-            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
-            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+            { timeType: 1, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { timeType: 2, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { timeType: 3, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
           ]
         },
         peakShaving: {
           selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
           timeSlots: [
-            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
-            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
-            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+            { timeType: 1, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { timeType: 2, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { timeType: 3, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
           ]
         },
         sellFirst: {
           selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
           timeSlots: [
-            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
-            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
-            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+            { timeType: 1, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { timeType: 2, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { timeType: 3, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
           ]
         },
         limitLoad: {
           selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
           timeSlots: [
-            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
-            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
-            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+            { timeType: 1, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { timeType: 2, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { timeType: 3, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
           ]
         },
         zeroExport: {
           selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
           timeSlots: [
-            { enabled: true, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
-            { enabled: false, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
-            { enabled: false, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
+            { timeType: 1, startTime: '08:00', endTime: '10:00', action: 'charge', power: '13.00' },
+            { timeType: 2, startTime: '10:00', endTime: '20:00', action: 'discharge', power: '25.00' },
+            { timeType: 3, startTime: '20:00', endTime: '00:00', action: 'charge', power: '100.00' }
           ]
         }
       }
     }
+  },
+  mounted() {
+    this.loadStrategyConfig()
   },
   computed: {
     selectedWeekDays() {
@@ -328,8 +341,9 @@ export default {
       }
     },
     addTimeSlot() {
+      const newTimeType = this.timeSlots.length + 1
       this.timeSlots.push({
-        enabled: false,
+        timeType: newTimeType,
         startTime: '',
         endTime: '',
         action: 'charge',
@@ -339,8 +353,9 @@ export default {
     deleteTimeSlot(index) {
       this.timeSlots.splice(index, 1)
     },
+    // 移除了 enabled 字段，该方法已不再需要
     toggleSlot(index) {
-      this.timeSlots[index].enabled = !this.timeSlots[index].enabled
+      // 预留方法，可根据需求扩展
     },
     showActionPicker(index) {
       this.currentSlotIndex = index
@@ -365,7 +380,88 @@ export default {
     },
     confirmSave() {
       this.showConfirmDialog = false
-      uni.showToast({ title: '保存成功', icon: 'success' })
+      this.saveStrategyConfig()
+    },
+    // 加载策略配置
+    async loadStrategyConfig() {
+      try {
+        const areaLevelId = this.$store.state.areaInfoId || 940
+        const response = await request({
+          url: '/api/energyStation/upsertEsStrategyConfig',
+          method: 'GET',
+          params: { areaLevelId }
+        })
+        if (response.status === 200 && response.data) {
+          this.parseStrategyConfig(response.data)
+        }
+      } catch (error) {
+        console.error('加载策略配置失败:', error)
+      }
+    },
+    // 解析策略配置
+    parseStrategyConfig(data) {
+      if (data.strategyTypes && data.strategyTypes.length > 0) {
+        const firstStrategy = data.strategyTypes[0]
+        // 根据策略类型设置当前模式
+        const strategyType = firstStrategy.strategyType
+        for (const [mode, type] of Object.entries(this.modeToStrategyType)) {
+          if (type === strategyType) {
+            this.activeMode = mode
+            break
+          }
+        }
+        // 设置星期
+        if (firstStrategy.daysOfWeek) {
+          const days = firstStrategy.daysOfWeek.split(',').map(Number)
+          this.modeData[this.activeMode].selectedWeekDays = days.map(d => d - 1) // 转换为0-based索引
+        }
+        // 设置时间配置
+        if (firstStrategy.timeConfigs) {
+          this.modeData[this.activeMode].timeSlots = firstStrategy.timeConfigs.map(config => ({
+            timeType: config.timeType,
+            startTime: config.startTime,
+            endTime: config.endTime,
+            action: config.action === 1 ? 'charge' : 'discharge',
+            power: String(config.power)
+          }))
+        }
+      }
+    },
+    // 保存策略配置
+    async saveStrategyConfig() {
+      try {
+
+        console.log(this.$store.state,"99999999999999")
+        
+        // 构建请求数据
+        const requestData = {
+          areaLevelId: this.$store.state.areaInfoId || 940,
+          strategyType: this.modeToStrategyType[this.activeMode],
+          DaysOfWeek: this.selectedWeekDays.map(d => d + 1).join(','), // 转换为1-based索引
+          timeConfigs: this.timeSlots.map(slot => ({
+            timeType: slot.timeType,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            action: slot.action === 'charge' ? 1 : 2,
+            power: parseFloat(slot.power) || 0
+          }))
+        }
+
+        const response = await request({
+          url: '/api/energyStation/upsertEsStrategyConfig',
+          method: 'POST',
+          data: requestData
+        })
+
+        if (response.status === 200) {
+          uni.showToast({ title: '保存成功', icon: 'success' })
+        } else {
+          uni.showToast({ title: '保存失败', icon: 'error' })
+        }
+      } catch (error) {
+        console.error('保存策略配置失败:', error)
+        uni.showToast({ title: '保存失败', icon: 'error' })
+      }
     }
   }
 }
@@ -483,112 +579,99 @@ export default {
 .time-table-header {
   display: flex;
   align-items: center;
-  padding: 20rpx 0;
-  border-bottom: 1rpx solid #f0f0f0;
+  padding: 24rpx 16rpx;
+  border-bottom: 2rpx solid #e8e8e8;
   font-size: 26rpx;
-  color: #999;
-}
-
-.th-checkbox {
-  width: 60rpx;
+  color: #666;
+  font-weight: 500;
+  background-color: #fafbfc;
+  border-radius: 12rpx 12rpx 0 0;
 }
 
 .th-name {
-  width: 80rpx;
+  flex: 0 0 90rpx;
   text-align: center;
 }
 
 .th-time {
-  width: 120rpx;
+  flex: 1;
   text-align: center;
+  min-width: 0;
 }
 
 .th-action {
-  width: 100rpx;
+  flex: 0 0 130rpx;
   text-align: center;
 }
 
 .th-power {
-  width: 100rpx;
+  flex: 0 0 130rpx;
   text-align: center;
 }
 
 .th-delete {
-  width: 80rpx;
+  flex: 0 0 90rpx;
   text-align: center;
 }
 
 /* 表格内容 */
 .time-table-body {
-  margin-top: 10rpx;
+  margin-top: 4rpx;
+  background-color: #fff;
+  border-radius: 0 0 12rpx 12rpx;
 }
 
 .time-row {
   display: flex;
   align-items: center;
-  padding: 20rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
+  padding: 20rpx 16rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.time-row:hover {
+  background-color: #fafbfc;
 }
 
 .time-row:last-child {
   border-bottom: none;
 }
 
-.td-checkbox {
-  width: 60rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.checkbox {
-  width: 36rpx;
-  height: 36rpx;
-  border: 2rpx solid #dcdfe6;
-  border-radius: 6rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #fff;
-}
-
-.checkbox.checked {
-  background-color: #1890ff;
-  border-color: #1890ff;
-}
-
-.checkbox.checked::after {
-  content: '✓';
-  color: #fff;
-  font-size: 24rpx;
-  font-weight: bold;
-}
-
 .td-name {
-  width: 80rpx;
+  flex: 0 0 90rpx;
   text-align: center;
   font-size: 28rpx;
   color: #333;
+  font-weight: 500;
 }
 
 .td-time {
-  width: 120rpx;
-  padding: 0 5rpx;
+  flex: 1;
+  padding: 0 6rpx;
+  min-width: 0;
 }
 
 .time-input {
   width: 100%;
-  height: 64rpx;
-  line-height: 64rpx;
+  height: 60rpx;
+  line-height: 60rpx;
   text-align: center;
   background-color: #f5f7fa;
   border-radius: 8rpx;
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: #333;
+  border: 1rpx solid transparent;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.time-input:focus {
+  background-color: #fff;
+  border-color: #1890ff;
 }
 
 .td-action {
-  width: 100rpx;
+  flex: 0 0 130rpx;
   display: flex;
   justify-content: center;
 }
@@ -596,14 +679,18 @@ export default {
 .action-select {
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  padding: 8rpx 16rpx;
+  justify-content: center;
+  gap: 6rpx;
+  padding: 8rpx 12rpx;
   background-color: #f5f7fa;
   border-radius: 8rpx;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .action-text {
-  font-size: 28rpx;
+  font-size: 26rpx;
+  font-weight: 500;
 }
 
 .action-text.charge {
@@ -615,38 +702,51 @@ export default {
 }
 
 .arrow-down {
-  font-size: 20rpx;
+  font-size: 18rpx;
   color: #999;
 }
 
 .td-power {
-  width: 100rpx;
-  padding: 0 5rpx;
+  flex: 0 0 130rpx;
+  padding: 0 6rpx;
 }
 
 .power-input {
   width: 100%;
-  height: 64rpx;
-  line-height: 64rpx;
+  height: 60rpx;
+  line-height: 60rpx;
   text-align: center;
   background-color: #f5f7fa;
   border-radius: 8rpx;
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: #333;
+  border: 1rpx solid transparent;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.power-input:focus {
+  background-color: #fff;
+  border-color: #1890ff;
 }
 
 .td-delete {
-  width: 100rpx;
+  flex: 0 0 90rpx;
   display: flex;
   justify-content: center;
 }
 
 .delete-btn {
   padding: 8rpx 16rpx;
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: #ff4d4f;
   background-color: #fff2f0;
-  border-radius: 8rpx;
+  border-radius: 6rpx;
+  transition: all 0.2s;
+}
+
+.delete-btn:active {
+  background-color: #ffccc7;
 }
 
 /* 保存按钮 */

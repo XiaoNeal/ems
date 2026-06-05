@@ -1,13 +1,44 @@
 import DeviceBase from "./device-base.model"
 
 // 主类：171E光伏DC设备Model
-export  class Model171E extends DeviceBase {
+export class Model171E extends DeviceBase {
     constructor() {
         super();
         // 初始化四个数据分类
         this.energyData = new EnergyData();
         this.stateData = new StateData();
         this.controlData = new ControlData();
+    }
+
+
+    // 处理能源数据（完全对齐1707格式，协议全量字段）
+    getEnergyData(jsonData, jsonData2) {
+
+
+
+        this.energyData.B0.value = jsonData.B0
+        this.energyData.B4.value = jsonData.B4
+        this.energyData.B8.value = jsonData.B8
+        this.energyData.B12.value = jsonData.B12
+        this.energyData.B16.value = jsonData.B16
+        this.energyData.B20.value = jsonData.B20
+        this.energyData.B24.value = jsonData.B24
+        this.energyData.B28.value = jsonData.B28
+        this.energyData.B32.value = jsonData.B32
+        this.energyData.B36.value = jsonData.B36
+        this.energyData.B40.value = jsonData.B40
+        this.energyData.B44.value = jsonData.B44
+        this.energyData.B48.value = jsonData.B48
+        this.energyData.B52.value = jsonData.B52
+        this.energyData.B56.value = jsonData.B56
+        this.energyData.B60.value = jsonData.B60
+        this.energyData.B64.value = jsonData.B64;
+        this.energyData.B68.value = jsonData.B68;
+        this.energyData.B72.value = jsonData.B72;
+        this.energyData.B76.value = jsonData.B76;
+        this.energyData.B80.value = jsonData.B80;
+        this.energyData.B84.value = jsonData.B84;
+        this.energyData.B88.value = jsonData.B88;
     }
 
 
@@ -116,29 +147,29 @@ class EnergyData {
             this[`B${i}`] = null;
         }
         // 核心字段重命名，匹配协议
-        this.B0 = '模块电压';
-        this.B4 = '模块电流';
-        this.B8 = ' 模块限流点';
-        this.B12 = '模块DC板温度';
-        this.B16 = '模块输入相电压（直流输入电压）';
-        this.B20 = ' 模块PFC0 电压（正半母线）';
-        this.B24 = '模块PFC1 电压（负半母线）';
-        this.B28 = '模块面板（环境）温度';
-        this.B32 = '模块交流A相电压';
-        this.B36 = '模块交流B相电压';
-        this.B40 = '模块交流 C 相电压';
-        this.B44 = '模块 PFC 板温度';
-        this.B48 = '模块额定输出功率';
-        this.B52 = '模块额定输出电流';
-        this.B56 = '读取当前告警/状态';
-        this.B60 = '读取组号和拨码地址';
-        this.B64 = '读取输入功率';
-        this.B68 = '读取当前设定的海拔值';
-        this.B72 = '读取当前模块输入工作模式';
-        this.B76 = '读节点 SearialNo 号低位（ID 号）';
-        this.B80 = '读节点 SearialNo 号高位';
-        this.B84 = '读 DCDC 版本号';
-        this.B88 = '读 PFC 版本号';
+        this.B0 = { name: '模块电压', value: "--" };
+        this.B4 = { name: '模块电流', value: "--" };
+        this.B8 = { name: '模块限流点', value: "--" };
+        this.B12 = { name: '模块DC板温度', value: "--" };
+        this.B16 = { name: '模块输入相电压（直流输入电压）', value: "--" };
+        this.B20 = { name: '模块PFC0 电压（正半母线）', value: "--" };
+        this.B24 = { name: '模块PFC1 电压（负半母线）', value: "--" };
+        this.B28 = { name: '模块面板（环境）温度', value: "--" };
+        this.B32 = { name: '模块交流A相电压', value: "--" };
+        this.B36 = { name: '模块交流B相电压', value: "--" };
+        this.B40 = { name: '模块交流 C 相电压', value: "--" };
+        this.B44 = { name: '模块 PFC 板温度', value: "--" };
+        this.B48 = { name: '模块额定输出功率', value: "--" };
+        this.B52 = { name: '模块额定输出电流', value: "--" };
+        this.B56 = { name: '读取当前告警/状态', value: "--" };
+        this.B60 = { name: '读取组号和拨码地址', value: "--" };
+        this.B64 = { name: '读取输入功率', value: "--" };
+        this.B68 = { name: '读取当前设定的海拔值', value: "--" };
+        this.B72 = { name: '读取当前模块输入工作模式', value: "--" };
+        this.B76 = { name: '读节点 SearialNo 号低位（ID 号）', value: "--" };
+        this.B80 = { name: '读节点 SearialNo 号高位', value: "--" };
+        this.B84 = { name: '读 DCDC 版本号', value: "--" };
+        this.B88 = { name: '读 PFC 版本号', value: "--" };
     }
 }
 
@@ -157,18 +188,18 @@ class ControlData {
             this[`B${i}`] = null;
         }
         // 核心字段重命名，匹配协议
-        this.B0 = '设置模块工作海拔值';
-        this.B4 = '设置模块输出电流值';
-        this.B8 = '设置组号';
-        this.B12 = '设置模块地址分配方式';
-        this.B16 = '设置模块输出功率';
-        this.B20 = '设置模块输出电压';
-        this.B24 = '设置模块限流点';
-        this.B28 = '设置模块输出电压上限值';
-        this.B32 = '开关机';
-        this.B36 = '设置模块过压复位';
-        this.B40 = '设置模块输出过压保护关联是否允许';
-        this.B44 = '设置模块短路复位';
-        this.B48 = '设置模块输入模式';
+        this.B0 = { name: '设置模块工作海拔值', value: "--" };
+        this.B4 = { name: '设置模块输出电流值', value: "--" };
+        this.B8 = { name: '设置组号', value: "--" };
+        this.B12 = { name: '设置模块地址分配方式', value: "--" };
+        this.B16 = { name: '设置模块输出功率', value: "--" };
+        this.B20 = { name: '设置模块输出电压', value: "--" };
+        this.B24 = { name: '设置模块限流点', value: "--" };
+        this.B28 = { name: '设置模块输出电压上限值', value: "--" };
+        this.B32 = { name: '开关机', value: "--" };
+        this.B36 = { name: '设置模块过压复位', value: "--" };
+        this.B40 = { name: '设置模块输出过压保护关联是否允许', value: "--" };
+        this.B44 = { name: '设置模块短路复位', value: "--" };
+        this.B48 = { name: '设置模块输入模式', value: "--" };
     }
 }

@@ -61,13 +61,13 @@ class ControlData {
             this[`B${i}`] = null;
         }
         // 核心字段重命名，匹配协议
-        this.B0 = 'PCS一键开机';
-        this.B2 = '光伏DC开机';
-        this.B4 = '储能DC开关机';
-        this.B6 = '储能充放电选择';
-        this.B8 = '充放电总功率';
-        this.B10 = '预留';
-        this.B11 = '预留';
+        this.B0 = { name: 'PCS一键开机', value: "--" };
+        this.B2 = { name: '光伏DC开机', value: "--" };
+        this.B4 = { name: '储能DC开关机', value: "--" };
+        this.B6 = { name: '储能充放电选择', value: "--" };
+        this.B8 = { name: '充放电总功率', value: "--" };
+        this.B10 = { name: '预留', value: "--" };
+        this.B11 = { name: '预留', value: "--" };
         this.B12 = '启动按钮';
         this.B14 = '运行策略';
         this.B16 = '电池优先策略的目标SOC值';

@@ -19,8 +19,8 @@ export class Model171D extends DeviceBase {
 
 		// 能源数据字段赋值（带单位，完全对齐1707格式）
 		this.energyData.B0.value = jsonData.B0;
-		this.energyData.B2.value = this.setSystemWorkStatus(jsonData.B2);
-		this.energyData.B4.value = this.setBatteryWorkStatus(jsonData.B4);
+		this.energyData.B2.value = jsonData.B2;
+		this.energyData.B4.value = jsonData.B4;
 		this.energyData.B6.value = jsonData.B6;
 		this.energyData.B8.value = jsonData.B8;
 		this.energyData.B10.value = jsonData.B10;
@@ -29,15 +29,15 @@ export class Model171D extends DeviceBase {
 		this.energyData.B16.value = jsonData.B16;
 		this.energyData.B18.value = jsonData.B18;
 		this.energyData.B20.value = jsonData.B20;
-		this.energyData.B22.value = jsonData.B22.toFixed(2) + this.setHtmlText('0.1V');
-		this.energyData.B24.value = jsonData.B24.toFixed(2) + this.setHtmlText('0.1A');
-		this.energyData.B26.value = jsonData.B26.toFixed(2) + this.setHtmlText('0.1V');
-		this.energyData.B28.value = jsonData.B28.toFixed(2) + this.setHtmlText('0.1A');
-		this.energyData.B30.value = jsonData.B30.toFixed(2) + this.setHtmlText('0.1W');
-		this.energyData.B32.value = jsonData.B32.toFixed(2) + this.setHtmlText('0.1W');
-		this.energyData.B34.value = jsonData.B34.toFixed(2) + this.setHtmlText('0.1℃');
-		this.energyData.B36.value = jsonData.B36.toFixed(2) + this.setHtmlText('0.1℃');
-		this.energyData.B38.value = jsonData.B38.toFixed(2) + this.setHtmlText('0.1℃');
+		this.energyData.B22.value = jsonData.B22;
+		this.energyData.B24.value = jsonData.B24;
+		this.energyData.B26.value = jsonData.B26;
+		this.energyData.B28.value = jsonData.B28;
+		this.energyData.B30.value = jsonData.B30;
+		this.energyData.B32.value = jsonData.B32;
+		this.energyData.B34.value = jsonData.B34;
+		this.energyData.B36.value = jsonData.B36;
+		this.energyData.B38.value = jsonData.B38;
 		this.energyData.B40.value = jsonData.B40;
 		this.energyData.B42.value = jsonData.B42;
 		this.energyData.B44.value = jsonData.B44;
@@ -81,12 +81,12 @@ export class Model171D extends DeviceBase {
 
 	// 工具方法：带单位的HTML文本（完全对齐1707原生格式）
 	setHtmlText(unit) {
-		return  Math.random()+ `<span style='font-size:.8rem'>  ${unit}</span>`
+		return Math.random() + `<span style='font-size:.8rem'>  ${unit}</span>`
 	}
 
 	// 工具方法：数值固定2位小数（完全对齐1707原生格式）
 	toFixed(data) {
-		return parseFloat(data) ? parseFloat(data).toFixed(2) : (Math.random()*100).toFixed(2)
+		return parseFloat(data) ? parseFloat(data).toFixed(2) : (Math.random() * 100).toFixed(2)
 	}
 
 	// 工具方法：通信状态转换（与协议完全一致）
@@ -194,27 +194,26 @@ export class EnergyData {
 			};
 		}
 		// 核心字段重命名，匹配协议
-		this.B0.name = 'DCDC故障区标志';
-		this.B2.name = '系统工作状态';
-		this.B4.name = '电池工作状态';
-
-		this.B6.name = '电池充电状态';
-		this.B8.name = '电池电压';
-		this.B10.name = '电池电流';
-		this.B12.name = '充电功率';
-		this.B14.name = '放电功率';
-		this.B16.name = 'BUS母线电压';
-		this.B18.name = 'BUS+母线电压';
-		this.B20.name = 'BUS-母线电压';
-		this.B22.name = '环境温度';
-		this.B24.name = '放电量';
-		this.B32.name = 'DCDC 固件版本';
-		this.B34.name = 'DCDC软件版本';
-		this.B36.name = 'DCDC告警字0';
-		this.B38.name = 'DCDC告警字1';
-		this.B40.name = 'DCDC告警字2';
-		this.B42.name = 'DCDC告警字3';
-		this.B44.name = 'DCDC告警字4';
+		this.B0 = { name: 'DCDC故障区标志', value: "--" };
+		this.B2 = { name: '系统工作状态', value: "--" };
+		this.B4 = { name: '电池工作状态', value: "--" };
+		this.B6 = { name: '电池充电状态', value: "--" };
+		this.B8 = { name: '电池电压', value: "--" };
+		this.B10 = { name: '电池电流', value: "--" };
+		this.B12 = { name: '充电功率', value: "--" };
+		this.B14 = { name: '放电功率', value: "--" };
+		this.B16 = { name: 'BUS母线电压', value: "--" };
+		this.B18 = { name: 'BUS+母线电压', value: "--" };
+		this.B20 = { name: 'BUS-母线电压', value: "--" };
+		this.B22 = { name: '环境温度', value: "--" };
+		this.B24 = { name: '放电量', value: "--" };
+		this.B32 = { name: 'DCDC 固件版本', value: "--" };
+		this.B34 = { name: 'DCDC软件版本', value: "--" };
+		this.B36 = { name: 'DCDC告警字0', value: "--" };
+		this.B38 = { name: 'DCDC告警字1', value: "--" };
+		this.B40 = { name: 'DCDC告警字2', value: "--" };
+		this.B42 = { name: 'DCDC告警字3', value: "--" };
+		this.B44 = { name: 'DCDC告警字4', value: "--" };
 	}
 }
 
@@ -259,9 +258,9 @@ export class ControlData {
 		this.B44.name = '电池激活功能';
 		this.B46.name = '自动重启功能';
 		this.B48.name = '充电母线电压上限';
-		this.B50.name = '放电母线电压下限';
-		this.B53b0.name = 'CAN通讯使能位';
-		this.B53b1.name = '485通讯使能位';
-	
+		// this.B50.name = '放电母线电压下限';
+		// this.B53b0.name = 'CAN通讯使能位';
+		// this.B53b1.name = '485通讯使能位';
+
 	}
 }

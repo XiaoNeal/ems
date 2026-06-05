@@ -12,7 +12,7 @@
           </view>
         </view>
       </view>
-      
+
       <!-- 开关型参数 -->
       <view class="switch-section">
         <view v-for="param in storageSwitchParams" :key="param.key" class="param-row">
@@ -22,18 +22,12 @@
           </view>
           <view class="switch-btns-wrapper">
             <view class="switch-btns">
-              <view 
-                v-for="option in param.options" 
-                :key="option.value" 
-                class="switch-btn"
-                :class="[
-                  getParamValue(param.key) === option.value ? 'btn-active' : '', 
-                  !isEditing ? 'btn-disabled' : '',
-                  clickedButton === param.key + '-' + option.value ? 'btn-clicked' : '',
-                  isDangerousOption(option) ? 'btn-danger' : ''
-                ]"
-                @click="handleSwitchClick(param, option)"
-              >
+              <view v-for="option in param.options" :key="option.value" class="switch-btn" :class="[
+                getParamValue(param.key) === option.value ? 'btn-active' : '',
+                !isEditing ? 'btn-disabled' : '',
+                clickedButton === param.key + '-' + option.value ? 'btn-clicked' : '',
+                isDangerousOption(option) ? 'btn-danger' : ''
+              ]" @click="handleSwitchClick(param, option)">
                 {{ option.label }}
               </view>
             </view>
@@ -44,7 +38,8 @@
       <!-- 数值型参数 -->
       <view class="divider"></view>
       <view class="param-list">
-        <view v-for="param in storageParams" :key="param.key" class="param-row" :class="{ 'editing-row': editingParam === param.key }">
+        <view v-for="param in storageParams" :key="param.key" class="param-row"
+          :class="{ 'editing-row': editingParam === param.key }">
           <view class="param-info">
             <text class="param-name">{{ param.label }}</text>
             <text v-if="param.min !== undefined && param.max !== undefined" class="param-range">
@@ -55,8 +50,8 @@
             <view class="param-right">
               <view class="param-value-box" :class="{ editing: editingParam === param.key }">
                 <text v-if="editingParam !== param.key" class="val-text">{{ formatParamValue(param) }}</text>
-                <input v-else class="val-input" type="digit" v-model="tempValue" :min="param.min"
-                  :max="param.max" placeholder="请输入" focus @blur="handleInputBlur(param)" @confirm="handleInputConfirm(param)" />
+                <input v-else class="val-input" type="digit" v-model="tempValue" :min="param.min" :max="param.max"
+                  placeholder="请输入" focus @blur="handleInputBlur(param)" @confirm="handleInputConfirm(param)" />
               </view>
               <text class="unit-text">{{ param.unit || '' }}</text>
             </view>
@@ -108,7 +103,8 @@
 
     <!-- 操作结果提示 -->
     <view v-if="operationLog.visible" class="operation-toast" :class="operationLog.type">
-      <uni-icons :type="operationLog.type === 'success' ? 'checkmarkempty' : 'closeempty'" size="20" :color="operationLog.type === 'success' ? '#52c41a' : '#ff4d4f'"></uni-icons>
+      <uni-icons :type="operationLog.type === 'success' ? 'checkmarkempty' : 'closeempty'" size="20"
+        :color="operationLog.type === 'success' ? '#52c41a' : '#ff4d4f'"></uni-icons>
       <text class="toast-text">{{ operationLog.message }}</text>
     </view>
   </view>
@@ -127,7 +123,7 @@ export default {
   },
   data() {
     return {
-      idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
+      idCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
       deviceAddress: '02',
       isEditing: false,
       clickedButton: '',
@@ -154,87 +150,118 @@ export default {
         timer: null
       },
       storageParams: [
-        { key: 'storage.B16', field: 'B16', label: '组ID号', unit: '', min: 1, max: 31, default: 1 },
-        { key: 'storage.B18', field: 'B18', label: '模块数量', unit: '', min: 1, max: 31, default: 1 },
-        { key: 'storage.B22', field: 'B22', label: '直流母线电压', unit: 'V', min: 3500, max: 8500, default: 7200 },
-        { key: 'storage.B26', field: 'B26', label: '充放电功率设定', unit: '%', min: 0, max: 1300, default: 1000 },
-        { key: 'storage.B28', field: 'B28', label: '电池均充电压', unit: 'V', min: 400, max: 3600, default: 600 },
-        { key: 'storage.B30', field: 'B30', label: '充电电流设置', unit: 'A', min: 0, max: 1300, default: 1000 },
-        { key: 'storage.B32', field: 'B32', label: '电池浮充电压', unit: 'V', min: 400, max: 3600, default: 600 },
-        { key: 'storage.B34', field: 'B34', label: '放电电压设置', unit: 'V', min: 400, max: 3600, default: 400 },
-        { key: 'storage.B36', field: 'B36', label: '放电电流设置', unit: 'A', min: 0, max: 1300, default: 1000 },
-        { key: 'storage.B38', field: 'B38', label: '电池过压关机点', unit: 'V', min: 400, max: 3700, default: 3700 },
-        { key: 'storage.B40', field: 'B40', label: '电池低压告警点', unit: 'V', min: 350, max: 3550, default: 450 },
-        { key: 'storage.B42', field: 'B42', label: '电池低压关机点', unit: 'V', min: 350, max: 3550, default: 350 },
-        { key: 'storage.B48', field: 'B48', label: '充电母线电压上限', unit: 'V', min: 3500, max: 8500, default: 6300 },
-        { key: 'storage.B50', field: 'B50', label: '放电母线电压下限', unit: 'V', min: 3500, max: 8500, default: 5700 }
+        { key: 'storage.B16', field: 'B16', address: '60024', label: '组ID号', unit: '', min: 1, max: 31, default: 1 },
+        { key: 'storage.B18', field: 'B18', address: '60025', label: '模块数量', unit: '', min: 1, max: 31, default: 1 },
+        { key: 'storage.B22', field: 'B22', address: '60040', label: '直流母线电压', unit: 'V', min: 3500, max: 8500, scale: 10, default: 7200 },
+        { key: 'storage.B26', field: 'B26', address: '60043', label: '充放电功率设定', unit: '%', min: 0, max: 1300, scale: 10, default: 1000 },
+        { key: 'storage.B28', field: 'B28', address: '60044', label: '电池均充电压', unit: 'V', min: 400, max: 3600, scale: 10, default: 600 },
+        { key: 'storage.B30', field: 'B30', address: '60045', label: '充电电流设置', unit: 'A', min: 0, max: 1300, scale: 10, default: 1000 },
+        { key: 'storage.B32', field: 'B32', address: '60046', label: '电池浮充电压', unit: 'V', min: 400, max: 3600, scale: 10, default: 600 },
+        { key: 'storage.B34', field: 'B34', address: '60047', label: '放电电压设置', unit: 'V', min: 400, max: 3600, scale: 10, default: 400 },
+        { key: 'storage.B36', field: 'B36', address: '60048', label: '放电电流设置', unit: 'A', min: 0, max: 1300, scale: 10, default: 1000 },
+        { key: 'storage.B38', field: 'B38', address: '60049', label: '电池过压关机点', unit: 'V', min: 400, max: 3700, scale: 10, default: 3700 },
+        { key: 'storage.B40', field: 'B40', address: '60050', label: '电池欠压告警点', unit: 'V', min: 350, max: 3550, scale: 10, default: 450 },
+        { key: 'storage.B42', field: 'B42', address: '60051', label: '电池欠压关机点', unit: 'V', min: 350, max: 3550, scale: 10, default: 350 },
+        { key: 'storage.B48', field: 'B48', address: '60054', label: '充电母线电压上限', unit: 'V', min: 3500, max: 8500, scale: 10, default: 6300 },
+        { key: 'storage.B49', field: 'B49', address: '60055', label: '放电母线电压下限', unit: 'V', min: 3500, max: 8500, scale: 10, default: 5700 }
       ],
       storageSwitchParams: [
-        { key: 'storage.B0', label: 'Can波特率设置', options: [
-          { label: '1000kbps', value: '0' },
-          { label: '500kbps', value: '1' },
-          { label: '250kbps', value: '2' },
-          { label: '125kbps', value: '3' }
-        ]},
-        { key: 'storage.B2', label: '认证标准码', options: [
-          { label: '中国标准I', value: '0' },
-          { label: '中国标准II', value: '1' },
-          { label: '美国标准', value: '2' },
-          { label: '德国标准', value: '3' }
-        ]},
-        { key: 'storage.B4', label: '机器类型', options: [
-          { label: 'IBDC30060', value: '1' },
-          { label: 'IBG30060', value: '2' }
-        ]},
-        { key: 'storage.B8', label: '运行模式设置', options: [
-          { label: '无输出模式', value: '0' },
-          { label: '正常运行模式', value: '1' },
-          { label: '开环调试模式', value: '2' },
-          { label: '发波调试模式', value: '3' }
-        ]},
-        { key: 'storage.B10', label: '运行状态设置', options: [
-          { label: '自适应', value: '0' },
-          { label: '并网', value: '1' },
-          { label: '离网', value: '2' }
-        ]},
-        { key: 'storage.B12', label: '系统开关机', options: [
-          { label: '开机', value: '0x0055', dangerous: true },
-          { label: '关机', value: '0x00AA', dangerous: true }
-        ]},
-        { key: 'storage.B14', label: '恢复出厂设置', options: [
-          { label: '恢复所有值', value: '0x0055', dangerous: true },
-          { label: '恢复用户值', value: '0x00AA', dangerous: true }
-        ]},
-        { key: 'storage.B20', label: '电池类型', options: [
-          { label: '铅酸电池', value: '0' },
-          { label: '锂电池', value: '1' }
-        ]},
-        { key: 'storage.B24', label: '充放电指令', options: [
-          { label: '待机', value: '0' },
-          { label: '充电', value: '1' },
-          { label: '放电', value: '2' },
-          { label: 'BAT自动', value: '3' },
-          { label: 'BUS自动', value: '4' },
-          { label: '关充电', value: '5' },
-          { label: '高压PV', value: '6' },
-          { label: '低压PV', value: '7' }
-        ]},
-        { key: 'storage.B44', label: '电池激活功能', options: [
-          { label: '禁止', value: '0' },
-          { label: '使能', value: '1' }
-        ]},
-        { key: 'storage.B46', label: '自动重启功能', options: [
-          { label: '禁止', value: '0' },
-          { label: '使能', value: '1' }
-        ]},
-        { key: 'storage.B53b0', label: 'CAN通讯使能位', options: [
-          { label: '禁止', value: '0' },
-          { label: '使能', value: '1' }
-        ]},
-        { key: 'storage.B53b1', label: '485通讯使能位', options: [
-          { label: '禁止', value: '0' },
-          { label: '使能', value: '1' }
-        ]}
+        {
+          key: 'storage.B0', field: 'B0', address: '60016', label: 'Can波特率设置', options: [
+            { label: '1000kbps', value: '0' },
+            { label: '500kbps', value: '1' },
+            { label: '250kbps', value: '2' },
+            { label: '125kbps', value: '3' }
+          ]
+        },
+        {
+          key: 'storage.B2', field: 'B2', address: '60017', label: '认证标准码', options: [
+            { label: '中国标准I', value: '0' },
+            { label: '中国标准II', value: '1' },
+            { label: '美国标准', value: '2' },
+            { label: '德国标准', value: '3' }
+          ]
+        },
+        {
+          key: 'storage.B4', field: 'B4', address: '60018', label: '机器类型', options: [
+            { label: 'IBDC30060', value: '1' },
+            { label: 'IBG30060', value: '2' }
+          ]
+        },
+        {
+          key: 'storage.B6', field: 'B6', address: '60019', label: '故障清除', options: [
+            { label: '清除所有故障', value: '0x0055', dangerous: true }
+          ]
+        },
+        {
+          key: 'storage.B8', field: 'B8', address: '60020', label: '运行模式设置', options: [
+            { label: '无输出模式', value: '0' },
+            { label: '正常运行模式', value: '1' },
+            { label: '开环调试模式', value: '2' },
+            { label: '发波调试模式', value: '3' }
+          ]
+        },
+        {
+          key: 'storage.B10', field: 'B10', address: '60021', label: '运行状态设置', options: [
+            { label: '自适应', value: '0' },
+            { label: '并网', value: '1' },
+            { label: '离网', value: '2' }
+          ]
+        },
+        {
+          key: 'storage.B12', field: 'B12', address: '60022', label: '系统开关机', options: [
+            { label: '开机', value: '0x0055', dangerous: true },
+            { label: '关机', value: '0x00AA', dangerous: true }
+          ]
+        },
+        {
+          key: 'storage.B14', field: 'B14', address: '60023', label: '恢复出厂设置', options: [
+            { label: '恢复所有值', value: '0x0055', dangerous: true },
+            { label: '恢复用户值', value: '0x00AA', dangerous: true }
+          ]
+        },
+        {
+          key: 'storage.B20', field: 'B20', address: '60038', label: '电池类型', options: [
+            { label: '铅酸电池', value: '0' },
+            { label: '锂电池', value: '1' }
+          ]
+        },
+        {
+          key: 'storage.B24', field: 'B24', address: '60042', label: '充放电指令', options: [
+            { label: '待机', value: '0' },
+            { label: '充电', value: '1' },
+            { label: '放电', value: '2' },
+            { label: 'BAT自动', value: '3' },
+            { label: 'BUS自动', value: '4' },
+            { label: '关充电', value: '5' },
+            { label: '高压PV', value: '6' },
+            { label: '低压PV', value: '7' }
+          ]
+        },
+        {
+          key: 'storage.B44', field: 'B44', address: '60052', label: '电池激活功能', options: [
+            { label: '禁止', value: '0' },
+            { label: '使能', value: '1' }
+          ]
+        },
+        {
+          key: 'storage.B46', field: 'B46', address: '60053', label: '自动重启功能', options: [
+            { label: '禁止', value: '0' },
+            { label: '使能', value: '1' }
+          ]
+        },
+        {
+          key: 'storage.B53b0', field: 'B53b0', address: '60100', label: 'CAN通讯使能位', options: [
+            { label: '禁止', value: '0' },
+            { label: '使能', value: '1' }
+          ]
+        },
+        {
+          key: 'storage.B53b1', field: 'B53b1', address: '60100', label: '485通讯使能位', options: [
+            { label: '禁止', value: '0' },
+            { label: '使能', value: '1' }
+          ]
+        }
       ]
     }
   },
@@ -426,18 +453,11 @@ export default {
       this.lastSendTimes[param.key] = Date.now()
 
       try {
-        const registerMap = {
-          'storage.B0': '0', 'storage.B2': '2', 'storage.B4': '4',
-          'storage.B6': '6', 'storage.B8': '8', 'storage.B10': '10',
-          'storage.B12': '12', 'storage.B14': '14', 'storage.B16': '16',
-          'storage.B18': '18', 'storage.B20': '20', 'storage.B22': '22',
-          'storage.B24': '24', 'storage.B26': '26', 'storage.B28': '28',
-          'storage.B30': '30', 'storage.B32': '32', 'storage.B34': '34',
-          'storage.B36': '36', 'storage.B38': '38', 'storage.B40': '40',
-          'storage.B42': '42', 'storage.B44': '44', 'storage.B46': '46',
-          'storage.B48': '48', 'storage.B50': '50'
-        }
-        const registerAddress = registerMap[param.key] || '00000000'
+        const registerAddress = param.address
+        
+        // 支持 scale 参数：传输值 = 实际值 × scale
+        const scale = param.scale || 1
+        const registerValue = (Math.round(parseFloat(value) * scale)).toString()
 
         const commandData = {
           apiSufix: 'multiControl',
@@ -450,7 +470,7 @@ export default {
             addr: 30,
             deviceId: '30',
             registerAddress: registerAddress,
-            registerValue: value,
+            registerValue: registerValue,
             valueType: '01',
             registerType: '03',
             extra1: '00',
@@ -472,14 +492,16 @@ export default {
     },
 
     async submitSwitchParam(param, value) {
-      const registerMap = {
-        'storage.B0': '0', 'storage.B2': '2', 'storage.B4': '4',
-        'storage.B6': '6', 'storage.B8': '8', 'storage.B10': '10',
-        'storage.B12': '12', 'storage.B14': '14', 'storage.B20': '20',
-        'storage.B24': '24', 'storage.B44': '44', 'storage.B46': '46',
-        'storage.B53b0': '53', 'storage.B53b1': '53'
-      }
-      const registerAddress = registerMap[param.key] || '00000000'
+      // const registerMap = {
+      //   'storage.B0': '0', 'storage.B2': '2', 'storage.B4': '4',
+      //   'storage.B6': '6', 'storage.B8': '8', 'storage.B10': '10',
+      //   'storage.B12': '12', 'storage.B14': '14', 'storage.B20': '20',
+      //   'storage.B24': '24', 'storage.B44': '44', 'storage.B46': '46',
+      //   'storage.B53b0': '53', 'storage.B53b1': '53'
+      // }
+      // const registerAddress = registerMap[param.key] || '00000000'
+
+      const registerAddress = param.address
 
       const commandData = {
         apiSufix: 'multiControl',
@@ -565,7 +587,7 @@ export default {
   color: #333;
   position: relative;
   padding-left: 20rpx;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -589,23 +611,23 @@ export default {
   border-radius: 8rpx;
   font-size: 26rpx;
   transition: all 0.2s ease;
-  
+
   &.primary {
     background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
     color: #ffffff;
     box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
-    
+
     &:active {
       transform: scale(0.95);
       box-shadow: 0 2rpx 6rpx rgba(102, 153, 255, 0.2);
     }
   }
-  
+
   &.close {
     background: #f5f5f5;
     color: #666;
     border: 1rpx solid #e0e0e0;
-    
+
     &:active {
       background: #e8e8e8;
     }
@@ -628,11 +650,11 @@ export default {
   padding: 28rpx 0;
   border-bottom: 1rpx solid #f5f5f5;
   transition: all 0.2s ease;
-  
+
   &:last-child {
     border-bottom: none;
   }
-  
+
   &.editing-row {
     background: #f8fbff;
     margin: 0 -20rpx;
@@ -750,7 +772,7 @@ export default {
   color: #6699ff;
   background: #ffffff;
   border: 2rpx solid #6699ff;
-  
+
   &:active {
     background: #f0f5ff;
   }
@@ -761,11 +783,11 @@ export default {
   background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
   box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
   min-width: 100rpx;
-  
+
   &:active {
     transform: scale(0.95);
   }
-  
+
   &.btn-loading {
     opacity: 0.8;
     pointer-events: none;
@@ -777,7 +799,7 @@ export default {
   background: #f5f5f5;
   border: 2rpx solid #e0e0e0;
   min-width: 60rpx;
-  
+
   &:active {
     background: #e8e8e8;
   }
@@ -845,7 +867,7 @@ export default {
 .btn-danger {
   border-color: #ff6b6b;
   color: #ff6b6b;
-  
+
   &.btn-active {
     background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
     border-color: #ff6b6b;
@@ -937,24 +959,24 @@ export default {
   font-size: 28rpx;
   text-align: center;
   transition: all 0.2s ease;
-  
+
   &.btn-cancel {
     background: #f5f5f5;
     color: #666;
-    
+
     &:active {
       background: #e8e8e8;
     }
   }
-  
+
   &.btn-confirm {
     background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
     color: #ffffff;
-    
+
     &:active {
       transform: scale(0.98);
     }
-    
+
     &.btn-danger {
       background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
     }
@@ -976,15 +998,15 @@ export default {
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
   z-index: 9999;
   animation: slideDown 0.3s ease;
-  
+
   &.success {
     border-left: 4rpx solid #52c41a;
   }
-  
+
   &.error {
     border-left: 4rpx solid #ff4d4f;
   }
-  
+
   &.warning {
     border-left: 4rpx solid #faad14;
   }
@@ -1000,6 +1022,7 @@ export default {
     opacity: 0;
     transform: translateX(-50%) translateY(-20rpx);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -1014,7 +1037,7 @@ export default {
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  
+
   &.small {
     width: 24rpx;
     height: 24rpx;

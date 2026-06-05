@@ -42,7 +42,7 @@
           <view class="param-info">
             <text class="param-name">{{ param.label }}</text>
             <text v-if="param.min !== undefined && param.max !== undefined" class="param-range">
-              范围: {{ param.min }}~{{ param.max }}{{ param.unit }}
+              范围: <template v-if="param.min2 !== undefined">{{ param.min }}~{{ param.max }}, {{ param.min2 }}~{{ param.max2 }}</template><template v-else>{{ param.min }}~{{ param.max }}</template>{{ param.unit }}
             </text>
           </view>
           <view class="param-right-wrapper">
@@ -121,7 +121,7 @@ export default {
   },
   data() {
     return {
-      idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
+      idCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
       deviceAddress: '01',
       isEditing: false,
       clickedButton: '',
@@ -148,106 +148,109 @@ export default {
         timer: null
       },
       pcsParams: [
-        { key: 'pcs.B0', field: 'B0', label: '设置模块工作海拔值', unit: 'm', min: 1000, max: 5000 },
-        { key: 'pcs.B4', field: 'B4', label: '设置组号', unit: '', min: 0, max: 7 },
-        { key: 'pcs.B40', field: 'B40', label: '设置直流侧电压', unit: 'mV' },
-        { key: 'pcs.B44', field: 'B44', label: '设置直流侧电流', unit: 'mA', min: -78, max: 73.5 },
-        { key: 'pcs.B48', field: 'B48', label: '设置交流侧总有功功率(并网模式的功率控制模式)', unit: 'W' },
-        { key: 'pcs.B50', field: 'B50', label: '设置交流侧总有功功率(交流侧总有功功率值)', unit: 'W' },
-        { key: 'pcs.B52', field: 'B52', label: '设置交流侧总无功功率', unit: 'kVar' },
-        { key: 'pcs.B56', field: 'B56', label: '设置交流侧功率因素 PF', unit: '' },
-        { key: 'pcs.B64', field: 'B64', label: '设置交流相电压', unit: 'V' },
-        { key: 'pcs.B66', field: 'B66', label: '设置交流频率', unit: 'Hz' },
-        { key: 'pcs.B72', field: 'B72', label: '设置直流欠压保护电压', unit: 'V' },
-        { key: 'pcs.B76', field: 'B76', label: '设置直流过压保护电压', unit: 'V' },
-        { key: 'pcs.B80', field: 'B80', label: '设置一级交流欠压保护线电压', unit: 'V' },
-        { key: 'pcs.B82', field: 'B82', label: '设置一级交流欠压保护时间', unit: 's' },
-        { key: 'pcs.B84', field: 'B84', label: '设置一级交流过压保护线电压', unit: 'V' },
-        { key: 'pcs.B86', field: 'B86', label: '设置一级交流过压保护时间', unit: 's' },
-        { key: 'pcs.B88', field: 'B88', label: '设置一级交流欠频保护频率', unit: 'Hz' },
-        { key: 'pcs.B90', field: 'B90', label: '设置一级交流欠频保护时间', unit: 's' },
-        { key: 'pcs.B92', field: 'B92', label: '设置一级交流过频保护频率', unit: 'Hz' },
-        { key: 'pcs.B94', field: 'B94', label: '设置一级交流过频保护时间', unit: 's' },
-        { key: 'pcs.B96', field: 'B96', label: '设置一级交流过频保护时间', unit: 's' },
-        { key: 'pcs.B98', field: 'B98', label: '设置一级交流过频保护时间', unit: 's' },
-        { key: 'pcs.B100', field: 'B100', label: '设置二级交流过频保护频率', unit: 'Hz' },
-        { key: 'pcs.B102', field: 'B102', label: '设置二级交流过频保护时间', unit: 's' },
-        { key: 'pcs.B108', field: 'B108', label: '设置二级交流欠压保护线电压', unit: 'V' },
-        { key: 'pcs.B110', field: 'B110', label: '设置二级交流欠压保护时间', unit: 's' },
-        { key: 'pcs.B112', field: 'B112', label: '设置二级交流过压保护线电压', unit: 'V' },
-        { key: 'pcs.B114', field: 'B114', label: '设置二级交流过压保护时间', unit: 's' }
+        { key: 'pcs.B0', field: 'B0',address: '0x0017', label: '设置模块工作海拔值', unit: 'm', min: 1000, max: 5000 },
+        { key: 'pcs.B4', field: 'B4',address: '0x001E', label: '设置组号', unit: '', min: 0, max: 7 },
+        { key: 'pcs.B40', field: 'B40',address: '0x0077', label: '设置直流侧电压', unit: 'mV' },
+        { key: 'pcs.B44', field: 'B44',address: '0x0079', label: '设置直流侧电流', unit: 'mA', min: -78, max: 73.5 },
+        { key: 'pcs.B48', field: 'B48',address: '0x0080', label: '设置交流侧总有功功率(并网模式的功率控制模式)', unit: 'W' },
+        // { key: 'pcs.B50', field: 'B50',address: '0x001C', label: '设置交流侧总有功功率(交流侧总有功功率值)', unit: 'W' },
+        { key: 'pcs.B52', field: 'B52',address: '0x0081', label: '设置交流侧总无功功率', unit: 'Var', min: -10648, max: 10648 },  
+        { key: 'pcs.B56', field: 'B56',address: '0x0082', label: '设置交流侧功率因素 PF', unit: '', min: -1, max: -0.8, min2: 0.8, max2: 1, scale: 1000 },
+        // { key: 'pcs.B64', field: 'B64',address: '0x0083', label: '设置交流相电压', unit: 'V' },
+        // { key: 'pcs.B66', field: 'B66',address: '0x0084', label: '设置交流相电压', unit: 'V', 
+        //   format: '1-2字节', dataType: 'int16', scale: 10, unitFactor: 0.1, range: [200, 240], access: 'rw' },  
+        // { key: 'pcs.B66', field: 'B66',address: '0x0084', label: '设置交流频率', unit: 'Hz', 
+        //   format: '3-4字节', dataType: 'int16', scale: 1, unitFactor: 0.001, range: [50, 60], access: 'rw' },  
+        { key: 'pcs.B72', field: 'B72',address: '0x0087', label: '设置直流欠压保护电压', unit: 'V', min: 145, max: 500, scale: 10 },
+        { key: 'pcs.B76', field: 'B76',address: '0x0088', label: '设置直流过压保护电压', unit: 'V', min: 600, max: 1030, scale: 10 },
+        // { key: 'pcs.B80', field: 'B80',address: '0x0089', label: '设置一级交流欠压保护线电压', unit: 'V' },
+        // { key: 'pcs.B82', field: 'B82',address: '0x0089', label: '设置一级交流欠压保护时间', unit: 's' },
+        // { key: 'pcs.B84', field: 'B84',address: '0x008A', label: '设置一级交流过压保护线电压', unit: 'V' },
+        // { key: 'pcs.B86', field: 'B86',address: '0x008A', label: '设置一级交流过压保护时间', unit: 's' },
+        // { key: 'pcs.B88', field: 'B88',address: '0x008B', label: '设置一级交流欠频保护频率', unit: 'Hz' },
+        // { key: 'pcs.B90', field: 'B90',address: '0x008B', label: '设置一级交流欠频保护时间', unit: 's' },
+        // { key: 'pcs.B92', field: 'B92',address: '0x008C', label: '设置一级交流过频保护频率', unit: 'Hz' },
+        // { key: 'pcs.B94', field: 'B94',address: '0x008C', label: '设置一级交流过频保护时间', unit: 's' },
+        // { key: 'pcs.B96', field: 'B96',address: '0x008D', label: '设置一级交流过频保护时间', unit: 's' },
+        // { key: 'pcs.B98', field: 'B98',address: '0x008D', label: '设置一级交流过频保护时间', unit: 's' },
+        // { key: 'pcs.B100', field: 'B100',address: '0x008E', label: '设置二级交流过频保护频率', unit: 'Hz' },
+        // { key: 'pcs.B102', field: 'B102',address: '0x008E', label: '设置二级交流过频保护时间', unit: 's' },
+        // { key: 'pcs.B108', field: 'B108',address: '0x0090', label: '设置二级交流欠压保护线电压', unit: 'V' },
+        // { key: 'pcs.B110', field: 'B110',address: '0x0090', label: '设置二级交流欠压保护时间', unit: 's' },
+        // { key: 'pcs.B112', field: 'B112',address: '0x0091', label: '设置二级交流过压保护线电压', unit: 'V' },
+        // { key: 'pcs.B114', field: 'B114',address: '0x0091', label: '设置二级交流过压保护时间', unit: 's' }
       ],
       pcsSwitchParams: [
         {
-          key: 'pcs.B8', label: '设置模块地址分配方式', options: [
+          key: 'pcs.B8', field: 'B8',address: '0x001F', label: '设置模块地址分配方式', options: [
             { label: '自动分配', value: '0x00000000' },
             { label: '拨码设置', value: '0x00010000' }
           ]
         },
         {
-          key: 'pcs.B12', label: '设置离网模式交流侧欠压复位', options: [
+          key: 'pcs.B12', field: 'B12',address: '0x0024', label: '设置离网模式交流侧欠压复位', options: [
             { label: '禁止', value: '0x00000000' },
             { label: '复位', value: '0x00010000' }
           ]
         },
         {
-          key: 'pcs.B16', label: '设置整流模式直流侧欠压复位', options: [
+          key: 'pcs.B16', field: 'B16',address: '0x0025', label: '设置整流模式直流侧欠压复位', options: [
             { label: '禁止', value: '0x00000000' },
             { label: '复位', value: '0x00010000' }
           ]
         },
         {
-          key: 'pcs.B20', label: '设置模块工作模式', options: [
+          key: 'pcs.B20', field: 'B20',address: '0x002F', label: '设置模块工作模式', options: [
             { label: '并网', value: '0x00000000' },
             { label: '离网', value: '0x00010000' },
             { label: '整流', value: '0x00020000' }
           ]
         },
         {
-          key: 'pcs.B24', label: '设置模块开关机', options: [
+          key: 'pcs.B24', field: 'B24',address: '0x0030', label: '设置模块开关机', options: [
             { label: '开机', value: '0x00010000', dangerous: true },
             { label: '关机', value: '0x00000000', dangerous: true }
           ]
         },
         {
-          key: 'pcs.B28', label: '设置模块直流侧过压复位', options: [
+          key: 'pcs.B28', field: 'B28',address: '0x0031', label: '设置模块直流侧过压复位', options: [
             { label: '禁止', value: '0x00000000' },
             { label: '复位', value: '0x00010000' }
           ]
         },
         {
-          key: 'pcs.B32', label: '设置逆变模式直流侧欠压复位', options: [
+          key: 'pcs.B32', field: 'B32',address: '0x0042', label: '设置逆变模式直流侧欠压复位', options: [
             { label: '禁止', value: '0x00000000' },
             { label: '复位', value: '0x00010000' }
           ]
         },
         {
-          key: 'pcs.B36', label: '设置模块短路复位', options: [
+          key: 'pcs.B36', field: 'B36',address: '0x0044', label: '设置模块短路复位', options: [
             { label: '禁止', value: '0x00000000' },
             { label: '复位', value: '0x00010000' }
           ]
         },
         {
-          key: 'pcs.B60', label: '设置交流侧无功功率类型', options: [
+          key: 'pcs.B60', field: 'B60',address: '0x0083', label: '设置交流侧无功功率类型', options: [
             { label: '不设置无功功率输出功能', value: '0x00A00000' },
             { label: '通过 PF 设置命令', value: '0x00A10000' },
             { label: '通过无功功率设置命令', value: '0x00A20000' }
           ]
         },
         {
-          key: 'pcs.B68', label: '设置是否错相', options: [
+          key: 'pcs.B68', field: 'B68',address: '0x0085', label: '设置是否错相', options: [
             { label: '否', value: '0x00000000' },
             { label: '是', value: '0x00010000' }
           ]
         },
         {
-          key: 'pcs.B104', label: '设置是否过载输出', options: [
+          key: 'pcs.B104', field: 'B104',address: '0x008F', label: '设置是否过载输出', options: [
             { label: '禁止', value: '0x00000000' },
             { label: '使能', value: '0x00010000' }
           ]
         },
         {
-          key: 'pcs.B116', label: '设置是否使能输入电压环', options: [
+          key: 'pcs.B116', field: 'B116',address: '0x0092', label: '设置是否使能输入电压环', options: [
             { label: '禁止', value: '0x00000000' },
             { label: '使能', value: '0x00010000' }
           ]
@@ -335,7 +338,7 @@ export default {
       }, 5000)
 
       try {
-        await this.submitSwitchParam(param, option.value)
+        await this.submitSwitchParam(param.key, option.value)
         this.showToast(`${param.label}: ${option.label}成功`, 'success')
       } catch (error) {
         this.showToast(`${param.label}: ${option.label}失败`, 'error')
@@ -398,19 +401,33 @@ export default {
         return
       }
 
-      // 范围限制
-      if (param.min !== undefined && value < param.min) {
-        value = param.min
-        this.showToast(`不能小于${param.min}`, 'warning')
-      }
-      if (param.max !== undefined && value > param.max) {
-        value = param.max
-        this.showToast(`不能大于${param.max}`, 'warning')
+      // 范围限制（支持双区间）
+      if (param.min2 !== undefined && param.max2 !== undefined) {
+        // 双区间校验：第一组 或 第二组
+        const inRange1 = value >= param.min && value <= param.max
+        const inRange2 = value >= param.min2 && value <= param.max2
+        if (!inRange1 && !inRange2) {
+          this.showToast(`值必须在 ${param.min}~${param.max} 或 ${param.min2}~${param.max2} 范围内`, 'warning')
+          value = this.tempValue
+        }
+      } else {
+        if (param.min !== undefined && value < param.min) {
+          value = param.min
+          this.showToast(`不能小于${param.min}`, 'warning')
+        }
+        if (param.max !== undefined && value > param.max) {
+          value = param.max
+          this.showToast(`不能大于${param.max}`, 'warning')
+        }
       }
 
       // 精度处理
       if (param.key === 'pcs.B44') {
         value = Math.round(value * 10) / 10
+      } else if (param.scale) {
+        // 带 scale 参数的，根据 scale 保留小数位
+        const factor = Math.pow(10, Math.floor(Math.log10(param.scale)))
+        value = Math.round(value * factor) / factor
       } else {
         value = Math.round(value)
       }
@@ -431,14 +448,24 @@ export default {
         return
       }
 
-      // 范围校验
-      if (param.min !== undefined && numValue < param.min) {
-        this.showToast(`${param.label}不能小于${param.min}`, 'warning')
-        return
-      }
-      if (param.max !== undefined && numValue > param.max) {
-        this.showToast(`${param.label}不能大于${param.max}`, 'warning')
-        return
+      // 范围校验（支持双区间）
+      if (param.min2 !== undefined && param.max2 !== undefined) {
+        // 双区间校验：第一组 或 第二组
+        const inRange1 = numValue >= param.min && numValue <= param.max
+        const inRange2 = numValue >= param.min2 && numValue <= param.max2
+        if (!inRange1 && !inRange2) {
+          this.showToast(`${param.label}必须在 ${param.min}~${param.max} 或 ${param.min2}~${param.max2} 范围内`, 'warning')
+          return
+        }
+      } else {
+        if (param.min !== undefined && numValue < param.min) {
+          this.showToast(`${param.label}不能小于${param.min}`, 'warning')
+          return
+        }
+        if (param.max !== undefined && numValue > param.max) {
+          this.showToast(`${param.label}不能大于${param.max}`, 'warning')
+          return
+        }
       }
 
       // 打开确认弹窗
@@ -466,28 +493,19 @@ export default {
       this.lastSendTimes[param.key] = Date.now()
 
       try {
-        const registerMap = {
-          'pcs.B0': '0', 'pcs.B8': '8', 'pcs.B12': '12',
-          'pcs.B16': '16', 'pcs.B20': '20', 'pcs.B24': '24',
-          'pcs.B28': '28', 'pcs.B32': '32', 'pcs.B36': '36',
-          'pcs.B40': '40', 'pcs.B44': '44', 'pcs.B48': '48',
-          'pcs.B52': '52', 'pcs.B56': '56', 'pcs.B60': '60',
-          'pcs.B62': '62', 'pcs.B64': '64', 'pcs.B68': '68',
-          'pcs.B72': '72', 'pcs.B76': '76', 'pcs.B78': '78',
-          'pcs.B80': '80', 'pcs.B82': '82', 'pcs.B84': '84',
-          'pcs.B86': '86', 'pcs.B88': '88', 'pcs.B90': '90',
-          'pcs.B96': '96', 'pcs.B98': '98', 'pcs.B100': '100',
-          'pcs.B104': '104', 'pcs.B106': '106', 'pcs.B108': '108',
-          'pcs.B110': '110', 'pcs.B112': '112'
-        }
-        const registerAddress = registerMap[param.key] || '00000000'
+        const registerAddress = param.address 
 
         const valueMultiplier = {
-          'pcs.B0': 1000
+          'pcs.B0': 1000,
+          'pcs.B52': 1,     // 设置交流侧总无功功率 (Var)
+          'pcs.B56': 1000,  // 设置交流侧功率因素 PF: 传输值 = 实际值 × 1000
+          'pcs.B66': 10,    // 交流相电压: 传输值 = 实际值 × 10
+          'pcs.B66F': 1000  // 交流频率: 传输值 = 实际值 × 1000 (Hz转mHz)
         }
         const hexParams = ['pcs.B4']
-        const multiplier = valueMultiplier[param.key] || 1
-        const finalValue = parseFloat(value) * multiplier
+        // 优先使用 param.scale，其次使用映射表
+        const multiplier = param.scale || valueMultiplier[param.key] || 1
+        const finalValue = Math.round(parseFloat(value) * multiplier)
         const registerValue = hexParams.includes(param.key)
           ? '0x' + finalValue.toString(16).padStart(8, '0')
           : finalValue.toString()
@@ -502,7 +520,7 @@ export default {
             deviceCategory: '171B',
             addr: this.deviceAddress,
             deviceId: '1',
-            registerAddress: registerAddress,
+            registerAddress: param.address || registerAddress,
             registerValue: registerValue,
             valueType: '01',
             registerType: '03',
@@ -511,6 +529,7 @@ export default {
             extra3: '00'
           }]
         }
+        console.log(commandData, param.key)
 
         await sendCommandFrame(commandData)
         this.params.pcs[param.field] = value
@@ -526,15 +545,11 @@ export default {
 
     async submitSwitchParam(paramKey, value) {
       const param = this.pcsSwitchParams.find(p => p.key === paramKey)
+
+      console.log(param,paramKey, value, registerAddress,"0000000000089898989")
       if (!param) return
 
-      const registerMap = {
-        'pcs.B8': '8', 'pcs.B12': '12', 'pcs.B16': '16',
-        'pcs.B20': '20', 'pcs.B24': '24', 'pcs.B28': '28',
-        'pcs.B32': '32', 'pcs.B36': '36', 'pcs.B60': '60',
-        'pcs.B68': '68', 'pcs.B104': '104', 'pcs.B116': '116'
-      }
-      const registerAddress = registerMap[paramKey] || '00000000'
+      const registerAddress = param.address 
 
       const commandData = {
         apiSufix: 'multiControl',

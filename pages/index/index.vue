@@ -51,8 +51,8 @@
           </view>
           <text class="tab-text">监测</text>
         </view>
-        <!-- 系统Tab - 有设备且选择设备后才显示 -->
-        <view v-if="esIds.length > 0 && selectedDeviceId" class="tab-item" :class="{ 'active': currentTab === 1 }" @click="switchTab(1)">
+        <!-- 系统Tab - 非设备列表页面且有设备且选择设备后才显示 -->
+        <view v-if="!this.showDeviceList && esIds.length > 0 && selectedDeviceId" class="tab-item" :class="{ 'active': currentTab === 1 }" @click="switchTab(1)">
           <view class="tab-icon">
             <image :src="currentTab === 1 ? activeIcons[1] : inactiveIcons[1]" mode="widthFix" />
           </view>

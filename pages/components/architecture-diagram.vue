@@ -27,7 +27,8 @@
       <view class="device-label-top-left">
         <text class="device-name">光伏</text>
         <view class="power-row">
-          <text class="device-power">0.00</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B0 ?
+            device171F.energyData.B0.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
@@ -35,7 +36,8 @@
       <view class="device-label-top-right">
         <text class="device-name">电网</text>
         <view class="power-row">
-          <text class="device-power">{{ gridPower }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B4 ?
+            device171F.energyData.B4.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
@@ -43,43 +45,50 @@
       <view class="device-label" style="left: 3%;top: 75%">
         <text class="device-name">交流配电柜</text>
         <view class="power-row">
-          <text class="device-power">{{ ((currentStatus['600a29b2cdf9e30600897f26'] ? currentStatus['600a29b2cdf9e30600897f26'].P : 157530) / 1000).toFixed(2) }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B68 ?
+            device171F.energyData.B68.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
       <view class="device-label" style="left: 19%;top: 78%">
         <text class="device-name">储能</text>
         <view class="power-row">
-          <text class="device-power">{{ ((currentStatus['616e66f584c6e1930fa05917'] ? currentStatus['616e66f584c6e1930fa05917'].P : 157530) / 1000).toFixed(2) }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B8 ?
+            device171F.energyData.B8.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
-        <text class="device-soc">32.5%</text>
+        <text class="device-soc">{{ device171F && device171F.energyData && device171F.energyData.B128 ?
+          device171F.energyData.B128.value : '--' }}%</text>
       </view>
       <view class="device-label" style="left: 35%;top: 78%">
         <text class="device-name">空调</text>
         <view class="power-row">
-          <text class="device-power">{{ ((currentStatus['616e670d84c6e1930fa05919'] ? currentStatus['616e670d84c6e1930fa05919'].P : 157530) / 1000).toFixed(2) }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B18 ?
+            device171F.energyData.B18.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
       <view class="device-label" style="left: 50%;top: 78%">
         <text class="device-name">柔性直流充电桩</text>
         <view class="power-row">
-          <text class="device-power">{{ ((currentStatus['616e671a84c6e1930fa0591b'] ? currentStatus['616e671a84c6e1930fa0591b'].P : 157530) / 1000).toFixed(2) }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B26 ?
+            device171F.energyData.B26.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
       <view class="device-label" style="left: 67%;top: 78%">
         <text class="device-name">照明</text>
         <view class="power-row">
-          <text class="device-power">{{ ((currentStatus['616e672b84c6e1930fa0591d'] ? currentStatus['616e672b84c6e1930fa0591d'].P : 157530) / 1000).toFixed(2) }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B30 ?
+            device171F.energyData.B30.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
       <view class="device-label" style="left: 82%;top: 78%">
         <text class="device-name">其他负荷</text>
         <view class="power-row">
-          <text class="device-power">{{ ((currentStatus['616e673984c6e1930fa0591f'] ? currentStatus['616e673984c6e1930fa0591f'].P : 157530) / 1000).toFixed(2) }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B22 ?
+            device171F.energyData.B22.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
@@ -94,8 +103,8 @@
             <text class="card-title">今日发电</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ device170F && device170F.energyData && device170F.energyData.B32 ?
-              device170F.energyData.B32.value : '--' }} </text>
+            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B34 ?
+              device171F.energyData.B34.value : '--' }} </text>
             <text class="card-unit"> kWh</text>
           </view>
         </view>
@@ -106,8 +115,8 @@
             <text class="card-title">今日用电</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ device170F && device170F.energyData && device170F.energyData.B36 ?
-              device170F.energyData.B36.value : '--' }} </text>
+            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B38 ?
+              device171F.energyData.B38.value : '--' }} </text>
             <text class="card-unit"> kWh</text>
           </view>
         </view>
@@ -120,8 +129,8 @@
             <text class="card-title">储能剩余</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ device170F && device170F.energyData && device170F.energyData.B66 ?
-              device170F.energyData.B66.value : '--' }}</text>
+            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B58 ?
+              device171F.energyData.B58.value : '--' }}</text>
             <text class="card-unit">%</text>
           </view>
         </view>
@@ -132,8 +141,8 @@
             <text class="card-title">电网供电</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ device170F && device170F.energyData && device170F.energyData.B40 ?
-              device170F.energyData.B40.value : '--' }} </text>
+            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B42 ?
+              device171F.energyData.B42.value : '--' }} </text>
             <text class="card-unit"> kWh</text>
           </view>
         </view>
@@ -265,11 +274,11 @@ export default {
         totalConsumeElectricityQ: 0,
       },
       deviceList: [],
-      dcdc170FData: null,
+      dcdc171FData: null,
       nyzData: { SOC: "--" },
       // 设备配置参数
       deviceConfig: {
-        idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
+        idCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
         typeCode: '3401',
         address: '01'
       },
@@ -285,11 +294,11 @@ export default {
         //   dashLength: 2
         // },
 
-         dataLabel: false,
+        dataLabel: false,
         padding: [15, 15, 0, 15],
         enableScroll: false,
         legend: {},
-       xAxis: { labelCount: 6, disableGrid: true },
+        xAxis: { labelCount: 6, disableGrid: true },
         yAxis: {
           gridType: "dash",
           dashLength: 2
@@ -311,7 +320,9 @@ export default {
       showStopModal: false,
       systemRunning: false,
       isFullScreen: false,
-      statusBarHeight: 93 // 默认状态栏高度
+      statusBarHeight: 93, // 默认状态栏高度
+      navBarHeight: 44, // 导航栏高度
+      topSafeArea: 0 // 顶部安全区域总高度
     }
   },
   computed: {
@@ -319,22 +330,31 @@ export default {
       if (this.isFullScreen) {
         return `
           position: fixed;
-          top: 93px;
+          top: 0;
           left: 0;
           width: 100vw;
-          height: calc(100vh - 20px);
+          height: 100vh;
           margin: 0;
           background: #fff;
           z-index: 9999;
+          overflow: hidden;
         `;
       }
       return '';
     },
     chartCardStyle() {
-      return this.isFullScreen ? 'height: 60vh;' : '';
+      if (this.isFullScreen) {
+        const headerHeight = 88; // chart-header 高度
+        const dateSelectorHeight = 88; // date-selector 高度
+        return `
+          height: calc(100vh - ${this.topSafeArea}px - ${headerHeight}rpx - ${dateSelectorHeight}rpx - env(safe-area-inset-bottom));
+          padding-top: ${this.topSafeArea}px;
+        `;
+      }
+      return '';
     },
-    device170F() {
-      return this.deviceList.find(item => item && item.deviceType === '170F_V1_2');
+    device171F() {
+      return this.deviceList.find(item => item && item.deviceType === '171F');
     },
     userId() {
       return this.$store.state.userInfo?.userId || 0
@@ -353,11 +373,24 @@ export default {
     this.getNyzRealTimeData();
     this.initPage();
     this.dataInterval = setInterval(() => { this.initPage() }, 1000 * 60 * 5);
+
+    // 获取系统信息并设置CSS变量
     const systemInfo = uni.getSystemInfoSync();
-    this.statusBarHeight = systemInfo.statusBarHeight || 93;
-    console.log('statusBarHeight', this.statusBarHeight);
-    // this.statusBarHeight = systemInfo.statusBarHeight || 93;
-    // console.log('statusBarHeight---------------', this.statusBarHeight);
+    this.statusBarHeight = systemInfo.statusBarHeight || 20;
+    this.navBarHeight = systemInfo.platform === 'android' ? 48 : 44;
+    this.topSafeArea = this.statusBarHeight + this.navBarHeight;
+
+    // 设置CSS变量用于全屏模式
+    const safeAreaTop = systemInfo.safeArea?.top || systemInfo.statusBarHeight || 0;
+    const safeAreaBottom = systemInfo.safeArea?.bottom || 0;
+    try {
+      document.documentElement.style.setProperty('--safe-area-top', safeAreaTop + 'px');
+      document.documentElement.style.setProperty('--safe-area-bottom', safeAreaBottom + 'px');
+    } catch (e) {
+      console.warn('Failed to set CSS variables:', e);
+    }
+
+    console.log('statusBarHeight:', this.statusBarHeight, 'navBarHeight:', this.navBarHeight, 'topSafeArea:', this.topSafeArea);
   },
   beforeDestroy() {
     this.dataInterval && clearInterval(this.dataInterval);
@@ -370,32 +403,51 @@ export default {
   },
   methods: {
     init170CDevice() {
+      // const device170C = {
+      //   deviceType: '170C_V1_1',
+      //   address: '1F',
+      //   barCode: '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00',
+      //   deviceId: '170C001',
+      //   name: 'DCDC设备'
+      // };
+
       const device170C = {
         deviceType: '170C_V1_1',
         address: '1F',
-        barCode: '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00',
+        barCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
         deviceId: '170C001',
         name: 'DCDC设备'
       };
 
-      const device170F = {
-        deviceType: '170F_V1_2',
+
+
+      // const device171F = {
+      //   deviceType: '171F_V1_2',
+      //   address: '01',
+      //   barCode: '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00',
+      //   deviceId: '171F001',
+      //   name: 'DCDC设备171F'
+      // };
+
+
+      const device171F = {
+        deviceType: '171F_V1_2',
         address: '01',
-        barCode: '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00',
-        deviceId: '170F001',
-        name: 'DCDC设备170F'
+        barCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
+        deviceId: '171F001',
+        name: 'DCDC设备171F'
       };
 
 
-      realtimeDataProvider.initDeviceList([device170C, device170F]);
+      realtimeDataProvider.initDeviceList([device170C, device171F]);
       this.deviceList = realtimeDataProvider.getDeviceList();
       console.log('deviceList', this.deviceList);
 
 
     },
-    handle170FData(jsonData) {
-      console.log('170F设备数据:', jsonData);
-      this.dcdc170FData = jsonData;
+    handle171FData(jsonData) {
+      console.log('171F设备数据:', jsonData);
+      this.dcdc171FData = jsonData;
     },
     handle170CData(jsonData) {
       console.log('170C设备数据:', jsonData);
@@ -419,11 +471,11 @@ export default {
       // ================== 小程序/H5 全屏处理 ==================
       // #ifndef APP-PLUS
       if (this.isFullScreen) {
-        uni.showToast({
-          title: '已适配安全区，内容不遮挡',
-          icon: 'none',
-          duration: 2000
-        });
+        // uni.showToast({
+        //   title: '已适配安全区，内容不遮挡',
+        //   icon: 'none',
+        //   duration: 2000
+        // });
       } else {
         uni.showToast({ title: '退出全屏', icon: 'none' });
       }
@@ -555,11 +607,11 @@ export default {
     closeModal() { this.showModal = false; },
     openStopModal() { this.showStopModal = true; },
     closeStopModal() { this.showStopModal = false; },
-    
+
     // 通用命令执行方法
     async executeCommand(options) {
       const { title, content, apiSufix, commandBuilder, action, stateKey } = options;
-      
+
       return new Promise((resolve) => {
         uni.showModal({
           title,
@@ -569,11 +621,11 @@ export default {
               resolve(false);
               return;
             }
-            
+
             try {
               uni.showLoading({ title: '下发中...' });
               const commands = typeof commandBuilder === 'function' ? commandBuilder(action) : commandBuilder;
-              
+
               await sendCommandFrame({
                 apiSufix,
                 idCode: this.deviceConfig.idCode,
@@ -582,7 +634,7 @@ export default {
                 userId: this.userId,
                 commands
               });
-              
+
               uni.hideLoading();
               // 更新选中状态
               if (stateKey) {
@@ -606,7 +658,7 @@ export default {
         });
       });
     },
-    
+
     // 构建通用命令
     buildCommand(registerAddress, registerValue) {
       return [{
@@ -622,7 +674,7 @@ export default {
         extra3: '00'
       }];
     },
-    
+
     // 确认启动
     async confirmStart() {
       this.showModal = false;
@@ -638,7 +690,7 @@ export default {
         this.systemRunning = true;
       }
     },
-    
+
     // 确认停止
     async confirmStop() {
       this.showStopModal = false;
@@ -654,7 +706,7 @@ export default {
         this.systemRunning = false;
       }
     },
-    
+
     handleStartStop() {
       if (this.systemRunning) {
         this.showStopModal = true;
@@ -934,10 +986,56 @@ export default {
 
 /* 全屏时安全区样式 */
 .fullscreen-chart {
-  padding-top: env(safe-area-inset-top) !important;
-  padding-left: env(safe-area-inset-left) !important;
-  padding-right: env(safe-area-inset-right) !important;
-  padding-bottom: env(safe-area-inset-bottom) !important;
+  padding-top: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.fullscreen-chart .date-selector {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 44px);
+  left: 0;
+  right: 0;
+  z-index: 1001;
+  margin: 0;
+  border-radius: 0;
+  border-bottom: 1rpx solid #f0f0f0;
+  background: #fff;
+}
+
+.fullscreen-chart .chart-header {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 44px + 88rpx);
+  left: 0;
+  right: 0;
+  z-index: 1002;
+  padding: 0 20rpx;
+  background: #fff;
+  border-bottom: 1rpx solid #f0f0f0;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fullscreen-chart .chart-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.fullscreen-chart .fullscreen-btn {
+  padding: 10rpx 20rpx;
+  background: #4488FB;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+  color: #fff;
+}
+
+.fullscreen-chart .chart-card {
+  padding-top: calc(env(safe-area-inset-top) + 44px + 176rpx);
+  height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 44px - 176rpx);
 }
 
 .date-selector {

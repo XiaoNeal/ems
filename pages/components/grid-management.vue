@@ -1,6 +1,14 @@
 <template>
   <view class="grid-management" :class="{ fullscreen: isFullScreen }">
     
+    <!-- 全屏模式头部 -->
+    <view v-if="isFullScreen" class="fullscreen-header">
+      <text class="fullscreen-title">{{ fullScreenType === 'power' ? '电网功率曲线' : '供馈电量统计' }}</text>
+      <view class="fullscreen-exit-btn" @click="toggleFullScreen(fullScreenType)">
+        <text>退出全屏</text>
+      </view>
+    </view>
+    
     <view class="content">
       <!-- 电网数据卡片 -->
       <view class="stats-container">
@@ -76,11 +84,11 @@
         <view class="divider"></view>
         
         <!-- 电网功率曲线 -->
-        <view class="chart-section">
+        <view class="chart-section" :class="{ 'power-chart-section': isFullScreen && fullScreenType === 'power' }">
           <view class="chart-header">
             <text class="chart-title">电网功率曲线</text>
             <view class="fullscreen-button" @click="toggleFullScreen('power')">
-              <text>全屏</text>
+              <text>{{ isFullScreen && fullScreenType === 'power' ? '退出全屏' : '全屏' }}</text>
             </view>
           </view>
           <view class="chart-body">
@@ -92,11 +100,11 @@
         <view class="divider"></view>
 
         <!-- 供馈电量统计 -->
-        <view class="chart-section">
+        <view class="chart-section" :class="{ 'energy-chart-section': isFullScreen && fullScreenType === 'energy' }">
           <view class="chart-header">
             <text class="chart-title">供馈电量统计</text>
             <view class="fullscreen-button" @click="toggleFullScreen('energy')">
-              <text>全屏</text>
+              <text>{{ isFullScreen && fullScreenType === 'energy' ? '退出全屏' : '全屏' }}</text>
             </view>
           </view>
           <view class="chart-body">
@@ -129,6 +137,7 @@ export default {
       todaySupplyEnergy: "157.12",
       totalSupplyEnergy: "157.12",
       isFullScreen: false,
+      fullScreenType: '', // 当前全屏的图表类型 'power' | 'energy'
       activeDateTab: '年',
       timeTypeIndex: 2,
       selectedDate: new Date().toISOString().split('T')[0],
@@ -254,32 +263,31 @@ export default {
       this.getPowerCurveData();
     },
     toggleFullScreen(type) {
-      this.isFullScreen = !this.isFullScreen;
-
-      // ================== App 横屏 + 状态栏处理 ==================
-      // #ifdef APP-PLUS
-      if (this.isFullScreen) {
-        // 强制横屏
-        plus.screen.lockOrientation('landscape-primary');
-        // 隐藏状态栏（彻底解决刘海遮挡）
-        plus.navigator.setFullscreen(true);
-        uni.showToast({ title: type === 'power' ? '电网功率曲线全屏' : '供馈电量统计全屏', icon: 'none' });
-      } else {
-        // 恢复竖屏 + 显示状态栏
+      if (this.isFullScreen && this.fullScreenType === type) {
+        // 退出全屏
+        this.isFullScreen = false;
+        this.fullScreenType = '';
+        
+        // #ifdef APP-PLUS
         plus.screen.lockOrientation('portrait-primary');
         plus.navigator.setFullscreen(false);
-        uni.showToast({ title: '退出全屏', icon: 'none' });
+        // #endif
+      } else {
+        // 进入全屏
+        this.isFullScreen = true;
+        this.fullScreenType = type;
+        
+        // #ifdef APP-PLUS
+        plus.screen.lockOrientation('landscape-primary');
+        plus.navigator.setFullscreen(true);
+        // #endif
       }
-      // #endif
-
-      // ================== H5/小程序 全屏处理（模拟） ==================
-      // #ifndef APP-PLUS
+      
       uni.showToast({
         title: this.isFullScreen ? (type === 'power' ? '电网功率曲线全屏' : '供馈电量统计全屏') : '退出全屏',
         icon: 'none',
         duration: 1500
       });
-      // #endif
     },
     handleDateTypeChange(type) {
       this.activeDateTab = type;
@@ -333,16 +341,93 @@ export default {
 /* 全屏模式 */
 .grid-management.fullscreen {
   position: fixed;
-  top: 93px;
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 9999;
   margin: 0;
-  padding: 20rpx;
-  height: calc(100vh - 93px);
-  overflow: auto;
-  background: #EFF4FB;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* 全屏头部 */
+.fullscreen-header {
+  position: fixed;
+  top: env(safe-area-inset-top);
+  left: 0;
+  right: 0;
+  z-index: 1001;
+  height: 88rpx;
+  padding: 0 20rpx;
+  background: #fff;
+  border-bottom: 1rpx solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fullscreen-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.fullscreen-exit-btn {
+  padding: 10rpx 20rpx;
+  background: #4488FB;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+  color: #fff;
+}
+
+/* 全屏内容区域 */
+.grid-management.fullscreen .content {
+  padding-top: calc(env(safe-area-inset-top) + 88rpx);
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+/* 全屏时隐藏统计卡片 */
+.grid-management.fullscreen .stats-container {
+  display: none;
+}
+
+/* 全屏时日期选择器固定 */
+.grid-management.fullscreen .date-selector {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 88rpx);
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  margin: 0;
+  border-radius: 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+/* 全屏时图表区域 */
+.grid-management.fullscreen .grid-data-section {
+  padding-top: calc(env(safe-area-inset-top) + 176rpx);
+  height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 176rpx);
+  margin: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+/* 全屏时只显示当前图表 */
+.grid-management.fullscreen .chart-section {
+  display: none;
+}
+
+.grid-management.fullscreen .chart-section.power-chart-section,
+.grid-management.fullscreen .chart-section.energy-chart-section {
+  display: block;
+}
+
+.grid-management.fullscreen .chart-section:not(.power-chart-section):not(.energy-chart-section) {
+  display: none;
 }
 
 .header {

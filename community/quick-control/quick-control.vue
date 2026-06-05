@@ -159,7 +159,7 @@ export default {
       powerValue: '',
       // 设备配置参数（根据实际情况配置）
       deviceConfig: {
-        idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
+        idCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
         typeCode: '3401',
         address: '01'
       },

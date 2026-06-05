@@ -97,6 +97,7 @@ export class Model171B extends DeviceBase {
 
 	// 工具方法：带单位的HTML文本（完全对齐1707）
 	setHtmlText(unit) {
+		return ""
 		return  Math.random()+ `<span style='font-size:.8rem'>  ${unit}</span>`
 	}
 

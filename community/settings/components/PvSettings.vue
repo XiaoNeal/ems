@@ -121,7 +121,7 @@ export default {
   },
   data() {
     return {
-      idCode: 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF',
+      idCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
       deviceAddress: '03',
       isEditing: false,
       clickedButton: '',
@@ -148,36 +148,37 @@ export default {
         timer: null
       },
       pvParams: [
-        { key: 'pv.B0', field: 'B0', label: '设置模块工作海拔值', unit: 'm', min: 1000, max: 5000 },
-        { key: 'pv.B4', field: 'B4', label: '设置模块输出电流值', unit: 'A' },
-        { key: 'pv.B8', field: 'B8', label: '设置组号', unit: '', min: 0, max: 60 },
-        { key: 'pv.B16', field: 'B16', label: '设置模块输出功率', unit: 'kW', min: 0.1, max: 1 },
-        { key: 'pv.B20', field: 'B20', label: '设置模块输出电压', unit: 'V' },
-        { key: 'pv.B24', field: 'B24', label: '设置模块限流点', unit: 'A' },
-        { key: 'pv.B28', field: 'B28', label: '设置模块输出电压上限值', unit: 'V' }
+        { key: 'pv.B0', field: 'B0', address: '0x0017', label: '设置模块工作海拔值', unit: 'm', min: 1000, max: 5000 },
+        { key: 'pv.B4', field: 'B4', address: '0x001B', label: '设置模块输出电流值', unit: 'A', scale: 1024 },
+        // { key: 'pv.B8', field: 'B8', address: '0x001E', label: '设置模块输出电流值', unit: 'A' },
+        { key: 'pv.B8', field: 'B8', address: '0x001E', label: '设置组号', unit: '', min: 0, max: 60, scale: 1024 },
+        { key: 'pv.B16', field: 'B16', address: '0x0020', label: '设置模块输出功率', unit: 'kW', min: 0.1, max: 1, scale: 20000 },
+        { key: 'pv.B20', field: 'B20', address: '0x0021', label: '设置模块输出电压', unit: 'V' },
+        { key: 'pv.B24', field: 'B24', address: '0x0022', label: '设置模块限流点', unit: 'A' },
+        { key: 'pv.B28', field: 'B28', address: '0x0023', label: '设置模块输出电压上限值', unit: 'V' }
       ],
       pvSwitchParams: [
-        { key: 'pv.B12', label: '设置模块地址分配方式', options: [
+        { key: 'pv.B12', field: 'B12', address: '0x001F', label: '设置模块地址分配方式', options: [
           { label: '自动分配', value: '0x00000000' },
           { label: '拨码设置', value: '0x00010000' }
         ]},
-        { key: 'pv.B32', label: '开关机', options: [
+        { key: 'pv.B32', field: 'B32', address: '0x0030', label: '开关机', options: [
           { label: '开机', value: '0x00010000', dangerous: true },
           { label: '关机', value: '0x00000000', dangerous: true }
         ]},
-        { key: 'pv.B36', label: '设置模块过压复位', options: [
+        { key: 'pv.B36', field: 'B36', address: '0x0031', label: '设置模块过压复位', options: [
           { label: '禁止', value: '0x00000000' },
           { label: '复位', value: '0x00010000' }
         ]},
-        { key: 'pv.B40', label: '设置模块输出过压保护关联是否允许', options: [
+        { key: 'pv.B40', field: 'B40', address: '0x003E', label: '设置模块输出过压保护关联是否允许', options: [
           { label: '允许', value: '0x00000000' },
           { label: '禁止', value: '0x00010000' }
         ]},
-        { key: 'pv.B44', label: '设置模块短路复位', options: [
+        { key: 'pv.B44', field: 'B44', address: '0x0044', label: '设置模块短路复位', options: [
           { label: '禁止', value: '0x00000000' },
           { label: '复位', value: '0x00010000' }
         ]},
-        { key: 'pv.B48', label: '设置模块输入模式', options: [
+        { key: 'pv.B48', field: 'B48', address: '0x0046', label: '设置模块输入模式', options: [
           { label: '交流模式', value: '0x00000001' },
           { label: '直流模式', value: '0x00000002' }
         ]}
@@ -377,19 +378,20 @@ export default {
       this.lastSendTimes[param.key] = Date.now()
 
       try {
-        const registerMap = {
-          'pv.B0': '0', 'pv.B4': '4', 'pv.B8': '8',
-          'pv.B12': '12', 'pv.B16': '16', 'pv.B20': '20',
-          'pv.B24': '24', 'pv.B28': '28', 'pv.B32': '32',
-          'pv.B36': '36', 'pv.B40': '40', 'pv.B44': '44',
-          'pv.B48': '48'
-        }
-        const registerAddress = registerMap[param.key] || '00000000'
+        // const registerMap = {
+        //   'pv.B0': '0', 'pv.B4': '4', 'pv.B8': '8',
+        //   'pv.B12': '12', 'pv.B16': '16', 'pv.B20': '20',
+        //   'pv.B24': '24', 'pv.B28': '28', 'pv.B32': '32',
+        //   'pv.B36': '36', 'pv.B40': '40', 'pv.B44': '44',
+        //   'pv.B48': '48'
+        // }
+        // const registerAddress = registerMap[param.key] || '00000000'
 
-        let registerValue = parseFloat(value)
-        if (param.key === 'pv.B16') {
-          registerValue = parseFloat(value) * 20000
-        }
+        const registerAddress = param.address 
+
+        // 支持 scale 参数：传输值 = 实际值 × scale
+        const scale = param.scale || (param.key === 'pv.B16' ? 20000 : 1)
+        const registerValue = Math.round(parseFloat(value) * scale)
 
         const commandData = {
           apiSufix: 'multiControl',
@@ -402,7 +404,7 @@ export default {
             addr: 6,
             deviceId: '6',
             registerAddress: registerAddress,
-            registerValue: registerValue.toString().padStart(8, '0'),
+            registerValue: registerValue.toString(),
             valueType: '01',
             registerType: '03',
             extra1: '00',
@@ -424,11 +426,12 @@ export default {
     },
 
     async submitSwitchParam(param, value) {
-      const registerMap = {
-        'pv.B12': '12', 'pv.B32': '32', 'pv.B36': '36',
-        'pv.B40': '40', 'pv.B44': '44', 'pv.B48': '48'
-      }
-      const registerAddress = registerMap[param.key] || '00000000'
+      // const registerMap = {
+      //   'pv.B12': '12', 'pv.B32': '32', 'pv.B36': '36',
+      //   'pv.B40': '40', 'pv.B44': '44', 'pv.B48': '48'
+      // }
+      // const registerAddress = registerMap[param.key] || '00000000'
+      const registerAddress = param.address 
 
       let hexValue = '0x00010000'
       if (value === '0x00000000' || value === 'none' || value === 'off') {
