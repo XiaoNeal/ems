@@ -11,18 +11,19 @@
               <image src="/static/images/storage.svg" style="width: 40rpx; height: 40rpx;" />
               <view class="progress-track" style="flex: 1;">
                 <view class="progress-fill" :style="{
-                  width: `${device170F && device170F.energyData && device170F.energyData.B66 ? parseFloat(device170F.energyData.B66.value) : 0}%`,
+                  width: `${device171F && device171F.energyData && device171F.energyData.B128 ? parseFloat(device171F.energyData.B128.value) : 0}%`,
                   background: statusGradient,
                 }">
-                  <text class="progress-text">{{ device170F && device170F.energyData && device170F.energyData.B66 ?
-                    device170F.energyData.B66.value : '--' }}%</text>
+                  <text class="progress-text">{{ device171F && device171F.energyData && device171F.energyData.B128 ?
+                    device171F.energyData.B128.value : '--' }}%</text>
                 </view>
               </view>
               <text :style="{ fontSize: '24rpx', color: statusGradient }">{{ totalStorageData.status }}</text>
             </view>
             <view class="soc-remaining" style="display: flex; justify-content: space-between; align-items: center;">
               <text>剩余电量预计可用</text>
-              <text style="font-weight: bold;">{{ remainingTime }} 小时</text>
+              <text style="font-weight: bold;">{{ device171F && device171F.energyData && device171F.energyData.B130 ?
+                device171F.energyData.B130.value : '--' }} 小时</text>
             </view>
             <!-- </view> -->
           </view>
@@ -37,7 +38,7 @@
           <view class="stat-subitem">
             <text class="stat-label">{{ statList[0].label }}</text>
             <view>
-              <text class="stat-value">{{ statList[0].value || "--" }}</text>
+              <text class="stat-value">{{ statList[0].value !== undefined ? statList[0].value : "--" }}</text>
               <text class="stat-unit">{{ statList[0].unit }}</text>
             </view>
           </view>
@@ -51,42 +52,13 @@
           <view class="stat-subitem">
             <text class="stat-label">{{ statList[1].label }}</text>
             <view>
-              <text class="stat-value">{{ statList[1].value || "--" }}</text>
+              <text class="stat-value">{{ statList[1].value !== undefined ? statList[1].value : "--" }}</text>
               <text class="stat-unit">{{ statList[1].unit }}</text>
             </view>
           </view>
           <view class="stat-subitem">
             <text class="stat-label">出现在</text>
             <text class="stat-value small">{{ statList[1].time || "--" }}</text>
-          </view>
-        </view>
-      </view>
-      <view class="stat-row">
-        <view class="stat-item vertical">
-          <view class="stat-subitem">
-            <text class="stat-label">{{ statList[2].label }}</text>
-            <view>
-              <text class="stat-value">{{ statList[2].value || "--" }}</text>
-              <text class="stat-unit">{{ statList[2].unit }}</text>
-            </view>
-          </view>
-          <view class="stat-subitem">
-            <text class="stat-label">出现在</text>
-            <text class="stat-value small">{{ statList[2].time || "--" }}</text>
-          </view>
-        </view>
-        <view class="stat-divider"></view>
-        <view class="stat-item vertical">
-          <view class="stat-subitem">
-            <text class="stat-label">{{ statList[3].label }}</text>
-            <view>
-              <text class="stat-value">{{ statList[3].value || "--" }}</text>
-              <text class="stat-unit">{{ statList[3].unit }}</text>
-            </view>
-          </view>
-          <view class="stat-subitem">
-            <text class="stat-label">出现在</text>
-            <text class="stat-value small">{{ statList[3].time || "--" }}</text>
           </view>
         </view>
       </view>
@@ -102,7 +74,7 @@
             <dy-date timeType="day" @getData="onPowerDateChange" v-model="powerDate" class="compact-date-picker" />
           </view>
           <view class="chart-view">
-            <qiun-data-charts  type="line" :chartData="storageChartData" :opts="storagePowerOptions"
+            <qiun-data-charts type="line" :chartData="storageChartData" :opts="storagePowerOptions"
               canvasId="CamoFLVBqPYEJXtAEDIxdbLdHpZAvPitPOEWER" :ontouch="false" :canvas2d="canvas2d" />
           </view>
         </view>
@@ -121,15 +93,15 @@
             </view>
             <dy-date v-if="timeTypeIndex === 0" timeType="day" @getData="handleDatePicker" v-model="selectedDate"
               class="custom-picker date-picker" />
-            <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker"
-              v-model="selectedDate" class="custom-picker date-picker" />
+            <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker" v-model="selectedDate"
+              class="custom-picker date-picker" />
             <dy-date v-else timeType="year" @getData="handleDatePicker" v-model="selectedDate"
               class="custom-picker date-picker" />
           </view>
 
           <view class="chart-view">
-            <qiun-data-charts  type="column" :chartData="storageQData" :opts="storageQOptions"
-              :canvasId="chartId + '-q'" :ontouch="false" :canvas2d="canvas2d" />
+            <qiun-data-charts type="column" :chartData="storageQData" :opts="storageQOptions" :canvasId="chartId + '-q'"
+              :ontouch="false" :canvas2d="canvas2d" />
           </view>
         </view>
       </view>
@@ -146,7 +118,7 @@ import dyDate from "@/components/dy-Date/dy-Date.vue";
 // import nyz from "@/api/nyz";
 // import energy_new from "@/api/energy_new";
 // import { mapGetters } from "vuex";
-import { queryHighestChargeAndPower, queryDayGeneratedPower, queryDayElectricityStatistic, queryMonthElectricityStatistic, queryYearElectricityStatistic } from "../../api/power";
+import { queryHighestChargeAndPower, getPowerData, queryDayElectricityStatistic, queryMonthElectricityStatistic, queryYearElectricityStatistic } from "../../api/power";
 
 export default {
   components: { dyDate },
@@ -154,24 +126,14 @@ export default {
   data() {
     return {
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
-      
+
       chartId: 'storage-' + Math.random().toString(36).substr(2, 9),
       showChart: false,
       activeChartTab: "日",
       timeTypeIndex: 0,
       current: "Storage-Management",
-      dayMaxChargeQ: "",
-      dayMaxChargeQTime: "",
-      hisMaxChargePower: "",
-      hisMaxChargePowerTime: "",
-      dayMaxDischargeQ: "",
-      dayMaxDischargeQTime: "",
-      hisMaxDischargePower: "",
-      hisMaxDischargePowerTime: "",
-      storageStatus: "--",
-      percent: 80,
       powerDate: new Date().toISOString().split("T")[0],
-      device170F: null,
+      deviceList: [],
       nyzRealTimeData: {
         status: "--",
         storagePower1: 0,
@@ -213,13 +175,19 @@ export default {
     // storageammeterDeviceids() {
     //   return this.currentSystem?.storageammeterDeviceids || [];
     // },
+    device171F() {
+      console.log(this.deviceList, this.deviceList.find(item => item && item.deviceType === '171F'), "171F");
+      return this.deviceList.find(item => item && item.deviceType === '171F');
+    },
     totalStorageData() {
-      let totalPower =
-        parseFloat(this.nyzRealTimeData.storagePower1 || 0) +
-        parseFloat(this.nyzRealTimeData.storagePower2 || 0);
-      let status = totalPower > 0 ? "充电中" : totalPower < 0 ? "放电中" : "不充不放";
-      let soc = parseFloat(this.nyzRealTimeData.soc) || 0;
-      return { power: totalPower.toFixed(2), status, soc, ratio: 0 };
+      const storagePower = parseFloat(this.getFieldValue('B60')) || 0;
+      let status = '不充不放';
+      if (storagePower > 0) {
+        status = '充电中';
+      } else if (storagePower < 0) {
+        status = '放电中';
+      }
+      return { power: storagePower.toFixed(2), status, soc: 0, ratio: 0 };
     },
     remainingTime() { return 23; },
     statusGradient() {
@@ -230,10 +198,8 @@ export default {
     },
     statList() {
       return [
-        { label: "日最高发电量", value: this.dayMaxChargeQ, unit: "kWh", time: this.dayMaxChargeQTime },
-        { label: "历史最高充电功率", value: this.hisMaxChargePower, unit: "kW", time: this.hisMaxChargePowerTime },
-        { label: "日最高放电量", value: this.dayMaxDischargeQ, unit: "kW", time: this.dayMaxDischargeQTime },
-        { label: "历史最高放电功率", value: this.hisMaxDischargePower, unit: "kW", time: this.hisMaxDischargePowerTime },
+        { label: "日最高充电量", value: this.getFieldValue('B134'), unit: "kWh", time: this.formatChargeDate() },
+        { label: "日最高放电量", value: this.getFieldValue('B144'), unit: "kWh", time: this.formatDischargeDate() },
       ];
     },
   },
@@ -243,7 +209,8 @@ export default {
     this.getHighestChargeAndPower();
     this.getNyzRealTimeData();
     this.handleDatePicker(this.selectedDate);
-    this.init170FDevice();
+    // this.init170FDevice();
+    this.init171FDevice();
 
     // 页面稳定后再画图表
     setTimeout(() => {
@@ -256,21 +223,58 @@ export default {
     if (this.updateTimer) clearTimeout(this.updateTimer);
   },
   methods: {
-    init170FDevice() {
-      const device170F = {
-        deviceType: '170F_V1_2',
+   
+    init171FDevice() {
+      const device171F = {
+        deviceType: '171F',
+        typeCode: '171F',
         address: '01',
-        barCode: '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00',
-        deviceId: '170F001',
-        name: 'DCDC设备170F'
+        barCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
+        deviceId: '171F001',
+        name: 'DCDC设备171F'
       };
+      realtimeDataProvider.initDeviceList([device171F]);
+      this.deviceList = realtimeDataProvider.getDeviceList();
+    },
+    getFieldValue(key) {
+      // console.log(this.device171F, this.device171F.energyData, key, "----121---------------");
+      if (!this.device171F || !this.device171F.energyData || this.device171F.energyData[key] === undefined) {
 
-      realtimeDataProvider.initDeviceList([device170F]);
-      var deviceList = realtimeDataProvider.getDeviceList();
+        return "--";
+      }
+      return this.device171F.energyData[key].value;
+    },
+    formatChargeDate() {
+      if (!this.device171F || !this.device171F.energyData) return "--";
+      const year = this.device171F.energyData.B138?.value;
+      const month = this.device171F.energyData.B140?.value;
+      const day = this.device171F.energyData.B142?.value;
 
-      this.device170F = deviceList.find((item) => item && item.deviceType === '170F_V1_2');
-      console.log(this.device170F, "-------------------");
+      if (year && month && day) {
+        const monthStr = String(month).padStart(2, '0');
+        const dayStr = String(day).padStart(2, '0');
+        return `${year}-${monthStr}-${dayStr}`;
+      }
+      return "--";
+    },
+    formatDischargeDate() {
+      if (!this.device171F || !this.device171F.energyData) return "--";
+      const year = this.device171F.energyData.B148?.value;
+      const month = this.device171F.energyData.B150?.value;
+      const day = this.device171F.energyData.B152?.value;
 
+      if (year && month && day) {
+        const monthStr = String(month).padStart(2, '0');
+        const dayStr = String(day).padStart(2, '0');
+        return `${year}-${monthStr}-${dayStr}`;
+      }
+      return "--";
+    },
+    formatHistoryChargePowerTime() {
+      return "--";
+    },
+    formatHistoryDischargePowerTime() {
+      return "--";
     },
     handleDateTypeChange(tab) {
       this.activeChartTab = tab;
@@ -352,7 +356,7 @@ export default {
           // 提取充电量和放电量数据
           const storageCharge = parseFloat(res.data.storageCharge) || 0;
           const storageDischarge = parseFloat(res.data.storageDischarge) || 0;
-          
+
           // 按小时生成数据
           for (let h = 0; h < 24; h++) {
             c.push(storageCharge >= 0 ? parseFloat(storageCharge.toFixed(2)) : 0);
@@ -365,7 +369,7 @@ export default {
             d.push(0);
           }
         }
-        
+
         this.storageQData = {
           categories: [...Array(24).keys()].map(h => `${String(h).padStart(2, "0")}:00`),
           series: [{ name: "充电量", data: c }, { name: "放电量", data: d }],
@@ -379,7 +383,7 @@ export default {
       const days = new Date(year, month, 0).getDate();
       const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
       const endDate = `${year}-${String(month).padStart(2, "0")}-${days}`;
-      
+
       queryMonthElectricityStatistic({
         esId: 8,
         startDate,
@@ -387,7 +391,7 @@ export default {
         areaLevelIds: 940
       }).then((res) => {
         const c = [], d = [];
-        
+
         if (res.data) {
           // 假设接口返回日数据数组
           const dailyData = res.data;
@@ -404,16 +408,16 @@ export default {
             d.push(0);
           }
         }
-        
-        this.storageQData = { 
-          categories: [...Array(days).keys()].map(i => i+1), 
-          series: [{ name: "充电量", data: c }, { name: "放电量", data: d }] 
+
+        this.storageQData = {
+          categories: [...Array(days).keys()].map(i => i + 1),
+          series: [{ name: "充电量", data: c }, { name: "放电量", data: d }]
         };
       });
     },
     findYearStorageQAndPower() {
       const year = new Date(this.selectedDate).getFullYear();
-      
+
       queryYearElectricityStatistic({
         esId: 8,
         year,
@@ -422,7 +426,7 @@ export default {
 
         console.log(res, "-----------121--------");
         const c = [], d = [];
-        
+
         if (res.data) {
           // 假设接口返回月数据数组
           const monthlyData = res.data;
@@ -438,10 +442,10 @@ export default {
             d.push(0);
           }
         }
-        
-        this.storageQData = { 
-          categories: [...Array(12).keys()].map(i => i+1), 
-          series: [{ name: "充电量", data: c }, { name: "放电量", data: d }] 
+
+        this.storageQData = {
+          categories: [...Array(12).keys()].map(i => i + 1),
+          series: [{ name: "充电量", data: c }, { name: "放电量", data: d }]
         };
       });
     },
@@ -461,7 +465,9 @@ export default {
       //   this.hisMaxDischargePowerTime = res.data.timeOfMinPower;
       // });
     },
-    onPowerDateChange() {
+    onPowerDateChange(value) {
+      // 更新选中的日期
+      this.powerDate = value;
       if (this.updateTimer) clearTimeout(this.updateTimer);
       this.updateTimer = setTimeout(() => {
         this.getPowerCurve();
@@ -469,23 +475,37 @@ export default {
     },
 
     getPowerCurve() {
-      queryDayGeneratedPower({
+      getPowerData({
         esId: 8,
         date: this.powerDate,
         areaLevelIds: 940
       }).then((res) => {
         const categories = [], charge = [], discharge = [];
 
-        if (res.data) {
-          // 假设接口返回单条数据，提取储能功率
-          const storagePower = parseFloat(res.data.storagePower) || 0;
-
-          // 按小时生成数据（使用相同的功率值）
+        if (res.data && res.data.length > 0) {
+          const dataList = res.data;
+          
+          // 按小时聚合数据（0-23小时，每小时取一个点）
           for (let h = 0; h < 24; h++) {
             const time = `${String(h).padStart(2, "0")}:00`;
             categories.push(time);
-            charge.push(storagePower >= 0 ? storagePower.toFixed(2) : 0);
-            discharge.push(storagePower < 0 ? -storagePower.toFixed(2) : 0);
+            
+            // 找到该小时范围内的数据
+            const hourData = dataList.filter(item => {
+              const dateTime = item.dateTime || '';
+              const hour = parseInt(dateTime.substring(11, 13)) || 0;
+              return hour === h;
+            });
+            
+            if (hourData.length > 0) {
+              // 计算平均值
+              const avgValue = hourData.reduce((sum, item) => sum + (parseFloat(item.storagePowerReverse || 0)), 0) / hourData.length;
+              charge.push(avgValue >= 0 ? parseFloat(avgValue.toFixed(2)) : 0);
+              discharge.push(avgValue < 0 ? parseFloat((-avgValue).toFixed(2)) : 0);
+            } else {
+              charge.push(0);
+              discharge.push(0);
+            }
           }
         } else {
           // 无数据时生成空数据

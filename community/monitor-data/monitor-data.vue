@@ -104,27 +104,27 @@
             <view class="data-grid">
               <view class="grid-item">
                 <text class="item-label">A相有功(kW)</text>
-                <text class="item-value">{{ device171B.energyData.B24.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B24 ? device171B.energyData.B24.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">A相无功(kVar)</text>
-                <text class="item-value">{{ device171B.energyData.B26.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B26 ? device171B.energyData.B26.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">B相有功(kW)</text>
-                <text class="item-value">{{ device171B.energyData.B28.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B28 ? device171B.energyData.B28.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">B相无功(kVar)</text>
-                <text class="item-value">{{ device171B.energyData.B30.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B30 ? device171B.energyData.B30.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">C相有功(kW)</text>
-                <text class="item-value">{{ device171B.energyData.B32.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B32 ? device171B.energyData.B32.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">C相无功(kVar)</text>
-                <text class="item-value">{{ device171B.energyData.B34.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B34 ? device171B.energyData.B34.value : "--" }}</text>
               </view>
             </view>
           </view>
@@ -134,23 +134,23 @@
             <view class="data-grid">
               <view class="grid-item">
                 <text class="item-label">交流频率(Hz)</text>
-                <text class="item-value">{{ device171B.energyData.B36.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B36 ? device171B.energyData.B36.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块面板温度(℃)</text>
-                <text class="item-value">{{ device171B.energyData.B40.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B40 ? device171B.energyData.B40.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">总有功功率(kW)</text>
-                <text class="item-value">{{ device171B.energyData.B44.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B44 ? device171B.energyData.B44.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">总无功功率(kVar)</text>
-                <text class="item-value">{{ device171B.energyData.B48.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B48 ? device171B.energyData.B48.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">总视在功率(kVA)</text>
-                <text class="item-value">{{ device171B.energyData.B52.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B52 ? device171B.energyData.B52.value : "--" }}</text>
               </view>
             </view>
           </view>
@@ -160,39 +160,39 @@
             <view class="data-grid">
               <view class="grid-item">
                 <text class="item-label">直流侧电压(V)</text>
-                <text class="item-value">{{ device171B.energyData.B56.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B56 ? device171B.energyData.B56.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">直流侧电流(A)</text>
-                <text class="item-value">{{ device171B.energyData.B58.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B58 ? device171B.energyData.B58.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">额定输出功率(kW)</text>
-                <text class="item-value">{{ device171B.energyData.B60.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B60 ? device171B.energyData.B60.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块状态</text>
-                <text class="item-value">{{ device171B.energyData.B64.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B64 ? device171B.energyData.B64.value : "--" }}</text>
               </view>
-              <view class="grid-item">
+              <!-- <view class="grid-item">
                 <text class="item-label">欠压复位状态</text>
-                <text class="item-value">{{ device171B.energyData.B68.value }}</text>
-              </view>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B68 ? device171B.energyData.B68.value : "--" }}</text>
+              </view> -->
               <view class="grid-item">
                 <text class="item-label">模块组号</text>
-                <text class="item-value">{{ device171B.energyData.B72.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B72 ? device171B.energyData.B72.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块地址</text>
-                <text class="item-value">{{ device171B.energyData.B74.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B74 ? device171B.energyData.B74.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">海拔值(m)</text>
-                <text class="item-value">{{ device171B.energyData.B76.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B76 ? device171B.energyData.B76.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">软件版本</text>
-                <text class="item-value">{{ device171B.energyData.B82.value }}</text>
+                <text class="item-value">{{ device171B && device171B.energyData && device171B.energyData.B82 ? device171B.energyData.B82.value : "--" }}</text>
               </view>
             </view>
           </view>
@@ -200,54 +200,54 @@
 
         <!-- 电池组 -->
         <view v-if="activeTab === 1" class="module">
-          <view class="module-title">电池组 (DCDC)</view>
+          <view class="module-title">储能DC</view>
 
           <view class="data-group">
             <view class="group-title">DCDC状态</view>
             <view class="data-grid">
               <view class="grid-item">
                 <text class="item-label">DCDC故障区标志</text>
-                <text class="item-value">{{ device171D.energyData.B0.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B0 ? device171D.energyData.B0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">系统工作状态</text>
-                <text class="item-value">{{ device171D.energyData.B2.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B2 ? device171D.energyData.B2.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">电池工作状态</text>
-                <text class="item-value">{{ device171D.energyData.B4.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B4 ? device171D.energyData.B4.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">电池充电状态</text>
-                <text class="item-value">{{ device171D.energyData.B6.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B6 ? device171D.energyData.B6.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">电池电压(V)</text>
-                <text class="item-value">{{ device171D.energyData.B8.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B8 ? device171D.energyData.B8.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">电池电流(A)</text>
-                <text class="item-value">{{ device171D.energyData.B10.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B10 ? device171D.energyData.B10.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">充电功率(kW)</text>
-                <text class="item-value">{{ device171D.energyData.B12.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B12 ? device171D.energyData.B12.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">放电功率(kW)</text>
-                <text class="item-value">{{ device171D.energyData.B14.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B14 ? device171D.energyData.B14.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">BUS母线电压(V)</text>
-                <text class="item-value">{{ device171D.energyData.B16.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B16 ? device171D.energyData.B16.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">BUS+母线电压(V)</text>
-                <text class="item-value">{{ device171D.energyData.B18.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B18 ? device171D.energyData.B18.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">BUS-母线电压(V)</text>
-                <text class="item-value">{{ device171D.energyData.B20.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B20 ? device171D.energyData.B20.value : "--" }}</text>
               </view>
             </view>
           </view>
@@ -256,760 +256,354 @@
             <view class="data-grid">
               <view class="grid-item">
                 <text class="item-label">环境温度(℃)</text>
-                <text class="item-value">{{ device171D.energyData.B22.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B22 ? device171D.energyData.B22.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">放电量</text>
-                <text class="item-value">{{ device171D.energyData.B24.value }}</text>
+                <text class="item-label">放电量(kWh)</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B24 ? device171D.energyData.B24.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">输出电压(V)</text>
-                <text class="item-value">{{ device171D.energyData.B26.value }}</text>
+                <text class="item-label">充电量(kWh)</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B28 ? device171D.energyData.B28.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">输出电流(A)</text>
-                <text class="item-value">{{ device171D.energyData.B28.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">输入功率(kW)</text>
-                <text class="item-value">{{ device171D.energyData.B30.value }}</text>
+                <text class="item-label">协议版本</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B32 ? device171D.energyData.B32.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">DCDC固件版本</text>
-                <text class="item-value">{{ device171D.energyData.B32.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B34 ? device171D.energyData.B34.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">DCDC软件版本</text>
-                <text class="item-value">{{ device171D.energyData.B34.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DCDC告警字0</text>
-                <text class="item-value">{{ device171D.energyData.B36.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DCDC告警字1</text>
-                <text class="item-value">{{ device171D.energyData.B38.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DCDC告警字2</text>
-                <text class="item-value">{{ device171D.energyData.B40.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DCDC告警字3</text>
-                <text class="item-value">{{ device171D.energyData.B42.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DCDC告警字4</text>
-                <text class="item-value">{{ device171D.energyData.B44.value }}</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B36 ? device171D.energyData.B36.value : "--" }}</text>
               </view>
             </view>
           </view>
 
-          <!-- BMS报警状态 -->
+          <!-- DCDC报警状态 -->
           <view class="data-group">
-            <view class="group-title">BMS报警状态</view>
+            <view class="group-title">DCDC报警状态</view>
             <view class="data-grid">
               <view class="grid-item">
-                <text class="item-label">组端过压1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B0b0.value }}</text>
+                <text class="item-label">电池过压告警</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B40b0 ? device171D.energyData.B40b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端过压2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B0b1.value }}</text>
+                <text class="item-label">电池过压关机</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B40b1 ? device171D.energyData.B40b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端过压3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B0b2.value }}</text>
+                <text class="item-label">电池快速过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B40b2 ? device171D.energyData.B40b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端欠压1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B0b3.value }}</text>
+                <text class="item-label">电池欠压告警</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B40b3 ? device171D.energyData.B40b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端欠压2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B0b4.value }}</text>
+                <text class="item-label">电池欠压关机</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B40b4 ? device171D.energyData.B40b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端欠压3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B0b5.value }}</text>
+                <text class="item-label">电池快速欠压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B40b5 ? device171D.energyData.B40b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端放电过流1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B0b6.value }}</text>
+                <text class="item-label">电池输入短路</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B40b6 ? device171D.energyData.B40b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端放电过流2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B0b7.value }}</text>
+                <text class="item-label">充放电过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B40b7 ? device171D.energyData.B40b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端放电过流3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B1b0.value }}</text>
+                <text class="item-label">充放电快速过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B41b0 ? device171D.energyData.B41b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端充电过流1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B1b1.value }}</text>
+                <text class="item-label">充放电硬件过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B41b1 ? device171D.energyData.B41b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端充电过流2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B1b2.value }}</text>
+                <text class="item-label">电池未接</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B41b2 ? device171D.energyData.B41b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端充电过流3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B1b3.value }}</text>
+                <text class="item-label">电池反接</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B41b3 ? device171D.energyData.B41b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端绝缘1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B1b4.value }}</text>
+                <text class="item-label">BUS3过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B41b4 ? device171D.energyData.B41b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端绝缘2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B1b5.value }}</text>
+                <text class="item-label">BUS3快速过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B41b5 ? device171D.energyData.B41b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">组端绝缘3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B1b6.value }}</text>
+                <text class="item-label">BUS3欠压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B41b6 ? device171D.energyData.B41b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">单体电池充电过温1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B1b7.value }}</text>
+                <text class="item-label">BUS3快速欠压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B41b7 ? device171D.energyData.B41b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">单体电池充电过温2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B2b0.value }}</text>
+                <text class="item-label">BUS2过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B42b0 ? device171D.energyData.B42b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">单体电池充电过温3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B2b1.value }}</text>
+                <text class="item-label">BUS2快速过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B42b1 ? device171D.energyData.B42b1.value : "--" }}</text>
               </view>
-              <view class="grid-item">
-                <text class="item-label">单体电池充电欠温1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B2b2.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电池充电欠温2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B2b3.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电池充电欠温3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B2b4.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电压过压1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B2b5.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电压过压2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B2b6.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电压过压3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B2b7.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电压欠压1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B3b0.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电压欠压2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B3b1.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电压欠压3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B3b2.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体压差过高1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B3b3.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体压差过高2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B3b4.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体压差过高3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B3b5.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体温差过高1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B3b6.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体温差过高2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B3b7.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体温差过高3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B4b0.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">SOC过低1级告警</text>
-                <text class="item-value">{{ device171D.energyData.B4b1.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">SOC过低2级告警</text>
-                <text class="item-value">{{ device171D.energyData.B4b2.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">SOC过低3级告警</text>
-                <text class="item-value">{{ device171D.energyData.B4b3.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">动力插箱温度过高1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B4b4.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">动力插箱温度过高2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B4b5.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">动力插箱温度过高3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B4b6.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池模组过压1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B4b7.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池模组过压2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B5b0.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池模组过压3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B5b1.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池模组欠压1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B5b2.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池模组欠压2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B5b3.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池模组欠压3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B5b4.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DI1故障</text>
-                <text class="item-value">{{ device171D.energyData.B5b5.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DI2故障</text>
-                <text class="item-value">{{ device171D.energyData.B5b6.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DI3故障</text>
-                <text class="item-value">{{ device171D.energyData.B5b7.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DI4故障</text>
-                <text class="item-value">{{ device171D.energyData.B6b0.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DI5故障</text>
-                <text class="item-value">{{ device171D.energyData.B6b1.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DI6故障</text>
-                <text class="item-value">{{ device171D.energyData.B6b2.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DI7故障</text>
-                <text class="item-value">{{ device171D.energyData.B6b3.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DI8故障</text>
-                <text class="item-value">{{ device171D.energyData.B6b4.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">内网通讯失联</text>
-                <text class="item-value">{{ device171D.energyData.B6b5.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电压采集异常</text>
-                <text class="item-value">{{ device171D.energyData.B6b6.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体温度采集异常</text>
-                <text class="item-value">{{ device171D.energyData.B6b7.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">显控检测故障</text>
-                <text class="item-value">{{ device171D.energyData.B7b0.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">簇间压差大</text>
-                <text class="item-value">{{ device171D.energyData.B7b1.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">簇间跳机故障</text>
-                <text class="item-value">{{ device171D.energyData.B7b2.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池极限故障</text>
-                <text class="item-value">{{ device171D.energyData.B7b3.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">项目软件版本参数不一致</text>
-                <text class="item-value">{{ device171D.energyData.B7b4.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">与PCS通讯故障</text>
-                <text class="item-value">{{ device171D.energyData.B7b5.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">PC强控调试模式</text>
-                <text class="item-value">{{ device171D.energyData.B7b6.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">CAN霍尔传感器故障</text>
-                <text class="item-value">{{ device171D.energyData.B7b7.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">CAN霍尔传感器通讯故障</text>
-                <text class="item-value">{{ device171D.energyData.B8b0.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">硬件自检异常</text>
-                <text class="item-value">{{ device171D.energyData.B8b1.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电压线束故障</text>
-                <text class="item-value">{{ device171D.energyData.B8b2.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">均衡故障</text>
-                <text class="item-value">{{ device171D.energyData.B8b3.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">EMS通讯故障</text>
-                <text class="item-value">{{ device171D.energyData.B8b4.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">与三级BMS通讯故障</text>
-                <text class="item-value">{{ device171D.energyData.B8b5.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电池放电过温1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B8b6.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电池放电过温2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B8b7.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电池放电过温3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B9b0.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电池放电欠温1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B9b1.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电池放电欠温2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B9b2.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体电池放电欠温3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B9b3.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">SOC过高1级告警</text>
-                <text class="item-value">{{ device171D.energyData.B9b4.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">SOC过高2级告警</text>
-                <text class="item-value">{{ device171D.energyData.B9b5.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">SOC过高3级告警</text>
-                <text class="item-value">{{ device171D.energyData.B9b6.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">温升快报警1级报警</text>
-                <text class="item-value">{{ device171D.energyData.B9b7.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">温升快报警2级报警</text>
-                <text class="item-value">{{ device171D.energyData.B10b0.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">温升快报警3级报警</text>
-                <text class="item-value">{{ device171D.energyData.B10b1.value }}</text>
-              </view>
-            </view>
-          </view>
-
-          <!-- BMS电池簇状态 -->
-          <view class="data-group">
-            <view class="group-title">BMS电池簇状态</view>
-            <view class="data-grid">
-              <view class="grid-item">
-                <text class="item-label">电池簇电压</text>
-                <text class="item-value">{{ device171D.energyData.B12.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇电流值</text>
-                <text class="item-value">{{ device171D.energyData.B14.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇总SOC</text>
-                <text class="item-value">{{ device171D.energyData.B16.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇总SOH</text>
-                <text class="item-value">{{ device171D.energyData.B18.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇总SOE</text>
-                <text class="item-value">{{ device171D.energyData.B20.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇绝缘电阻R+</text>
-                <text class="item-value">{{ device171D.energyData.B22.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇绝缘电阻R-</text>
-                <text class="item-value">{{ device171D.energyData.B24.value }}</text>
+              <!-- <view class="grid-item">
+                <text class="item-label">预留</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B42b2 ? device171D.energyData.B42b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池簇电池状态</text>
-                <text class="item-value">{{ device171D.energyData.B26.value }}</text>
+                <text class="item-label">预留</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B42b3 ? device171D.energyData.B42b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池簇电池状态</text>
-                <text class="item-value">{{ device171D.energyData.B28b0.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇电池状态</text>
-                <text class="item-value">{{ device171D.energyData.B28b1.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇电池状态</text>
-                <text class="item-value">{{ device171D.energyData.B28b2.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇电池状态</text>
-                <text class="item-value">{{ device171D.energyData.B28b3.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇电池状态</text>
-                <text class="item-value">{{ device171D.energyData.B28b4.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇电池状态</text>
-                <text class="item-value">{{ device171D.energyData.B28b5.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇电池状态</text>
-                <text class="item-value">{{ device171D.energyData.B28b6.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇电池状态</text>
-                <text class="item-value">{{ device171D.energyData.B28b7.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">SLP信号</text>
-                <text class="item-value">{{ device171D.energyData.B29b0.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DO1输出状态</text>
-                <text class="item-value">{{ device171D.energyData.B30b0.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DO2输出状态</text>
-                <text class="item-value">{{ device171D.energyData.B30b1.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DO3输出状态</text>
-                <text class="item-value">{{ device171D.energyData.B30b2.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DO4输出状态</text>
-                <text class="item-value">{{ device171D.energyData.B30b3.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DO5输出状态</text>
-                <text class="item-value">{{ device171D.energyData.B30b4.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DO6输出状态</text>
-                <text class="item-value">{{ device171D.energyData.B30b5.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DO7输出状态</text>
-                <text class="item-value">{{ device171D.energyData.B30b6.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">DO8输出状态</text>
-                <text class="item-value">{{ device171D.energyData.B30b7.value }}</text>
-              </view>
-            </view>
-          </view>
-
-          <!-- BMS参数 -->
-          <view class="data-group">
-            <view class="group-title">BMS参数</view>
-            <view class="data-grid">
-              <view class="grid-item">
-                <text class="item-label">实际温度采集点数</text>
-                <text class="item-value">{{ device171D.energyData.B32.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池最高温度</text>
-                <text class="item-value">{{ device171D.energyData.B34.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池最高温度所在模块号</text>
-                <text class="item-value">{{ device171D.energyData.B36.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池最高温度模块内序号</text>
-                <text class="item-value">{{ device171D.energyData.B38.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池最低温度</text>
-                <text class="item-value">{{ device171D.energyData.B40.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池最低温度所在模块号</text>
-                <text class="item-value">{{ device171D.energyData.B42.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池最低温度模块内序号</text>
-                <text class="item-value">{{ device171D.energyData.B44.value }}</text>
-              </view>
+                <text class="item-label">预留</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B42b4 ? device171D.energyData.B42b4.value : "--" }}</text>
+              </view> -->
               <view class="grid-item">
-                <text class="item-label">电池平均温度</text>
-                <text class="item-value">{{ device171D.energyData.B46.value }}</text>
+                <text class="item-label">BUS2欠压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B42b5 ? device171D.energyData.B42b5.value : "--" }}</text>
               </view>
+              <!-- <view class="grid-item">
+                <text class="item-label">预留</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B42b6 ? device171D.energyData.B42b6.value : "--" }}</text>
+              </view> -->
               <view class="grid-item">
-                <text class="item-label">电池组电池总节数</text>
-                <text class="item-value">{{ device171D.energyData.B48.value }}</text>
+                <text class="item-label">BUS1+过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B42b7 ? device171D.energyData.B42b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">单体平均电压</text>
-                <text class="item-value">{{ device171D.energyData.B50.value }}</text>
+                <text class="item-label">BUS1+快速过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B43b0 ? device171D.energyData.B43b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最高单体电压</text>
-                <text class="item-value">{{ device171D.energyData.B52.value }}</text>
+                <text class="item-label">BUS1-过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B43b1 ? device171D.energyData.B43b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最高单体电压所在模块号</text>
-                <text class="item-value">{{ device171D.energyData.B54.value }}</text>
+                <text class="item-label">BUS1-快速过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B43b2 ? device171D.energyData.B43b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最高单体电压模块内序号</text>
-                <text class="item-value">{{ device171D.energyData.B56.value }}</text>
+                <text class="item-label">BUS1电压不平衡</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B43b3 ? device171D.energyData.B43b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最低单体电压</text>
-                <text class="item-value">{{ device171D.energyData.B58.value }}</text>
+                <text class="item-label">BUS1+快速欠压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B43b4 ? device171D.energyData.B43b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最低单体电压所在模块号</text>
-                <text class="item-value">{{ device171D.energyData.B60.value }}</text>
+                <text class="item-label">BUS1-快速欠压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B43b5 ? device171D.energyData.B43b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最低单体电压模块内序号</text>
-                <text class="item-value">{{ device171D.energyData.B62.value }}</text>
+                <text class="item-label">BUS+母线过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B43b6 ? device171D.energyData.B43b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">单体平均SOC</text>
-                <text class="item-value">{{ device171D.energyData.B64.value }}</text>
+                <text class="item-label">BUS+母线快速过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B43b7 ? device171D.energyData.B43b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最高单体SOC</text>
-                <text class="item-value">{{ device171D.energyData.B66.value }}</text>
+                <text class="item-label">BUS-母线过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B44b0 ? device171D.energyData.B44b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最高单体SOC所在模块号</text>
-                <text class="item-value">{{ device171D.energyData.B68.value }}</text>
+                <text class="item-label">BUS-母线快速过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B44b1 ? device171D.energyData.B44b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最高单体SOC模块内序号</text>
-                <text class="item-value">{{ device171D.energyData.B70.value }}</text>
+                <text class="item-label">BUS母线电压不平衡</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B44b2 ? device171D.energyData.B44b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最低单体SOC</text>
-                <text class="item-value">{{ device171D.energyData.B72.value }}</text>
+                <text class="item-label">BUS母线未接</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B44b3 ? device171D.energyData.B44b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最低单体SOC所在模块号</text>
-                <text class="item-value">{{ device171D.energyData.B74.value }}</text>
+                <text class="item-label">BUS母线反接</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B44b4 ? device171D.energyData.B44b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最低单体SOC模块内序号</text>
-                <text class="item-value">{{ device171D.energyData.B76.value }}</text>
+                <text class="item-label">BUS母线短路</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B44b5 ? device171D.energyData.B44b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">单体平均SOH</text>
-                <text class="item-value">{{ device171D.energyData.B78.value }}</text>
+                <text class="item-label">BUS母线欠压关机</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B44b6 ? device171D.energyData.B44b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最高单体SOH</text>
-                <text class="item-value">{{ device171D.energyData.B80.value }}</text>
+                <text class="item-label">BUS+母线快速欠压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B44b7 ? device171D.energyData.B44b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最高单体SOH所在模块号</text>
-                <text class="item-value">{{ device171D.energyData.B82.value }}</text>
+                <text class="item-label">BUS-母线快速欠压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B45b0 ? device171D.energyData.B45b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最高单体SOH模块内序号</text>
-                <text class="item-value">{{ device171D.energyData.B84.value }}</text>
+                <text class="item-label">DCDC1过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B45b1 ? device171D.energyData.B45b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最低单体SOH</text>
-                <text class="item-value">{{ device171D.energyData.B86.value }}</text>
+                <text class="item-label">DCDC1快速过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B45b2 ? device171D.energyData.B45b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最低单体SOH所在模块号</text>
-                <text class="item-value">{{ device171D.energyData.B88.value }}</text>
+                <text class="item-label">DCDC1硬件过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B45b3 ? device171D.energyData.B45b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最低单体SOH模块内序号</text>
-                <text class="item-value">{{ device171D.energyData.B90.value }}</text>
+                <text class="item-label">DCDC2过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B45b4 ? device171D.energyData.B45b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">单体平均内阻</text>
-                <text class="item-value">{{ device171D.energyData.B92.value }}</text>
+                <text class="item-label">DCDC2快速过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B45b5 ? device171D.energyData.B45b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最高单体内阻</text>
-                <text class="item-value">{{ device171D.energyData.B94.value }}</text>
+                <text class="item-label">DCDC2硬件过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B45b6 ? device171D.energyData.B45b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最高单体内阻所在模块号</text>
-                <text class="item-value">{{ device171D.energyData.B96.value }}</text>
+                <text class="item-label">DCDC3过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B45b7 ? device171D.energyData.B45b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最高单体内阻模块内序号</text>
-                <text class="item-value">{{ device171D.energyData.B98.value }}</text>
+                <text class="item-label">DCDC3快速过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B46b0 ? device171D.energyData.B46b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最低单体内阻</text>
-                <text class="item-value">{{ device171D.energyData.B100.value }}</text>
+                <text class="item-label">DCDC3硬件过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B46b1 ? device171D.energyData.B46b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最低单体内阻所在模块号</text>
-                <text class="item-value">{{ device171D.energyData.B102.value }}</text>
+                <text class="item-label">DCDC不均流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B46b2 ? device171D.energyData.B46b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">最低单体内阻模块内序号</text>
-                <text class="item-value">{{ device171D.energyData.B104.value }}</text>
+                <text class="item-label">BUS1+硬件过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B46b3 ? device171D.energyData.B46b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池箱最高温度</text>
-                <text class="item-value">{{ device171D.energyData.B106.value }}</text>
+                <text class="item-label">谐振电感A1硬件过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B46b4 ? device171D.energyData.B46b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池箱最高温度所在模块号</text>
-                <text class="item-value">{{ device171D.energyData.B108.value }}</text>
+                <text class="item-label">BUS1-硬件过压</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B46b5 ? device171D.energyData.B46b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池箱最高温度模块内序号</text>
-                <text class="item-value">{{ device171D.energyData.B110.value }}</text>
+                <text class="item-label">谐振电感A2硬件过流</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B46b6 ? device171D.energyData.B46b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池箱最低温度</text>
-                <text class="item-value">{{ device171D.energyData.B112.value }}</text>
+                <text class="item-label">过载110%</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B46b7 ? device171D.energyData.B46b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池箱最低温度所在模块号</text>
-                <text class="item-value">{{ device171D.energyData.B114.value }}</text>
+                <text class="item-label">过载125%</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B47b0 ? device171D.energyData.B47b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池箱最低温度模块内序号</text>
-                <text class="item-value">{{ device171D.energyData.B116.value }}</text>
+                <text class="item-label">BuckBoost软启故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B47b1 ? device171D.energyData.B47b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池箱箱平均温度</text>
-                <text class="item-value">{{ device171D.energyData.B118.value }}</text>
+                <text class="item-label">DCDC母线软启故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B47b2 ? device171D.energyData.B47b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池模组最高电压值</text>
-                <text class="item-value">{{ device171D.energyData.B120.value }}</text>
+                <text class="item-label">DCDC电池软启故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B47b3 ? device171D.energyData.B47b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池模组最高电压序号</text>
-                <text class="item-value">{{ device171D.energyData.B122.value }}</text>
+                <text class="item-label">BAT散热器过温</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B47b4 ? device171D.energyData.B47b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池模组最低电压值</text>
-                <text class="item-value">{{ device171D.energyData.B124.value }}</text>
+                <text class="item-label">DCDC原边过温</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B47b5 ? device171D.energyData.B47b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池模组最低电压序号</text>
-                <text class="item-value">{{ device171D.energyData.B126.value }}</text>
+                <text class="item-label">DCDC副边过温</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B47b6 ? device171D.energyData.B47b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">累计充电电量</text>
-                <text class="item-value">{{ device171D.energyData.B128.value }}</text>
+                <text class="item-label">DCDC环境过温</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B47b7 ? device171D.energyData.B47b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">累计放电电量</text>
-                <text class="item-value">{{ device171D.energyData.B132.value }}</text>
+                <text class="item-label">辅助电源故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B48b0 ? device171D.energyData.B48b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">单次充电电量</text>
-                <text class="item-value">{{ device171D.energyData.B136.value }}</text>
+                <text class="item-label">DCDC功率降额</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B48b1 ? device171D.energyData.B48b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">单次放电电量</text>
-                <text class="item-value">{{ device171D.energyData.B138.value }}</text>
+                <text class="item-label">DCDC风扇A故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B48b2 ? device171D.energyData.B48b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">累计充电次数</text>
-                <text class="item-value">{{ device171D.energyData.B140.value }}</text>
+                <text class="item-label">DCDC风扇B故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B48b3 ? device171D.energyData.B48b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">累计放电次数</text>
-                <text class="item-value">{{ device171D.energyData.B142.value }}</text>
+                <text class="item-label">E2PROM读故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B48b4 ? device171D.energyData.B48b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池组负载电压</text>
-                <text class="item-value">{{ device171D.energyData.B144.value }}</text>
+                <text class="item-label">E2PROM写故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B48b5 ? device171D.energyData.B48b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池组总电压-备用1</text>
-                <text class="item-value">{{ device171D.energyData.B146.value }}</text>
+                <text class="item-label">DCDC心跳检测异常</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B48b6 ? device171D.energyData.B48b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池组电流值-备用1</text>
-                <text class="item-value">{{ device171D.energyData.B148.value }}</text>
+                <text class="item-label">DCDC软件版本错误</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B48b7 ? device171D.energyData.B48b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">电池组电流值-备用2</text>
-                <text class="item-value">{{ device171D.energyData.B150.value }}</text>
+                <text class="item-label">监控CANA通讯故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B49b0 ? device171D.energyData.B49b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">系统运行心跳</text>
-                <text class="item-value">{{ device171D.energyData.B152.value }}</text>
+                <text class="item-label">并机CANB通讯故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B49b1 ? device171D.energyData.B49b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">绝缘采集状态</text>
-                <text class="item-value">{{ device171D.energyData.B154.value }}</text>
+                <text class="item-label">SPI通讯故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B49b2 ? device171D.energyData.B49b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">禁充标志</text>
-                <text class="item-value">{{ device171D.energyData.B156b0.value }}</text>
+                <text class="item-label">485通讯故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B49b3 ? device171D.energyData.B49b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">禁放标志</text>
-                <text class="item-value">{{ device171D.energyData.B156b1.value }}</text>
+                <text class="item-label">母线侧主继电器故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B49b4 ? device171D.energyData.B49b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">告警状态</text>
-                <text class="item-value">{{ device171D.energyData.B156b2.value }}</text>
+                <text class="item-label">电池侧主继电器故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B49b5 ? device171D.energyData.B49b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">充满状态</text>
-                <text class="item-value">{{ device171D.energyData.B156b3.value }}</text>
+                <text class="item-label">DC机型配置错误</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B49b6 ? device171D.energyData.B49b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
-                <text class="item-label">放空状态</text>
-                <text class="item-value">{{ device171D.energyData.B156b4.value }}</text>
+                <text class="item-label">EPO故障</text>
+                <text class="item-value">{{ device171D && device171D.energyData && device171D.energyData.B49b7 ? device171D.energyData.B49b7.value : "--" }}</text>
               </view>
             </view>
           </view>
@@ -1019,740 +613,808 @@
         <!-- BMS -->
         <view v-if="activeTab === 2" class="module">
           <view class="module-title">BMS</view>
-
+<!-- 电气参数 -->
+          <view class="data-group">
+            <view class="group-title">电气参数</view>
+            <view class="data-grid">
+              <view class="grid-item">
+                <text class="item-label">电池簇电压(V)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B12 ? device171C.energyData.B12.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇电流值(A)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B14 ? device171C.energyData.B14.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇总SOC(%)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B16 ? device171C.energyData.B16.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇总SOH(%)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B18 ? device171C.energyData.B18.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇总SOE(kWh)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B20 ? device171C.energyData.B20.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇绝缘电阻R+(kΩ)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B22 ? device171C.energyData.B22.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇绝缘电阻R-(kΩ)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B24 ? device171C.energyData.B24.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池簇电池状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B26 ? device171C.energyData.B26.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI1状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B28b0 ? device171C.energyData.B28b0.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI2状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B28b1 ? device171C.energyData.B28b1.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI3状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B28b2 ? device171C.energyData.B28b2.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI4状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B28b3 ? device171C.energyData.B28b3.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI5状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B28b4 ? device171C.energyData.B28b4.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI6状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B28b5 ? device171C.energyData.B28b5.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI7状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B28b6 ? device171C.energyData.B28b6.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DI8状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B28b7 ? device171C.energyData.B28b7.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">SLP信号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B29b0 ? device171C.energyData.B29b0.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DO1输出状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B30b0 ? device171C.energyData.B30b0.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DO2输出状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B30b1 ? device171C.energyData.B30b1.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DO3输出状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B30b2 ? device171C.energyData.B30b2.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DO4输出状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B30b3 ? device171C.energyData.B30b3.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DO5输出状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B30b4 ? device171C.energyData.B30b4.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DO6输出状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B30b5 ? device171C.energyData.B30b5.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DO7输出状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B30b6 ? device171C.energyData.B30b6.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">DO8输出状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B30b7 ? device171C.energyData.B30b7.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">实际温度采集点数</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B32 ? device171C.energyData.B32.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池最高温度(℃)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B34 ? device171C.energyData.B34.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池最高温度所在模块号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B36 ? device171C.energyData.B36.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池最高温度模块内序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B38 ? device171C.energyData.B38.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池最低温度(℃)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B40 ? device171C.energyData.B40.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池最低温度所在模块号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B42 ? device171C.energyData.B42.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池最低温度模块内序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B44 ? device171C.energyData.B44.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池平均温度(℃)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B46 ? device171C.energyData.B46.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池组电池总节数</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B48 ? device171C.energyData.B48.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体平均电压(V)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B50 ? device171C.energyData.B50.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体电压(V)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B52 ? device171C.energyData.B52.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体电压所在模块号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B54 ? device171C.energyData.B54.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体电压模块内序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B56 ? device171C.energyData.B56.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体电压(V)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B58 ? device171C.energyData.B58.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体电压所在模块号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B60 ? device171C.energyData.B60.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体电压模块内序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B62 ? device171C.energyData.B62.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体平均SOC(%)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B64 ? device171C.energyData.B64.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体SOC(%)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B66 ? device171C.energyData.B66.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体SOC所在模块号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B68 ? device171C.energyData.B68.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体SOC模块内序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B70 ? device171C.energyData.B70.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体SOC(%)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B72 ? device171C.energyData.B72.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体SOC所在模块号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B74 ? device171C.energyData.B74.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体SOC模块内序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B76 ? device171C.energyData.B76.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体平均SOH(%)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B78 ? device171C.energyData.B78.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体SOH(%)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B80 ? device171C.energyData.B80.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体SOH所在模块号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B82 ? device171C.energyData.B82.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体SOH模块内序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B84 ? device171C.energyData.B84.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体SOH(%)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B86 ? device171C.energyData.B86.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体SOH所在模块号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B88 ? device171C.energyData.B88.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体SOH模块内序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B90 ? device171C.energyData.B90.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单体平均内阻(mΩ)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B92 ? device171C.energyData.B92.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体内阻(mΩ)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B94 ? device171C.energyData.B94.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体内阻所在模块号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B96 ? device171C.energyData.B96.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最高单体内阻模块内序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B98 ? device171C.energyData.B98.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体内阻(mΩ)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B100 ? device171C.energyData.B100.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体内阻所在模块号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B102 ? device171C.energyData.B102.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最低单体内阻模块内序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B104 ? device171C.energyData.B104.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱最高温度(℃)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B106 ? device171C.energyData.B106.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱最高温度所在模块号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B108 ? device171C.energyData.B108.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱最高温度模块内序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B110 ? device171C.energyData.B110.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱最低温度(℃)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B112 ? device171C.energyData.B112.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱最低温度所在模块号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B114 ? device171C.energyData.B114.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱最低温度模块内序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B116 ? device171C.energyData.B116.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池箱平均温度(℃)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B118 ? device171C.energyData.B118.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组最高电压值(V)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B120 ? device171C.energyData.B120.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组最高电压序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B122 ? device171C.energyData.B122.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组最低电压值(V)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B124 ? device171C.energyData.B124.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池模组最低电压序号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B126 ? device171C.energyData.B126.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">累计充电电量(kWh)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B128 ? device171C.energyData.B128.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">累计放电电量(kWh)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B132 ? device171C.energyData.B132.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单次充电电量(kWh)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B136 ? device171C.energyData.B136.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单次放电电量(kWh)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B138 ? device171C.energyData.B138.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">累计充电次数</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B140 ? device171C.energyData.B140.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">累计放电次数</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B142 ? device171C.energyData.B142.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池组负载电压(V)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B144 ? device171C.energyData.B144.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池组总电压-备用1(V)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B146 ? device171C.energyData.B146.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池组电流值-备用1(A)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B148 ? device171C.energyData.B148.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">电池组电流值-备用2(A)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B150 ? device171C.energyData.B150.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">系统运行心跳</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B152 ? device171C.energyData.B152.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">绝缘采集状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B154 ? device171C.energyData.B154.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">禁充标志</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B156b0 ? device171C.energyData.B156b0.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">禁放标志</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B156b1 ? device171C.energyData.B156b1.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">告警状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B156b2 ? device171C.energyData.B156b2.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">充满状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B156b3 ? device171C.energyData.B156b3.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">放空状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B156b4 ? device171C.energyData.B156b4.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">系统告警状态</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B158 ? device171C.energyData.B158.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">系统告警状态-禁充/禁放解除条件</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B160 ? device171C.energyData.B160.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">系统告警状态-禁充/禁放解除时间</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B162 ? device171C.energyData.B162.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大允许充电电流(A)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B164 ? device171C.energyData.B164.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大允许放电电流(A)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B166 ? device171C.energyData.B166.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大允许充电功率(kW)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B168 ? device171C.energyData.B168.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大允许放电功率(kW)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B170 ? device171C.energyData.B170.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大单体电压节号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B172 ? device171C.energyData.B172.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最小单体电压节号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B174 ? device171C.energyData.B174.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大单体温度节号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B176 ? device171C.energyData.B176.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最小单体温度节号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B178 ? device171C.energyData.B178.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大SOC节号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B180 ? device171C.energyData.B180.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最小SOC节号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B182 ? device171C.energyData.B182.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大SOH节号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B184 ? device171C.energyData.B184.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最小SOH节号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B186 ? device171C.energyData.B186.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最大电池内阻节号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B188 ? device171C.energyData.B188.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">最小电池内阻节号</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B190 ? device171C.energyData.B190.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单日累计充电电量(kWh)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B192 ? device171C.energyData.B192.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">单日累计放电电量(kWh)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B196 ? device171C.energyData.B196.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">主控采集NTC温度1(℃)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B200 ? device171C.energyData.B200.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">主控采集NTC温度2(℃)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B202 ? device171C.energyData.B202.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">主控采集NTC温度3(℃)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B204 ? device171C.energyData.B204.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">主控采集NTC温度4(℃)</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B206 ? device171C.energyData.B206.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">通讯协议版本号主版本</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B208 ? device171C.energyData.B208.value : "--" }}</text>
+              </view>
+              <view class="grid-item">
+                <text class="item-label">通讯协议版本号子版本</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B210 ? device171C.energyData.B210.value : "--" }}</text>
+              </view>
+            </view>
+          </view>
           <!-- 告警状态 -->
           <view class="data-group">
             <view class="group-title">告警状态</view>
             <view class="data-grid">
               <view class="grid-item">
                 <text class="item-label">组端过压1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B0b0.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B0b0 ? device171C.energyData.B0b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端过压2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B0b1.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B0b1 ? device171C.energyData.B0b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端过压3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B0b2.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B0b2 ? device171C.energyData.B0b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端欠压1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B0b3.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B0b3 ? device171C.energyData.B0b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端欠压2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B0b4.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B0b4 ? device171C.energyData.B0b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端欠压3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B0b5.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B0b5 ? device171C.energyData.B0b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端放电过流1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B0b6.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B0b6 ? device171C.energyData.B0b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端放电过流2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B0b7.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B0b7 ? device171C.energyData.B0b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端放电过流3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B1b0.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B1b0 ? device171C.energyData.B1b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端充电过流1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B1b1.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B1b1 ? device171C.energyData.B1b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端充电过流2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B1b2.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B1b2 ? device171C.energyData.B1b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端充电过流3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B1b3.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B1b3 ? device171C.energyData.B1b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端绝缘1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B1b4.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B1b4 ? device171C.energyData.B1b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端绝缘2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B1b5.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B1b5 ? device171C.energyData.B1b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组端绝缘3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B1b6.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B1b6 ? device171C.energyData.B1b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电池充电过温1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B1b7.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B1b7 ? device171C.energyData.B1b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电池充电过温2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B2b0.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B2b0 ? device171C.energyData.B2b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电池充电过温3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B2b1.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B2b1 ? device171C.energyData.B2b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电池充电欠温1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B2b2.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B2b2 ? device171C.energyData.B2b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电池充电欠温2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B2b3.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B2b3 ? device171C.energyData.B2b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电池充电欠温3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B2b4.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B2b4 ? device171C.energyData.B2b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电压过压1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B2b5.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B2b5 ? device171C.energyData.B2b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电压过压2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B2b6.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B2b6 ? device171C.energyData.B2b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电压过压3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B2b7.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B2b7 ? device171C.energyData.B2b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电压欠压1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B3b0.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B3b0 ? device171C.energyData.B3b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电压欠压2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B3b1.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B3b1 ? device171C.energyData.B3b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电压欠压3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B3b2.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B3b2 ? device171C.energyData.B3b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体压差过高1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B3b3.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B3b3 ? device171C.energyData.B3b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体压差过高2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B3b4.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B3b4 ? device171C.energyData.B3b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体压差过高3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B3b5.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B3b5 ? device171C.energyData.B3b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体温差过高1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B3b6.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B3b6 ? device171C.energyData.B3b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体温差过高2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B3b7.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B3b7 ? device171C.energyData.B3b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体温差过高3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B4b0.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B4b0 ? device171C.energyData.B4b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">SOC过低1级告警</text>
-                <text class="item-value">{{ device171C.energyData.B4b1.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B4b1 ? device171C.energyData.B4b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">SOC过低2级告警</text>
-                <text class="item-value">{{ device171C.energyData.B4b2.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B4b2 ? device171C.energyData.B4b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">SOC过低3级告警</text>
-                <text class="item-value">{{ device171C.energyData.B4b3.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B4b3 ? device171C.energyData.B4b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">动力插箱温度过高1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B4b4.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B4b4 ? device171C.energyData.B4b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">动力插箱温度过高2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B4b5.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B4b5 ? device171C.energyData.B4b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">动力插箱温度过高3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B4b6.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B4b6 ? device171C.energyData.B4b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">电池模组过压1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B4b7.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B4b7 ? device171C.energyData.B4b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">电池模组过压2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B5b0.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B5b0 ? device171C.energyData.B5b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">电池模组过压3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B5b1.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B5b1 ? device171C.energyData.B5b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">电池模组欠压1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B5b2.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B5b2 ? device171C.energyData.B5b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">电池模组欠压2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B5b3.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B5b3 ? device171C.energyData.B5b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">电池模组欠压3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B5b4.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B5b4 ? device171C.energyData.B5b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">DI1故障</text>
-                <text class="item-value">{{ device171C.energyData.B5b5.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B5b5 ? device171C.energyData.B5b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">DI2故障</text>
-                <text class="item-value">{{ device171C.energyData.B5b6.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B5b6 ? device171C.energyData.B5b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">DI3故障</text>
-                <text class="item-value">{{ device171C.energyData.B5b7.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B5b7 ? device171C.energyData.B5b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">DI4故障</text>
-                <text class="item-value">{{ device171C.energyData.B6b0.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B6b0 ? device171C.energyData.B6b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">DI5故障</text>
-                <text class="item-value">{{ device171C.energyData.B6b1.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B6b1 ? device171C.energyData.B6b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">DI6故障</text>
-                <text class="item-value">{{ device171C.energyData.B6b2.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B6b2 ? device171C.energyData.B6b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">DI7故障</text>
-                <text class="item-value">{{ device171C.energyData.B6b3.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B6b3 ? device171C.energyData.B6b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">DI8故障</text>
-                <text class="item-value">{{ device171C.energyData.B6b4.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B6b4 ? device171C.energyData.B6b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">内网通讯失联</text>
-                <text class="item-value">{{ device171C.energyData.B6b5.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B6b5 ? device171C.energyData.B6b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电压采集异常</text>
-                <text class="item-value">{{ device171C.energyData.B6b6.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B6b6 ? device171C.energyData.B6b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体温度采集异常</text>
-                <text class="item-value">{{ device171C.energyData.B6b7.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B6b7 ? device171C.energyData.B6b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">显控检测故障</text>
-                <text class="item-value">{{ device171C.energyData.B7b0.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B7b0 ? device171C.energyData.B7b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">簇间压差大</text>
-                <text class="item-value">{{ device171C.energyData.B7b1.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B7b1 ? device171C.energyData.B7b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">簇间跳机故障</text>
-                <text class="item-value">{{ device171C.energyData.B7b2.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B7b2 ? device171C.energyData.B7b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">电池极限故障</text>
-                <text class="item-value">{{ device171C.energyData.B7b3.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B7b3 ? device171C.energyData.B7b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">项目软件版本参数不一致</text>
-                <text class="item-value">{{ device171C.energyData.B7b4.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B7b4 ? device171C.energyData.B7b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">与PCS通讯故障</text>
-                <text class="item-value">{{ device171C.energyData.B7b5.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B7b5 ? device171C.energyData.B7b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">PC强控调试模式</text>
-                <text class="item-value">{{ device171C.energyData.B7b6.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B7b6 ? device171C.energyData.B7b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">CAN霍尔传感器故障</text>
-                <text class="item-value">{{ device171C.energyData.B7b7.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B7b7 ? device171C.energyData.B7b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">CAN霍尔传感器通讯故障</text>
-                <text class="item-value">{{ device171C.energyData.B8b0.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B8b0 ? device171C.energyData.B8b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">硬件自检异常</text>
-                <text class="item-value">{{ device171C.energyData.B8b1.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B8b1 ? device171C.energyData.B8b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电压线束故障</text>
-                <text class="item-value">{{ device171C.energyData.B8b2.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B8b2 ? device171C.energyData.B8b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">均衡故障</text>
-                <text class="item-value">{{ device171C.energyData.B8b3.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B8b3 ? device171C.energyData.B8b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">EMS通讯故障</text>
-                <text class="item-value">{{ device171C.energyData.B8b4.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B8b4 ? device171C.energyData.B8b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">与三级BMS通讯故障</text>
-                <text class="item-value">{{ device171C.energyData.B8b5.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B8b5 ? device171C.energyData.B8b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电池放电过温1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B8b6.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B8b6 ? device171C.energyData.B8b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电池放电过温2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B8b7.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B8b7 ? device171C.energyData.B8b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电池放电过温3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B9b0.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B9b0 ? device171C.energyData.B9b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电池放电欠温1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B9b1.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B9b1 ? device171C.energyData.B9b1.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电池放电欠温2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B9b2.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B9b2 ? device171C.energyData.B9b2.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">单体电池放电欠温3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B9b3.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B9b3 ? device171C.energyData.B9b3.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">SOC过高1级告警</text>
-                <text class="item-value">{{ device171C.energyData.B9b4.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B9b4 ? device171C.energyData.B9b4.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">SOC过高2级告警</text>
-                <text class="item-value">{{ device171C.energyData.B9b5.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B9b5 ? device171C.energyData.B9b5.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">SOC过高3级告警</text>
-                <text class="item-value">{{ device171C.energyData.B9b6.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B9b6 ? device171C.energyData.B9b6.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">温升快报警1级报警</text>
-                <text class="item-value">{{ device171C.energyData.B9b7.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B9b7 ? device171C.energyData.B9b7.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">温升快报警2级报警</text>
-                <text class="item-value">{{ device171C.energyData.B10b0.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B10b0 ? device171C.energyData.B10b0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">温升快报警3级报警</text>
-                <text class="item-value">{{ device171C.energyData.B10b1.value }}</text>
+                <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B10b1 ? device171C.energyData.B10b1.value : "--" }}</text>
               </view>
             </view>
           </view>
 
-          <!-- 电气参数 -->
-          <view class="data-group">
-            <view class="group-title">电气参数</view>
-            <view class="data-grid">
-              <view class="grid-item">
-                <text class="item-label">电池簇电压(V)</text>
-                <text class="item-value">{{ device171C.energyData.B12.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇电流值(A)</text>
-                <text class="item-value">{{ device171C.energyData.B14.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇总SOC(%)</text>
-                <text class="item-value">{{ device171C.energyData.B16.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇总SOH(%)</text>
-                <text class="item-value">{{ device171C.energyData.B18.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇总SOE(kWh)</text>
-                <text class="item-value">{{ device171C.energyData.B20.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇绝缘电阻R+(kΩ)</text>
-                <text class="item-value">{{ device171C.energyData.B22.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇绝缘电阻R-(kΩ)</text>
-                <text class="item-value">{{ device171C.energyData.B24.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池簇电池状态</text>
-                <text class="item-value">{{ device171C.energyData.B26.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">实际温度采集点数</text>
-                <text class="item-value">{{ device171C.energyData.B32.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池最高温度(℃)</text>
-                <text class="item-value">{{ device171C.energyData.B34.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池最高温度所在模块号</text>
-                <text class="item-value">{{ device171C.energyData.B36.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池最高温度模块内序号</text>
-                <text class="item-value">{{ device171C.energyData.B38.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池最低温度(℃)</text>
-                <text class="item-value">{{ device171C.energyData.B40.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池最低温度所在模块号</text>
-                <text class="item-value">{{ device171C.energyData.B42.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池最低温度模块内序号</text>
-                <text class="item-value">{{ device171C.energyData.B44.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池平均温度(℃)</text>
-                <text class="item-value">{{ device171C.energyData.B46.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池组电池总节数</text>
-                <text class="item-value">{{ device171C.energyData.B48.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体平均电压(V)</text>
-                <text class="item-value">{{ device171C.energyData.B50.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最高单体电压(V)</text>
-                <text class="item-value">{{ device171C.energyData.B52.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最高单体电压所在模块号</text>
-                <text class="item-value">{{ device171C.energyData.B54.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最高单体电压模块内序号</text>
-                <text class="item-value">{{ device171C.energyData.B56.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最低单体电压(V)</text>
-                <text class="item-value">{{ device171C.energyData.B58.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最低单体电压所在模块号</text>
-                <text class="item-value">{{ device171C.energyData.B60.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最低单体电压模块内序号</text>
-                <text class="item-value">{{ device171C.energyData.B62.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体平均SOC(%)</text>
-                <text class="item-value">{{ device171C.energyData.B64.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最高单体SOC(%)</text>
-                <text class="item-value">{{ device171C.energyData.B66.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最高单体SOC所在模块号</text>
-                <text class="item-value">{{ device171C.energyData.B68.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最高单体SOC模块内序号</text>
-                <text class="item-value">{{ device171C.energyData.B70.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最低单体SOC(%)</text>
-                <text class="item-value">{{ device171C.energyData.B72.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最低单体SOC所在模块号</text>
-                <text class="item-value">{{ device171C.energyData.B74.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最低单体SOC模块内序号</text>
-                <text class="item-value">{{ device171C.energyData.B76.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体平均SOH(%)</text>
-                <text class="item-value">{{ device171C.energyData.B78.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最高单体SOH(%)</text>
-                <text class="item-value">{{ device171C.energyData.B80.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最高单体SOH所在模块号</text>
-                <text class="item-value">{{ device171C.energyData.B82.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最高单体SOH模块内序号</text>
-                <text class="item-value">{{ device171C.energyData.B84.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最低单体SOH(%)</text>
-                <text class="item-value">{{ device171C.energyData.B86.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最低单体SOH所在模块号</text>
-                <text class="item-value">{{ device171C.energyData.B88.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最低单体SOH模块内序号</text>
-                <text class="item-value">{{ device171C.energyData.B90.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单体平均内阻(mΩ)</text>
-                <text class="item-value">{{ device171C.energyData.B92.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最高单体内阻(mΩ)</text>
-                <text class="item-value">{{ device171C.energyData.B94.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最高单体内阻所在模块号</text>
-                <text class="item-value">{{ device171C.energyData.B96.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最高单体内阻模块内序号</text>
-                <text class="item-value">{{ device171C.energyData.B98.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最低单体内阻(mΩ)</text>
-                <text class="item-value">{{ device171C.energyData.B100.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最低单体内阻所在模块号</text>
-                <text class="item-value">{{ device171C.energyData.B102.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最低单体内阻模块内序号</text>
-                <text class="item-value">{{ device171C.energyData.B104.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池箱最高温度(℃)</text>
-                <text class="item-value">{{ device171C.energyData.B106.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池箱最高温度所在模块号</text>
-                <text class="item-value">{{ device171C.energyData.B108.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池箱最高温度模块内序号</text>
-                <text class="item-value">{{ device171C.energyData.B110.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池箱最低温度(℃)</text>
-                <text class="item-value">{{ device171C.energyData.B112.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池箱最低温度所在模块号</text>
-                <text class="item-value">{{ device171C.energyData.B114.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池箱最低温度模块内序号</text>
-                <text class="item-value">{{ device171C.energyData.B116.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池箱平均温度(℃)</text>
-                <text class="item-value">{{ device171C.energyData.B118.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池模组最高电压值(V)</text>
-                <text class="item-value">{{ device171C.energyData.B120.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池模组最高电压序号</text>
-                <text class="item-value">{{ device171C.energyData.B122.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池模组最低电压值(V)</text>
-                <text class="item-value">{{ device171C.energyData.B124.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池模组最低电压序号</text>
-                <text class="item-value">{{ device171C.energyData.B126.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">累计充电电量(kWh)</text>
-                <text class="item-value">{{ device171C.energyData.B128.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">累计放电电量(kWh)</text>
-                <text class="item-value">{{ device171C.energyData.B132.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单次充电电量(kWh)</text>
-                <text class="item-value">{{ device171C.energyData.B136.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单次放电电量(kWh)</text>
-                <text class="item-value">{{ device171C.energyData.B138.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">累计充电次数</text>
-                <text class="item-value">{{ device171C.energyData.B140.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">累计放电次数</text>
-                <text class="item-value">{{ device171C.energyData.B142.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池组负载电压(V)</text>
-                <text class="item-value">{{ device171C.energyData.B144.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池组总电压-备用1(V)</text>
-                <text class="item-value">{{ device171C.energyData.B146.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池组电流值-备用1(A)</text>
-                <text class="item-value">{{ device171C.energyData.B148.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">电池组电流值-备用2(A)</text>
-                <text class="item-value">{{ device171C.energyData.B150.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">系统运行心跳</text>
-                <text class="item-value">{{ device171C.energyData.B152.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">绝缘采集状态</text>
-                <text class="item-value">{{ device171C.energyData.B154.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">禁充标志</text>
-                <text class="item-value">{{ device171C.energyData.B156b0.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">禁放标志</text>
-                <text class="item-value">{{ device171C.energyData.B156b1.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">告警状态</text>
-                <text class="item-value">{{ device171C.energyData.B156b2.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">充满状态</text>
-                <text class="item-value">{{ device171C.energyData.B156b3.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">放空状态</text>
-                <text class="item-value">{{ device171C.energyData.B156b4.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">系统告警状态</text>
-                <text class="item-value">{{ device171C.energyData.B158.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">系统告警状态-禁充/禁放解除条件</text>
-                <text class="item-value">{{ device171C.energyData.B160.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">系统告警状态-禁充/禁放解除时间</text>
-                <text class="item-value">{{ device171C.energyData.B162.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最大允许充电电流(A)</text>
-                <text class="item-value">{{ device171C.energyData.B164.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最大允许放电电流(A)</text>
-                <text class="item-value">{{ device171C.energyData.B166.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最大允许充电功率(kW)</text>
-                <text class="item-value">{{ device171C.energyData.B168.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最大允许放电功率(kW)</text>
-                <text class="item-value">{{ device171C.energyData.B170.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最大单体电压节号</text>
-                <text class="item-value">{{ device171C.energyData.B172.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最小单体电压节号</text>
-                <text class="item-value">{{ device171C.energyData.B174.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最大单体温度节号</text>
-                <text class="item-value">{{ device171C.energyData.B176.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最小单体温度节号</text>
-                <text class="item-value">{{ device171C.energyData.B178.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最大SOC节号</text>
-                <text class="item-value">{{ device171C.energyData.B180.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最小SOC节号</text>
-                <text class="item-value">{{ device171C.energyData.B182.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最大SOH节号</text>
-                <text class="item-value">{{ device171C.energyData.B184.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最小SOH节号</text>
-                <text class="item-value">{{ device171C.energyData.B186.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最大电池内阻节号</text>
-                <text class="item-value">{{ device171C.energyData.B188.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">最小电池内阻节号</text>
-                <text class="item-value">{{ device171C.energyData.B190.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单日累计充电电量(kWh)</text>
-                <text class="item-value">{{ device171C.energyData.B192.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">单日累计放电电量(kWh)</text>
-                <text class="item-value">{{ device171C.energyData.B196.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">主控采集NTC温度1(℃)</text>
-                <text class="item-value">{{ device171C.energyData.B200.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">主控采集NTC温度2(℃)</text>
-                <text class="item-value">{{ device171C.energyData.B202.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">主控采集NTC温度3(℃)</text>
-                <text class="item-value">{{ device171C.energyData.B204.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">主控采集NTC温度4(℃)</text>
-                <text class="item-value">{{ device171C.energyData.B206.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">通讯协议版本号主版本</text>
-                <text class="item-value">{{ device171C.energyData.B208.value }}</text>
-              </view>
-              <view class="grid-item">
-                <text class="item-label">通讯协议版本号子版本</text>
-                <text class="item-value">{{ device171C.energyData.B210.value }}</text>
-              </view>
-            </view>
-          </view>
+          
         </view>
 
         <!-- 光伏 -->
@@ -1765,15 +1427,15 @@
             <view class="data-grid">
               <view class="grid-item">
                 <text class="item-label">模块当前告警/状态</text>
-                <text class="item-value">{{ device171E.energyData.B56.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B56 ? device171E.energyData.B56.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">组号和拨码地址</text>
-                <text class="item-value">{{ device171E.energyData.B60.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B60 ? device171E.energyData.B60.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">当前模块输入工作模式</text>
-                <text class="item-value">{{ device171E.energyData.B72.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B72 ? device171E.energyData.B72.value : "--" }}</text>
               </view>
             </view>
           </view>
@@ -1783,83 +1445,83 @@
             <view class="data-grid">
               <view class="grid-item">
                 <text class="item-label">模块电压(V)</text>
-                <text class="item-value">{{ device171E.energyData.B0.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B0 ? device171E.energyData.B0.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块电流(A)</text>
-                <text class="item-value">{{ device171E.energyData.B4.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B4 ? device171E.energyData.B4.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块限流点</text>
-                <text class="item-value">{{ device171E.energyData.B8.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B8 ? device171E.energyData.B8.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块DC板温度(℃)</text>
-                <text class="item-value">{{ device171E.energyData.B12.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B12 ? device171E.energyData.B12.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块输入相电压(V)</text>
-                <text class="item-value">{{ device171E.energyData.B16.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B16 ? device171E.energyData.B16.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块PFC0电压(V)</text>
-                <text class="item-value">{{ device171E.energyData.B20.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B20 ? device171E.energyData.B20.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块PFC1电压(V)</text>
-                <text class="item-value">{{ device171E.energyData.B24.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B24 ? device171E.energyData.B24.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块面板温度(℃)</text>
-                <text class="item-value">{{ device171E.energyData.B28.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B28 ? device171E.energyData.B28.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块交流A相电压(V)</text>
-                <text class="item-value">{{ device171E.energyData.B32.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B32 ? device171E.energyData.B32.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块交流B相电压(V)</text>
-                <text class="item-value">{{ device171E.energyData.B36.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B36 ? device171E.energyData.B36.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块交流C相电压(V)</text>
-                <text class="item-value">{{ device171E.energyData.B40.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B40 ? device171E.energyData.B40.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块PFC板温度(℃)</text>
-                <text class="item-value">{{ device171E.energyData.B44.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B44 ? device171E.energyData.B44.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块额定输出功率(kW)</text>
-                <text class="item-value">{{ device171E.energyData.B48.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B48 ? device171E.energyData.B48.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">模块额定输出电流(A)</text>
-                <text class="item-value">{{ device171E.energyData.B52.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B52 ? device171E.energyData.B52.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">输入功率(kW)</text>
-                <text class="item-value">{{ device171E.energyData.B64.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B64 ? device171E.energyData.B64.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">当前设定海拔值</text>
-                <text class="item-value">{{ device171E.energyData.B68.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B68 ? device171E.energyData.B68.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">节点SerialNo低位</text>
-                <text class="item-value">{{ device171E.energyData.B76.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B76 ? device171E.energyData.B76.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">节点SerialNo高位</text>
-                <text class="item-value">{{ device171E.energyData.B80.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B80 ? device171E.energyData.B80.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">DCDC版本号</text>
-                <text class="item-value">{{ device171E.energyData.B84.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B84 ? device171E.energyData.B84.value : "--" }}</text>
               </view>
               <view class="grid-item">
                 <text class="item-label">PFC版本号</text>
-                <text class="item-value">{{ device171E.energyData.B88.value }}</text>
+                <text class="item-value">{{ device171E && device171E.energyData && device171E.energyData.B88 ? device171E.energyData.B88.value : "--" }}</text>
               </view>
             </view>
           </view>
@@ -1875,7 +1537,7 @@ export default {
   data() {
     return {
       activeTab: 0,
-      tabs: ['PCS', '电池组', 'BMS', '光伏'],
+      tabs: ['PCS', '储能DC', 'BMS', '光伏'],
       // 电池组数据（从171D-model.js和171c-model.js的energyData字段映射）
       batteryData: {
         // DCDC状态（171D-model.js）
@@ -1990,7 +1652,7 @@ export default {
       const device171B = {
         deviceType: '171B',
         address: '01',
-        barCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
+        barCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
         deviceId: '170C001',
         name: 'DCDC设备'
       };
@@ -1998,15 +1660,15 @@ export default {
       const device171C = {
         deviceType: '171C',
         address: '01',
-        barCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
+        barCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
         deviceId: '170F001',
         name: 'DCDC设备170F'
       };
 
       const device171D = {
         deviceType: '171D',
-        address: '01',
-        barCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
+        address: '1E',
+        barCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
         deviceId: '170F001',
         name: 'DCDC设备170F'
       };
@@ -2014,7 +1676,7 @@ export default {
       const device171E = {
         deviceType: '171E',
         address: '06',
-        barCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
+        barCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
         deviceId: '170F001',
         name: 'DCDC设备170F'
       };

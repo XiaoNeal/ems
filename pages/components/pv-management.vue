@@ -1,6 +1,6 @@
 <template>
   <view class="pv-monitor container" :class="{ fullscreen: isFullScreen }">
-    
+
     <!-- 全屏模式头部 -->
     <view v-if="isFullScreen" class="fullscreen-header">
       <text class="fullscreen-title">{{ fullScreenType === 'power' ? '发电功率曲线' : '发电量统计' }}</text>
@@ -8,51 +8,60 @@
         <text>退出全屏</text>
       </view>
     </view>
-    
+
     <!-- 数据卡片区域 -->
     <view class="stats-box">
       <view class="stat-row">
         <view class="stat-item vertical" style="justify-content: center;">
           <view class="stat-subitem">
             <text class="stat-label">当日发电量</text>
-            <text class="stat-value">{{ dailyGeneration }}<text class="stat-unit">kWh</text></text>
+            <text class="stat-value">{{ device171F && device171F.energyData && device171F.energyData.B78 !== undefined ?
+              device171F.energyData.B78.value : "--" }}<text class="stat-unit">kWh</text></text>
           </view>
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item vertical">
           <view class="stat-subitem">
             <text class="stat-label">累计发电量</text>
-            <text class="stat-value">{{ totalGeneration }}<text class="stat-unit">kWh</text></text>
+            <text class="stat-value">{{ device171F && device171F.energyData && device171F.energyData.B106 !== undefined
+              ?
+              device171F.energyData.B106.value : "--" }}<text class="stat-unit">kWh</text></text>
           </view>
           <view class="stat-subitem">
             <text class="stat-label">累计发电时长</text>
-            <text class="stat-value">{{ runningDays }}<text class="stat-unit">天</text></text>
+            <text class="stat-value">{{ device171F && device171F.energyData && device171F.energyData.B110 !== undefined
+              ?
+              device171F.energyData.B110.value : "--" }}<text class="stat-unit">天</text></text>
           </view>
         </view>
       </view>
 
       <view class="section-divider"></view>
-      
+
       <view class="stat-row">
         <view class="stat-item vertical">
           <view class="stat-subitem">
             <text class="stat-label">日最高发电量</text>
-            <text class="stat-value">{{ maxGeneration }}<text class="stat-unit">kWh</text></text>
+            <text class="stat-value">{{ device171F && device171F.energyData && device171F.energyData.B82 !== undefined
+              ?
+              device171F.energyData.B82.value : "--" }}<text class="stat-unit">kWh</text></text>
           </view>
           <view class="stat-subitem">
             <text class="stat-label">出现在</text>
-            <text class="stat-value small">{{ maxGenerationTime }}</text>
+            <text class="stat-value small">{{ formatMaxGenerationTime(device171F) }}</text>
           </view>
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item vertical">
           <view class="stat-subitem">
             <text class="stat-label">历史最高发电功率</text>
-            <text class="stat-value ">{{ historyGenerationPower }}<text class="stat-unit">kW</text></text>
+            <text class="stat-value ">{{ device171F && device171F.energyData && device171F.energyData.B92 !== undefined
+              ?
+              device171F.energyData.B92.value : "--" }}<text class="stat-unit">kW</text></text>
           </view>
           <view class="stat-subitem">
             <text class="stat-label">出现在</text>
-            <text class="stat-value small">{{ historyGenerationPowerTime }}</text>
+            <text class="stat-value small">{{ formatMaxPowerTime(device171F) }}</text>
           </view>
         </view>
       </view>
@@ -60,38 +69,12 @@
 
     <!-- 数据图表板块 -->
     <view class="data-chart-section">
-      <!-- 日期选择器：使用dy-date组件 -->
-      <view class="date-selector">
-        <view class="date-tabs">
-          <view v-for="(tab, i) in ['日', '月', '年']" :key="i" :class="['date-tab', { active: activeDateTab === tab }]"
-            @click="switchDateTab(tab)">
-            {{ tab }}
-          </view>
-        </view>
-
-        <!-- 使用dy-date组件 -->
-        <dy-date v-if="timeTypeIndex === 0" timeType="day" @getData="handleDatePicker" v-model="selectedDate"
-          class="custom-picker date-picker" />
-        <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker" v-model="selectedDate"
-          class="custom-picker date-picker" />
-        <dy-date v-else timeType="year" @getData="handleDatePicker" v-model="selectedDate"
-          class="custom-picker date-picker" />
-      </view>
-
-      <!-- 分割线 -->
-      <view class="section-divider"></view>
-
       <!-- 图表区域 -->
       <view class="chart-section">
         <view class="chart-card" :class="{ 'power-chart-card': isFullScreen && fullScreenType === 'power' }">
           <view class="chart-header">
             <text class="chart-title">发电功率曲线</text>
-            <view class="chart-controls">
-              <!-- <view class="chart-tab">今日</view> -->
-              <view class="chart-tab fullscreen-btn" @click="toggleFullScreen('power')">
-                {{ isFullScreen && fullScreenType === 'power' ? '退出全屏' : '全屏' }}
-              </view>
-            </view>
+            <dy-date timeType="day" @getData="onPowerDateChange" v-model="powerDate" class="compact-date-picker" />
           </view>
           <view class="chart-body">
             <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
@@ -111,6 +94,20 @@
               </view>
             </view>
           </view>
+          <view class="chart-tab-bar">
+            <view class="chart-tabs">
+              <view v-for="(tab, i) in ['日', '月', '年']" :key="i"
+                :class="['chart-tab-item', { active: activeDateTab === tab }]" @click="switchDateTab(tab)">
+                {{ tab }}
+              </view>
+            </view>
+            <dy-date v-if="timeTypeIndex === 0" timeType="day" @getData="handleDatePicker" v-model="selectedDate"
+              class="custom-picker date-picker" />
+            <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker" v-model="selectedDate"
+              class="custom-picker date-picker" />
+            <dy-date v-else timeType="year" @getData="handleDatePicker" v-model="selectedDate"
+              class="custom-picker date-picker" />
+          </view>
           <view class="chart-body">
             <qiun-data-charts type="column" :chartData="generationData" :opts="generationOptions" :ontouch="true"
               :canvas2d="canvas2d" class="generation-chart" :canvas-id="chartId + '-generation'" />
@@ -125,11 +122,13 @@
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 import {
   findPhotovoltaicEnergyInfo,
-  queryDayGeneratedPower,
+  // queryDayGeneratedPower,
+  getPowerData,
   queryDayElectricityStatistic,
   queryMonthElectricityStatistic,
   queryYearElectricityStatistic
 } from '../../api/power';
+import { realtimeDataProvider } from '@/service/websocket';
 
 export default {
   components: {
@@ -152,22 +151,112 @@ export default {
       activeDateTab: "日",
       timeTypeIndex: 0,
       selectedDate: new Date().toISOString().split('T')[0],
+      powerDate: new Date().toISOString().split('T')[0],
       isFullScreen: false,
       fullScreenType: '', // 当前全屏的图表类型 'power' | 'generation'
 
       powerCurveSeries: [],
       generationSeries: [],
-      generationCategories: []
+      generationCategories: [],
+      deviceList: []
     };
   },
 
+  computed: {
+
+    device171F() {
+      // return this.deviceList
+      // console.log(this.deviceList, 'deviceList1211113333333333333', this.deviceList.find(item => item && item.deviceType === '171F'));
+      let device = this.deviceList.find(item => item && item.deviceType === '171F');
+
+      return device;
+    },
+    powerCurveData() {
+      return {
+        categories: this.powerCurveSeries.length > 0 ? ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'] : [],
+        series: [{ data: this.powerCurveSeries.length > 0 ? this.powerCurveSeries : [], name: '发电功率' }]
+      }
+    },
+    powerCurveOptions() {
+      return {
+        dataLabel: false,
+        dataPointShape: false,
+        color: ["#6DE188"],
+        xAxis: { labelCount: 6, disableGrid: true },
+        yAxis: { gridType: "dash", data: [{ position: "left", title: "单位:kW" }] },
+        extra: { area: { type: "curve", gradient: true } }
+      }
+    },
+    generationData() {
+      return {
+        categories: this.generationCategories.length > 0 ? this.generationCategories : [],
+        series: [{ data: this.generationSeries.length > 0 ? this.generationSeries : [], name: '发电量' }]
+      }
+    },
+    generationOptions() {
+      return {
+        dataLabel: false,
+        dataPointShape: false,
+        color: ["#6DE188"],
+        xAxis: { labelCount: 8, disableGrid: true },
+        yAxis: { gridType: "dash", data: [{ position: "left", title: "单位:kWh" }] },
+      }
+    }
+  },
   mounted() {
+    this.init171FDevice();
     this.getPhotovoltaicEnergyInfo();
     this.getDayGeneratedPower();
     this.getElectricityStatistic();
   },
 
+
+
   methods: {
+    init171FDevice() {
+      const device171F = {
+        deviceType: '171F',
+        typeCode: '171F',
+        address: '01',
+        barCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
+        deviceId: '171F001',
+        name: 'DCDC设备171F'
+      };
+      realtimeDataProvider.initDeviceList([device171F]);
+      this.deviceList = realtimeDataProvider.getDeviceList();
+
+      // console.log(this.deviceList, 'deviceList121111', this.deviceList.find(item => item && item.deviceType === '171F'));
+    },
+    formatMaxGenerationTime(device) {
+      if (!device || !device.energyData) return "--";
+      const year = device.energyData.B86?.value;
+      const month = device.energyData.B88?.value;
+      const day = device.energyData.B90?.value;
+      
+      if (year && month && day) {
+        const monthStr = String(month).padStart(2, '0');
+        const dayStr = String(day).padStart(2, '0');
+        return `${year}-${monthStr}-${dayStr}`;
+      }
+      return "--";
+    },
+    formatMaxPowerTime(device) {
+      if (!device || !device.energyData) return "--";
+      const year = device.energyData.B96?.value;
+      const month = device.energyData.B98?.value;
+      const day = device.energyData.B100?.value;
+      const hour = device.energyData.B102?.value;
+      const minute = device.energyData.B104?.value;
+      
+      if (year && month && day) {
+        const monthStr = String(month).padStart(2, '0');
+        const dayStr = String(day).padStart(2, '0');
+        const hourStr = hour ? String(hour).padStart(2, '0') : '00';
+        const minuteStr = minute ? String(minute).padStart(2, '0') : '00';
+        return `${year}-${monthStr}-${dayStr} ${hourStr}:${minuteStr}`;
+      }
+      return "--";
+    },
     getPhotovoltaicEnergyInfo() {
       findPhotovoltaicEnergyInfo({
         esId: 8,
@@ -186,25 +275,38 @@ export default {
     },
 
     getDayGeneratedPower() {
-      queryDayGeneratedPower({
+      getPowerData({
         esId: 8,
         date: this.selectedDate,
         areaLevelIds: 940
       }).then((res) => {
-        if (!res.data) {
+        if (!res.data || res.data.length === 0) {
           this.powerCurveSeries = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
           return;
         }
 
-        const generatedPower = parseFloat(res.data.generatedPower) || 0;
-        this.powerCurveSeries = Array.from({ length: 12 }, (_, i) => {
-          const hour = i * 2;
-          if (hour >= 6 && hour <= 18) {
-            const value = generatedPower * Math.sin((hour - 6) * Math.PI / 12);
-            return parseFloat(value.toFixed(2));
+        const dataList = res.data;
+        const hourlyData = [];
+        
+        // 按每2小时聚合数据（0-23小时，每2小时取一个点）
+        for (let i = 0; i < 24; i += 2) {
+          // 找到该小时范围内的数据
+          const hourData = dataList.filter(item => {
+            const time = item.dateTime || '';
+            const hour = parseInt(time.substring(11, 13)) || 0;
+            return hour >= i && hour < i + 2;
+          });
+          
+          if (hourData.length > 0) {
+            // 计算平均值
+            const avgValue = hourData.reduce((sum, item) => sum + (parseFloat(item.generatedPower || 0)), 0) / hourData.length;
+            hourlyData.push(parseFloat(avgValue.toFixed(2)));
+          } else {
+            hourlyData.push(0);
           }
-          return 0;
-        });
+        }
+        
+        this.powerCurveSeries = hourlyData;
       });
     },
 
@@ -308,12 +410,19 @@ export default {
       console.log("选中日期：", value, " 类型：", this.activeDateTab);
     },
 
+    onPowerDateChange(date) {
+      console.log('发电功率曲线日期变化:', date);
+      this.powerDate = date;
+      this.selectedDate = date;
+      this.getDayGeneratedPower();
+    },
+
     toggleFullScreen(type) {
       if (this.isFullScreen && this.fullScreenType === type) {
         // 退出全屏
         this.isFullScreen = false;
         this.fullScreenType = '';
-        
+
         // #ifdef APP-PLUS
         plus.screen.lockOrientation('portrait-primary');
         plus.navigator.setFullscreen(false);
@@ -322,13 +431,13 @@ export default {
         // 进入全屏
         this.isFullScreen = true;
         this.fullScreenType = type;
-        
+
         // #ifdef APP-PLUS
         plus.screen.lockOrientation('landscape-primary');
         plus.navigator.setFullscreen(true);
         // #endif
       }
-      
+
       uni.showToast({
         title: this.isFullScreen ? (type === 'power' ? '发电功率曲线全屏' : '发电量统计全屏') : '退出全屏',
         icon: 'none',
@@ -337,37 +446,7 @@ export default {
     }
   },
 
-  computed: {
-    powerCurveData() {
-      return {
-        categories: this.powerCurveSeries.length > 0 ? ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'] : [],
-        series: [{ data: this.powerCurveSeries.length > 0 ? this.powerCurveSeries : [], name: '发电功率' }]
-      }
-    },
-    powerCurveOptions() {
-      return {
-        dataLabel: false,
-        color: ["#6DE188"],
-        xAxis: { labelCount: 6, disableGrid: true },
-        yAxis: { gridType: "dash", data: [{ position: "left", title: "单位:kW" }] },
-        extra: { area: { type: "curve", gradient: true } }
-      }
-    },
-    generationData() {
-      return {
-        categories: this.generationCategories.length > 0 ? this.generationCategories : [],
-        series: [{ data: this.generationSeries.length > 0 ? this.generationSeries : [], name: '发电量' }]
-      }
-    },
-    generationOptions() {
-      return {
-        dataLabel: false,
-        color: ["#6DE188"],
-        xAxis: { labelCount: 8, disableGrid: true },
-        yAxis: { gridType: "dash", data: [{ position: "left", title: "单位:kWh" }] },
-      }
-    }
-  }
+
 }
 </script>
 
@@ -669,5 +748,43 @@ export default {
 
 .date-picker {
   font-size: 12px;
+}
+
+/* 图表日期选择栏 */
+.chart-tab-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 16rpx 20rpx;
+  margin: 12rpx 0;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 100;
+}
+
+.chart-tabs {
+  display: flex;
+}
+
+.chart-tab-item {
+  padding: 6rpx 30rpx;
+  border: 1rpx solid #e8e8e8;
+  font-size: 15px;
+  color: #666;
+  background: #f8f9fa;
+  cursor: pointer;
+}
+
+.chart-tab-item.active {
+  background: #4488FB;
+  color: #fff;
+  border-color: #4488FB;
+}
+
+/* 紧凑型日期选择器 */
+.compact-date-picker {
+  font-size: 12px;
+  color: #4488FB;
 }
 </style>

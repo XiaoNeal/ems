@@ -123,7 +123,7 @@ export default {
   },
   data() {
     return {
-      idCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
+      idCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
       deviceAddress: '02',
       isEditing: false,
       clickedButton: '',
@@ -251,17 +251,23 @@ export default {
           ]
         },
         {
-          key: 'storage.B53b0', field: 'B53b0', address: '60100', label: 'CAN通讯使能位', options: [
-            { label: '禁止', value: '0' },
-            { label: '使能', value: '1' }
-          ]
-        },
-        {
-          key: 'storage.B53b1', field: 'B53b1', address: '60100', label: '485通讯使能位', options: [
-            { label: '禁止', value: '0' },
-            { label: '使能', value: '1' }
+          key: 'storage.B53b1', field: 'B53b1', address: '60100', label: '告警屏蔽位1-Bit1', options: [
+            { label: 'CAN通讯使能位', value: '0' },
+            { label: '485通讯使能位', value: '1' }
           ]
         }
+        // {
+        //   key: 'storage.B53b0', field: 'B53b0', address: '60100', label: 'CAN通讯使能位', options: [
+        //     { label: '禁止', value: '0' },
+        //     { label: '使能', value: '1' }
+        //   ]
+        // },
+        // {
+        //   key: 'storage.B53b1', field: 'B53b1', address: '60100', label: '485通讯使能位', options: [
+        //     { label: '禁止', value: '0' },
+        //     { label: '使能', value: '1' }
+        //   ]
+        // }
       ]
     }
   },
@@ -454,13 +460,13 @@ export default {
 
       try {
         const registerAddress = param.address
-        
+
         // 支持 scale 参数：传输值 = 实际值 × scale
         const scale = param.scale || 1
         const registerValue = (Math.round(parseFloat(value) * scale)).toString()
 
         const commandData = {
-          apiSufix: 'multiControl',
+          apiSufix: 't3401_171D_control',
           idCode: this.idCode,
           typeCode: '3401',
           address: this.deviceAddress,

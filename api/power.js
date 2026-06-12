@@ -8,7 +8,9 @@ import { URL } from '../utils/forSpringBoot'
 export const getPowerData = (params) => {
 	return request({
 		// url: '/api/energyStation/v2/queryDayGeneratedPower',
-		url: '/api/energyStation/v1/queryComprehensivePowerByMinute',
+		// url: '/api/energyStation/v1/queryComprehensivePowerByMinute',
+		url: '/api/energyStation/v1/queryComprehensivePowerBy5Minute',
+
 		method: 'GET',
 		data: params
 	})

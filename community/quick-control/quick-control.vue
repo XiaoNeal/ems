@@ -55,90 +55,94 @@
         </view>
       </view>
       
-      <!-- 储能DC控制 -->
+      <!-- 储能综合控制 -->
       <view class="control-card">
         <view class="card-header">
-          <text class="card-title">储能DC控制</text>
+          <text class="card-title">储能综合控制</text>
         </view>
-        <view class="switch-btns-wrapper">
-          <view class="switch-btns triple">
-            <view 
-              class="switch-btn" 
-              :class="{ 'btn-active': selectedStorageDcAction === 'grid-connect' }"
-              @click="storageDcAction('grid-connect')"
-            >
-              并网开机
-            </view>
-            <view 
-              class="switch-btn" 
-              :class="{ 'btn-active': selectedStorageDcAction === 'stop' }"
-              @click="storageDcAction('stop')"
-            >
-              一键关机
-            </view>
-            <view 
-              class="switch-btn" 
-              :class="{ 'btn-active': selectedStorageDcAction === 'off-grid' }"
-              @click="storageDcAction('off-grid')"
-            >
-              离网开机
-            </view>
-          </view>
-        </view>
-      </view>
-      
-      <!-- 储能模式 -->
-      <view class="control-card">
-        <view class="card-header">
-          <text class="card-title">储能模式选择</text>
-        </view>
-        <view class="switch-btns-wrapper">
-          <view class="switch-btns">
-            <view 
-              class="switch-btn charge" 
-              :class="{ 'btn-active': selectedStorageMode === 'charge' }"
-              @click="storageModeAction('charge')"
-            >
-              充电
-            </view>
-            <view 
-              class="switch-btn discharge" 
-              :class="{ 'btn-active': selectedStorageMode === 'discharge' }"
-              @click="storageModeAction('discharge')"
-            >
-              放电
-            </view>
-          </view>
-        </view>
-      </view>
-      
-      <!-- 功率设置 -->
-      <view class="control-card">
-        <view class="card-header">
-          <text class="card-title">充放电总功率</text>
-        </view>
-        <view class="param-row">
-          <view class="param-info">
-            <text class="param-name">功率值</text>
-            <text class="param-range">范围: 1~10kW</text>
-          </view>
-          <view class="param-right-wrapper">
-            <view class="param-right">
-              <view class="param-value-box" :class="{ editing: powerValue }">
-                <input 
-                  type="digit" 
-                  v-model="powerValue" 
-                  placeholder="请输入" 
-                  @input="validatePower" 
-                  maxlength="2"
-                  class="val-input"
-                />
+        
+        <!-- 储能DC控制 -->
+        <view class="control-section">
+          <text class="section-title">储能DC控制方式</text>
+          <view class="switch-btns-wrapper">
+            <view class="switch-btns triple">
+              <view 
+                class="switch-btn" 
+                :class="{ 'btn-active': selectedStorageDcAction === 'grid-connect' }"
+                @click="selectStorageDcAction('grid-connect')"
+              >
+                并网开机
               </view>
-              <text class="unit-text">kW</text>
+              <view 
+                class="switch-btn" 
+                :class="{ 'btn-active': selectedStorageDcAction === 'stop' }"
+                @click="selectStorageDcAction('stop')"
+              >
+                一键关机
+              </view>
+              <view 
+                class="switch-btn" 
+                :class="{ 'btn-active': selectedStorageDcAction === 'off-grid' }"
+                @click="selectStorageDcAction('off-grid')"
+              >
+                离网开机
+              </view>
             </view>
-            <view class="btn btn-sure" @click="setPower">
-              <text>下发</text>
+          </view>
+        </view>
+        
+        <!-- 储能模式选择 -->
+        <view class="control-section">
+          <text class="section-title">储能工作模式</text>
+          <view class="switch-btns-wrapper">
+            <view class="switch-btns">
+              <view 
+                class="switch-btn charge" 
+                :class="{ 'btn-active': selectedStorageMode === 'charge' }"
+                @click="selectStorageMode('charge')"
+              >
+                充电
+              </view>
+              <view 
+                class="switch-btn discharge" 
+                :class="{ 'btn-active': selectedStorageMode === 'discharge' }"
+                @click="selectStorageMode('discharge')"
+              >
+                放电
+              </view>
             </view>
+          </view>
+        </view>
+        
+        <!-- 功率设置 -->
+        <view class="control-section">
+          <text class="section-title">充放电总功率</text>
+          <view class="param-row">
+            <view class="param-info">
+              <text class="param-range">范围: 1~10kW</text>
+            </view>
+            <view class="param-right-wrapper">
+              <view class="param-right">
+                <view class="param-value-box" :class="{ editing: powerValue }">
+                  <input 
+                    type="digit" 
+                    v-model="powerValue" 
+                    placeholder="请输入" 
+                    @input="validatePower" 
+                    maxlength="2"
+                    class="val-input"
+                  />
+                </view>
+                <text class="unit-text">kW</text>
+              </view>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 统一下发按钮 -->
+        <view class="submit-wrapper">
+          <view class="btn btn-sure" @click="submitAll">
+            <text>下发</text>
           </view>
         </view>
       </view>
@@ -159,7 +163,7 @@ export default {
       powerValue: '',
       // 设备配置参数（根据实际情况配置）
       deviceConfig: {
-        idCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
+        idCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
         typeCode: '3401',
         address: '01'
       },
@@ -281,7 +285,7 @@ export default {
         title: '光伏DC控制',
         content: `确定要执行光伏DC${actionText}操作吗？`,
         apiSufix: 'pvDcControl',
-        commandBuilder: () => this.buildCommand('102', action === 'start' ? '1' : '0'),
+        commandBuilder: () => this.buildCommand('102', action === 'start' ? '1' : '2'),
         action,
         stateKey: 'selectedPvDcAction',
         successMsg: `光伏DC${actionText}成功`,
@@ -289,43 +293,14 @@ export default {
       });
     },
     
-    // 储能DC操作 (1:并网一键开机, 2:一键关机, 3:离网一键开机)
-    storageDcAction(action) {
-      const actionMap = {
-        'grid-connect': '并网一键开机',
-        'stop': '一键关机',
-        'off-grid': '离网一键开机'
-      };
-      const valueMap = {
-        'grid-connect': '1',
-        'stop': '2',
-        'off-grid': '3'
-      };
-      this.executeCommand({
-        title: '储能DC控制',
-        content: `确定要执行储能DC${actionMap[action]}操作吗？`,
-        apiSufix: 'storageDcControl',
-        commandBuilder: () => this.buildCommand('104', valueMap[action] || '0'),
-        action,
-        stateKey: 'selectedStorageDcAction',
-        successMsg: `储能DC${actionMap[action]}成功`,
-        failMsg: `储能DC${actionMap[action]}失败`
-      });
+    // 选择储能DC操作
+    selectStorageDcAction(action) {
+      this.selectedStorageDcAction = action;
     },
     
-    // 储能模式操作
-    storageModeAction(mode) {
-      const modeText = mode === 'charge' ? '充电' : '放电';
-      this.executeCommand({
-        title: '储能模式选择',
-        content: `确定要设置储能为${modeText}模式吗？`,
-        apiSufix: 'storageModeControl',
-        commandBuilder: () => this.buildCommand('106', mode === 'charge' ? '1' : '2'),
-        mode,
-        stateKey: 'selectedStorageMode',
-        successMsg: `储能${modeText}模式设置成功`,
-        failMsg: `储能${modeText}模式设置失败`
-      });
+    // 选择储能模式
+    selectStorageMode(mode) {
+      this.selectedStorageMode = mode;
     },
     
     // 功率输入验证
@@ -353,8 +328,25 @@ export default {
       }
     },
     
-    // 功率设置
-    setPower() {
+    // 统一下发（同时调用三次接口）
+    async submitAll() {
+      // 验证选择
+      if (!this.selectedStorageDcAction) {
+        uni.showToast({
+          title: '请选择储能DC控制方式',
+          icon: 'none'
+        });
+        return;
+      }
+      
+      if (!this.selectedStorageMode) {
+        uni.showToast({
+          title: '请选择储能模式',
+          icon: 'none'
+        });
+        return;
+      }
+      
       if (!this.powerValue || parseFloat(this.powerValue) < 1) {
         uni.showToast({
           title: '请输入1-10kW范围内的功率值',
@@ -363,18 +355,95 @@ export default {
         return;
       }
       
-      const power = this.powerValue;
-      this.executeCommand({
-        title: '充放电总功率设置',
-        content: `确定要设置充放电总功率为${power}kW吗？`,
-        apiSufix: 'powerControl',
-        commandBuilder: () => this.buildCommand('108', power * 10),
-        stateKey: null,
-        successMsg: `充放电总功率设置为${power}kW成功`,
-        failMsg: '充放电总功率设置失败'
-      }).then((success) => {
-        if (success) {
-          this.powerValue = '';
+      // 构建确认信息
+      const actionMap = {
+        'grid-connect': '并网一键开机',
+        'stop': '一键关机',
+        'off-grid': '离网一键开机'
+      };
+      const modeText = this.selectedStorageMode === 'charge' ? '充电' : '放电';
+      
+      uni.showModal({
+        title: '储能综合控制',
+        content: `确定要执行以下操作吗？\n• 储能DC: ${actionMap[this.selectedStorageDcAction]}\n• 储能模式: ${modeText}\n• 充放电功率: ${this.powerValue}kW`,
+        success: async (res) => {
+          if (!res.confirm) {
+            return;
+          }
+          
+          uni.showLoading({ title: '下发中...' });
+          
+          let successCount = 0;
+          const totalCount = 3;
+          
+          // 1. 调用储能DC控制接口
+          try {
+            const valueMap = {
+              'grid-connect': '1',
+              'stop': '2',
+              'off-grid': '3'
+            };
+            await sendCommandFrame({
+              apiSufix: 't3401_171F_control',
+              idCode: this.deviceConfig.idCode,
+              typeCode: this.deviceConfig.typeCode,
+              address: this.deviceConfig.address,
+              userId: this.userId,
+              commands: this.buildCommand('104', valueMap[this.selectedStorageDcAction] || '0')
+            });
+            successCount++;
+          } catch (error) {
+            console.error('storageDcControl error:', error);
+          }
+          
+          // 2. 调用储能模式控制接口
+          try {
+            await sendCommandFrame({
+              apiSufix: 't3401_171F_control',
+              idCode: this.deviceConfig.idCode,
+              typeCode: this.deviceConfig.typeCode,
+              address: this.deviceConfig.address,
+              userId: this.userId,
+              commands: this.buildCommand('106', this.selectedStorageMode === 'charge' ? '1' : '2')
+            });
+            successCount++;
+          } catch (error) {
+            console.error('storageModeControl error:', error);
+          }
+          
+          // 3. 调用功率控制接口
+          try {
+            await sendCommandFrame({
+              apiSufix: 't3401_171F_control',
+              idCode: this.deviceConfig.idCode,
+              typeCode: this.deviceConfig.typeCode,
+              address: this.deviceConfig.address,
+              userId: this.userId,
+              commands: this.buildCommand('108', this.powerValue * 10)
+            });
+            successCount++;
+          } catch (error) {
+            console.error('powerControl error:', error);
+          }
+          
+          uni.hideLoading();
+          
+          if (successCount === totalCount) {
+            uni.showToast({
+              title: '下发成功',
+              icon: 'success'
+            });
+          } else if (successCount > 0) {
+            uni.showToast({
+              title: `${successCount}/${totalCount} 下发成功`,
+              icon: 'none'
+            });
+          } else {
+            uni.showToast({
+              title: '下发失败',
+              icon: 'none'
+            });
+          }
         }
       });
     }
@@ -405,6 +474,37 @@ export default {
   &:active {
     transform: scale(0.99);
     box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  }
+}
+
+.control-section {
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+  
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 20rpx;
+  display: block;
+  position: relative;
+  padding-left: 20rpx;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6rpx;
+    height: 24rpx;
+    background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
+    border-radius: 3rpx;
   }
 }
 
@@ -445,6 +545,10 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 32rpx 24rpx;
+  
+  &.border-top {
+    border-top: 1rpx solid #f5f5f5;
+  }
 }
 
 .switch-btns {
@@ -625,6 +729,29 @@ export default {
     transform: scale(0.96);
     box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
   }
+}
+
+.btn-submit {
+  color: #ffffff;
+  background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+  box-shadow: 0 8rpx 24rpx rgba(0, 212, 170, 0.4);
+  min-width: 280rpx;
+  height: 88rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  
+  &:active {
+    transform: scale(0.96);
+    box-shadow: 0 4rpx 12rpx rgba(0, 212, 170, 0.3);
+  }
+}
+
+.submit-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx;
+  border-top: 1rpx solid #f5f5f5;
 }
 
 input::placeholder {

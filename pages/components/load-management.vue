@@ -8,19 +8,19 @@
       </view>
       <view class="device-grid">
         <view class="device-item">
-          <text class="number">{{ nyzData.dljQuantity || 1 }}</text>
-          <text class="text">多联机</text>
+          <text class="number">{{ nyzData.dljQuantity || 0 }}</text>
+          <text class="text">空调</text>
         </view>
         <view class="device-item">
-          <text class="number">{{ nyzData.mkjQuantity || 2 }}</text>
-          <text class="text">模块机</text>
+          <text class="number">{{ nyzData.mkjQuantity || 0 }}</text>
+          <text class="text">充电桩</text>
         </view>
         <view class="device-item">
-          <text class="number">{{ nyzData.nyzQuantity || 3 }}</text>
-          <text class="text">能源站</text>
+          <text class="number">{{ nyzData.nyzQuantity || 0 }}</text>
+          <text class="text">照明</text>
         </view>
         <view class="device-item">
-          <text class="number">{{ nyzData.unknownDeviceQuantity || 4 }}</text>
+          <text class="number">{{ nyzData.unknownDeviceQuantity || 0 }}</text>
           <text class="text">未知设备</text>
         </view>
       </view>
@@ -61,15 +61,15 @@
           <!-- 设备信息 -->
           <view class="device-info">
             <view class="device-data">
-              <view class="data-item">
-                <text class="data-label">功率</text>
-                <text class="data-value">{{ item.power }} W</text>
+                <view class="data-item">
+                  <text class="data-label">功率</text>
+                  <text class="data-value">{{ item.power || '--' }} W</text>
+                </view>
+                <view class="data-item">
+                  <text class="data-label">用电量</text>
+                  <text class="data-value">{{ item.energyConsumption || '--' }} kWh</text>
+                </view>
               </view>
-              <view class="data-item">
-                <text class="data-label">用电量</text>
-                <text class="data-value">{{ item.energyConsumption }} kWh</text>
-              </view>
-            </view>
           </view>
         </view>
       </view>
@@ -120,11 +120,11 @@ export default {
         '能源站': 0
       },
       nyzData: {
-        dljQuantity: "2",
-        cdzQuantity: "1",
-        mkjQuantity: "--",
+        dljQuantity: "0",
+        cdzQuantity: "0",
+        mkjQuantity: "0",
         lightQuantity: "0",
-        unknownDeviceQuantity: "--",
+        unknownDeviceQuantity: "0",
         nyzFlexibility: "--",
         totalLoadrate: "--",
         totalEnergyEfficiencyLevel: "--"
@@ -196,7 +196,7 @@ export default {
       })
     },
     async findFlexibilityLoadPowerTotal() {
-      const esId = this.$store.state.powerStationsId || 8;
+      const esId =  8;
       const areaLevelIds = this.$store.state.areaInfoId || 940;
       const result = await queryDayGeneratedPower({
         esId: esId,

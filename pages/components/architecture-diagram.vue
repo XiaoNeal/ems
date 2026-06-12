@@ -1,33 +1,32 @@
 <template>
   <view class="container">
     <!-- 警告框和启动按钮 -->
-    <view class="warning-and-start">
-      <view class="warning-box">
-        <text class="warning-icon">⚠️</text>
+    <!-- <view class="warning-and-start"> -->
+    <!-- <view class="warning-box" >
+        <text class="warning-icon" @click="toggleWarning">⚠️</text>
         <view class="warning-content">
-          <text class="warning-title">能源基础电力装备 非专业禁止操作!</text>
-          <text class="warning-text">1.系统内置锂电光伏发电，电网断网后仍带电，请谨慎操作;</text>
-          <text class="warning-text">2.长期断电将导致锂电过放报警，请联系厂家;</text>
-          <text class="warning-text">3.系统具备离网应急功能，请依需要谨慎配置和管理使用。</text>
+          <text class="warning-title">能源装备·非专业禁止操作</text>
         </view>
-      </view>
-      <view class="start-button">
-        <view class="start-circle" @click="handleStartStop">
-          <image :src="systemRunning ? '/static/images/start.svg' : '/static/images/start.svg'" class="start-bg" />
-          <text class="start-text">{{ systemRunning ? '运行中' : '启动' }}</text>
-        </view>
-      </view>
-    </view>
+      </view> -->
+
+    <!-- </view>  -->
 
     <!-- 系统架构图 -->
     <view class="system-img">
+      <view class="start-button" style="position:absolute;top: 8%;left: 77%; ">
+        <view class="start-circle" @click="handleStartStop">
+          <image :src="systemRunning ? '/static/images/start.svg' : '/static/images/start.svg'" class="start-bg" />
+          <text class="start-text">{{ getSystemStatus() }}</text>
+        </view>
+      </view>
       <image src="/static/images/system-architecture-new.png"
-        style="width:100%; height:96%; position: absolute; top:0; left:0; z-index: 1;"></image>
+        style="width:100%; height:96%; position: absolute; top:0; left:0; z-index: 1;padding: 20rpx;"></image>
       <!-- 光伏 -->
       <view class="device-label-top-left">
         <text class="device-name">光伏</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B0 ?
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B0 &&
+            device171F.energyData.B0.value != '--' ?
             device171F.energyData.B0.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
@@ -36,58 +35,73 @@
       <view class="device-label-top-right">
         <text class="device-name">电网</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B4 ?
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B4 &&
+            device171F.energyData.B4.value != '--' ?
             device171F.energyData.B4.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
       <!-- 设备数据标签 -->
       <view class="device-label" style="left: 3%;top: 75%">
-        <text class="device-name">交流配电柜</text>
+        <text class="device-name">交流负荷</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B68 ?
-            device171F.energyData.B68.value : '--' }}</text>
-          <text class="power-unit">kW</text>
-        </view>
-      </view>
-      <view class="device-label" style="left: 19%;top: 78%">
-        <text class="device-name">储能</text>
-        <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B8 ?
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B8 &&
+            device171F.energyData.B8.value != '--' ?
             device171F.energyData.B8.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
-        <text class="device-soc">{{ device171F && device171F.energyData && device171F.energyData.B128 ?
+      </view>
+      <view class="device-label" style="left: 22%;top: 78%">
+        <text class="device-name">储能</text>
+        <view class="power-row">
+          <text class="device-power">
+            <text v-if="device171F && device171F.energyData && device171F.energyData.B60 && device171F.energyData.B60.value != '--'">
+              {{ parseFloat(device171F.energyData.B60.value) > 0 ? '充电' : (parseFloat(device171F.energyData.B60.value) < 0 ? '放电' : '静置') }}
+            </text>
+            <text v-if="device171F && device171F.energyData && device171F.energyData.B60 && device171F.energyData.B60.value != '--'">
+              {{ ' ' }}
+            </text>
+            {{ device171F && device171F.energyData && device171F.energyData.B60 &&
+            device171F.energyData.B60.value != '--' ?
+            device171F.energyData.B60.value : '--' }}</text>
+          <text class="power-unit">kW</text>
+        </view>
+        <text class="device-soc">{{ device171F && device171F.energyData && device171F.energyData.B128 &&
+          device171F.energyData.B128.value != '--' ?
           device171F.energyData.B128.value : '--' }}%</text>
       </view>
-      <view class="device-label" style="left: 35%;top: 78%">
+      <view class="device-label" style="left: 38%;top: 78%">
         <text class="device-name">空调</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B18 ?
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B18 &&
+            device171F.energyData.B18.value != '--' ?
             device171F.energyData.B18.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
-      <view class="device-label" style="left: 50%;top: 78%">
+      <view class="device-label" style="left: 47%;top: 78%">
         <text class="device-name">柔性直流充电桩</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B26 ?
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B26 &&
+            device171F.energyData.B26.value != '--' ?
             device171F.energyData.B26.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
-      <view class="device-label" style="left: 67%;top: 78%">
+      <view class="device-label" style="left: 70%;top: 78%">
         <text class="device-name">照明</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B30 ?
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B30 &&
+            device171F.energyData.B30.value != '--' ?
             device171F.energyData.B30.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
-      <view class="device-label" style="left: 82%;top: 78%">
+      <view class="device-label" style="left: 83%;top: 78%">
         <text class="device-name">其他负荷</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B22 ?
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B22 &&
+            device171F.energyData.B22.value != '--' ?
             device171F.energyData.B22.value : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
@@ -103,7 +117,8 @@
             <text class="card-title">今日发电</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B34 ?
+            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B34 &&
+              device171F.energyData.B34.value != '--' ?
               device171F.energyData.B34.value : '--' }} </text>
             <text class="card-unit"> kWh</text>
           </view>
@@ -115,7 +130,8 @@
             <text class="card-title">今日用电</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B38 ?
+            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B38 &&
+              device171F.energyData.B38.value != '--' ?
               device171F.energyData.B38.value : '--' }} </text>
             <text class="card-unit"> kWh</text>
           </view>
@@ -129,8 +145,9 @@
             <text class="card-title">储能剩余</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B58 ?
-              device171F.energyData.B58.value : '--' }}</text>
+            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B128 &&
+              device171F.energyData.B128.value != '--' ?
+              device171F.energyData.B128.value : '--' }}</text>
             <text class="card-unit">%</text>
           </view>
         </view>
@@ -141,7 +158,8 @@
             <text class="card-title">电网供电</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B42 ?
+            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B42 &&
+              device171F.energyData.B42.value != '--' ?
               device171F.energyData.B42.value : '--' }} </text>
             <text class="card-unit"> kWh</text>
           </view>
@@ -236,6 +254,33 @@
         </view>
       </view>
     </view>
+
+    <!-- 警告详情弹窗 -->
+    <view class="modal-overlay warning-modal-overlay" v-if="showWarningModal" @click="closeWarningModal">
+      <view class="modal-content warning-modal-content" @click.stop>
+        <view class="modal-header">
+          <text class="modal-title">⚠️ 安全警告</text>
+        </view>
+        <view class="modal-body warning-modal-body">
+          <text class="warning-modal-title">能源装备·非专业禁止操作</text>
+          <view class="warning-item">
+            <text class="warning-number">1.</text>
+            <text class="warning-modal-text">系统内置锂电光伏发电，电网断网后仍带电，请谨慎操作</text>
+          </view>
+          <view class="warning-item">
+            <text class="warning-number">2.</text>
+            <text class="warning-modal-text">长期断电将导致锂电过放报警，请联系厂家</text>
+          </view>
+          <view class="warning-item">
+            <text class="warning-number">3.</text>
+            <text class="warning-modal-text">系统具备离网应急功能，请依需要谨慎配置和管理使用</text>
+          </view>
+        </view>
+        <view class="modal-footer">
+          <button class="modal-confirm warning-confirm" @click="closeWarningModal">我知道了</button>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -261,6 +306,7 @@ export default {
       storageStatus: "放电中",
       currentStatus: {},
       gridStatus: "供电中",
+      showFullWarning: false,
       gridPower: "--",
       totalProvideQ: "--",
       totalStorageDisChargeQ: "--",
@@ -295,6 +341,7 @@ export default {
         // },
 
         dataLabel: false,
+        dataPointShape: false,
         padding: [15, 15, 0, 15],
         enableScroll: false,
         legend: {},
@@ -309,7 +356,7 @@ export default {
             opacity: 0.2,
             addLine: true,
             width: 2,
-            gradient: true,
+            // gradient: true,
             activeType: "hollow"
           }
         }
@@ -318,6 +365,7 @@ export default {
       electricityData: { categories: [], series: [{ data: [], name: '发电功率' }] },
       showModal: false,
       showStopModal: false,
+      showWarningModal: false,
       systemRunning: false,
       isFullScreen: false,
       statusBarHeight: 93, // 默认状态栏高度
@@ -368,7 +416,7 @@ export default {
   },
   mounted() {
     // realtimeDataProvider.createScoket(uni.getStorageSync('currentTemplate'), uni.getStorageSync('urlPrefix'));
-    this.init170CDevice();
+    this.init171FDevice();
     this.getSqRealTimeData();
     this.getNyzRealTimeData();
     this.initPage();
@@ -402,46 +450,19 @@ export default {
     // #endif
   },
   methods: {
-    init170CDevice() {
-      // const device170C = {
-      //   deviceType: '170C_V1_1',
-      //   address: '1F',
-      //   barCode: '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00',
-      //   deviceId: '170C001',
-      //   name: 'DCDC设备'
-      // };
-
-      const device170C = {
-        deviceType: '170C_V1_1',
-        address: '1F',
-        barCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
-        deviceId: '170C001',
-        name: 'DCDC设备'
-      };
-
-
-
-      // const device171F = {
-      //   deviceType: '171F_V1_2',
-      //   address: '01',
-      //   barCode: '00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00',
-      //   deviceId: '171F001',
-      //   name: 'DCDC设备171F'
-      // };
-
-
+    init171FDevice() {
       const device171F = {
-        deviceType: '171F_V1_2',
+        deviceType: '171F',
         address: '01',
-        barCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
+        barCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
         deviceId: '171F001',
         name: 'DCDC设备171F'
       };
 
 
-      realtimeDataProvider.initDeviceList([device170C, device171F]);
+      realtimeDataProvider.initDeviceList([device171F]);
       this.deviceList = realtimeDataProvider.getDeviceList();
-      console.log('deviceList', this.deviceList);
+      console.log('deviceList--------', this.deviceList);
 
 
     },
@@ -501,6 +522,8 @@ export default {
       this.handleDatePicker(this.selectedDate);
     },
     handleDatePicker(value) {
+      // 更新选中的日期
+      this.selectedDate = value;
       const typeMap = { 0: 'hour', 1: 'day', 2: 'month' };
       this.type = typeMap[this.timeTypeIndex];
       if (this.type === "hour") this.getPowerData2();
@@ -567,25 +590,48 @@ export default {
     getPowerData2() {
       // 准备接口参数
       const params = {
-        esId: 8,
-        date: dateStandardFormat(new Date()),
-        areaLevelIds: 950
+        esId:  8,
+        date: this.selectedDate,
+        areaLevelIds: this.$store.state.areaInfoId || 950
       };
 
       // 调用新接口
       getPowerData(params).then(result => {
-        if (result.data) {
+        if (result.data && result.data.length > 0) {
+          const dataList = result.data;
           const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
-          result.data.forEach(item => {
-            // 确保数据为Number格式
-            generationData.push(Number(item.generatedPower) || 0);
-            loadData.push(Number(item.loadPower) || 0);
-            chargeData.push(Number(item.chargePower) || 0);
-            dischargeData.push(Number(item.dischargePower) || 0);
-            // 从dateTime中提取小时部分
-            const hour = item.dateTime ? item.dateTime.split(' ')[1].split(':')[0] : '';
-            xAxisData.push(hour);
-          });
+          
+          // 按小时聚合数据（0-23小时）
+          for (let h = 0; h < 24; h++) {
+            const time = `${String(h).padStart(2, "0")}:00`;
+            xAxisData.push(time);
+            
+            // 找到该小时范围内的数据
+            const hourData = dataList.filter(item => {
+              const dateTime = item.dateTime || '';
+              const hour = parseInt(dateTime.substring(11, 13)) || 0;
+              return hour === h;
+            });
+            
+            if (hourData.length > 0) {
+              // 计算平均值
+              const avgGeneration = hourData.reduce((sum, item) => sum + (parseFloat(item.generatedPower || 0)), 0) / hourData.length;
+              const avgLoad = hourData.reduce((sum, item) => sum + (parseFloat(item.loadPower || 0)), 0) / hourData.length;
+              const avgStorage = hourData.reduce((sum, item) => sum + (parseFloat(item.storagePowerReverse || 0)), 0) / hourData.length;
+              
+              generationData.push(parseFloat(avgGeneration.toFixed(2)));
+              loadData.push(parseFloat(avgLoad.toFixed(2)));
+              chargeData.push(avgStorage >= 0 ? parseFloat(avgStorage.toFixed(2)) : 0);
+              dischargeData.push(avgStorage < 0 ? parseFloat((-avgStorage).toFixed(2)) : 0);
+            } else {
+              // 该小时无数据，补充0值确保曲线连贯
+              generationData.push(0);
+              loadData.push(0);
+              chargeData.push(0);
+              dischargeData.push(0);
+            }
+          }
+          
           this.electricityData = {
             categories: xAxisData,
             series: [
@@ -596,6 +642,8 @@ export default {
             ]
           };
         }
+
+        console.log(this.electricityData, 'electricityData');
       });
     },
     findMonthEnergyAndIncome() { },
@@ -714,6 +762,21 @@ export default {
         this.showModal = true;
       }
     },
+    toggleWarning() {
+      this.showWarningModal = true;
+    },
+    closeWarningModal() {
+      this.showWarningModal = false;
+    },
+    getSystemStatus() {
+      const b0Value = this.device171F && this.device171F.controlData && this.device171F.controlData.B0 && this.device171F.controlData.B0.value;
+      if (b0Value === 1 || b0Value === '1') {
+        return '运行中';
+      } else if (b0Value === 0 || b0Value === '0') {
+        return '启动';
+      }
+      return '启动';
+    },
   }
 };
 </script>
@@ -739,28 +802,40 @@ export default {
   flex: 1;
   display: flex;
   align-items: flex-start;
+  padding: 20rpx;
+  background: linear-gradient(135deg, #fff9e6 0%, #fff5d6 100%);
+  border-radius: 12rpx;
+  border: 1rpx solid #ffe4a0;
+  cursor: pointer;
 }
 
 .warning-icon {
-  font-size: 28rpx;
-  margin-right: 12rpx;
-  color: #FF7D00;
+  font-size: 32rpx;
+  margin-right: 16rpx;
+  color: #ff762c;
+  flex-shrink: 0;
 }
 
 .warning-title {
   font-size: 28rpx;
   font-weight: bold;
-  color: #ff762C;
+  color: #ff762c;
   display: block;
-  text-align: center;
   margin-bottom: 8rpx;
 }
 
 .warning-text {
   font-size: 22rpx;
-  color: #666;
-  line-height: 1.5;
+  color: #8c6a4a;
+  line-height: 1.6;
   display: block;
+}
+
+.expand-icon {
+  font-size: 20rpx;
+  color: #ff762c;
+  margin-left: 12rpx;
+  flex-shrink: 0;
 }
 
 .start-button {
@@ -798,7 +873,8 @@ export default {
 
 .system-img {
   position: relative;
-  height: 440rpx;
+  /* height: 440rpx; */
+  height: 516rpx;
   margin: 20rpx;
   border-radius: 12rpx;
   overflow: hidden;
@@ -841,7 +917,7 @@ export default {
 .device-label-top-left {
   position: absolute;
   top: 7%;
-  left: 31%;
+  left: 34%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -850,7 +926,7 @@ export default {
 
 .device-label-top-right {
   position: absolute;
-  top: 49%;
+  top: 19%;
   left: 1%;
   display: flex;
   flex-direction: column;
@@ -1236,5 +1312,58 @@ export default {
   justify-content: center;
   border-radius: 0;
   margin: 4px 20rpx
+}
+
+/* 警告弹窗样式 */
+.warning-modal-overlay {
+  z-index: 10001;
+}
+
+.warning-modal-content {
+  max-width: 600rpx;
+  width: 85%;
+}
+
+.warning-modal-body {
+  padding: 20rpx 32rpx 32rpx;
+}
+
+.warning-modal-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #F56C6C;
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+.warning-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+
+.warning-number {
+  font-size: 24rpx;
+  color: #F56C6C;
+  font-weight: bold;
+  margin-right: 8rpx;
+  flex-shrink: 0;
+}
+
+.warning-modal-text {
+  font-size: 24rpx;
+  color: #606266;
+  line-height: 1.6;
+  flex: 1;
+}
+
+.warning-confirm {
+  background: #F56C6C;
+  color: #fff;
+  border: none;
+  border-radius: 8rpx;
+  margin: 0 32rpx 32rpx;
+  height: 72rpx;
 }
 </style>

@@ -121,7 +121,7 @@ export default {
   },
   data() {
     return {
-      idCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
+      idCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
       deviceAddress: '03',
       isEditing: false,
       clickedButton: '',
@@ -152,7 +152,7 @@ export default {
         { key: 'pv.B4', field: 'B4', address: '0x001B', label: '设置模块输出电流值', unit: 'A', scale: 1024 },
         // { key: 'pv.B8', field: 'B8', address: '0x001E', label: '设置模块输出电流值', unit: 'A' },
         { key: 'pv.B8', field: 'B8', address: '0x001E', label: '设置组号', unit: '', min: 0, max: 60, scale: 1024 },
-        { key: 'pv.B16', field: 'B16', address: '0x0020', label: '设置模块输出功率', unit: 'kW', min: 0.1, max: 1, scale: 20000 },
+        { key: 'pv.B16', field: 'B16', address: '0x0020', label: '设置模块输出功率', unit: 'W', min: 0.1, max: 1, scale: 20000 },
         { key: 'pv.B20', field: 'B20', address: '0x0021', label: '设置模块输出电压', unit: 'V' },
         { key: 'pv.B24', field: 'B24', address: '0x0022', label: '设置模块限流点', unit: 'A' },
         { key: 'pv.B28', field: 'B28', address: '0x0023', label: '设置模块输出电压上限值', unit: 'V' }
@@ -163,8 +163,8 @@ export default {
           { label: '拨码设置', value: '0x00010000' }
         ]},
         { key: 'pv.B32', field: 'B32', address: '0x0030', label: '开关机', options: [
-          { label: '开机', value: '0x00010000', dangerous: true },
-          { label: '关机', value: '0x00000000', dangerous: true }
+          { label: '开机', value: '0x00000000', dangerous: true },
+          { label: '关机', value: '0x00010000', dangerous: true }
         ]},
         { key: 'pv.B36', field: 'B36', address: '0x0031', label: '设置模块过压复位', options: [
           { label: '禁止', value: '0x00000000' },
@@ -394,7 +394,7 @@ export default {
         const registerValue = Math.round(parseFloat(value) * scale)
 
         const commandData = {
-          apiSufix: 'multiControl',
+          apiSufix: 't3401_171E_control',
           idCode: this.idCode,
           typeCode: '3401',
           address: this.deviceAddress,

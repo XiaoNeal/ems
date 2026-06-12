@@ -17,14 +17,14 @@
             <view class="stat-subitem">
               <text class="stat-label">电网实时功率</text>
               <view>
-                <text class="stat-value negative">-3.7</text>
-                <text class="stat-unit">kWh</text>
+                <text class="stat-value">{{ gridPower !== undefined ? gridPower : '--' }}</text>
+                <text class="stat-unit">kW</text>
               </view>
             </view>
             <view class="stat-subitem">
               <text class="stat-label">电网频率</text>
               <view>
-                <text class="stat-value">0.0</text>
+                <text class="stat-value">{{ gridFrequency !== undefined ? gridFrequency : '--' }}</text>
                 <text class="stat-unit">Hz</text>
               </view>
             </view>
@@ -34,14 +34,14 @@
             <view class="stat-subitem">
               <text class="stat-label">电网今日馈电量</text>
               <view>
-                <text class="stat-value">157.12</text>
+                <text class="stat-value">{{ todayFeedEnergy !== undefined ? todayFeedEnergy : '--' }}</text>
                 <text class="stat-unit">kWh</text>
               </view>
             </view>
             <view class="stat-subitem">
               <text class="stat-label">电网累计馈电量</text>
               <view>
-                <text class="stat-value">157.12</text>
+                <text class="stat-value">{{ totalFeedEnergy !== undefined ? totalFeedEnergy : '--' }}</text>
                 <text class="stat-unit">kWh</text>
               </view>
             </view>
@@ -52,14 +52,14 @@
             <view class="stat-subitem">
               <text class="stat-label">电网今日供电</text>
               <view>
-                <text class="stat-value">157.12</text>
+                <text class="stat-value">{{ todaySupplyEnergy !== undefined ? todaySupplyEnergy : '--' }}</text>
                 <text class="stat-unit">kWh</text>
               </view>
             </view>
             <view class="stat-subitem">
               <text class="stat-label">电网累计供电</text>
               <view>
-                <text class="stat-value">157.12</text>
+                <text class="stat-value">{{ totalSupplyEnergy !== undefined ? totalSupplyEnergy : '--' }}</text>
                 <text class="stat-unit">kWh</text>
               </view>
             </view>
@@ -69,27 +69,11 @@
       
       <!-- 电网数据区块 -->
       <view class="grid-data-section">
-        <!-- 日期选择 -->
-        <view class="date-selector">
-          <view class="date-tabs">
-            <view v-for="(tab, i) in ['日', '月', '年']" :key="i" :class="['date-tab', { active: activeDateTab === tab }]" @click="handleDateTypeChange(tab)">
-              {{ tab }}
-            </view>
-          </view>
-          <dy-date v-if="timeTypeIndex === 0" timeType="day" @getData="handleDatePicker" v-model="selectedDate" class="custom-picker date-picker" />
-          <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker" v-model="selectedDate" class="custom-picker date-picker" />
-          <dy-date v-else timeType="year" @getData="handleDatePicker" v-model="selectedDate" class="custom-picker date-picker" />
-        </view>
-        
-        <view class="divider"></view>
-        
         <!-- 电网功率曲线 -->
         <view class="chart-section" :class="{ 'power-chart-section': isFullScreen && fullScreenType === 'power' }">
           <view class="chart-header">
             <text class="chart-title">电网功率曲线</text>
-            <view class="fullscreen-button" @click="toggleFullScreen('power')">
-              <text>{{ isFullScreen && fullScreenType === 'power' ? '退出全屏' : '全屏' }}</text>
-            </view>
+            <dy-date timeType="day" @getData="onPowerDateChange" v-model="powerDate" class="compact-date-picker" />
           </view>
           <view class="chart-body">
             <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
@@ -107,6 +91,20 @@
               <text>{{ isFullScreen && fullScreenType === 'energy' ? '退出全屏' : '全屏' }}</text>
             </view>
           </view>
+          <view class="chart-tab-bar">
+            <view class="chart-tabs">
+              <view v-for="(tab, i) in ['日', '月', '年']" :key="i"
+                :class="['chart-tab-item', { active: activeDateTab === tab }]" @click="handleDateTypeChange(tab)">
+                {{ tab }}
+              </view>
+            </view>
+            <dy-date v-if="timeTypeIndex === 0" timeType="day" @getData="handleDatePicker" v-model="selectedDate"
+              class="custom-picker date-picker" />
+            <dy-date v-else-if="timeTypeIndex === 1" timeType="month" @getData="handleDatePicker" v-model="selectedDate"
+              class="custom-picker date-picker" />
+            <dy-date v-else timeType="year" @getData="handleDatePicker" v-model="selectedDate"
+              class="custom-picker date-picker" />
+          </view>
           <view class="chart-body">
             <qiun-data-charts type="column" :chartData="energyData" :opts="energyOptions" :ontouch="true"
               :canvas2d="canvas2d" class="energy-chart" :canvas-id="chartId + '-energy'" />
@@ -119,7 +117,8 @@
 
 <script>
 import dyDate from '@/components/dy-Date/dy-Date.vue';
-import { queryDayGeneratedPower } from '../../api/power';
+import { realtimeDataProvider } from '@/service/websocket';
+import { getPowerData } from '../../api/power';
 export default {
   components: {
     dyDate,
@@ -129,23 +128,20 @@ export default {
     return {
       chartId: 'grid-' + Math.random().toString(36).substr(2, 9),
       gridStatus: "正常",
-      gridVoltage: "220",
-      gridFrequency: "0.0",
-      gridPower: "-3.7",
-      todayFeedEnergy: "157.12",
-      totalFeedEnergy: "157.12",
-      todaySupplyEnergy: "157.12",
-      totalSupplyEnergy: "157.12",
       isFullScreen: false,
       fullScreenType: '', // 当前全屏的图表类型 'power' | 'energy'
       activeDateTab: '年',
       timeTypeIndex: 2,
       selectedDate: new Date().toISOString().split('T')[0],
+      powerDate: new Date().toISOString().split('T')[0],
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
+      deviceList: [],
       // 电网功率曲线数据
       powerCurveSeries: [],
       powerCurveCategories: [],
       powerCurveOptions: {
+        dataLabel: false,
+        dataPointShape: false,
         padding: [15, 15, 0, 5],
         enableScroll: false,
         legend: {
@@ -154,6 +150,7 @@ export default {
           float: 'right'
         },
         xAxis: {
+          labelCount: 6,
           disableGrid: true
         },
         yAxis: {
@@ -186,6 +183,8 @@ export default {
         ]
       },
       energyOptions: {
+        dataLabel: false,
+        dataPointShape: false,
         padding: [15, 15, 0, 5],
         enableScroll: false,
         legend: {
@@ -212,6 +211,9 @@ export default {
     };
   },
   computed: {
+    device171F() {
+      return this.deviceList.find(item => item && item.deviceType === '171F');
+    },
     powerCurveData() {
       return {
         categories: this.powerCurveCategories.length > 0 ? this.powerCurveCategories : [],
@@ -221,35 +223,90 @@ export default {
           color: '#1890FF'
         }]
       }
-    }
+    },
+    gridFrequency() {
+      const value = this.getFieldValue('B174');
+      if (value === '--' || value === undefined || value === null) {
+        return '--';
+      }
+      return parseFloat(value).toFixed(2);
+    },
+    gridPower() {
+      return this.getFieldValue('B4');
+    },
+    todaySupplyEnergy() {
+      return this.getFieldValue('B42');
+    },
+    totalSupplyEnergy() {
+      return this.getFieldValue('B62');
+    },
+    todayFeedEnergy() {
+      return this.getFieldValue('B188');
+    },
+    totalFeedEnergy() {
+      return this.getFieldValue('B180');
+    },
   },
   methods: {
+    init171FDevice() {
+      const device171F = {
+        deviceType: '171F',
+        typeCode: '171F',
+        address: '01',
+        barCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
+        deviceId: '171F001',
+        name: 'DCDC设备171F'
+      };
+      realtimeDataProvider.initDeviceList([device171F]);
+      this.deviceList = realtimeDataProvider.getDeviceList();
+    },
+    getFieldValue(key) {
+      if (!this.device171F || !this.device171F.energyData || this.device171F.energyData[key] === undefined) {
+        return "--";
+      }
+      return this.device171F.energyData[key].value;
+    },
     // 获取电网功率曲线数据
     async getPowerCurveData() {
       try {
-        const esId = this.$store.state.powerStationsId || 8;
+        const esId =  8;
         const areaLevelIds = this.$store.state.areaInfoId || 940;
         const params = {
           esId: esId,
-          date: this.selectedDate,
+          date: this.powerDate,
           areaLevelIds: areaLevelIds
         };
-        const res = await queryDayGeneratedPower(params);
-        if (res && res.data) {
+
+        console.log(params, 'params');
+        const res = await getPowerData(params);
+        if (res && res.data && res.data.length > 0) {
           // 处理接口返回数据
-          const data = res.data;
-          if (data.list && data.list.length > 0) {
-            this.powerCurveCategories = data.list.map(item => {
-              const time = item.time || item.datetime || '';
-              return time.substring(11, 16) || time; // 提取时间部分
+          const dataList = res.data;
+          const categories = [];
+          const series = [];
+          
+          // 按每2小时聚合数据（0-23小时，每2小时取一个点）
+          for (let i = 0; i < 24; i += 2) {
+            // 找到该小时范围内的数据
+            const hourData = dataList.filter(item => {
+              const time = item.dateTime || '';
+              const hour = parseInt(time.substring(11, 13)) || 0;
+              return hour >= i && hour < i + 2;
             });
-            this.powerCurveSeries = data.list.map(item => {
-              return Number(item.value || item.power || 0);
-            });
-          } else {
-            this.powerCurveCategories = [];
-            this.powerCurveSeries = [];
+            
+            if (hourData.length > 0) {
+              categories.push(`${String(i).padStart(2, "0")}:00`);
+              // 计算平均值
+              const avgValue = hourData.reduce((sum, item) => sum + (parseFloat(item.gridPower || 0)), 0) / hourData.length;
+              series.push(parseFloat(avgValue.toFixed(2)));
+            }
           }
+          
+          this.powerCurveCategories = categories;
+          this.powerCurveSeries = series;
+        } else {
+          this.powerCurveCategories = [];
+          this.powerCurveSeries = [];
         }
       } catch (error) {
         console.error('获取电网功率曲线数据失败:', error);
@@ -304,9 +361,15 @@ export default {
       console.log('选择的日期:', date);
       this.selectedDate = date;
       this.getPowerCurveData();
+    },
+    onPowerDateChange(date) {
+      console.log('功率曲线日期变化:', date);
+      this.powerDate = date;
+      this.getPowerCurveData();
     }
   },
   mounted() {
+    this.init171FDevice();
     this.getPowerCurveData();
   }
 };
@@ -591,5 +654,43 @@ export default {
   .energy-chart {
     background: #f9f9f9;
   }
+}
+
+/* 图表日期选择栏 */
+.chart-tab-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 16rpx 20rpx;
+  margin: 12rpx 0;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 100;
+}
+
+.chart-tabs {
+  display: flex;
+}
+
+.chart-tab-item {
+  padding: 6rpx 30rpx;
+  border: 1rpx solid #e8e8e8;
+  font-size: 15px;
+  color: #666;
+  background: #f8f9fa;
+  cursor: pointer;
+}
+
+.chart-tab-item.active {
+  background: #4488FB;
+  color: #fff;
+  border-color: #4488FB;
+}
+
+/* 紧凑型日期选择器 */
+.compact-date-picker {
+  font-size: 12px;
+  color: #4488FB;
 }
 </style>

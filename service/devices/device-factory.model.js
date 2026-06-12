@@ -15,15 +15,15 @@ import { Model230A } from './230A-model.js'
 import { Model2801 } from './2801-model.js'
 import { Model1904 } from './1904-model.js'
 import { Model170Cv1 } from "./170Cv1-model.js";
-import { Model170C } from './170C-model.js'
-import { Model1704 } from './1704-model.js'
-import { Model1D02 } from "./1D02-model";
-import { Model1707v3_2 } from "./1707v3_2-model.js";
-import { Model1707V3 } from './1707V3-model.js'
-import { Model1704v1_1 } from './1704v1_1-model.js'
+// import { Model170C } from './170C-model.js'
+// import { Model1704 } from './1704-model.js'
+// import { Model1D02 } from "./1D02-model";
+// import { Model1707v3_2 } from "./1707v3_2-model.js";
+// import { Model1707V3 } from './1707V3-model.js'
+// import { Model1704v1_1 } from './1704v1_1-model.js'
 import { Model0319 } from './0319-model.js'
 import { Model0318v1_1 } from "./0318v1_1-model.js";
-import { Model010C } from "./010C-model.js";
+// import { Model010C } from "./010C-model.js";
 import { Model1312v1_1 } from "./1312v1_1-model.js";
 import { Model131Cv2 } from './131Cv2-model.js'
 import { Model170C_V1_1Model } from './170C_V1_1-model.js'
@@ -32,27 +32,28 @@ import { Model171E } from './171E-model.js'
 import { Model171B } from './171B-model.js'
 import { Model171C } from './171C-model.js'
 import { Model171D } from './171D-model.js'
+import { Model171F } from './171F-model.js'
 
 export class DeviceFactory {
 	static create(jsonData, gateway) {
 		let dev;
 		switch (jsonData.deviceType) {
-			case '1707_V3_2': {
-				dev = new Model1707v3_2();
-				break;
-			}
-			case '1707_V3_3': {
-				dev = new Model1707V3();
-				break;
-			}
-			case '1704_V1_1': {
-				dev = new Model1704();
-				break;
-			}
-			case '1704_V1_2': {
-				dev = new Model1704();
-				break;
-			}
+			// case '1707_V3_2': {
+			// 	dev = new Model1707v3_2();
+			// 	break;
+			// }
+			// case '1707_V3_3': {
+			// 	dev = new Model1707V3();
+			// 	break;
+			// }
+			// case '1704_V1_1': {
+			// 	dev = new Model1704();
+			// 	break;
+			// }
+			// case '1704_V1_2': {
+			// 	dev = new Model1704();
+			// 	break;
+			// }
 			case '0318_V1_1': {
 				dev = new Model0318v1_1();
 				break;
@@ -159,10 +160,10 @@ export class DeviceFactory {
 				dev = new Model0319()
 				break;
 			}
-			case '010C':{
-				dev = new Model010C()
-				break;
-			}
+			// case '010C':{
+			// 	dev = new Model010C()
+			// 	break;
+			// }
 			case '1312_V1_1':{
 				dev = new Model1312v1_1()
 				break;
@@ -193,6 +194,10 @@ export class DeviceFactory {
 			}
 			case '171E':{
 				dev = new Model171E()
+				break;
+			}
+			case '171F':{
+				dev = new Model171F()
 				break;
 			}
 			

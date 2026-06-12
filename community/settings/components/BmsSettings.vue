@@ -127,7 +127,7 @@ export default {
   },
   data() {
     return {
-      idCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
+      idCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
       deviceAddress: '04',
       isEditing: false,
       editingParam: '',
@@ -585,7 +585,7 @@ export default {
       }
 
       const commandData = {
-        apiSufix: 'multiControl',
+        apiSufix: 't3401_171C_control',
         idCode: this.idCode,
         typeCode: '3401',
         address: this.deviceAddress,

@@ -18,111 +18,103 @@ export class Model171C extends DeviceBase {
 	getEnergyData(jsonData, jsonData2) {
 		// 能源数据字段赋值（带单位，完全对齐PCS模板格式）
 		// 处理位字段 B0-B10
-		console.log(jsonData,"999999999999999999999999999999");
-		this.energyData.B0b0.value = jsonData.B0b0;
-		this.energyData.B0b1.value = jsonData.B0b1;
-		this.energyData.B0b2.value = jsonData.B0b2;
-		this.energyData.B0b3.value = jsonData.B0b3;
-		this.energyData.B0b4.value = jsonData.B0b4;
-		this.energyData.B0b5.value = jsonData.B0b5;
-		this.energyData.B0b6.value = jsonData.B0b6;
-		this.energyData.B0b7.value = jsonData.B0b7;
+		// console.log(jsonData, "999999999999999999999999999999");
+		this.energyData.B0b0.value = this.setAlarmStatus(jsonData.B0b0);
+		this.energyData.B0b1.value = this.setAlarmStatus(jsonData.B0b1);
+		this.energyData.B0b2.value = this.setAlarmStatus(jsonData.B0b2);
+		this.energyData.B0b3.value = this.setAlarmStatus(jsonData.B0b3);
+		this.energyData.B0b4.value = this.setAlarmStatus(jsonData.B0b4);
+		this.energyData.B0b5.value = this.setAlarmStatus(jsonData.B0b5);
+		this.energyData.B0b6.value = this.setAlarmStatus(jsonData.B0b6);
+		this.energyData.B0b7.value = this.setAlarmStatus(jsonData.B0b7);
 
-		this.energyData.B1b0.value = jsonData.B1b0;
-		this.energyData.B1b1.value = jsonData.B1b1;
-		this.energyData.B1b2.value = jsonData.B1b2;
-		this.energyData.B1b3.value = jsonData.B1b3;
-		this.energyData.B1b4.value = jsonData.B1b4;
-		this.energyData.B1b5.value = jsonData.B1b5;
-		this.energyData.B1b6.value = jsonData.B1b6;
-		this.energyData.B1b7.value = jsonData.B1b7;
+		this.energyData.B1b0.value = this.setAlarmStatus(jsonData.B1b0);
+		this.energyData.B1b1.value = this.setAlarmStatus(jsonData.B1b1);
+		this.energyData.B1b2.value = this.setAlarmStatus(jsonData.B1b2);
+		this.energyData.B1b3.value = this.setAlarmStatus(jsonData.B1b3);
+		this.energyData.B1b4.value = this.setAlarmStatus(jsonData.B1b4);
+		this.energyData.B1b5.value = this.setAlarmStatus(jsonData.B1b5);
+		this.energyData.B1b6.value = this.setAlarmStatus(jsonData.B1b6);
+		this.energyData.B1b7.value = this.setAlarmStatus(jsonData.B1b7);
 
-		this.energyData.B2b0.value = jsonData.B2b0;
-		this.energyData.B2b1.value = jsonData.B2b1;
-		this.energyData.B2b2.value = jsonData.B2b2;
-		this.energyData.B2b3.value = jsonData.B2b3;
-		this.energyData.B2b4.value = jsonData.B2b4;
-		this.energyData.B2b6.value = jsonData.B2b6;
-		this.energyData.B2b7.value = jsonData.B2b7;
+		this.energyData.B2b0.value = this.setAlarmStatus(jsonData.B2b0);
+		this.energyData.B2b1.value = this.setAlarmStatus(jsonData.B2b1);
+		this.energyData.B2b2.value = this.setAlarmStatus(jsonData.B2b2);
+		this.energyData.B2b3.value = this.setAlarmStatus(jsonData.B2b3);
+		this.energyData.B2b4.value = this.setAlarmStatus(jsonData.B2b4);
+		this.energyData.B2b5.value = this.setAlarmStatus(jsonData.B2b5);
+		this.energyData.B2b6.value = this.setAlarmStatus(jsonData.B2b6);
+		this.energyData.B2b7.value = this.setAlarmStatus(jsonData.B2b7);
 
-		this.energyData.B3b0.value = jsonData.B3b0;
-		this.energyData.B3b1.value = jsonData.B3b1;
-		this.energyData.B3b2.value = jsonData.B3b2;
-		this.energyData.B3b3.value = jsonData.B3b3;
-		this.energyData.B3b4.value = jsonData.B3b4;
-		this.energyData.B3b5.value = jsonData.B3b5;
-		this.energyData.B3b6.value = jsonData.B3b6;
-		this.energyData.B3b7.value = jsonData.B3b7;
+		this.energyData.B3b0.value = this.setAlarmStatus(jsonData.B3b0);
+		this.energyData.B3b1.value = this.setAlarmStatus(jsonData.B3b1);
+		this.energyData.B3b2.value = this.setAlarmStatus(jsonData.B3b2);
+		this.energyData.B3b3.value = this.setAlarmStatus(jsonData.B3b3);
+		this.energyData.B3b4.value = this.setAlarmStatus(jsonData.B3b4);
+		this.energyData.B3b5.value = this.setAlarmStatus(jsonData.B3b5);
+		this.energyData.B3b6.value = this.setAlarmStatus(jsonData.B3b6);
+		this.energyData.B3b7.value = this.setAlarmStatus(jsonData.B3b7);
 
-		this.energyData.B4b0.value = jsonData.B4b0;
-		this.energyData.B4b1.value = jsonData.B4b1;
-		this.energyData.B4b2.value = jsonData.B4b2;
-		this.energyData.B4b3.value = jsonData.B4b3;
-		this.energyData.B4b4.value = jsonData.B4b4;
-		this.energyData.B4b6.value = jsonData.B4b6;
-		this.energyData.B4b7.value = jsonData.B4b7;
+		this.energyData.B4b0.value = this.setAlarmStatus(jsonData.B4b0);
+		this.energyData.B4b1.value = this.setAlarmStatus(jsonData.B4b1);
+		this.energyData.B4b2.value = this.setAlarmStatus(jsonData.B4b2);
+		this.energyData.B4b3.value = this.setAlarmStatus(jsonData.B4b3);
+		this.energyData.B4b4.value = this.setAlarmStatus(jsonData.B4b4);
+		this.energyData.B4b5.value = this.setAlarmStatus(jsonData.B4b5);
+		this.energyData.B4b6.value = this.setAlarmStatus(jsonData.B4b6);
+		this.energyData.B4b7.value = this.setAlarmStatus(jsonData.B4b7);
 
-		this.energyData.B5b0.value = jsonData.B5b0;
-		this.energyData.B5b1.value = jsonData.B5b1;
-		this.energyData.B5b2.value = jsonData.B5b2;
-		this.energyData.B5b3.value = jsonData.B5b3;
-		this.energyData.B5b4.value = jsonData.B5b4;
-		this.energyData.B5b5.value = jsonData.B5b5;
-		this.energyData.B5b6.value = jsonData.B5b6;
-		this.energyData.B5b7.value = jsonData.B5b7;
+		this.energyData.B5b0.value = this.setAlarmStatus(jsonData.B5b0);
+		this.energyData.B5b1.value = this.setAlarmStatus(jsonData.B5b1);
+		this.energyData.B5b2.value = this.setAlarmStatus(jsonData.B5b2);
+		this.energyData.B5b3.value = this.setAlarmStatus(jsonData.B5b3);
+		this.energyData.B5b4.value = this.setAlarmStatus(jsonData.B5b4);
+		this.energyData.B5b5.value = this.setAlarmStatus(jsonData.B5b5);
+		this.energyData.B5b6.value = this.setAlarmStatus(jsonData.B5b6);
+		this.energyData.B5b7.value = this.setAlarmStatus(jsonData.B5b7);
 
-		this.energyData.B6b0.value = jsonData.B6b0;
-		this.energyData.B6b1.value = jsonData.B6b1;
-		this.energyData.B6b2.value = jsonData.B6b2;
-		this.energyData.B6b3.value = jsonData.B6b3;
-		this.energyData.B6b4.value = jsonData.B6b4;
-		this.energyData.B6b5.value = jsonData.B6b5;
-		this.energyData.B6b6.value = jsonData.B6b6;
-		this.energyData.B6b7.value = jsonData.B6b7;
+		this.energyData.B6b0.value = this.setAlarmStatus(jsonData.B6b0);
+		this.energyData.B6b1.value = this.setAlarmStatus(jsonData.B6b1);
+		this.energyData.B6b2.value = this.setAlarmStatus(jsonData.B6b2);
+		this.energyData.B6b3.value = this.setAlarmStatus(jsonData.B6b3);
+		this.energyData.B6b4.value = this.setAlarmStatus(jsonData.B6b4);
+		this.energyData.B6b5.value = this.setAlarmStatus(jsonData.B6b5);
+		this.energyData.B6b6.value = this.setAlarmStatus(jsonData.B6b6);
+		this.energyData.B6b7.value = this.setAlarmStatus(jsonData.B6b7);
 
-		this.energyData.B7b0.value = jsonData.B7b0;
-		this.energyData.B7b1.value = jsonData.B7b1;
-		this.energyData.B7b2.value = jsonData.B7b2;
-		this.energyData.B7b3.value = jsonData.B7b3;
-		this.energyData.B7b4.value = jsonData.B7b4;
-		this.energyData.B7b5.value = jsonData.B7b5;
-		this.energyData.B7b6.value = jsonData.B7b6;
-		this.energyData.B7b7.value = jsonData.B7b7;
+		this.energyData.B7b0.value = this.setAlarmStatus(jsonData.B7b0);
+		this.energyData.B7b1.value = this.setAlarmStatus(jsonData.B7b1);
+		this.energyData.B7b2.value = this.setAlarmStatus(jsonData.B7b2);
+		this.energyData.B7b3.value = this.setAlarmStatus(jsonData.B7b3);
+		this.energyData.B7b4.value = this.setAlarmStatus(jsonData.B7b4);
+		this.energyData.B7b5.value = this.setAlarmStatus(jsonData.B7b5);
+		this.energyData.B7b6.value = this.setAlarmStatus(jsonData.B7b6);
+		this.energyData.B7b7.value = this.setAlarmStatus(jsonData.B7b7);
 
-		this.energyData.B8b0.value = jsonData.B8b0;
-		this.energyData.B8b1.value = jsonData.B8b1;
-		this.energyData.B8b2.value = jsonData.B8b2;
-		this.energyData.B8b3.value = jsonData.B8b3;
-		this.energyData.B8b4.value = jsonData.B8b4;
-		this.energyData.B8b5.value = jsonData.B8b5;
-		this.energyData.B8b6.value = jsonData.B8b6;
-		this.energyData.B8b7.value = jsonData.B8b7;
+		this.energyData.B8b0.value = this.setAlarmStatus(jsonData.B8b0);
+		this.energyData.B8b1.value = this.setAlarmStatus(jsonData.B8b1);
+		this.energyData.B8b2.value = this.setAlarmStatus(jsonData.B8b2);
+		this.energyData.B8b3.value = this.setAlarmStatus(jsonData.B8b3);
+		this.energyData.B8b4.value = this.setAlarmStatus(jsonData.B8b4);
+		this.energyData.B8b5.value = this.setAlarmStatus(jsonData.B8b5);
+		this.energyData.B8b6.value = this.setAlarmStatus(jsonData.B8b6);
+		this.energyData.B8b7.value = this.setAlarmStatus(jsonData.B8b7);
 		// }
 		// if (jsonData.B9 != null) {
 		// const b9 = parseInt(jsonData.B9);
-		this.energyData.B9b0.value = jsonData.B9b0;
-		this.energyData.B9b1.value = jsonData.B9b1;
-		this.energyData.B9b2.value = jsonData.B9b2;
-		this.energyData.B9b3.value = jsonData.B9b3;
-		this.energyData.B9b4.value = jsonData.B9b4;
-		this.energyData.B9b5.value = jsonData.B9b5;
-		this.energyData.B9b6.value = jsonData.B9b6;
-		this.energyData.B9b7.value = jsonData.B9b7;
-		// }
-		// if (jsonData.B10 != null) {
-		// const b10 = parseInt(jsonData.B10);
-		this.energyData.B10b0.value = jsonData.B10b0;
-		this.energyData.B10b1.value = jsonData.B10b1;
-		// this.energyData.B10b2.value = jsonData.B10b2;
-		// this.energyData.B10b3.value = jsonData.B10b3;
-		// this.energyData.B10b4.value = jsonData.B10b4;
-		// this.energyData.B10b5.value = jsonData.B10b5;
-		// this.energyData.B10b6.value = jsonData.B10b6;
-		// this.energyData.B10b7.value = jsonData.B10b7;
-		// }
-		// 普通字段 B12, B14, B16, B18, B20, B22, B24, B26
+		this.energyData.B9b0.value = this.setAlarmStatus(jsonData.B9b0);
+		this.energyData.B9b1.value = this.setAlarmStatus(jsonData.B9b1);
+		this.energyData.B9b2.value = this.setAlarmStatus(jsonData.B9b2);
+		this.energyData.B9b3.value = this.setAlarmStatus(jsonData.B9b3);
+		this.energyData.B9b4.value = this.setAlarmStatus(jsonData.B9b4);
+		this.energyData.B9b5.value = this.setAlarmStatus(jsonData.B9b5);
+		this.energyData.B9b6.value = this.setAlarmStatus(jsonData.B9b6);
+		this.energyData.B9b7.value = this.setAlarmStatus(jsonData.B9b7);
+		
+		this.energyData.B10b0.value = this.setAlarmStatus(jsonData.B10b0);
+		this.energyData.B10b1.value = this.setAlarmStatus(jsonData.B10b1);
+		
 		this.energyData.B12.value = jsonData.B12;
-		console.log(jsonData.B12,"B12",this.energyData.B12.value,this.energyData.B12);
 		this.energyData.B14.value = jsonData.B14;
 		this.energyData.B16.value = jsonData.B16;
 		this.energyData.B18.value = jsonData.B18;
@@ -130,9 +122,6 @@ export class Model171C extends DeviceBase {
 		this.energyData.B22.value = jsonData.B22;
 		this.energyData.B24.value = jsonData.B24;
 		this.energyData.B26.value = jsonData.B26;
-		// 处理 B28 的位字段
-		// if (jsonData.B28 != null) {
-		// 	const b28 = parseInt(jsonData.B28);
 		this.energyData.B28b0.value = jsonData.B28b0;
 		this.energyData.B28b1.value = jsonData.B28b1;
 		this.energyData.B28b2.value = jsonData.B28b2;
@@ -141,14 +130,7 @@ export class Model171C extends DeviceBase {
 		this.energyData.B28b5.value = jsonData.B28b5;
 		this.energyData.B28b6.value = jsonData.B28b6;
 		this.energyData.B28b7.value = jsonData.B28b7;
-		// }
-		// 处理 B29 的位字段
-		// if (jsonData.B29 != null) {
 		this.energyData.B29b0.value = jsonData.B29b0;
-		// }
-		// 处理 B30 的位字段
-		// if (jsonData.B30 != null) {
-		// 	const b30 = parseInt(jsonData.B30);
 		this.energyData.B30b0.value = jsonData.B30b0;
 		this.energyData.B30b1.value = jsonData.B30b1;
 		this.energyData.B30b2.value = jsonData.B30b2;
@@ -157,8 +139,7 @@ export class Model171C extends DeviceBase {
 		this.energyData.B30b5.value = jsonData.B30b5;
 		this.energyData.B30b6.value = jsonData.B30b6;
 		this.energyData.B30b7.value = jsonData.B30b7;
-		// }
-		// 普通字段 B32, B34, B36, B38, B40, B42, B44, B46, B48, B50, B52, B54, B56, B58, B60, B62, B64, B66, B68, B70, B72, B74, B76, B78, B80, B82, B84, B86, B88, B90, B92, B94, B96, B98, B100, B102, B104, B106, B108, B110, B112, B114, B116, B118, B120, B122, B124, B126, B128, B132, B136, B138, B140, B142, B144, B146, B148, B150, B152, B154
+
 		this.energyData.B32.value = jsonData.B32;
 		this.energyData.B34.value = jsonData.B34;
 		this.energyData.B36.value = jsonData.B36;
@@ -168,7 +149,7 @@ export class Model171C extends DeviceBase {
 		this.energyData.B44.value = jsonData.B44;
 		this.energyData.B46.value = jsonData.B46;
 		this.energyData.B48.value = jsonData.B48;
-		 this.energyData.B50.value = jsonData.B50;
+		this.energyData.B50.value = jsonData.B50;
 		this.energyData.B52.value = jsonData.B52;
 		this.energyData.B54.value = jsonData.B54;
 		this.energyData.B56.value = jsonData.B56;
@@ -178,7 +159,7 @@ export class Model171C extends DeviceBase {
 		this.energyData.B64.value = jsonData.B64;
 		this.energyData.B66.value = jsonData.B66;
 		this.energyData.B68.value = jsonData.B68;
-		 this.energyData.B70.value = jsonData.B70;
+		this.energyData.B70.value = jsonData.B70;
 		this.energyData.B72.value = jsonData.B72;
 		this.energyData.B74.value = jsonData.B74;
 		this.energyData.B76.value = jsonData.B76;
@@ -188,7 +169,7 @@ export class Model171C extends DeviceBase {
 		this.energyData.B84.value = jsonData.B84;
 		this.energyData.B86.value = jsonData.B86;
 		this.energyData.B88.value = jsonData.B88;
-		 this.energyData.B90.value = jsonData.B90;
+		this.energyData.B90.value = jsonData.B90;
 		this.energyData.B92.value = jsonData.B92;
 		this.energyData.B94.value = jsonData.B94;
 		this.energyData.B96.value = jsonData.B96;
@@ -198,7 +179,7 @@ export class Model171C extends DeviceBase {
 		this.energyData.B104.value = jsonData.B104;
 		this.energyData.B106.value = jsonData.B106;
 		this.energyData.B108.value = jsonData.B108;
-		 this.energyData.B110.value = jsonData.B110;
+		this.energyData.B110.value = jsonData.B110;
 		this.energyData.B112.value = jsonData.B112;
 		this.energyData.B114.value = jsonData.B114;
 		this.energyData.B116.value = jsonData.B116;
@@ -229,33 +210,33 @@ export class Model171C extends DeviceBase {
 		this.energyData.B156b4.value = jsonData.B156b4;
 
 
-			this.energyData.B158.value = jsonData.B158;
-	this.energyData.B160.value = jsonData.B160;
-	this.energyData.B162.value = jsonData.B162;
-	this.energyData.B164.value = jsonData.B164;
-	this.energyData.B166.value = jsonData.B166;
-	this.energyData.B168.value = jsonData.B168;	
-	this.energyData.B170.value = jsonData.B170;
-	this.energyData.B172.value = jsonData.B172;
-	this.energyData.B174.value = jsonData.B174;
-	this.energyData.B176.value = jsonData.B176;
-	this.energyData.B178.value = jsonData.B178;
-	this.energyData.B180.value = jsonData.B180;
-	this.energyData.B182.value = jsonData.B182;
-	this.energyData.B184.value = jsonData.B184;
-	this.energyData.B186.value = jsonData.B186;
-	this.energyData.B184.value = jsonData.B184;
-	this.energyData.B186.value = jsonData.B186;
-	this.energyData.B188.value = jsonData.B188;
-	this.energyData.B190.value = jsonData.B190;
-	this.energyData.B192.value = jsonData.B192;
-	this.energyData.B196.value = jsonData.B196;
-	this.energyData.B200.value = jsonData.B200;
-	this.energyData.B202.value = jsonData.B202;
-	this.energyData.B204.value = jsonData.B204;
-	this.energyData.B206.value = jsonData.B206;
-	this.energyData.B208.value = jsonData.B208;
-	this.energyData.B210.value = jsonData.B210;
+		this.energyData.B158.value = jsonData.B158;
+		this.energyData.B160.value = jsonData.B160;
+		this.energyData.B162.value = jsonData.B162;
+		this.energyData.B164.value = jsonData.B164;
+		this.energyData.B166.value = jsonData.B166;
+		this.energyData.B168.value = (jsonData.B168 / 1000);
+		this.energyData.B170.value = (jsonData.B170 / 1000);
+		this.energyData.B172.value = jsonData.B172;
+		this.energyData.B174.value = jsonData.B174;
+		this.energyData.B176.value = jsonData.B176;
+		this.energyData.B178.value = jsonData.B178;
+		this.energyData.B180.value = jsonData.B180;
+		this.energyData.B182.value = jsonData.B182;
+		this.energyData.B184.value = jsonData.B184;
+		this.energyData.B186.value = jsonData.B186;
+		this.energyData.B184.value = jsonData.B184;
+		this.energyData.B186.value = jsonData.B186;
+		this.energyData.B188.value = jsonData.B188;
+		this.energyData.B190.value = jsonData.B190;
+		this.energyData.B192.value = jsonData.B192;
+		this.energyData.B196.value = jsonData.B196;
+		this.energyData.B200.value = jsonData.B200;
+		this.energyData.B202.value = jsonData.B202;
+		this.energyData.B204.value = jsonData.B204;
+		this.energyData.B206.value = jsonData.B206;
+		this.energyData.B208.value = jsonData.B208;
+		this.energyData.B210.value = jsonData.B210;
 		// }
 	}
 
@@ -361,26 +342,6 @@ export class Model171C extends DeviceBase {
 		this.controlData.B148.value = jsonData.data.B148?.toFixed(2) + this.setHtmlText('℃/min');
 		this.controlData.B150.value = jsonData.data.B150?.toFixed(2) + this.setHtmlText('℃/min');
 
-		// 合并数据同步
-		this.mergeData.overVoltage1Threshold = this.controlData.B0.value;
-		this.mergeData.underVoltage1Threshold = this.controlData.B8.value;
-		this.mergeData.dischargeOverCurrent1Threshold = this.controlData.B16.value;
-		this.mergeData.chargeOverCurrent1Threshold = this.controlData.B24.value;
-		this.mergeData.insulation1Threshold = this.controlData.B32.value;
-		this.mergeData.cellChargeOverTemp1Threshold = this.controlData.B40.value;
-		this.mergeData.cellChargeUnderTemp1Threshold = this.controlData.B48.value;
-		this.mergeData.cellOverVoltage1Threshold = this.controlData.B56.value;
-		this.mergeData.cellUnderVoltage1Threshold = this.controlData.B64.value;
-		this.mergeData.cellVoltageDiff1Threshold = this.controlData.B72.value;
-		this.mergeData.cellTempDiff1Threshold = this.controlData.B80.value;
-		this.mergeData.socLow1Threshold = this.controlData.B88.value;
-		this.mergeData.powerBoxOverTemp1Threshold = this.controlData.B96.value;
-		this.mergeData.moduleOverVoltage1Threshold = this.controlData.B104.value;
-		this.mergeData.moduleUnderVoltage1Threshold = this.controlData.B112.value;
-		this.mergeData.cellDischargeOverTemp1Threshold = this.controlData.B120.value;
-		this.mergeData.cellDischargeUnderTemp1Threshold = this.controlData.B128.value;
-		this.mergeData.socHigh1Threshold = this.controlData.B136.value;
-		this.mergeData.tempRiseFast1Threshold = this.controlData.B144.value;
 	}
 
 	// 工具方法：带单位的HTML文本（完全对齐PCS模板）
@@ -391,6 +352,18 @@ export class Model171C extends DeviceBase {
 	// 工具方法：数值固定2位小数（完全对齐PCS模板）
 	toFixed(data) {
 		return parseFloat(data) ? parseFloat(data).toFixed(2) : (Math.random() * 100).toFixed(2)
+	}
+
+	// 工具方法：告警状态转换（0-无告警，1-告警）
+	setAlarmStatus(key) {
+		switch (key) {
+			case 0:
+				return '无告警';
+			case 1:
+				return '告警';
+			default:
+				return key;
+		}
 	}
 
 	// 工具方法：通信状态转换（与PCS模板结构完全一致）
@@ -560,14 +533,14 @@ export class EnergyData {
 	B26 = { name: '电池簇电池状态', value: "--" };
 
 
-	B28b0 = { name: '电池簇电池状态', value: "--" };
-	B28b1 = { name: '电池簇电池状态', value: "--" };
-	B28b2 = { name: '电池簇电池状态', value: "--" };
-	B28b3 = { name: '电池簇电池状态', value: "--" };
-	B28b4 = { name: '电池簇电池状态', value: "--" };
-	B28b5 = { name: '电池簇电池状态', value: "--" };
-	B28b6 = { name: '电池簇电池状态', value: "--" };
-	B28b7 = { name: '电池簇电池状态', value: "--" };
+	B28b0 = { name: 'DI1 状态', value: "--" };
+	B28b1 = { name: 'DI2 状态', value: "--" };
+	B28b2 = { name: 'DI3 状态', value: "--" };
+	B28b3 = { name: 'DI4 状态', value: "--" };
+	B28b4 = { name: 'DI5 状态', value: "--" };
+	B28b5 = { name: 'DI6 状态', value: "--" };
+	B28b6 = { name: 'DI7 状态', value: "--" };
+	B28b7 = { name: 'DI8 状态', value: "--" };
 
 	B29b0 = { name: ' SLP 信号', value: "--" };
 
@@ -661,8 +634,8 @@ export class EnergyData {
 	B162 = { name: '系统告警状态-禁充/禁放解除时间', value: "--" };
 	B164 = { name: '最大允许充电电流', value: "--" };
 	B166 = { name: '最大允许放电电流', value: "--" };
-	B168 = { name: '最大允许充电功率', value: "--" };
-	B170 = { name: '最大允许放电功率', value: "--" };
+	B168 = { name: '最大允许充电功率(kW)', value: "--" };
+	B170 = { name: '最大允许放电功率(kW)', value: "--" };
 	B172 = { name: '最大单体电压节号', value: "--" };
 	B174 = { name: '最小单体电压节号', value: "--" };
 	B176 = { name: '最大单体温度节号', value: "--" };

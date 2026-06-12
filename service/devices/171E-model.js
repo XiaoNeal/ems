@@ -28,13 +28,14 @@ export class Model171E extends DeviceBase {
         this.energyData.B36.value = jsonData.B36
         this.energyData.B40.value = jsonData.B40
         this.energyData.B44.value = jsonData.B44
-        this.energyData.B48.value = jsonData.B48
+        this.energyData.B48.value = (jsonData.B48 / 1000)
         this.energyData.B52.value = jsonData.B52
-        this.energyData.B56.value = jsonData.B56
+        const dcdcStatus = (jsonData.B56 >> 22) & 1;
+        this.energyData.B56.value = dcdcStatus === 0 ? 'DCDC开机' : 'DCDC关机'
         this.energyData.B60.value = jsonData.B60
-        this.energyData.B64.value = jsonData.B64;
+        this.energyData.B64.value = (jsonData.B64 / 1000);
         this.energyData.B68.value = jsonData.B68;
-        this.energyData.B72.value = jsonData.B72;
+        this.energyData.B72.value = this.setInputWorkMode(jsonData.B72);
         this.energyData.B76.value = jsonData.B76;
         this.energyData.B80.value = jsonData.B80;
         this.energyData.B84.value = jsonData.B84;
@@ -128,6 +129,17 @@ export class Model171E extends DeviceBase {
         }
     }
 
+    // 工具方法：输入工作模式转换
+    setInputWorkMode(key) {
+        switch (key) {
+            case '00000001': return '单相交流';
+            case '00000002': return '直流';
+            case '00000003': return '三相交流';
+            case '00000005': return '模式不匹配（相序错误）';
+            default: return key;
+        }
+    }
+
     // 工具方法：工作模式转换
     setWorkMode(key) {
         switch (key) {
@@ -159,11 +171,11 @@ class EnergyData {
         this.B36 = { name: '模块交流B相电压', value: "--" };
         this.B40 = { name: '模块交流 C 相电压', value: "--" };
         this.B44 = { name: '模块 PFC 板温度', value: "--" };
-        this.B48 = { name: '模块额定输出功率', value: "--" };
+        this.B48 = { name: '模块额定输出功率(kW)', value: "--" };
         this.B52 = { name: '模块额定输出电流', value: "--" };
         this.B56 = { name: '读取当前告警/状态', value: "--" };
         this.B60 = { name: '读取组号和拨码地址', value: "--" };
-        this.B64 = { name: '读取输入功率', value: "--" };
+        this.B64 = { name: '读取输入功率(kW)', value: "--" };
         this.B68 = { name: '读取当前设定的海拔值', value: "--" };
         this.B72 = { name: '读取当前模块输入工作模式', value: "--" };
         this.B76 = { name: '读节点 SearialNo 号低位（ID 号）', value: "--" };
