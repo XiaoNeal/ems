@@ -52,14 +52,14 @@ const isRetryableError = (errMsg) => {
  * @returns {Promise} 请求结果
  */
 const request = (options) => {
-  // 合并默认配置
+  // 合并默认配置（优化超时时间，小程序环境建议不超过30秒）
   const config = {
     method: 'GET',
-    timeout: 100000,
+    timeout: 30000,
     dataType: 'json',
     responseType: 'text',
     sslVerify: false,
-    maxRetries: 3,
+    maxRetries: 2,
     retryDelay: 1000,
     ...options
   };
@@ -95,6 +95,16 @@ const request = (options) => {
         ...config.header
       };
 
+      // 打印请求信息用于调试
+      // console.log(`[Request] === 请求开始 ===`);
+      // console.log(`[Request] 方法: ${config.method.toUpperCase()}`);
+      // console.log(`[Request] URL: ${fullURL}`);
+      // console.log(`[Request] 超时时间: ${config.timeout}ms`);
+      // console.log(`[Request] 重试次数: ${retryCount}/${config.maxRetries}`);
+      // console.log(`[Request] Headers:`, headers);
+      // console.log(`[Request] Data:`, config.data);
+      // console.log(`[Request] === 请求结束 ===`);
+
       uni.request({
         method: config.method.toUpperCase(),
         url: fullURL,
@@ -106,10 +116,19 @@ const request = (options) => {
         timeout: config.timeout,
         complete: (response) => {
           const { data, statusCode, errMsg, header } = response;
+          // console.log(`[Response] === 响应开始 ===`);
+          // console.log(`[Response] URL: ${fullURL}`);
+          // console.log(`[Response] 状态码: ${statusCode}`);
+          // console.log(`[Response] 错误信息: ${errMsg}`);
+          // console.log(`[Response] 响应头:`, header);
+          // console.log(`[Response] 响应数据长度: ${data ? (typeof data === 'string' ? data.length : JSON.stringify(data).length) : 0}`);
+          // console.log(`[Response] === 响应结束 ===`);
+          
           // 处理超时
-          if (errMsg.includes("timeout")) {
+          if (errMsg && errMsg.includes("timeout")) {
             if (retryCount < config.maxRetries) {
               retryCount++;
+              console.warn(`[Request] 超时重试第${retryCount}次: ${fullURL}`);
               setTimeout(sendRequest, config.retryDelay * Math.pow(2, retryCount));
               return;
             } else {

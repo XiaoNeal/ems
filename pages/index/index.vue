@@ -138,7 +138,9 @@ export default {
       selectedDeviceId: null,
       fromProfile: false,
       isDeviceListLoaded: false,
-      deviceListLoading: false
+      deviceListLoading: false,
+      isNavigating: false, // 防止重复跳转的节流锁
+      lastClickTime: 0 // 上次点击时间戳，用于防重复点击
     }
   },
   mounted() {
@@ -146,15 +148,35 @@ export default {
     this.checkLoginStatus()
   },
   onLoad(options) {
-    if (options.esId) {
-      this.handleDeviceSelect(options.esId)
+    console.log('onLoad', options)
+    // 优先使用完整设备对象参数 - 直接处理，不调用handleDeviceSelect避免循环跳转
+    if (options.device) {
+      try {
+        const device = JSON.parse(decodeURIComponent(options.device))
+        console.log('从device参数加载设备:', device)
+        const deviceId = device.id || device.esId
+        this.selectedDeviceId = deviceId
+        this.fromProfile = false
+        // 清除fromProfile存储，防止onShow覆盖状态
+        uni.removeStorageSync('fromProfile')
+        this.$store.commit('changeCurrentSelectDevice', device)
+      } catch (e) {
+        console.error('解析device参数失败:', e)
+      }
+    } else if (options.esId) {
+      // 兼容旧的esId参数
+      console.log('从esId参数加载设备:', options.esId)
+      const device = { id: options.esId }
+      this.selectedDeviceId = options.esId
+      this.fromProfile = false
+      uni.removeStorageSync('fromProfile')
+      this.$store.commit('changeCurrentSelectDevice', device)
     } else {
       // 恢复上次选择的设备
-      const savedDeviceId = uni.getStorageSync('selectedDeviceId')
-      if (savedDeviceId) {
-        this.selectedDeviceId = savedDeviceId
-        this.$store.commit('changePowerStationId', savedDeviceId)
-        uni.setStorageSync('currentEsId', savedDeviceId)
+      const savedDevice = uni.getStorageSync('currentSelectDevice')
+      if (savedDevice) {
+        this.selectedDeviceId = savedDevice.id || savedDevice.esId
+        this.$store.commit('changeCurrentSelectDevice', savedDevice)
       }
     }
     this.checkFromProfile()
@@ -214,9 +236,11 @@ export default {
 
         // 如果只有一个设备，自动选中
         if (energyStations.length === 1) {
-          this.selectedDeviceId = energyStations[0]
-          this.$store.commit('changePowerStationId', energyStations[0])
-          uni.setStorageSync('currentEsId', energyStations[0])
+          const device = energyStations[0]
+          const deviceId = device.id || device.esId || device
+          this.selectedDeviceId = deviceId
+          console.log('自动选中设备:', deviceId, '设备信息:', device)
+          this.$store.commit('changeCurrentSelectDevice', device)
         }
         
         this.isDeviceListLoaded = true
@@ -229,19 +253,52 @@ export default {
     
     // 处理设备选择
     handleDeviceSelect(esId) {
-      this.selectedDeviceId = esId
+      // 节流锁1：防止重复点击（500ms内只响应一次）
+      const now = Date.now()
+      if (now - this.lastClickTime < 500) {
+        console.log('500ms内重复点击，忽略')
+        return
+      }
+      this.lastClickTime = now
+      
+      // 节流锁2：防止正在跳转时重复触发
+      if (this.isNavigating) {
+        console.log('正在跳转中，忽略重复点击')
+        return
+      }
+      this.isNavigating = true
+      
+      console.log('handleDeviceSelect---------------------------------------', esId)
+      // 兼容对象和数字两种格式
+      const device = typeof esId === 'object' ? esId : { id: esId }
+      const deviceId = device.id || device.esId || esId
+      this.selectedDeviceId = deviceId
       this.fromProfile = false
-      this.$store.commit('changePowerStationId', esId)
-      uni.setStorageSync('currentEsId', esId)
-      uni.setStorageSync('selectedDeviceId', esId)
+      console.log('选择设备:', device)
+      this.$store.commit('changeCurrentSelectDevice', device)
+      // 跳转到设备详情页面，传递完整设备对象
+      const deviceStr = encodeURIComponent(JSON.stringify(device))
+      // 使用redirectTo代替navigateTo，避免页面栈累积
+      uni.redirectTo({
+        url: `/pages/index/index?device=${deviceStr}`,
+        fail: (err) => {
+          console.error('跳转失败:', err)
+          uni.showToast({
+            title: '跳转失败',
+            icon: 'none'
+          })
+          this.isNavigating = false
+        },
+        complete: () => {
+          this.isNavigating = false
+        }
+      })
     },
     
     // 返回设备列表
     goBackToList() {
       this.selectedDeviceId = null
-      this.$store.commit('changePowerStationId', undefined)
-      uni.removeStorageSync('currentEsId')
-      uni.removeStorageSync('selectedDeviceId')
+      this.$store.commit('changeCurrentSelectDevice', {})
     },
     
     onScroll(e) {

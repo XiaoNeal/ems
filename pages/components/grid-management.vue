@@ -1,6 +1,6 @@
 <template>
   <view class="grid-management" :class="{ fullscreen: isFullScreen }">
-    
+
     <!-- 全屏模式头部 -->
     <view v-if="isFullScreen" class="fullscreen-header">
       <text class="fullscreen-title">{{ fullScreenType === 'power' ? '电网功率曲线' : '供馈电量统计' }}</text>
@@ -8,7 +8,7 @@
         <text>退出全屏</text>
       </view>
     </view>
-    
+
     <view class="content">
       <!-- 电网数据卡片 -->
       <view class="stats-container">
@@ -66,7 +66,7 @@
           </view>
         </view>
       </view>
-      
+
       <!-- 电网数据区块 -->
       <view class="grid-data-section">
         <!-- 电网功率曲线 -->
@@ -235,10 +235,10 @@ export default {
       return this.getFieldValue('B4');
     },
     todaySupplyEnergy() {
-      return this.getFieldValue('B42');
+      return this.getFieldValue('B184');
     },
     totalSupplyEnergy() {
-      return this.getFieldValue('B62');
+      return this.getFieldValue('B176');
     },
     todayFeedEnergy() {
       return this.getFieldValue('B188');
@@ -269,12 +269,11 @@ export default {
     // 获取电网功率曲线数据
     async getPowerCurveData() {
       try {
-        const esId =  8;
-        const areaLevelIds = this.$store.state.areaInfoId || 940;
+        const currentDevice = this.$store.state.currentSelectDevice || {};
         const params = {
-          esId: esId,
-          date: this.powerDate,
-          areaLevelIds: areaLevelIds
+          esId: currentDevice.id || 28,
+          date: this.selectedDate,
+          areaLevelIds: currentDevice.areaLevelId || 991
         };
 
         console.log(params, 'params');
@@ -284,7 +283,7 @@ export default {
           const dataList = res.data;
           const categories = [];
           const series = [];
-          
+
           // 按每2小时聚合数据（0-23小时，每2小时取一个点）
           for (let i = 0; i < 24; i += 2) {
             // 找到该小时范围内的数据
@@ -293,7 +292,7 @@ export default {
               const hour = parseInt(time.substring(11, 13)) || 0;
               return hour >= i && hour < i + 2;
             });
-            
+
             if (hourData.length > 0) {
               categories.push(`${String(i).padStart(2, "0")}:00`);
               // 计算平均值
@@ -301,7 +300,7 @@ export default {
               series.push(parseFloat(avgValue.toFixed(2)));
             }
           }
-          
+
           this.powerCurveCategories = categories;
           this.powerCurveSeries = series;
         } else {
@@ -324,7 +323,7 @@ export default {
         // 退出全屏
         this.isFullScreen = false;
         this.fullScreenType = '';
-        
+
         // #ifdef APP-PLUS
         plus.screen.lockOrientation('portrait-primary');
         plus.navigator.setFullscreen(false);
@@ -333,13 +332,13 @@ export default {
         // 进入全屏
         this.isFullScreen = true;
         this.fullScreenType = type;
-        
+
         // #ifdef APP-PLUS
         plus.screen.lockOrientation('landscape-primary');
         plus.navigator.setFullscreen(true);
         // #endif
       }
-      
+
       uni.showToast({
         title: this.isFullScreen ? (type === 'power' ? '电网功率曲线全屏' : '供馈电量统计全屏') : '退出全屏',
         icon: 'none',
@@ -382,7 +381,7 @@ export default {
     padding-top: calc(20rpx + env(safe-area-inset-top));
     padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
   }
-  
+
   /* 全屏时安全区样式（避开刘海/状态栏） */
   .grid-management.fullscreen {
     padding-top: env(safe-area-inset-top) !important;
@@ -495,6 +494,7 @@ export default {
 
 .header {
   margin-bottom: 20rpx;
+
   .title {
     font-size: 32rpx;
     font-weight: bold;
@@ -506,6 +506,7 @@ export default {
 .stats-container {
   margin-bottom: 20rpx;
 }
+
 .stat-row {
   display: flex;
   // margin-bottom: 10rpx;
@@ -513,20 +514,24 @@ export default {
   padding: 16rpx 10rpx;
   // border-radius: 16rpx;
 }
+
 .stat-item {
   flex: 1;
   display: flex;
   align-items: center;
 }
+
 .stat-item.vertical {
   flex-direction: column;
   align-items: flex-start;
 }
+
 .stat-item.double {
   display: flex;
   flex-direction: column;
-  flex:0.5;
+  flex: 0.5;
 }
+
 .stat-divider {
   width: 1rpx;
   height: 60rpx;
@@ -534,6 +539,7 @@ export default {
   margin: 0 16rpx;
   align-self: center;
 }
+
 .stat-subitem {
   display: flex;
   flex-direction: row;
@@ -542,26 +548,32 @@ export default {
   width: 100%;
   margin-bottom: 8rpx;
 }
+
 .stat-subitem:last-child {
   margin-bottom: 0;
 }
+
 .stat-label {
   font-size: 12px;
   color: #666;
   margin-right: 8rpx;
 }
+
 .stat-value {
   font-size: 18px;
   font-weight: bold;
   color: #4488FB;
+
   &.negative {
     color: #EB3341;
   }
 }
+
 .stat-value.small {
   font-size: 10px;
   font-weight: normal;
 }
+
 .stat-unit {
   font-size: 8px;
   color: #666;
@@ -621,21 +633,25 @@ export default {
   border-radius: 0;
   padding: 0;
   margin-bottom: 0;
+
   .chart-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20rpx;
+
     .chart-title {
       font-size: 28rpx;
       font-weight: 500;
       color: #333;
     }
+
     .fullscreen-button {
       font-size: 24rpx;
       color: #4488FB;
     }
   }
+
   .chart-placeholder {
     height: 300rpx;
     display: flex;
@@ -643,14 +659,17 @@ export default {
     justify-content: center;
     background: #f5f5f5;
     border-radius: 12rpx;
+
     text {
       font-size: 24rpx;
       color: #999;
     }
   }
+
   .power-chart {
     background: linear-gradient(to bottom, #e3f2fd 0%, #fff 100%);
   }
+
   .energy-chart {
     background: #f9f9f9;
   }

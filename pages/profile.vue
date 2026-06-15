@@ -106,7 +106,7 @@ export default {
   computed: {
     ...mapState(['user', 'userInfo']),
     currentDeviceName() {
-      const currentDevice = uni.getStorageSync('currentEsId')
+      const currentDevice = this.$store.state.currentSelectDevice
       if (!currentDevice) {
         return ''
       }
@@ -116,24 +116,18 @@ export default {
         return ''
       }
       
-      // 如果 currentDevice 本身是对象且有 name 属性
-      if (typeof currentDevice === 'object' && currentDevice.name) {
-        // 验证该设备是否存在于用户设备列表中
-        const exists = this.userInfo.esIds.some(item => {
-          if (typeof item === 'object') {
-            return item.esId === currentDevice.esId || item.id === currentDevice.id
-          }
-          return item === currentDevice.esId || item === currentDevice.id
-        })
-        return exists ? currentDevice.name : ''
+      // 如果 currentDevice 有 name 属性，直接返回
+      if (currentDevice.name) {
+        return currentDevice.name
       }
       
-      // 如果 currentDevice 是字符串ID，从 esIds 中查找
+      // 如果 currentDevice 是对象但没有 name，从 esIds 中查找
+      const deviceId = currentDevice.id || currentDevice.esId
       const device = this.userInfo.esIds.find(item => {
         if (typeof item === 'object') {
-          return item.esId === currentDevice || item.id === currentDevice || item === currentDevice
+          return item.esId === deviceId || item.id === deviceId
         }
-        return item === currentDevice
+        return item === deviceId
       })
       if (device && typeof device === 'object' && device.name) {
         return device.name
@@ -205,8 +199,7 @@ export default {
 
 
     navigateToDeviceList() {
-      uni.setStorageSync('currentEsId', '')
-      this.$store.commit('changePowerStationId', '')
+      this.$store.commit('changeCurrentSelectDevice', {})
       uni.setStorageSync('fromProfile', 'true')
       uni.navigateTo({
         url: '/pages/index/index'

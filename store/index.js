@@ -35,7 +35,7 @@ let saveStateKeys = [
 	'currentSystemInfo', 'currentStorageArea', 'headerTabBg', 'bGColor', 'fontColor', 'urlPrefix',
 	'dragLists', 'gatewayDetailLists', 'newVersion', 'notUpdated',
 	'areaInfoName', 'noEncryption',
-	'powerStationsId', 'userInfo' // 新增缓存字段
+	'currentSelectDevice', 'userInfo' // 新增缓存字段
 ];
 
 
@@ -63,10 +63,11 @@ const store = new Vuex.Store({
 			return state.esConfig
 		},
 		getEsVersion: (state) => {
-			console.log('当前电站ID:', state.powerStationsId) // 调试输出
+			console.log('当前设备:', state.currentSelectDevice) // 调试输出
 			const versionMap = new Map()
 				.set(1, 2).set(2, 2).set(3, 2).set(4, 1).set(5, 2)
-			return versionMap.get(state.powerStationsId) || 1 // 添加默认值
+			const deviceId = state.currentSelectDevice?.id || state.currentSelectDevice?.esId || 0
+			return versionMap.get(deviceId) || 1 // 添加默认值
 		},
 		currentSystem: state => state.systems.find(system => system.id === state.currentSystemId),
 		allSystems: state => state.systems.map(s => ({ id: s.id, name: s.name })),
@@ -76,29 +77,29 @@ const store = new Vuex.Store({
 		headerTabBg: lifeData.headerTabBg ? lifeData.headerTabBg : '#fff',
 		bGColor: lifeData.bGColor ? lifeData.bGColor : '#fff',
 		fontColor: lifeData.fontColor ? lifeData.fontColor : '#000',
-		vuex_userInfo: lifeData.vuex_userInfo ? lifeData.vuex_userInfo : {},
+		// vuex_userInfo: lifeData.vuex_userInfo ? lifeData.vuex_userInfo : {},
 		token: lifeData.token ? lifeData.token : '',
-		vuex_wxCode: '',
-		
-		deviceCategoryId: lifeData.deviceCategoryId ? lifeData.deviceCategoryId : '',
+		// vuex_wxCode: '',
+
+		// deviceCategoryId: lifeData.deviceCategoryId ? lifeData.deviceCategoryId : '',
 		areaInfoId: lifeData.areaInfoId ? lifeData.areaInfoId : '',
 
 		currentSystemInfo: lifeData.currentSystemInfo ? lifeData.currentSystemInfo : {},
-		currentStorageArea: lifeData.currentStorageArea ? lifeData.currentStorageArea : {},
-		urlPrefix: lifeData.urlPrefix ? lifeData.urlPrefix : '',
-		dragLists: lifeData.dragLists ? lifeData.dragLists : [],
-		gatewayDetailLists: lifeData.gatewayDetailLists ? lifeData.gatewayDetailLists : [],
-		notUpdated: lifeData.notUpdated ? lifeData.notUpdated : false,
-		newVersion: lifeData.newVersion ? lifeData.newVersion : 'v1.6.0',
-		areaInfoName: lifeData.areaInfoName ? lifeData.areaInfoName : '',
-		noEncryption: lifeData.noEncryption ? lifeData.noEncryption : false,
+		// currentStorageArea: lifeData.currentStorageArea ? lifeData.currentStorageArea : {},
+		// urlPrefix: lifeData.urlPrefix ? lifeData.urlPrefix : '',
+		// dragLists: lifeData.dragLists ? lifeData.dragLists : [],
+		// gatewayDetailLists: lifeData.gatewayDetailLists ? lifeData.gatewayDetailLists : [],
+		// notUpdated: lifeData.notUpdated ? lifeData.notUpdated : false,
+		// newVersion: lifeData.newVersion ? lifeData.newVersion : 'v1.6.0',
+		// areaInfoName: lifeData.areaInfoName ? lifeData.areaInfoName : '',
+		// noEncryption: lifeData.noEncryption ? lifeData.noEncryption : false,
 		hasLogin: lifeData.hasLogin ? lifeData.hasLogin : false,
 		userName: lifeData.userName ? lifeData.userName : '',
 
 		storageRealData: [],
-		powerStationsId: lifeData.powerStationsId ? lifeData.powerStationsId : undefined,
+		currentSelectDevice: lifeData.currentSelectDevice ? lifeData.currentSelectDevice : undefined,
 		homeSelectedEsId: lifeData.homeSelectedEsId ? lifeData.homeSelectedEsId : undefined,
-		centerList: lifeData.centerList ? lifeData.centerList : [],
+		// centerList: lifeData.centerList ? lifeData.centerList : [],
 	},
 	mutations: {
 		$uStore(state, payload) {
@@ -121,8 +122,11 @@ const store = new Vuex.Store({
 			// 保存变量到本地，见顶部函数定义
 			saveLifeData(saveKey, state[saveKey])
 		},
-		changePowerStationId(state, data) {
-			state.powerStationsId = data
+		// 存储完整设备对象
+		changeCurrentSelectDevice(state, data) {
+			console.log('changeCurrentSelectDevice', data)
+			state.currentSelectDevice = data || {}
+			saveLifeData('currentSelectDevice', data)
 		},
 		/**
 		 * 修改存储实时数据
@@ -130,11 +134,11 @@ const store = new Vuex.Store({
 		changeStorageRealData(state, data) {
 			state.storageRealData = data
 		},
-		UPDATE_CENTERLIST(state, value) {
-			state.centerList = value
-			console.log('------------------122', value)
-			saveLifeData('centerList', value)
-		},
+		// UPDATE_CENTERLIST(state, value) {
+		// 	state.centerList = value
+		// 	console.log('------------------122', value)
+		// 	saveLifeData('centerList', value)
+		// },
 		SET_LOGIN(state, userInfo) {
 			state.userInfo = userInfo
 			state.hasLogin = true
@@ -144,20 +148,20 @@ const store = new Vuex.Store({
 	},
 	actions: {
 		// 自定义 action
-		getCenterList(ctx) {
-			const userInfo = {
-				_id: "60054086019dcc42e41c91f7",
-				username: "homeAdmin",
-				name: "NEIIC 国创联能",
-				__v: 0,
-				role: {
-					_id: "60068a98fa3cf1513b206a74",
-					name: "admin",
-					description: "管理员"
-				},
-				level: "admin"
-			}
-			}
+		// getCenterList(ctx) {
+		// 	const userInfo = {
+		// 		_id: "60054086019dcc42e41c91f7",
+		// 		username: "homeAdmin",
+		// 		name: "NEIIC 国创联能",
+		// 		__v: 0,
+		// 		role: {
+		// 			_id: "60068a98fa3cf1513b206a74",
+		// 			name: "admin",
+		// 			description: "管理员"
+		// 		},
+		// 		level: "admin"
+		// 	}
+		// }
 	}
 })
 

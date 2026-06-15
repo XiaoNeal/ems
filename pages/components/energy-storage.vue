@@ -223,7 +223,7 @@ export default {
     if (this.updateTimer) clearTimeout(this.updateTimer);
   },
   methods: {
-   
+
     init171FDevice() {
       const device171F = {
         deviceType: '171F',
@@ -475,28 +475,31 @@ export default {
     },
 
     getPowerCurve() {
-      getPowerData({
-        esId: 8,
-        date: this.powerDate,
-        areaLevelIds: 940
-      }).then((res) => {
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+
+      const params = {
+        esId: currentDevice.id || 28,
+        date: this.selectedDate,
+        areaLevelIds: currentDevice.areaLevelId || 991
+      };
+      getPowerData(params).then((res) => {
         const categories = [], charge = [], discharge = [];
 
         if (res.data && res.data.length > 0) {
           const dataList = res.data;
-          
+
           // 按小时聚合数据（0-23小时，每小时取一个点）
           for (let h = 0; h < 24; h++) {
             const time = `${String(h).padStart(2, "0")}:00`;
             categories.push(time);
-            
+
             // 找到该小时范围内的数据
             const hourData = dataList.filter(item => {
               const dateTime = item.dateTime || '';
               const hour = parseInt(dateTime.substring(11, 13)) || 0;
               return hour === h;
             });
-            
+
             if (hourData.length > 0) {
               // 计算平均值
               const avgValue = hourData.reduce((sum, item) => sum + (parseFloat(item.storagePowerReverse || 0)), 0) / hourData.length;

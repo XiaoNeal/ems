@@ -23,7 +23,7 @@
       </view>
 
       <view v-for="(esId, index) in esIds" :key="index" class="device-item">
-        <view class="device-main" @click="selectDevice(esId)">
+        <view class="device-main" @click.stop="selectDevice(esId)">
           <view class="device-icon">
             <uni-icons type="monitor" size="40" color="#4488FB"></uni-icons>
           </view>
@@ -81,7 +81,7 @@
 
 <script>
 import { mapState } from 'vuex'
-import { bindEsUserByQrId } from '@/api/user'
+import { bindEsUserByQrId, findUserInfoByCodeId } from '@/api/user'
 
 export default {
   computed: {
@@ -130,8 +130,11 @@ export default {
     },
 
     selectDevice(esId) {
-      uni.setStorageSync('currentEsId', esId)
-      this.$emit('selectDevice', esId)
+      console.log('选择设备:', esId)
+      // 获取设备ID和完整设备对象
+      const device = typeof esId === 'object' ? esId : { id: esId }
+      // 只触发事件，由父组件统一处理跳转
+      this.$emit('selectDevice', device)
     },
 
     // 显示添加方式选择菜单
@@ -194,16 +197,29 @@ export default {
         scanType: ['qrCode'],
         success: (res) => {
           console.log('扫码结果:', res)
-          // 二维码内容即为 qrId
-          const qrId = res.result.trim()
-          if (qrId) {
-            this.validateAndAddDevice(qrId)
-          } else {
+          // 二维码内容可能是URL，需要提取energyQrId
+          let qrId = res.result.trim()
+          if (!qrId) {
             uni.showToast({
               title: '无法识别二维码',
               icon: 'none'
             })
+            return
           }
+          // 如果是URL，提取energyQrId参数
+          let cleanQrId = qrId.replace(/[`"'\\s]/g, '')
+          const lowerQrId = cleanQrId.toLowerCase()
+          const index = lowerQrId.indexOf('energyqrid=')
+          if (index !== -1) {
+            let value = cleanQrId.substring(index + 11)
+            const ampIndex = value.indexOf('&')
+            if (ampIndex !== -1) {
+              value = value.substring(0, ampIndex)
+            }
+            qrId = value
+            console.log('提取到的energyQrId:', qrId)
+          }
+          this.validateAndAddDevice(qrId)
         },
         fail: (err) => {
           console.error('扫码失败:', err)
@@ -264,18 +280,34 @@ export default {
       uni.showModal({
         title: '添加设备',
         editable: true,
-        placeholderText: '请输入设备二维码编号',
+        placeholderText: '请输入设备二维码编号或URL',
         confirmText: '确定',
         cancelText: '取消',
         success: (res) => {
           if (res.confirm && res.content) {
-            const qrId = res.content.trim()
+            let qrId = res.content.trim()
             if (!qrId) {
               uni.showToast({
                 title: '请输入二维码编号',
                 icon: 'none'
               })
               return
+            }
+            // 如果输入的是URL，从中提取energyQrId参数
+            // 先移除可能存在的反引号或空格
+            let cleanQrId = qrId.replace(/[`"'\\s]/g, '')
+            const lowerQrId = cleanQrId.toLowerCase()
+            const index = lowerQrId.indexOf('energyqrid=')
+            if (index !== -1) {
+              // 从等号后面开始提取
+              let value = cleanQrId.substring(index + 11) // 11是 'energyQrId=' 的长度
+              // 如果后面有&符号，截取到&之前
+              const ampIndex = value.indexOf('&')
+              if (ampIndex !== -1) {
+                value = value.substring(0, ampIndex)
+              }
+              qrId = value
+              console.log('提取到的energyQrId:', qrId)
             }
             this.validateAndAddDevice(qrId)
           }
@@ -284,18 +316,74 @@ export default {
     },
 
     validateAndAddDevice(qrId) {
+
+      console.log('qrId:', qrId, this.userInfo.userId)
       // 确认添加设备
       uni.showModal({
         title: '确认添加',
         content: `确定要使用此二维码绑定设备吗？`,
         confirmText: '确定',
         cancelText: '取消',
-        success: (res) => {
+        success: async (res) => {
           if (res.confirm) {
-            this.doAddDevice(qrId)
+            // 直接调用绑定设备接口
+            uni.showLoading({ title: '绑定中...' })
+            try {
+
+              // return
+              const esUserId = this.userInfo.userId
+              const res = await bindEsUserByQrId(qrId, esUserId)
+              if (res.status === 200) {
+                // 绑定成功后，调用接口获取最新设备列表
+                await this.refreshDeviceList()
+                
+                uni.showToast({
+                  title: '绑定成功',
+                  icon: 'success'
+                })
+
+                this.$emit('deviceAdded', qrId)
+              } else {
+                uni.showToast({
+                  title: res.msg || '绑定失败',
+                  icon: 'none'
+                })
+              }
+            } catch (error) {
+              uni.showToast({
+                title: '绑定失败',
+                icon: 'none'
+              })
+            } finally {
+              uni.hideLoading()
+            }
           }
         }
       })
+    },
+
+    // 刷新设备列表
+    async refreshDeviceList() {
+      try {
+        const codeId = this.userInfo.userId
+        console.log('调用 FindUserInfoByCodeId，codeId:', codeId)
+        const res = await findUserInfoByCodeId(codeId)
+        console.log('FindUserInfoByCodeId 返回结果:', res)
+        if (res && res.data) {
+          const data = res.data
+          console.log('接口返回数据:', data)
+          console.log('energyStations:', data.energyStations)
+          
+          // 接口返回的设备列表字段是 energyStations
+          if (data.energyStations && Array.isArray(data.energyStations)) {
+            this.esIds = data.energyStations
+            console.log('使用 energyStations:', this.esIds)
+          }
+          console.log('刷新后的设备列表长度:', this.esIds.length)
+        }
+      } catch (error) {
+        console.error('刷新设备列表失败:', error)
+      }
     },
 
     async doAddDevice(qrId) {

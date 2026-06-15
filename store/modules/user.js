@@ -27,7 +27,7 @@ const state = {
 		roleId: '',
 		roleName: '',
 		permissions: [],
-		powerStationsId: '', // 新增缓存字段
+		esIds: [], // 设备列表
 	},
 	hasLogin: false,
 	nickname: '',
@@ -74,7 +74,7 @@ const mutations = {
 		state.roleId = payload.roleId
 		state.roleName = payload.roleName
 		state.permissions = payload.permissions
-		state.powerStationsId = payload.powerStationsId
+		state.esIds = payload.esIds || []
 
 		// 新增持久化存储
 		uni.setStorageSync('userInfo', {
@@ -88,7 +88,7 @@ const mutations = {
 			roleId: payload.roleId,
 			roleName: payload.roleName,
 			permissions: payload.permissions,
-			powerStationsId: payload.powerStationsId
+			esIds: payload.esIds || []
 		})
 	},
 

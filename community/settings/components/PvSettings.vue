@@ -12,7 +12,7 @@
           </view>
         </view>
       </view>
-      
+
       <!-- 开关型参数 -->
       <view class="switch-section">
         <view v-for="param in pvSwitchParams" :key="param.key" class="param-row">
@@ -38,7 +38,8 @@
       <!-- 数值型参数 -->
       <view class="divider"></view>
       <view class="param-list">
-        <view v-for="param in pvParams" :key="param.key" class="param-row" :class="{ 'editing-row': editingParam === param.key }">
+        <view v-for="param in pvParams" :key="param.key" class="param-row"
+          :class="{ 'editing-row': editingParam === param.key }">
           <view class="param-info">
             <text class="param-name">{{ param.label }}</text>
             <text v-if="param.min !== undefined && param.max !== undefined" class="param-range">
@@ -49,8 +50,8 @@
             <view class="param-right">
               <view class="param-value-box" :class="{ editing: editingParam === param.key }">
                 <text v-if="editingParam !== param.key" class="val-text">{{ formatParamValue(param) }}</text>
-                <input v-else class="val-input" type="digit" v-model="tempValue" :min="param.min"
-                  :max="param.max" placeholder="请输入" focus @blur="handleInputBlur(param)" @confirm="handleInputConfirm(param)" />
+                <input v-else class="val-input" type="digit" v-model="tempValue" :min="param.min" :max="param.max"
+                  placeholder="请输入" focus @blur="handleInputBlur(param)" @confirm="handleInputConfirm(param)" />
               </view>
               <text class="unit-text">{{ param.unit || '' }}</text>
             </view>
@@ -102,7 +103,8 @@
 
     <!-- 操作结果提示 -->
     <view v-if="operationLog.visible" class="operation-toast" :class="operationLog.type">
-      <uni-icons :type="operationLog.type === 'success' ? 'checkmarkempty' : 'closeempty'" size="20" :color="operationLog.type === 'success' ? '#52c41a' : '#ff4d4f'"></uni-icons>
+      <uni-icons :type="operationLog.type === 'success' ? 'checkmarkempty' : 'closeempty'" size="20"
+        :color="operationLog.type === 'success' ? '#52c41a' : '#ff4d4f'"></uni-icons>
       <text class="toast-text">{{ operationLog.message }}</text>
     </view>
   </view>
@@ -151,37 +153,49 @@ export default {
         { key: 'pv.B0', field: 'B0', address: '0x0017', label: '设置模块工作海拔值', unit: 'm', min: 1000, max: 5000 },
         { key: 'pv.B4', field: 'B4', address: '0x001B', label: '设置模块输出电流值', unit: 'A', scale: 1024 },
         // { key: 'pv.B8', field: 'B8', address: '0x001E', label: '设置模块输出电流值', unit: 'A' },
-        { key: 'pv.B8', field: 'B8', address: '0x001E', label: '设置组号', unit: '', min: 0, max: 60, scale: 1024 },
-        { key: 'pv.B16', field: 'B16', address: '0x0020', label: '设置模块输出功率', unit: 'W', min: 0.1, max: 1, scale: 20000 },
+        { key: 'pv.B8', field: 'B8', address: '0x001E', label: '设置组号', unit: '', min: 0, max: 60 },
+        { key: 'pv.B16', field: 'B16', address: '0x0020', label: '设置模块输出功率', unit: 'kW', min: 2, max: 20, scale: 20 },
         { key: 'pv.B20', field: 'B20', address: '0x0021', label: '设置模块输出电压', unit: 'V' },
         { key: 'pv.B24', field: 'B24', address: '0x0022', label: '设置模块限流点', unit: 'A' },
         { key: 'pv.B28', field: 'B28', address: '0x0023', label: '设置模块输出电压上限值', unit: 'V' }
       ],
       pvSwitchParams: [
-        { key: 'pv.B12', field: 'B12', address: '0x001F', label: '设置模块地址分配方式', options: [
-          { label: '自动分配', value: '0x00000000' },
-          { label: '拨码设置', value: '0x00010000' }
-        ]},
-        { key: 'pv.B32', field: 'B32', address: '0x0030', label: '开关机', options: [
-          { label: '开机', value: '0x00000000', dangerous: true },
-          { label: '关机', value: '0x00010000', dangerous: true }
-        ]},
-        { key: 'pv.B36', field: 'B36', address: '0x0031', label: '设置模块过压复位', options: [
-          { label: '禁止', value: '0x00000000' },
-          { label: '复位', value: '0x00010000' }
-        ]},
-        { key: 'pv.B40', field: 'B40', address: '0x003E', label: '设置模块输出过压保护关联是否允许', options: [
-          { label: '允许', value: '0x00000000' },
-          { label: '禁止', value: '0x00010000' }
-        ]},
-        { key: 'pv.B44', field: 'B44', address: '0x0044', label: '设置模块短路复位', options: [
-          { label: '禁止', value: '0x00000000' },
-          { label: '复位', value: '0x00010000' }
-        ]},
-        { key: 'pv.B48', field: 'B48', address: '0x0046', label: '设置模块输入模式', options: [
-          { label: '交流模式', value: '0x00000001' },
-          { label: '直流模式', value: '0x00000002' }
-        ]}
+        {
+          key: 'pv.B12', field: 'B12', address: '0x001F', label: '设置模块地址分配方式', options: [
+            { label: '自动分配', value: '0x00000000' },
+            { label: '拨码设置', value: '0x00010000' }
+          ]
+        },
+        {
+          key: 'pv.B32', field: 'B32', address: '0x0030', label: '开关机', options: [
+            { label: '开机', value: '0x00000000', dangerous: true },
+            { label: '关机', value: '0x00010000', dangerous: true }
+          ]
+        },
+        {
+          key: 'pv.B36', field: 'B36', address: '0x0031', label: '设置模块过压复位', options: [
+            { label: '禁止', value: '0x00000000' },
+            { label: '复位', value: '0x00010000' }
+          ]
+        },
+        {
+          key: 'pv.B40', field: 'B40', address: '0x003E', label: '设置模块输出过压保护关联是否允许', options: [
+            { label: '允许', value: '0x00000000' },
+            { label: '禁止', value: '0x00010000' }
+          ]
+        },
+        {
+          key: 'pv.B44', field: 'B44', address: '0x0044', label: '设置模块短路复位', options: [
+            { label: '禁止', value: '0x00000000' },
+            { label: '复位', value: '0x00010000' }
+          ]
+        },
+        {
+          key: 'pv.B48', field: 'B48', address: '0x0046', label: '设置模块输入模式', options: [
+            { label: '交流模式', value: '0x00000001' },
+            { label: '直流模式', value: '0x00000002' }
+          ]
+        }
       ]
     }
   },
@@ -387,11 +401,19 @@ export default {
         // }
         // const registerAddress = registerMap[param.key] || '00000000'
 
-        const registerAddress = param.address 
+        const registerAddress = param.address
 
-        // 支持 scale 参数：传输值 = 实际值 × scale
-        const scale = param.scale || (param.key === 'pv.B16' ? 20000 : 1)
-        const registerValue = Math.round(parseFloat(value) * scale)
+        // 支持 scale 参数：传输值 = 实际值 / scale
+        const scale = param.scale || 1
+        let registerValue
+        if (param.key === 'pv.B16') {
+          registerValue = parseFloat(value) / scale
+        } else {
+          registerValue = parseFloat(value) * scale
+        }
+        // 
+
+        // registerValue = parseFloat(value)
 
         const commandData = {
           apiSufix: 't3401_171E_control',
@@ -431,7 +453,7 @@ export default {
       //   'pv.B40': '40', 'pv.B44': '44', 'pv.B48': '48'
       // }
       // const registerAddress = registerMap[param.key] || '00000000'
-      const registerAddress = param.address 
+      const registerAddress = param.address
 
       let hexValue = '0x00010000'
       if (value === '0x00000000' || value === 'none' || value === 'off') {
@@ -532,7 +554,7 @@ export default {
   color: #333;
   position: relative;
   padding-left: 20rpx;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -556,23 +578,23 @@ export default {
   border-radius: 8rpx;
   font-size: 26rpx;
   transition: all 0.2s ease;
-  
+
   &.primary {
     background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
     color: #ffffff;
     box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
-    
+
     &:active {
       transform: scale(0.95);
       box-shadow: 0 2rpx 6rpx rgba(102, 153, 255, 0.2);
     }
   }
-  
+
   &.close {
     background: #f5f5f5;
     color: #666;
     border: 1rpx solid #e0e0e0;
-    
+
     &:active {
       background: #e8e8e8;
     }
@@ -595,11 +617,11 @@ export default {
   padding: 28rpx 0;
   border-bottom: 1rpx solid #f5f5f5;
   transition: all 0.2s ease;
-  
+
   &:last-child {
     border-bottom: none;
   }
-  
+
   &.editing-row {
     background: #f8fbff;
     margin: 0 -20rpx;
@@ -717,7 +739,7 @@ export default {
   color: #6699ff;
   background: #ffffff;
   border: 2rpx solid #6699ff;
-  
+
   &:active {
     background: #f0f5ff;
   }
@@ -728,11 +750,11 @@ export default {
   background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
   box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
   min-width: 100rpx;
-  
+
   &:active {
     transform: scale(0.95);
   }
-  
+
   &.btn-loading {
     opacity: 0.8;
     pointer-events: none;
@@ -744,7 +766,7 @@ export default {
   background: #f5f5f5;
   border: 2rpx solid #e0e0e0;
   min-width: 60rpx;
-  
+
   &:active {
     background: #e8e8e8;
   }
@@ -811,7 +833,7 @@ export default {
 .btn-danger {
   border-color: #ff6b6b;
   color: #ff6b6b;
-  
+
   &.btn-active {
     background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
     border-color: #ff6b6b;
@@ -903,24 +925,24 @@ export default {
   font-size: 28rpx;
   text-align: center;
   transition: all 0.2s ease;
-  
+
   &.btn-cancel {
     background: #f5f5f5;
     color: #666;
-    
+
     &:active {
       background: #e8e8e8;
     }
   }
-  
+
   &.btn-confirm {
     background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
     color: #ffffff;
-    
+
     &:active {
       transform: scale(0.98);
     }
-    
+
     &.btn-danger {
       background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
     }
@@ -942,15 +964,15 @@ export default {
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
   z-index: 9999;
   animation: slideDown 0.3s ease;
-  
+
   &.success {
     border-left: 4rpx solid #52c41a;
   }
-  
+
   &.error {
     border-left: 4rpx solid #ff4d4f;
   }
-  
+
   &.warning {
     border-left: 4rpx solid #faad14;
   }
@@ -966,6 +988,7 @@ export default {
     opacity: 0;
     transform: translateX(-50%) translateY(-20rpx);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -980,7 +1003,7 @@ export default {
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  
+
   &.small {
     width: 24rpx;
     height: 24rpx;

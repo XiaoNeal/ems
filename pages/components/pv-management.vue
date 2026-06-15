@@ -232,7 +232,7 @@ export default {
       const year = device.energyData.B86?.value;
       const month = device.energyData.B88?.value;
       const day = device.energyData.B90?.value;
-      
+
       if (year && month && day) {
         const monthStr = String(month).padStart(2, '0');
         const dayStr = String(day).padStart(2, '0');
@@ -247,7 +247,7 @@ export default {
       const day = device.energyData.B100?.value;
       const hour = device.energyData.B102?.value;
       const minute = device.energyData.B104?.value;
-      
+
       if (year && month && day) {
         const monthStr = String(month).padStart(2, '0');
         const dayStr = String(day).padStart(2, '0');
@@ -275,11 +275,13 @@ export default {
     },
 
     getDayGeneratedPower() {
-      getPowerData({
-        esId: 8,
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+      const params = {
+        esId: currentDevice.id || 28,
         date: this.selectedDate,
-        areaLevelIds: 940
-      }).then((res) => {
+        areaLevelIds: currentDevice.areaLevelId || 991
+      };
+      getPowerData(params).then((res) => {
         if (!res.data || res.data.length === 0) {
           this.powerCurveSeries = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
           return;
@@ -287,7 +289,7 @@ export default {
 
         const dataList = res.data;
         const hourlyData = [];
-        
+
         // 按每2小时聚合数据（0-23小时，每2小时取一个点）
         for (let i = 0; i < 24; i += 2) {
           // 找到该小时范围内的数据
@@ -296,7 +298,7 @@ export default {
             const hour = parseInt(time.substring(11, 13)) || 0;
             return hour >= i && hour < i + 2;
           });
-          
+
           if (hourData.length > 0) {
             // 计算平均值
             const avgValue = hourData.reduce((sum, item) => sum + (parseFloat(item.generatedPower || 0)), 0) / hourData.length;
@@ -305,7 +307,7 @@ export default {
             hourlyData.push(0);
           }
         }
-        
+
         this.powerCurveSeries = hourlyData;
       });
     },

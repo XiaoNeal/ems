@@ -41,30 +41,43 @@
           <text class="power-unit">kW</text>
         </view>
       </view>
+
+
+      <view class="device-label" style="left:36%;top: 31%;">
+        <!-- <text class="device-name">交流负荷</text> -->
+        <view class="power-row">
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B14 &&
+            device171F.energyData.B14.value != '--' ?
+            parseFloat(device171F.energyData.B14.value).toFixed(2) : '--' }}</text>
+          <text class="power-unit">kW</text>
+        </view>
+      </view>
       <!-- 设备数据标签 -->
       <view class="device-label" style="left: 3%;top: 75%">
         <text class="device-name">交流负荷</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B8 &&
-            device171F.energyData.B8.value != '--' ?
-            device171F.energyData.B8.value : '--' }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B68 &&
+            device171F.energyData.B68.value != '--' ?
+            parseFloat(device171F.energyData.B68.value).toFixed(2) : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
-      <view class="device-label" style="left: 22%;top: 78%">
+      <view class="device-label" style="left: 18%;top: 78%">
         <text class="device-name">储能</text>
         <view class="power-row">
           <text class="device-power">
-            <text v-if="device171F && device171F.energyData && device171F.energyData.B60 && device171F.energyData.B60.value != '--'">
-              {{ parseFloat(device171F.energyData.B60.value) > 0 ? '充电' : (parseFloat(device171F.energyData.B60.value) < 0 ? '放电' : '静置') }}
-            </text>
-            <text v-if="device171F && device171F.energyData && device171F.energyData.B60 && device171F.energyData.B60.value != '--'">
-              {{ ' ' }}
-            </text>
-            {{ device171F && device171F.energyData && device171F.energyData.B60 &&
-            device171F.energyData.B60.value != '--' ?
-            device171F.energyData.B60.value : '--' }}</text>
-          <text class="power-unit">kW</text>
+            <text
+              v-if="device171F && device171F.energyData && device171F.energyData.B60 && device171F.energyData.B60.value != '--'">
+              {{ parseFloat(device171F.energyData.B60.value) > 0 ? '充电' : (parseFloat(device171F.energyData.B60.value) <
+                0 ? '放电' : '静置' ) }} </text>
+                <text
+                  v-if="device171F && device171F.energyData && device171F.energyData.B60 && device171F.energyData.B60.value != '--'">
+                  {{ ' ' }}
+                </text>
+                {{ device171F && device171F.energyData && device171F.energyData.B8 &&
+                  device171F.energyData.B8.value != '--' ?
+                  parseFloat(device171F.energyData.B8.value).toFixed(2) : '--' }}</text>
+            <text class="power-unit">kW</text>
         </view>
         <text class="device-soc">{{ device171F && device171F.energyData && device171F.energyData.B128 &&
           device171F.energyData.B128.value != '--' ?
@@ -100,9 +113,12 @@
       <view class="device-label" style="left: 83%;top: 78%">
         <text class="device-name">其他负荷</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B22 &&
+          <!-- <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B22 &&
             device171F.energyData.B22.value != '--' ?
-            device171F.energyData.B22.value : '--' }}</text>
+            device171F.energyData.B22.value : '--' }}</text> -->
+              <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B14 &&
+            device171F.energyData.B14.value != '--' ?
+            parseFloat(device171F.energyData.B14.value).toFixed(2) : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
@@ -428,14 +444,17 @@ export default {
     this.navBarHeight = systemInfo.platform === 'android' ? 48 : 44;
     this.topSafeArea = this.statusBarHeight + this.navBarHeight;
 
-    // 设置CSS变量用于全屏模式
+    // 设置CSS变量用于全屏模式（仅在H5环境中执行）
     const safeAreaTop = systemInfo.safeArea?.top || systemInfo.statusBarHeight || 0;
     const safeAreaBottom = systemInfo.safeArea?.bottom || 0;
-    try {
-      document.documentElement.style.setProperty('--safe-area-top', safeAreaTop + 'px');
-      document.documentElement.style.setProperty('--safe-area-bottom', safeAreaBottom + 'px');
-    } catch (e) {
-      console.warn('Failed to set CSS variables:', e);
+    // 检查是否为H5环境（小程序中没有document对象）
+    if (typeof document !== 'undefined' && document.documentElement) {
+      try {
+        document.documentElement.style.setProperty('--safe-area-top', safeAreaTop + 'px');
+        document.documentElement.style.setProperty('--safe-area-bottom', safeAreaBottom + 'px');
+      } catch (e) {
+        console.warn('Failed to set CSS variables:', e);
+      }
     }
 
     console.log('statusBarHeight:', this.statusBarHeight, 'navBarHeight:', this.navBarHeight, 'topSafeArea:', this.topSafeArea);
@@ -588,11 +607,15 @@ export default {
     //   });
     // },
     getPowerData2() {
+      // 从store获取当前设备信息
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+
+      console.log('currentDevice:', currentDevice, this.$store.state.currentSelectDevice, this.$store.state);
       // 准备接口参数
       const params = {
-        esId:  8,
+        esId: currentDevice.id || 28,
         date: this.selectedDate,
-        areaLevelIds: this.$store.state.areaInfoId || 950
+        areaLevelIds: currentDevice.areaLevelId || 991
       };
 
       // 调用新接口
@@ -600,25 +623,25 @@ export default {
         if (result.data && result.data.length > 0) {
           const dataList = result.data;
           const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
-          
+
           // 按小时聚合数据（0-23小时）
           for (let h = 0; h < 24; h++) {
             const time = `${String(h).padStart(2, "0")}:00`;
             xAxisData.push(time);
-            
+
             // 找到该小时范围内的数据
             const hourData = dataList.filter(item => {
               const dateTime = item.dateTime || '';
               const hour = parseInt(dateTime.substring(11, 13)) || 0;
               return hour === h;
             });
-            
+
             if (hourData.length > 0) {
               // 计算平均值
               const avgGeneration = hourData.reduce((sum, item) => sum + (parseFloat(item.generatedPower || 0)), 0) / hourData.length;
               const avgLoad = hourData.reduce((sum, item) => sum + (parseFloat(item.loadPower || 0)), 0) / hourData.length;
               const avgStorage = hourData.reduce((sum, item) => sum + (parseFloat(item.storagePowerReverse || 0)), 0) / hourData.length;
-              
+
               generationData.push(parseFloat(avgGeneration.toFixed(2)));
               loadData.push(parseFloat(avgLoad.toFixed(2)));
               chargeData.push(avgStorage >= 0 ? parseFloat(avgStorage.toFixed(2)) : 0);
@@ -631,7 +654,7 @@ export default {
               dischargeData.push(0);
             }
           }
-          
+
           this.electricityData = {
             categories: xAxisData,
             series: [
@@ -769,10 +792,10 @@ export default {
       this.showWarningModal = false;
     },
     getSystemStatus() {
-      const b0Value = this.device171F && this.device171F.controlData && this.device171F.controlData.B0 && this.device171F.controlData.B0.value;
-      if (b0Value === 1 || b0Value === '1') {
+      const b12Value = this.device171F && this.device171F.controlData && this.device171F.controlData.B12 && this.device171F.controlData.B12.value;
+      if (b12Value === 1 || b12Value === '1') {
         return '运行中';
-      } else if (b0Value === 0 || b0Value === '0') {
+      } else if (b12Value === 0 || b12Value === '0') {
         return '启动';
       }
       return '启动';

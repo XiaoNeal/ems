@@ -5,7 +5,8 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "登录",
+				"navigationBarTitleText": "首页",
+				"navigationStyle": "custom",
 				"app-plus": {
 					"bounce": "none"
 				}
@@ -15,6 +16,7 @@
 			"path": "pages/login/login",
 			"style": {
 				"navigationBarTitleText": "登录",
+				"navigationStyle": "custom",
 				"app-plus": {
 					"bounce": "none"
 				}
@@ -23,7 +25,7 @@
 		{
 			"path": "pages/monitor",
 			"style": {
-				"navigationBarTitleText": "首页",
+				"navigationBarTitleText": "监测",
 				"navigationStyle": "custom",
 				"enablePullDownRefresh": true
 			}
@@ -54,54 +56,63 @@
 				{
 					"path": "alarm/alarm",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "报警记录"
 					}
 				},
 				{
 					"path": "operation-record/operation-record",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "操作记录"
 					}
 				},
 				{
 					"path": "strategy-config/strategy-config",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "策略配置"
 					}
 				},
 				{
 					"path": "monitor-data/monitor-data",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "监控数据"
 					}
 				},
 				{
 					"path": "quick-control/quick-control",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "快捷控制"
 					}
 				},
 				{
 					"path": "settings/settings",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "设置参数"
 					}
 				},
 				{
 					"path": "access-setting/access-setting",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "接入设置"
 					}
 				},
 				{
 					"path": "device-detail/device-detail",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "设备详情"
 					}
 				},
 				{
 					"path": "system-info",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "系统信息",
 						"enablePullDownRefresh": false
 					}
@@ -109,6 +120,7 @@
 				{
 					"path": "ai-service/ai-service",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "AI客服"
 					}
 				}
@@ -120,54 +132,63 @@
 				{
 					"path": "about/about",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "关于我们"
 					}
 				},
 				{
 					"path": "password/password",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": ""
 					}
 				},
 				{
 					"path": "userOptions/setUserName",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": ""
 					}
 				},
 				{
 					"path": "userOptions/userOptions",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "设置"
 					}
 				},
 				{
 					"path": "register/register",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "注册"
 					}
 				},
 				{
 					"path": "register/user-category",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": ""
 					}
 				},
 				{
 					"path": "account-cancellation/account-cancellation",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": ""
 					}
 				},
 				{
 					"path": "agreement/privacy-policy",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "微能站隐私协议"
 					}
 				},
 				{
 					"path": "agreement/user-agreement",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "微能站软件许可及用户服务协议"
 					}
 				}
@@ -180,48 +201,56 @@
 				{
 					"path": "info",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "个人信息"
 					}
 				},
 				{
 					"path": "security",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "安全设置"
 					}
 				},
 				{
 					"path": "notifications",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "消息通知"
 					}
 				},
 				{
 					"path": "system-notifications",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "系统通知"
 					}
 				},
 				{
 					"path": "message-reminders",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "消息提醒"
 					}
 				},
 				{
 					"path": "settings",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "系统设置"
 					}
 				},
 				{
 				"path": "service",
 				"style": {
+						"navigationStyle": "custom",
 					"navigationBarTitleText": "智能客服"
 				}
 			},
 				{
 					"path": "about",
 					"style": {
+						"navigationStyle": "custom",
 						"navigationBarTitleText": "关于我们"
 					}
 				}
@@ -233,15 +262,14 @@
 		"navigationBarTitleText": "微能站",
 		"navigationBarBackgroundColor": "#fff",
 		"backgroundColor": "#fff",
-		"navigationStyle": "custom",
 		"enablePullDownRefresh": false,
 		"pageOrientation": "auto",
 		"app-plus": {
-			"bounce": "none"
-		},
-		"safeArea": {
-			"paddingTop": "auto",
-			"paddingBottom": "auto"
+			"bounce": "none",
+			"safeArea": {
+				"paddingTop": "auto",
+				"paddingBottom": "auto"
+			}
 		}
 	}
 }

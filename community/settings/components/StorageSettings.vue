@@ -152,18 +152,18 @@ export default {
       storageParams: [
         { key: 'storage.B16', field: 'B16', address: '60024', label: '组ID号', unit: '', min: 1, max: 31, default: 1 },
         { key: 'storage.B18', field: 'B18', address: '60025', label: '模块数量', unit: '', min: 1, max: 31, default: 1 },
-        { key: 'storage.B22', field: 'B22', address: '60040', label: '直流母线电压', unit: 'V', min: 3500, max: 8500, scale: 10, default: 7200 },
-        { key: 'storage.B26', field: 'B26', address: '60043', label: '充放电功率设定', unit: '%', min: 0, max: 1300, scale: 10, default: 1000 },
-        { key: 'storage.B28', field: 'B28', address: '60044', label: '电池均充电压', unit: 'V', min: 400, max: 3600, scale: 10, default: 600 },
-        { key: 'storage.B30', field: 'B30', address: '60045', label: '充电电流设置', unit: 'A', min: 0, max: 1300, scale: 10, default: 1000 },
-        { key: 'storage.B32', field: 'B32', address: '60046', label: '电池浮充电压', unit: 'V', min: 400, max: 3600, scale: 10, default: 600 },
-        { key: 'storage.B34', field: 'B34', address: '60047', label: '放电电压设置', unit: 'V', min: 400, max: 3600, scale: 10, default: 400 },
-        { key: 'storage.B36', field: 'B36', address: '60048', label: '放电电流设置', unit: 'A', min: 0, max: 1300, scale: 10, default: 1000 },
-        { key: 'storage.B38', field: 'B38', address: '60049', label: '电池过压关机点', unit: 'V', min: 400, max: 3700, scale: 10, default: 3700 },
-        { key: 'storage.B40', field: 'B40', address: '60050', label: '电池欠压告警点', unit: 'V', min: 350, max: 3550, scale: 10, default: 450 },
-        { key: 'storage.B42', field: 'B42', address: '60051', label: '电池欠压关机点', unit: 'V', min: 350, max: 3550, scale: 10, default: 350 },
-        { key: 'storage.B48', field: 'B48', address: '60054', label: '充电母线电压上限', unit: 'V', min: 3500, max: 8500, scale: 10, default: 6300 },
-        { key: 'storage.B49', field: 'B49', address: '60055', label: '放电母线电压下限', unit: 'V', min: 3500, max: 8500, scale: 10, default: 5700 }
+        { key: 'storage.B22', field: 'B22', address: '60040', label: '直流母线电压', unit: 'V', min: 350, max: 850, scale: 10, default: 720 },
+        { key: 'storage.B26', field: 'B26', address: '60043', label: '充放电功率设定', unit: '%', min: 0, max: 130, scale: 10, default: 100 },
+        { key: 'storage.B28', field: 'B28', address: '60044', label: '电池均充电压', unit: 'V', min: 40, max: 360, scale: 10, default: 60 },
+        { key: 'storage.B30', field: 'B30', address: '60045', label: '充电电流设置', unit: 'A', min: 0, max: 130, scale: 10, default: 100 },
+        { key: 'storage.B32', field: 'B32', address: '60046', label: '电池浮充电压', unit: 'V', min: 40, max: 360, scale: 10, default: 60 },
+        { key: 'storage.B34', field: 'B34', address: '60047', label: '放电电压设置', unit: 'V', min: 40, max: 360, scale: 10, default: 40 },
+        { key: 'storage.B36', field: 'B36', address: '60048', label: '放电电流设置', unit: 'A', min: 0, max: 130, scale: 10, default: 100 },
+        { key: 'storage.B38', field: 'B38', address: '60049', label: '电池过压关机点', unit: 'V', min: 40, max: 370, scale: 10, default: 370 },
+        { key: 'storage.B40', field: 'B40', address: '60050', label: '电池欠压告警点', unit: 'V', min: 35, max: 355, scale: 10, default: 450 },
+        { key: 'storage.B42', field: 'B42', address: '60051', label: '电池欠压关机点', unit: 'V', min: 35, max: 355, scale: 10, default: 350 },
+        { key: 'storage.B48', field: 'B48', address: '60054', label: '充电母线电压上限', unit: 'V', min: 350, max: 850, scale: 10, default: 630 },
+        { key: 'storage.B49', field: 'B49', address: '60055', label: '放电母线电压下限', unit: 'V', min: 350, max: 850, scale: 10, default: 570 }
       ],
       storageSwitchParams: [
         {
