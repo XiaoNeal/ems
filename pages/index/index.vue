@@ -28,12 +28,12 @@
         <view v-else-if="showDeviceList" class="page-item device-list-page">
           <DeviceList ref="deviceList" @selectDevice="handleDeviceSelect"></DeviceList>
         </view>
-        
+
         <!-- 监测页面 -->
         <view v-else-if="currentTab === 0" class="page-item">
           <Monitor ref="monitor"></Monitor>
         </view>
-        
+
         <!-- 系统页面 -->
         <view v-else-if="currentTab === 1" class="page-item">
           <System ref="system"></System>
@@ -52,7 +52,8 @@
           <text class="tab-text">监测</text>
         </view>
         <!-- 系统Tab - 非设备列表页面且有设备且选择设备后才显示 -->
-        <view v-if="!this.showDeviceList && esIds.length > 0 && selectedDeviceId" class="tab-item" :class="{ 'active': currentTab === 1 }" @click="switchTab(1)">
+        <view v-if="!this.showDeviceList && esIds.length > 0 && selectedDeviceId" class="tab-item"
+          :class="{ 'active': currentTab === 1 }" @click="switchTab(1)">
           <view class="tab-icon">
             <image :src="currentTab === 1 ? activeIcons[1] : inactiveIcons[1]" mode="widthFix" />
           </view>
@@ -77,6 +78,7 @@ import Profile from '../profile.vue'
 import System from '../system.vue'
 import DeviceList from '../components/device-list.vue'
 import { findUserInfoByCodeId } from '@/api/user'
+import { getDeviceByAreaId } from '@/api/devices'
 
 export default {
   components: {
@@ -93,26 +95,26 @@ export default {
       }
       return []
     },
-    
+
     // 是否显示设备列表
     showDeviceList() {
       return this.esIds.length === 0 || (this.esIds.length >= 2 && !this.selectedDeviceId) || this.fromProfile
     },
-    
+
     // 是否显示返回按钮
     showBackBtn() {
       return this.showDeviceList && this.selectedDeviceId !== null
     },
-    
+
     // 当前页面标题
     currentTitle() {
-        if (this.currentTab === 0) {
-          return '光储直柔能源站EMS'
-        } else if (this.currentTab === 1) {
-          return '系统管理'
-        } else if (this.currentTab === 2) {
-          return '我的'
-        }
+      if (this.currentTab === 0) {
+        return '光储直柔能源站EMS'
+      } else if (this.currentTab === 1) {
+        return '系统管理'
+      } else if (this.currentTab === 2) {
+        return '我的'
+      }
       return '光储直柔能源站EMS'
     }
   },
@@ -144,7 +146,6 @@ export default {
     }
   },
   mounted() {
-    console.log('onMounted----------------------------------------------------------',this.selectedDeviceId)
     this.checkLoginStatus()
   },
   onLoad(options) {
@@ -183,6 +184,25 @@ export default {
   },
   onShow() {
     this.checkFromProfile()
+    // 如果不是从profile跳转过来，且没有选中设备，尝试恢复之前保存的设备选择
+    if (!this.fromProfile && !this.selectedDeviceId) {
+      const savedDevice = uni.getStorageSync('currentSelectDevice')
+      if (savedDevice) {
+        const savedDeviceId = savedDevice.id || savedDevice.esId
+        // 检查保存的设备是否在当前设备列表中
+        if (this.esIds.length > 0) {
+          const foundDevice = this.esIds.find(item => {
+            const itemId = item.id || item.esId
+            return itemId === savedDeviceId
+          })
+          if (foundDevice) {
+            this.selectedDeviceId = savedDeviceId
+            this.$store.commit('changeCurrentSelectDevice', savedDevice)
+            console.log('onShow恢复之前选择的设备:', savedDeviceId)
+          }
+        }
+      }
+    }
   },
   onReady() {
     this.scrollToTop()
@@ -219,7 +239,7 @@ export default {
     async fetchDeviceList() {
       if (this.deviceListLoading) return
       this.deviceListLoading = true
-      
+
       try {
         const userId = this.userInfo.userId
         const res = await findUserInfoByCodeId(userId)
@@ -241,8 +261,51 @@ export default {
           this.selectedDeviceId = deviceId
           console.log('自动选中设备:', deviceId, '设备信息:', device)
           this.$store.commit('changeCurrentSelectDevice', device)
+          uni.setStorageSync('currentSelectDevice', device)
+          const areaId = device.areaId
+          try {
+            const deviceInfo = await getDeviceByAreaId(areaId)
+            console.log('获取设备信息:', deviceInfo)
+            if (deviceInfo && deviceInfo.data && deviceInfo.data.list) {
+              device.list = deviceInfo.data.list
+              console.log('获取设备信息:', device)
+              this.$store.commit('changeCurrentSelectDevice', device)
+              uni.setStorageSync('currentSelectDevice', device)
+            }
+          } catch (err) {
+            console.error('获取设备信息失败:', err)
+          }
+        } else if (energyStations.length > 1) {
+          // 如果有多个设备，尝试恢复之前保存的设备选择
+          const savedDevice = uni.getStorageSync('currentSelectDevice')
+          if (savedDevice) {
+            const savedDeviceId = savedDevice.id || savedDevice.esId
+            // 检查保存的设备是否在当前设备列表中
+            const foundDevice = energyStations.find(item => {
+              const itemId = item.id || item.esId
+              return itemId === savedDeviceId
+            })
+            if (foundDevice) {
+              this.selectedDeviceId = savedDeviceId
+              console.log('恢复之前选择的设备:', savedDeviceId)
+              this.$store.commit('changeCurrentSelectDevice', savedDevice )
+              const areaId = foundDevice.areaId
+              try {
+                const deviceInfo = await getDeviceByAreaId(areaId)
+                console.log('获取设备信息:', deviceInfo)
+                if (deviceInfo && deviceInfo.data && deviceInfo.data.list) {
+                  foundDevice.list = deviceInfo.data.list
+                  console.log('获取设备信息:', foundDevice)
+                  this.$store.commit('changeCurrentSelectDevice', foundDevice)
+                  uni.setStorageSync('currentSelectDevice', foundDevice)
+                }
+              } catch (err) {
+                console.error('获取设备信息失败:', err)
+              }
+            }
+          }
         }
-        
+
         this.isDeviceListLoaded = true
       } catch (error) {
         console.error('获取设备列表失败:', error)
@@ -250,9 +313,21 @@ export default {
         this.deviceListLoading = false
       }
     },
-    
+
     // 处理设备选择
-    handleDeviceSelect(esId) {
+    async handleDeviceSelect(esId) {
+
+
+      console.log('handleDeviceSelect---------------------------------------', esId)
+
+
+
+
+
+
+
+
+
       // 节流锁1：防止重复点击（500ms内只响应一次）
       const now = Date.now()
       if (now - this.lastClickTime < 500) {
@@ -260,15 +335,14 @@ export default {
         return
       }
       this.lastClickTime = now
-      
+
       // 节流锁2：防止正在跳转时重复触发
       if (this.isNavigating) {
         console.log('正在跳转中，忽略重复点击')
         return
       }
       this.isNavigating = true
-      
-      console.log('handleDeviceSelect---------------------------------------', esId)
+
       // 兼容对象和数字两种格式
       const device = typeof esId === 'object' ? esId : { id: esId }
       const deviceId = device.id || device.esId || esId
@@ -276,6 +350,27 @@ export default {
       this.fromProfile = false
       console.log('选择设备:', device)
       this.$store.commit('changeCurrentSelectDevice', device)
+      // 保存设备选择到本地存储，防止刷新丢失
+      uni.setStorageSync('currentSelectDevice', device)
+
+      // 先调用接口获取设备信息
+      try {
+        const areaId = device.areaId
+        const deviceInfo = await getDeviceByAreaId(areaId)
+        console.log('获取设备信息:', deviceInfo)
+        // 如果接口返回了设备信息，提取list添加到device对象中
+        if (deviceInfo && deviceInfo.data && deviceInfo.data.list) {
+          device.list = deviceInfo.data.list
+
+          console.log('获取设备信息11111111111111111111111:', device)
+          this.$store.commit('changeCurrentSelectDevice', device)
+          uni.setStorageSync('currentSelectDevice', device)
+        }
+      } catch (err) {
+        console.error('获取设备信息失败:', err)
+        // 即使获取设备信息失败，也继续跳转
+      }
+
       // 跳转到设备详情页面，传递完整设备对象
       const deviceStr = encodeURIComponent(JSON.stringify(device))
       // 使用redirectTo代替navigateTo，避免页面栈累积
@@ -294,17 +389,17 @@ export default {
         }
       })
     },
-    
+
     // 返回设备列表
     goBackToList() {
       this.selectedDeviceId = null
       this.$store.commit('changeCurrentSelectDevice', {})
     },
-    
+
     onScroll(e) {
       this.realScrollTop = e.detail.scrollTop
     },
-    
+
     // 优化：简化tab切换逻辑
     switchTab(index) {
       // 如果当前显示设备列表（从Profile跳转过来但未选择设备）
@@ -319,27 +414,27 @@ export default {
           return
         }
       }
-      
+
       // 系统Tab未显示时，不允许切换到系统Tab
       if (index === 1 && !this.selectedDeviceId) {
         return
       }
-      
+
       // 如果已经在当前tab，不执行任何操作
       if (this.currentTab === index) {
         return
       }
-      
+
       // 记录当前滚动位置
       this.scrollPositions[this.currentTab] = this.realScrollTop
-      
+
       // 切换tab
       this.currentTab = index
-      
+
       // 滚动到顶部
       this.scrollToTop()
     },
-    
+
     // 优化：简化滚动到顶部操作
     scrollToTop() {
       this.$nextTick(() => {
@@ -347,12 +442,12 @@ export default {
         this.$refs.contentScroll?.scrollTo({ top: 0, duration: 100 })
       })
     },
-    
+
     getIconType(index) {
       const icons = ['list', 'bar-chart', 'file-text', 'settings', 'user'];
       return icons[index];
     },
-    
+
     tabbarPageScrollLower() {
       const currentRef = ['monitor', 'system', 'profile'][this.currentTab];
       this.$refs[currentRef]?.loadMore?.();

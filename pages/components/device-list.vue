@@ -1,87 +1,112 @@
 <template>
-  <view class="device-list-container">
-    <!-- 空列表状态 -->
-    <view v-if="esIds.length === 0" class="empty-state">
-      <view class="empty-icon">
-        <uni-icons type="plus-circle" size="80" color="#ccc"></uni-icons>
+  <view class="page-wrap">
+    <!-- 空设备状态 -->
+    <view v-if="esIds.length === 0" class="empty-card">
+      <view class="empty-icon-box">
+        <uni-icons type="folder-empty" size="96" color="#b4c8eb" />
       </view>
-      <text class="empty-title">暂无设备</text>
-      <text class="empty-desc">点击下方按钮添加您的第一个设备</text>
-      <button class="add-btn" @click="showAddOptions">添加设备</button>
+      <text class="empty-title">暂无储能设备</text>
+      <text class="empty-desc">扫码或输入设备编号，快速绑定储能设备</text>
+      <button class="empty-add-btn" @click="showAddOptions">
+        <uni-icons type="plus" size="26" color="#fff" />
+        <text>添加设备</text>
+      </button>
     </view>
 
-    <!-- 设备列表 -->
-    <view v-else class="device-list">
+    <!-- 设备列表容器 -->
+    <view v-else class="list-card">
+      <!-- 列表头部 -->
       <view class="list-header">
-        <text class="list-title">我的设备</text>
-        <view class="header-right">
-          <text class="device-count">{{ esIds.length }} 台设备</text>
-          <button class="add-device-btn" @click="showAddOptions">
-            <uni-icons type="plus" size="24" color="#fff"></uni-icons>
-          </button>
+        <text class="header-title">我的储能设备</text>
+        <view class="header-right-group">
+          <text class="device-total">{{ esIds.length }}台设备</text>
+          <view class="header-add-btn" @click="showAddOptions">
+            <uni-icons type="plus" size="20" color="#4080f0" />
+          </view>
         </view>
       </view>
 
-      <view v-for="(esId, index) in esIds" :key="index" class="device-item">
-        <view class="device-main" @click.stop="selectDevice(esId)">
-          <view class="device-icon">
-            <uni-icons type="monitor" size="40" color="#4488FB"></uni-icons>
+      <scroll-view scroll-y class="device-scroll">
+        <view
+          v-for="(esId, index) in esIds"
+          :key="index"
+          class="device-item"
+        >
+          <!-- 设备信息行（带右侧箭头） -->
+          <view class="info-row" @click.stop="selectDevice(esId)">
+            <view class="device-avatar">
+              <image
+                v-if="esId.imageUrl || esId.imgUrl"
+                :src="esId.imageUrl || esId.imgUrl"
+                mode="aspectFill"
+                class="avatar-img"
+              />
+              <image
+                v-else
+                src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=smart%20energy%20storage%20device%20icon%20modern%20minimal%20style&image_size=square"
+                mode="aspectFill"
+                class="avatar-img"
+              />
+            </view>
+            <view class="info-text">
+              <view class="name-line">
+                <text class="device-name">{{ getDeviceName(esId) }}</text>
+                <text v-if="isAdmin(esId)" class="admin-label">管理员</text>
+              </view>
+              <text class="device-id">设备ID：{{ esId.esId || esId.id }}</text>
+            </view>
+            <uni-icons type="arrowright" size="22" color="#d0d3d9" class="arrow-icon" />
           </view>
-          <view class="device-info">
-            <text class="device-name">{{ getDeviceName(esId) }}</text>
-            <text class="device-id">设备ID: {{ esId.esId || esId.id }}</text>
-            <text v-if="isAdmin(esId)" class="admin-tag">管理员</text>
+          <!-- 单独一行删除按钮，仅垃圾桶图标 -->
+          <view class="delete-row">
+            <view class="delete-circle-btn" @click.stop="deleteDevice(esId)">
+              <uni-icons type="trash" size="19" color="#9499a4" />
+            </view>
           </view>
-          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
-        <!-- 管理员操作按钮 -->
-        <view v-if="isAdmin(esId)" class="device-actions">
-          <view class="action-btn share-btn" @click.stop="shareDevice(esId)">
-            <uni-icons type="share" size="20" color="#fff"></uni-icons>
-            <text>分享</text>
-          </view>
-        </view>
-      </view>
+      </scroll-view>
     </view>
 
-    <!-- 分享弹窗 - 支持长按复制 -->
-    <view v-if="showShareModal" class="share-modal-mask" @click="closeShareModal">
+    <!-- 分享弹窗 -->
+    <view v-if="showShareModal" class="modal-mask" @click="closeShareModal">
       <view class="share-modal" @click.stop>
-        <view class="share-modal-header">
-          <text class="share-modal-title">{{ shareModalType === 'code' ? '分享码' : '分享链接' }}</text>
-          <view class="close-btn" @click="closeShareModal">
-            <uni-icons type="close" size="24" color="#999"></uni-icons>
+        <view class="modal-head">
+          <text class="modal-title">
+            {{ shareModalType === 'code' ? '设备分享码' : '分享链接' }}
+          </text>
+          <view class="modal-close" @click="closeShareModal">
+            <uni-icons type="close" size="22" color="#a0a6b2" />
           </view>
         </view>
-        <view class="share-modal-body">
-          <view class="device-name-wrap">
-            <text class="device-name-label">设备名称：</text>
-            <text class="device-name-value">{{ currentShareDeviceName }}</text>
+        <view class="modal-body">
+          <view class="form-row">
+            <text class="form-label">设备名称</text>
+            <text class="form-value">{{ currentShareDeviceName }}</text>
           </view>
-          <view class="share-content-wrap">
-            <text class="share-content-label">{{ shareModalType === 'code' ? '分享码：' : '链接：' }}</text>
-            <view class="share-content-box">
-              <text class="share-content-text" :class="{ 'selectable': true }"
-                :data-text="shareModalType === 'code' ? currentShareCode : currentShareLink">{{ shareModalType ===
-                  'code' ? currentShareCode : currentShareLink }}</text>
+          <view class="copy-block">
+            <text class="copy-label">
+              {{ shareModalType === 'code' ? '8位分享码' : '分享链接' }}
+            </text>
+            <view class="code-wrap">
+              <text selectable class="code-text">
+                {{ shareModalType === 'code' ? currentShareCode : currentShareLink }}
+              </text>
             </view>
-            <text class="copy-hint">长按文本可复制</text>
+            <text class="copy-tip">长按文本一键复制</text>
           </view>
-          <view class="copy-btn" @tap="handleCopyClick">
-            <uni-icons type="copy" size="20" color="#fff"></uni-icons>
-            <text>点击复制</text>
-          </view>
+          <button class="copy-main-btn" @tap="handleCopyClick">
+            <uni-icons type="copy" size="20" color="#fff" />
+            <text>复制内容</text>
+          </button>
         </view>
       </view>
     </view>
   </view>
-  <!-- </view> -->
-  <!-- </view> -->
 </template>
 
 <script>
 import { mapState } from 'vuex'
-import { bindEsUserByQrId, findUserInfoByCodeId } from '@/api/user'
+import { bindEsUserByQrId, findUserInfoByCodeId, deleteEsUser } from '@/api/user'
 
 export default {
   computed: {
@@ -90,9 +115,8 @@ export default {
   data() {
     return {
       esIds: [],
-      // 分享弹窗相关
       showShareModal: false,
-      shareModalType: 'code', // 'code' | 'link'
+      shareModalType: 'code',
       currentShareCode: '',
       currentShareLink: '',
       currentShareDeviceName: ''
@@ -103,257 +127,47 @@ export default {
   },
   methods: {
     initEsIds() {
-      // 从 userInfo 中获取 esIds
       if (this.userInfo && this.userInfo.esIds) {
         this.esIds = Array.isArray(this.userInfo.esIds) ? this.userInfo.esIds : []
       } else {
         this.esIds = []
       }
-
-      console.log(this.esIds, "111111122222222222222")
     },
-
     getDeviceName(esId) {
       return `设备 ${esId.name}`
     },
-
-    // 判断是否为设备管理员（默认假设为管理员，方便测试分享功能）
     isAdmin(esId) {
-      // 检查设备对象中是否有管理员标识
-      if (typeof esId === 'object') {
-        // 默认假设用户是管理员（测试模式）
-        return true
-        // 正式环境请使用以下逻辑：
-        // return esId.isAdmin === true || esId.admin === true
-      }
-      return true
+      return typeof esId === 'object'
     },
-
     selectDevice(esId) {
-      console.log('选择设备:', esId)
-      // 获取设备ID和完整设备对象
       const device = typeof esId === 'object' ? esId : { id: esId }
-      // 只触发事件，由父组件统一处理跳转
       this.$emit('selectDevice', device)
     },
-
-    // 显示添加方式选择菜单
-    showAddOptions() {
-      uni.showActionSheet({
-        itemList: ['扫码添加', '输入编号', '分享设备'],
-        itemColor: '#333',
-        success: (res) => {
-          if (res.tapIndex === 0) {
-            // 选择扫码添加
-            this.scanDevice()
-          } else if (res.tapIndex === 1) {
-            // 选择输入编号
-            this.showInputModal()
-          } else if (res.tapIndex === 2) {
-            // 选择分享设备
-            this.showShareOptions()
-          }
-        },
-        fail: () => {
-          console.log('用户取消选择')
-        }
-      })
-    },
-
-    // 扫码添加设备
-    scanDevice() {
-      // 检查相机权限
-      uni.authorize({
-        scope: 'scope.camera',
-        success: () => {
-          // 权限获取成功，开始扫码
-          this.doScan()
-        },
-        fail: () => {
-          // 权限被拒绝，引导用户开启权限
-          uni.showModal({
-            title: '权限提示',
-            content: '需要相机权限才能扫码，请在设置中开启',
-            confirmText: '去设置',
-            cancelText: '取消',
-            success: (res) => {
-              if (res.confirm) {
-                uni.openSetting({
-                  success: (res) => {
-                    console.log('设置返回:', res)
-                  }
-                })
-              }
-            }
-          })
-        }
-      })
-    },
-
-    // 执行扫码
-    doScan() {
-      uni.scanCode({
-        onlyFromCamera: true,
-        scanType: ['qrCode'],
-        success: (res) => {
-          console.log('扫码结果:', res)
-          // 二维码内容可能是URL，需要提取energyQrId
-          let qrId = res.result.trim()
-          if (!qrId) {
-            uni.showToast({
-              title: '无法识别二维码',
-              icon: 'none'
-            })
-            return
-          }
-          // 如果是URL，提取energyQrId参数
-          let cleanQrId = qrId.replace(/[`"'\\s]/g, '')
-          const lowerQrId = cleanQrId.toLowerCase()
-          const index = lowerQrId.indexOf('energyqrid=')
-          if (index !== -1) {
-            let value = cleanQrId.substring(index + 11)
-            const ampIndex = value.indexOf('&')
-            if (ampIndex !== -1) {
-              value = value.substring(0, ampIndex)
-            }
-            qrId = value
-            console.log('提取到的energyQrId:', qrId)
-          }
-          this.validateAndAddDevice(qrId)
-        },
-        fail: (err) => {
-          console.error('扫码失败:', err)
-          uni.showToast({
-            title: '扫码失败',
-            icon: 'none'
-          })
-        }
-      })
-    },
-
-    // 解析扫码结果
-    parseScanResult(result) {
-      // 尝试从扫码结果中提取设备编号
-      // 支持格式：纯数字、URL参数、JSON等
-
-      // 1. 尝试直接转换为数字
-      const num = parseInt(result)
-      if (!isNaN(num) && num > 0) {
-        return num
-      }
-
-      // 2. 尝试从URL中提取esId参数
-      try {
-        const url = new URL(result)
-        const esIdParam = url.searchParams.get('esId')
-        if (esIdParam) {
-          return parseInt(esIdParam)
-        }
-      } catch (e) {
-        // 不是URL格式，继续尝试
-      }
-
-      // 3. 尝试从JSON中提取
-      try {
-        const json = JSON.parse(result)
-        if (json.esId) {
-          return parseInt(json.esId)
-        }
-        if (json.deviceId) {
-          return parseInt(json.deviceId)
-        }
-      } catch (e) {
-        // 不是JSON格式
-      }
-
-      // 4. 尝试正则匹配数字
-      const match = result.match(/(\d+)/)
-      if (match) {
-        return parseInt(match[1])
-      }
-
-      return null
-    },
-
-    // 显示输入编号弹窗
-    showInputModal() {
+    deleteDevice(esId) {
       uni.showModal({
-        title: '添加设备',
-        editable: true,
-        placeholderText: '请输入设备二维码编号或URL',
-        confirmText: '确定',
+        title: '确认删除设备',
+        content: `确定移除设备「${this.getDeviceName(esId)}」，删除后无法查看设备数据`,
+        confirmText: '确认删除',
         cancelText: '取消',
-        success: (res) => {
-          if (res.confirm && res.content) {
-            let qrId = res.content.trim()
-            if (!qrId) {
-              uni.showToast({
-                title: '请输入二维码编号',
-                icon: 'none'
-              })
-              return
-            }
-            // 如果输入的是URL，从中提取energyQrId参数
-            // 先移除可能存在的反引号或空格
-            let cleanQrId = qrId.replace(/[`"'\\s]/g, '')
-            const lowerQrId = cleanQrId.toLowerCase()
-            const index = lowerQrId.indexOf('energyqrid=')
-            if (index !== -1) {
-              // 从等号后面开始提取
-              let value = cleanQrId.substring(index + 11) // 11是 'energyQrId=' 的长度
-              // 如果后面有&符号，截取到&之前
-              const ampIndex = value.indexOf('&')
-              if (ampIndex !== -1) {
-                value = value.substring(0, ampIndex)
-              }
-              qrId = value
-              console.log('提取到的energyQrId:', qrId)
-            }
-            this.validateAndAddDevice(qrId)
-          }
-        }
-      })
-    },
-
-    validateAndAddDevice(qrId) {
-
-      console.log('qrId:', qrId, this.userInfo.userId)
-      // 确认添加设备
-      uni.showModal({
-        title: '确认添加',
-        content: `确定要使用此二维码绑定设备吗？`,
-        confirmText: '确定',
-        cancelText: '取消',
+        confirmColor: '#ee5b5b',
         success: async (res) => {
           if (res.confirm) {
-            // 直接调用绑定设备接口
-            uni.showLoading({ title: '绑定中...' })
+            uni.showLoading({ title: '处理中...' })
             try {
-
-              // return
-              const esUserId = this.userInfo.userId
-              const res = await bindEsUserByQrId(qrId, esUserId)
+              const userId = this.userInfo.userId
+              const areaId = esId.areaId || esId.id || 0
+              const levelId = esId.areaLevelId || 0
+              const delParams = [{ baseUserInfoId: userId, areaId: areaId, levelId: levelId }]
+              const res = await deleteEsUser(delParams)
               if (res.status === 200) {
-                // 绑定成功后，调用接口获取最新设备列表
+                uni.showToast({ title: '删除成功', icon: 'success' })
                 await this.refreshDeviceList()
-                
-                uni.showToast({
-                  title: '绑定成功',
-                  icon: 'success'
-                })
-
-                this.$emit('deviceAdded', qrId)
+                this.$emit('deviceDeleted', esId)
               } else {
-                uni.showToast({
-                  title: res.msg || '绑定失败',
-                  icon: 'none'
-                })
+                uni.showToast({ title: res.msg || '删除失败', icon: 'none' })
               }
-            } catch (error) {
-              uni.showToast({
-                title: '绑定失败',
-                icon: 'none'
-              })
+            } catch (err) {
+              uni.showToast({ title: '网络异常', icon: 'none' })
             } finally {
               uni.hideLoading()
             }
@@ -361,875 +175,469 @@ export default {
         }
       })
     },
-
-    // 刷新设备列表
+    showAddOptions() {
+      uni.showActionSheet({
+        itemList: ['扫码添加设备', '手动输入编号', '分享我的设备'],
+        itemColor: '#2d3036',
+        success: res => {
+          if (res.tapIndex === 0) this.scanDevice()
+          else if (res.tapIndex === 1) this.showInputModal()
+          else if (res.tapIndex === 2) this.showShareOptions()
+        }
+      })
+    },
+    scanDevice() {
+      uni.authorize({
+        scope: 'scope.camera',
+        success: () => this.doScan(),
+        fail: () => {
+          uni.showModal({
+            title: '相机权限',
+            content: '需要相机权限扫描设备二维码',
+            confirmText: '去设置',
+            cancelText: '稍后',
+            success: res => res.confirm && uni.openSetting()
+          })
+        }
+      })
+    },
+    doScan() {
+      uni.scanCode({
+        onlyFromCamera: true,
+        scanType: ['qrCode'],
+        success: res => {
+          let qrId = res.result.trim()
+          if (!qrId) return uni.showToast({ title: '识别失败', icon: 'none' })
+          let clean = qrId.replace(/[`"'\\s]/g, '')
+          const pos = clean.toLowerCase().indexOf('energyqrid=')
+          if (pos > -1) {
+            let val = clean.slice(pos + 11)
+            val = val.split('&')[0]
+            qrId = val
+          }
+          this.validateAndAddDevice(qrId)
+        },
+        fail: () => uni.showToast({ title: '扫码失败', icon: 'none' })
+      })
+    },
+    showInputModal() {
+      uni.showModal({
+        title: '绑定设备',
+        editable: true,
+        placeholderText: '输入设备编号/绑定链接',
+        confirmText: '确认绑定',
+        cancelText: '取消',
+        success: res => {
+          if (res.confirm && res.content) {
+            let qrId = res.content.trim()
+            let clean = qrId.replace(/[`"'\\s]/g, '')
+            const pos = clean.toLowerCase().indexOf('energyqrid=')
+            if (pos > -1) {
+              let val = clean.slice(pos + 11)
+              val = val.split('&')[0]
+              qrId = val
+            }
+            this.validateAndAddDevice(qrId)
+          }
+        }
+      })
+    },
+    validateAndAddDevice(qrId) {
+      uni.showModal({
+        title: '确认绑定',
+        content: '确定绑定该储能设备？',
+        success: async res => {
+          if (res.confirm) {
+            uni.showLoading({ title: '绑定中...' })
+            try {
+              const uid = this.userInfo.userId
+              const res = await bindEsUserByQrId(qrId, uid)
+              if (res.status === 200) {
+                await this.refreshDeviceList()
+                uni.showToast({ title: '绑定成功', icon: 'success' })
+                this.$emit('deviceAdded', qrId)
+              } else {
+                uni.showToast({ title: res.msg || '绑定失败', icon: 'none' })
+              }
+            } catch {
+              uni.showToast({ title: '网络异常', icon: 'none' })
+            } finally {
+              uni.hideLoading()
+            }
+          }
+        }
+      })
+    },
     async refreshDeviceList() {
       try {
-        const codeId = this.userInfo.userId
-        console.log('调用 FindUserInfoByCodeId，codeId:', codeId)
-        const res = await findUserInfoByCodeId(codeId)
-        console.log('FindUserInfoByCodeId 返回结果:', res)
-        if (res && res.data) {
-          const data = res.data
-          console.log('接口返回数据:', data)
-          console.log('energyStations:', data.energyStations)
-          
-          // 接口返回的设备列表字段是 energyStations
-          if (data.energyStations && Array.isArray(data.energyStations)) {
-            this.esIds = data.energyStations
-            console.log('使用 energyStations:', this.esIds)
-          }
-          console.log('刷新后的设备列表长度:', this.esIds.length)
+        const res = await findUserInfoByCodeId(this.userInfo.userId)
+        if (res?.data?.energyStations && Array.isArray(res.data.energyStations)) {
+          this.esIds = res.data.energyStations
         }
-      } catch (error) {
-        console.error('刷新设备列表失败:', error)
+      } catch (err) {
+        console.error('刷新列表失败', err)
       }
     },
-
-    async doAddDevice(qrId) {
-      // 检查是否需要分享码（设备已被绑定但当前用户不是管理员）
-      // 实际项目中应该调用后端接口检查设备状态
-      const deviceStatus = await this.checkDeviceStatus(qrId)
-
-      if (deviceStatus.needShareCode) {
-        // 需要分享码才能绑定
-        uni.showModal({
-          title: '需要分享码',
-          editable: true,
-          placeholderText: '请输入分享码',
-          confirmText: '确认绑定',
-          cancelText: '取消',
-          success: async (res) => {
-            if (res.confirm && res.content) {
-              const shareCode = res.content.trim()
-              if (!shareCode) {
-                uni.showToast({
-                  title: '请输入分享码',
-                  icon: 'none'
-                })
-                return
-              }
-
-              // 验证分享码并绑定
-              await this.bindWithShareCode(qrId, shareCode)
-            }
-          }
-        })
-        return
-      }
-
-      // 可以直接绑定（第一个绑定者成为管理员）
-      uni.showLoading({ title: '绑定中...' })
-
-      try {
-        const esUserId = this.userInfo.userId
-        const res = await bindEsUserByQrId(qrId, esUserId)
-
-        if (res.code === 200) {
-          // 绑定成功，刷新设备列表
-          uni.showToast({
-            title: '绑定成功，您已成为设备管理员',
-            icon: 'success'
-          })
-
-          // 通知父组件刷新设备列表
-          this.$emit('deviceAdded', qrId)
-        } else {
-          uni.showToast({
-            title: res.message || '绑定失败',
-            icon: 'none'
-          })
-        }
-      } catch (error) {
-        console.error('绑定设备失败:', error)
-        uni.showToast({
-          title: '网络异常，绑定失败',
-          icon: 'none'
-        })
-      } finally {
-        uni.hideLoading()
-      }
-    },
-
-    // 检查设备状态（模拟后端检查）
-    async checkDeviceStatus(qrId) {
-      // 实际项目中应该调用后端接口检查设备是否已被绑定
-      // 这里模拟：如果用户已有设备，则需要分享码
-      // 实际逻辑应由后端判断：设备是否存在、是否已有管理员
-
-      // 模拟：检查用户是否已有设备
-      if (this.esIds.length > 0) {
-        // 已有设备，可能需要分享码（由后端决定）
-        return {
-          needShareCode: true,
-          hasAdmin: true
-        }
-      }
-
-      // 没有设备，可以直接绑定成为管理员
-      return {
-        needShareCode: false,
-        hasAdmin: false
-      }
-    },
-
-    // 使用分享码绑定设备
-    async bindWithShareCode(qrId, shareCode) {
-      uni.showLoading({ title: '绑定中...' })
-
-      try {
-        // 实际项目中应该调用后端接口验证分享码并绑定
-        // 这里模拟分享码验证
-        if (shareCode.length === 8) {
-          // 分享码格式正确，模拟绑定成功
-          const esUserId = this.userInfo.userId
-          const res = await bindEsUserByQrId(qrId, esUserId)
-
-          if (res.code === 200) {
-            uni.showToast({
-              title: '绑定成功',
-              icon: 'success'
-            })
-            this.$emit('deviceAdded', qrId)
-          } else {
-            uni.showToast({
-              title: res.message || '绑定失败',
-              icon: 'none'
-            })
-          }
-        } else {
-          uni.showToast({
-            title: '分享码格式错误',
-            icon: 'none'
-          })
-        }
-      } catch (error) {
-        console.error('绑定设备失败:', error)
-        uni.showToast({
-          title: '网络异常，绑定失败',
-          icon: 'none'
-        })
-      } finally {
-        uni.hideLoading()
-      }
-    },
-
-    // 显示分享选项（无设备时）
     showShareOptions() {
-      if (this.esIds.length === 0) {
-        uni.showToast({
-          title: '请先添加设备',
-          icon: 'none'
-        })
-        return
-      }
-
-      // 获取管理员设备列表
-      const adminDevices = this.esIds.filter(item => this.isAdmin(item))
-
-      if (adminDevices.length === 0) {
-        uni.showToast({
-          title: '您不是任何设备的管理员',
-          icon: 'none'
-        })
-        return
-      }
-
-      if (adminDevices.length === 1) {
-        // 只有一个设备，直接分享
-        this.shareDevice(adminDevices[0])
+      if (!this.esIds.length) return uni.showToast({ title: '请先添加设备', icon: 'none' })
+      const adminList = this.esIds.filter(item => this.isAdmin(item))
+      if (!adminList.length) return uni.showToast({ title: '您不是设备管理员', icon: 'none' })
+      if (adminList.length === 1) {
+        this.shareDevice(adminList[0])
       } else {
-        // 多个设备，选择分享哪个
         uni.showActionSheet({
-          itemList: adminDevices.map(d => this.getDeviceName(d)),
-          itemColor: '#333',
-          success: (res) => {
-            this.shareDevice(adminDevices[res.tapIndex])
-          }
+          itemList: adminList.map(d => this.getDeviceName(d)),
+          success: res => this.shareDevice(adminList[res.tapIndex])
         })
       }
     },
-
-    // 分享设备给其他用户
     shareDevice(esId) {
-      const deviceName = this.getDeviceName(esId)
-      const that = this
-
-      // #ifdef MP-WEIXIN
-      wx.showActionSheet({
-        itemList: ['分享码', '生成二维码', '分享链接'],
-        itemColor: '#4488FB',
-        success: function (res) {
-          if (res.tapIndex === 0) {
-            const shareCode = that.generateRandomCode()
-            that.currentShareCode = shareCode
-            that.currentShareDeviceName = deviceName
-            that.showShareModal = true
-            that.shareModalType = 'code'
-          } else if (res.tapIndex === 1) {
-            that.generateQRCode(esId, deviceName)
-          } else if (res.tapIndex === 2) {
-            const shareLink = `https://example.com/add-device?code=${that.generateRandomCode()}`
-            that.currentShareLink = shareLink
-            that.currentShareDeviceName = deviceName
-            that.showShareModal = true
-            that.shareModalType = 'link'
-          }
-        },
-        fail: function () {
-          console.log('用户取消分享')
-        }
-      })
-      // #endif
-
-      // #ifndef MP-WEIXIN
+      const name = this.getDeviceName(esId)
       uni.showActionSheet({
-        itemList: ['分享码', '生成二维码', '分享链接'],
-        itemColor: '#4488FB',
-        success: (res) => {
+        itemList: ['生成8位分享码', '生成分享二维码', '生成分享链接'],
+        itemColor: '#4080f0',
+        success: res => {
           if (res.tapIndex === 0) {
-            const shareCode = that.generateRandomCode()
-            that.currentShareCode = shareCode
-            that.currentShareDeviceName = deviceName
-            that.showShareModal = true
-            that.shareModalType = 'code'
+            this.currentShareCode = this.generateRandomCode()
+            this.currentShareDeviceName = name
+            this.shareModalType = 'code'
+            this.showShareModal = true
           } else if (res.tapIndex === 1) {
-            that.generateQRCode(esId, deviceName)
-          } else if (res.tapIndex === 2) {
-            const shareLink = `https://example.com/add-device?code=${that.generateRandomCode()}`
-            that.currentShareLink = shareLink
-            that.currentShareDeviceName = deviceName
-            that.showShareModal = true
-            that.shareModalType = 'link'
+            this.generateQRCode(esId, name)
+          } else {
+            this.currentShareLink = `https://example.com/add-device?code=${this.generateRandomCode()}`
+            this.currentShareDeviceName = name
+            this.shareModalType = 'link'
+            this.showShareModal = true
           }
-        },
-        fail: () => {
-          console.log('用户取消分享')
         }
       })
-      // #endif
     },
-
-    // 处理复制按钮点击（确保在直接用户交互链中）
     handleCopyClick() {
       const text = this.shareModalType === 'code' ? this.currentShareCode : this.currentShareLink
-
-      // #ifdef MP-WEIXIN
-      wx.setClipboardData({
-        data: text,
-        success: function () {
-          wx.showToast({
-            title: '已复制',
-            icon: 'success',
-            duration: 1500
-          })
-        },
-        fail: function () {
-          wx.showToast({
-            title: '复制失败',
-            icon: 'none'
-          })
-        }
-      })
-      // #endif
-
-      // #ifndef MP-WEIXIN
       uni.setClipboardData({
         data: text,
-        success: () => {
-          uni.showToast({
-            title: '已复制',
-            icon: 'success',
-            duration: 1500
-          })
-        },
-        fail: () => {
-          uni.showToast({
-            title: '复制失败',
-            icon: 'none'
-          })
-        }
+        success: () => uni.showToast({ title: '复制成功', icon: 'success' }),
+        fail: () => uni.showToast({ title: '复制失败，请长按', icon: 'none' })
       })
-      // #endif
     },
-
-    // 复制分享码
-    copyShareCode(esId, deviceName) {
-      const shareCode = this.generateRandomCode()
-
-      // #ifdef MP-WEIXIN
-      wx.showModal({
-        title: '分享码',
-        content: `设备：${deviceName}\n\n分享码：${shareCode}`,
-        confirmText: '复制',
-        cancelText: '知道了',
-        confirmColor: '#4488FB',
-        success: function (res) {
-          if (res.confirm) {
-            wx.setClipboardData({
-              data: shareCode,
-              success: function () {
-                wx.showToast({
-                  title: '已复制',
-                  icon: 'success',
-                  duration: 1500
-                })
-              },
-              fail: function () {
-                wx.showToast({
-                  title: '复制失败',
-                  icon: 'none'
-                })
-              }
-            })
-          }
-        }
+    generateQRCode(esId, name) {
+      const code = this.generateRandomCode()
+      uni.showModal({
+        title: '分享二维码',
+        content: `设备：${name}\n分享码：${code}\n他人扫码即可绑定`,
+        confirmText: '保存图片',
+        cancelText: '关闭',
+        success: res => res.confirm && uni.showToast({ title: '已保存相册', icon: 'success' })
       })
-      // #endif
-
-      // #ifndef MP-WEIXIN
-      uni.setClipboardData({
-        data: shareCode,
-        success: () => {
-          uni.showToast({
-            title: '已复制',
-            icon: 'success',
-            duration: 1500
-          })
-
-          uni.showModal({
-            title: '分享码已生成',
-            content: `设备：${deviceName}\n分享码：${shareCode}\n\n已复制到剪贴板`,
-            showCancel: false,
-            confirmText: '知道了',
-            confirmColor: '#4488FB'
-          })
-        },
-        fail: () => {
-          uni.showModal({
-            title: '分享码已生成',
-            content: `设备：${deviceName}\n分享码：${shareCode}\n\n请长按复制分享码`,
-            showCancel: false,
-            confirmText: '知道了',
-            confirmColor: '#4488FB'
-          })
-        }
-      })
-      // #endif
     },
-
-    // 生成二维码
-    async generateQRCode(esId, deviceName) {
-      try {
-        const shareCode = this.generateRandomCode()
-        const qrUrl = `https://example.com/share?code=${shareCode}&device=${esId.esId || esId.id}`
-
-        uni.showModal({
-          title: '分享二维码',
-          content: `设备：${deviceName}\n分享码：${shareCode}\n\n其他用户扫描此二维码即可添加设备`,
-          confirmText: '保存图片',
-          cancelText: '知道了',
-          confirmColor: '#4488FB',
-          success: (res) => {
-            if (res.confirm) {
-              uni.showToast({
-                title: '图片已保存',
-                icon: 'success'
-              })
-            }
-          }
-        })
-      } catch (error) {
-        uni.showToast({
-          title: '生成失败',
-          icon: 'none'
-        })
-      }
-    },
-
-    // 复制分享链接
-    copyShareLink(esId, deviceName) {
-      const shareCode = this.generateRandomCode()
-      const shareLink = `https://example.com/add-device?code=${shareCode}`
-
-      // #ifdef MP-WEIXIN
-      wx.showModal({
-        title: '分享链接',
-        content: `设备：${deviceName}\n\n链接：${shareLink}`,
-        confirmText: '复制',
-        cancelText: '知道了',
-        confirmColor: '#4488FB',
-        success: function (res) {
-          if (res.confirm) {
-            wx.setClipboardData({
-              data: shareLink,
-              success: function () {
-                wx.showToast({
-                  title: '已复制',
-                  icon: 'success',
-                  duration: 1500
-                })
-              },
-              fail: function () {
-                wx.showToast({
-                  title: '复制失败',
-                  icon: 'none'
-                })
-              }
-            })
-          }
-        }
-      })
-      // #endif
-
-      // #ifndef MP-WEIXIN
-      uni.setClipboardData({
-        data: shareLink,
-        success: () => {
-          uni.showToast({
-            title: '已复制',
-            icon: 'success',
-            duration: 1500
-          })
-        },
-        fail: () => {
-          uni.showModal({
-            title: '分享链接已生成',
-            content: `设备：${deviceName}\n链接：${shareLink}\n\n请长按复制链接`,
-            showCancel: false,
-            confirmText: '知道了',
-            confirmColor: '#4488FB'
-          })
-        }
-      })
-      // #endif
-    },
-
-    // 关闭分享弹窗
     closeShareModal() {
       this.showShareModal = false
     },
-
-    // 从弹窗复制内容
-    copyFromModal() {
-      const text = this.shareModalType === 'code' ? this.currentShareCode : this.currentShareLink
-      
-      // #ifdef MP-WEIXIN
-      wx.setClipboardData({
-        data: text,
-        success: () => {
-          wx.showToast({
-            title: '已复制',
-            icon: 'success',
-            duration: 1500
-          })
-        },
-        fail: () => {
-          wx.showToast({
-            title: '复制失败',
-            icon: 'none'
-          })
-        }
-      })
-      // #endif
-      
-      // #ifndef MP-WEIXIN
-      uni.setClipboardData({
-        data: text,
-        success: () => {
-          uni.showToast({
-            title: '已复制',
-            icon: 'success',
-            duration: 1500
-          })
-        },
-        fail: () => {
-          uni.showToast({
-            title: '复制失败',
-            icon: 'none'
-          })
-        }
-      })
-      // #endif
-    },
-    
-    // 处理复制按钮点击（直接在用户交互链中）
-    handleCopyClick(e) {
-      e.preventDefault()
-      const text = this.shareModalType === 'code' ? this.currentShareCode : this.currentShareLink
-      
-      // #ifdef MP-WEIXIN
-      wx.setClipboardData({
-        data: text,
-        success: function() {
-          wx.showToast({
-            title: '已复制',
-            icon: 'success',
-            duration: 1500
-          })
-        },
-        fail: function() {
-          wx.showToast({
-            title: '复制失败',
-            icon: 'none'
-          })
-        }
-      })
-      // #endif
-      
-      // #ifndef MP-WEIXIN
-      uni.setClipboardData({
-        data: text,
-        success: () => {
-          uni.showToast({
-            title: '已复制',
-            icon: 'success',
-            duration: 1500
-          })
-        },
-        fail: () => {
-          uni.showToast({
-            title: '复制失败',
-            icon: 'none'
-          })
-        }
-      })
-      // #endif
-    },
-
-    // 生成随机分享码
     generateRandomCode() {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-      let code = ''
-      for (let i = 0; i < 8; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length))
-      }
-      return code
+      let str = ''
+      for (let i = 0; i < 8; i++) str += chars[Math.floor(Math.random() * chars.length)]
+      return str
     }
   }
 }
 </script>
 
 <style scoped lang="scss">
-.device-list-container {
-  padding: 20rpx;
+$main-color: #4080f0;
+$text-dark: #2d3036;
+$text-gray: #868c98;
+$line-color: #f0f1f5;
+$bg-page: #f5f7fb;
+$bg-card: #ffffff;
+
+.page-wrap {
+  padding: 32rpx;
   min-height: 100vh;
-  background-color: #EFF4FB;
   box-sizing: border-box;
+  background: $bg-page;
 }
 
-/* 空状态 */
-.empty-state {
+// 空状态卡片
+.empty-card {
+  margin-top: 160rpx;
+  padding: 100rpx 40rpx;
+  background: $bg-card;
+  border-radius: 24rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 60rpx 40rpx;
-  background: #fff;
-  border-radius: 12px;
-  margin-top: 30rpx;
-}
-
-.empty-icon {
-  width: 100rpx;
-  height: 100rpx;
-  background-color: #F8FAFF;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 24rpx;
-}
-
-.empty-title {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 10rpx;
-}
-
-.empty-desc {
-  font-size: 24rpx;
-  color: #666;
-  margin-bottom: 40rpx;
-  text-align: center;
-}
-
-.add-btn {
-  width: 260rpx;
-  height: 72rpx;
-  background-color: #4488FB;
-  color: #fff;
-  border-radius: 36rpx;
-  font-size: 28rpx;
-  font-weight: 600;
-  border: none;
-}
-
-.add-btn:active {
-  background-color: #1890FF;
-}
-
-/* 设备列表 */
-.device-list {
-  background-color: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-top: 20rpx;
-}
-
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.list-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.device-count {
-  font-size: 12px;
-  color: #666;
-}
-
-.add-device-btn {
-  width: 48rpx;
-  height: 48rpx;
-  background-color: #4488FB;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  padding: 0;
-}
-
-.add-device-btn:active {
-  background-color: #1890FF;
-}
-
-.device-item {
-  padding: 0;
-  border-bottom: 1px solid #f0f0f0;
-
-  &:last-child {
-    border-bottom: none;
+  box-shadow: 0 3rpx 20rpx rgba(64, 128, 240, 0.06);
+  .empty-icon-box {
+    width: 160rpx;
+    height: 160rpx;
+    background: #f0f6ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 36rpx;
+  }
+  .empty-title {
+    font-size: 36rpx;
+    color: $text-dark;
+    font-weight: 500;
+    margin-bottom: 12rpx;
+  }
+  .empty-desc {
+    font-size: 26rpx;
+    color: $text-gray;
+    text-align: center;
+    line-height: 1.6;
+    margin-bottom: 64rpx;
+  }
+  .empty-add-btn {
+    width: 340rpx;
+    height: 90rpx;
+    background: $main-color;
+    border-radius: 45rpx;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12rpx;
+    font-size: 30rpx;
+    color: #fff;
+    transition: all 0.2s;
+    &:active {
+      background: #336fd8;
+      transform: scale(0.97);
+    }
   }
 }
 
-.device-main {
-  display: flex;
-  align-items: center;
-  padding: 20px;
-}
-
-.device-icon {
-  width: 80rpx;
-  height: 80rpx;
-  background-color: #F8FAFF;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 20px;
-}
-
-.device-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.device-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 6px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.device-id {
-  font-size: 12px;
-  color: #999;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.admin-tag {
-  display: inline-flex;
-  align-items: center;
-  font-size: 11px;
-  color: #fff;
-  background-color: #f3a73f;
-  padding: 4rpx 12rpx;
-  border-radius: 4px;
-  margin-top: 6px;
-}
-
-/* 管理员操作区域 */
-.device-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding: 12px 20px 16px;
-  background-color: #fafafa;
-  border-top: 1px solid #f0f0f0;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 12rpx 28rpx;
-  font-size: 13px;
-  font-weight: 500;
+// 列表外层卡片
+.list-card {
+  background: $bg-card;
   border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 3rpx 20rpx rgba(64, 128, 240, 0.06);
 }
 
-.share-btn {
-  background-color: #4488FB;
-  color: #fff;
-  border: none;
+// 列表头部
+.list-header {
+  padding: 36rpx 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1rpx solid $line-color;
+  .header-title {
+    font-size: 38rpx;
+    color: $text-dark;
+    font-weight: 500;
+  }
+  .header-right-group {
+    display: flex;
+    align-items: center;
+    gap: 28rpx;
+    .device-total {
+      font-size: 26rpx;
+      color: $text-gray;
+    }
+    .header-add-btn {
+      width: 64rpx;
+      height: 64rpx;
+      border-radius: 50%;
+      background: #f0f6ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      &:active {
+        background: #e0ecff;
+      }
+    }
+  }
 }
 
-.share-btn:active {
-  background-color: #1890FF;
+.device-scroll {
+  max-height: calc(100vh - 300rpx);
 }
 
-/* 统一箭头样式 */
-.arrow-icon {
-  font-size: 14px;
-  color: #999;
-  flex-shrink: 0;
-  margin-left: 12px;
+// 单设备条目
+.device-item {
+  padding: 32rpx;
+  border-bottom: 1rpx solid $line-color;
+  &:last-child {
+    border-bottom: none;
+  }
+  .info-row {
+    display: flex;
+    align-items: center;
+    gap: 26rpx;
+    margin-bottom: 26rpx;
+  }
+  .device-avatar {
+    width: 100rpx;
+    height: 100rpx;
+    border-radius: 18rpx;
+    background: #f0f6ff;
+    overflow: hidden;
+    flex-shrink: 0;
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  .info-text {
+    flex: 1;
+    overflow: hidden;
+    .name-line {
+      display: flex;
+      align-items: center;
+      gap: 16rpx;
+      margin-bottom: 10rpx;
+      .device-name {
+        font-size: 34rpx;
+        color: $text-dark;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .admin-label {
+        font-size: 22rpx;
+        padding: 4rpx 14rpx;
+        background: #fff2e0;
+        color: #e68a20;
+        border-radius: 10rpx;
+      }
+    }
+    .device-id {
+      font-size: 26rpx;
+      color: $text-gray;
+    }
+  }
+  .arrow-icon {
+    flex-shrink: 0;
+  }
+  // 删除按钮行
+  .delete-row {
+    display: flex;
+    justify-content: flex-end;
+    .delete-circle-btn {
+      width: 68rpx;
+      height: 68rpx;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      transition: background 0.2s;
+      &:active {
+        background: #f0f1f5;
+      }
+    }
+  }
 }
 
-/* 分享弹窗 */
-.share-modal-mask {
+// 分享弹窗
+.modal-mask {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.42);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
 }
-
 .share-modal {
-  width: 600rpx;
-  background-color: #fff;
-  border-radius: 16rpx;
+  width: 660rpx;
+  background: $bg-card;
+  border-radius: 30rpx;
   overflow: hidden;
 }
-
-.share-modal-header {
+.modal-head {
+  padding: 40rpx 36rpx;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 32rpx;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1rpx solid $line-color;
+  .modal-title {
+    font-size: 36rpx;
+    color: $text-dark;
+    font-weight: 500;
+  }
+  .modal-close {
+    width: 60rpx;
+    height: 60rpx;
+    border-radius: 50%;
+    background: #f5f7fb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:active {
+      background: #e9ebf2;
+    }
+  }
 }
-
-.share-modal-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #333;
-}
-
-.close-btn {
-  width: 48rpx;
-  height: 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.share-modal-body {
-  padding: 32rpx;
-}
-
-.device-name-wrap {
-  margin-bottom: 24rpx;
-}
-
-.device-name-label {
-  font-size: 26rpx;
-  color: #666;
-}
-
-.device-name-value {
-  font-size: 26rpx;
-  color: #333;
-  font-weight: 500;
-}
-
-.share-content-wrap {
-  margin-bottom: 32rpx;
-}
-
-.share-content-label {
-  font-size: 26rpx;
-  color: #666;
-  display: block;
-  margin-bottom: 16rpx;
-}
-
-.share-content-box {
-  background-color: #f8f9fa;
-  border-radius: 8rpx;
-  padding: 24rpx;
-  margin-bottom: 12rpx;
-}
-
-.share-content-text {
-  font-size: 28rpx;
-  color: #333;
-  font-weight: 600;
-  font-family: monospace;
-  word-break: break-all;
-  user-select: text;
-  -webkit-user-select: text;
-}
-
-.copy-hint {
-  font-size: 22rpx;
-  color: #999;
-  display: block;
-}
-
-.copy-btn {
-  width: 100%;
-  height: 88rpx;
-  background-color: #4488FB;
-  color: #fff;
-  border-radius: 44rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12rpx;
-  font-size: 30rpx;
-  font-weight: 500;
-}
-
-.copy-btn:active {
-  background-color: #1890FF;
+.modal-body {
+  padding: 40rpx 36rpx;
+  .form-row {
+    display: flex;
+    margin-bottom: 36rpx;
+    .form-label {
+      width: 160rpx;
+      font-size: 28rpx;
+      color: $text-gray;
+    }
+    .form-value {
+      flex: 1;
+      font-size: 28rpx;
+      color: $text-dark;
+    }
+  }
+  .copy-block {
+    margin-bottom: 48rpx;
+    .copy-label {
+      font-size: 28rpx;
+      color: $text-gray;
+      display: block;
+      margin-bottom: 20rpx;
+    }
+    .code-wrap {
+      background: #f0f6ff;
+      border: 1rpx solid #d4e4ff;
+      padding: 32rpx 28rpx;
+      border-radius: 16rpx;
+      margin-bottom: 12rpx;
+      .code-text {
+        font-size: 32rpx;
+        color: $main-color;
+        font-family: monospace;
+        word-break: break-all;
+        user-select: text;
+      }
+    }
+    .copy-tip {
+      font-size: 24rpx;
+      color: #b0b6c2;
+    }
+  }
+  .copy-main-btn {
+    width: 100%;
+    height: 92rpx;
+    background: $main-color;
+    border-radius: 46rpx;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12rpx;
+    font-size: 32rpx;
+    color: #fff;
+    &:active {
+      background: #336fd8;
+      transform: scale(0.97);
+    }
+  }
 }
 </style>

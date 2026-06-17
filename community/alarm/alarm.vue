@@ -315,7 +315,6 @@ export default {
           areaLevelId: '883',
           esId: '2'
         })
-        console.log(res, "------------------------")
         const list = (res.data || []).map(it => this.formatAlarmItem(it))
         this.apiData = list
         this.totalCount = list.length

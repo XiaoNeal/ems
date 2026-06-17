@@ -17,8 +17,6 @@ export class Model171D extends DeviceBase {
 	// 处理能源数据（完全对齐1707格式，协议全量23个字段）
 	getEnergyData(jsonData, jsonData2) {
 
-		console.log(jsonData,'171D',"---------------------------");
-
 		// 能源数据字段赋值（带单位，完全对齐1707格式）
 		this.energyData.B0.value = this.setFaultZoneStatus(jsonData.B0);
 		this.energyData.B2.value = this.setSystemWorkStatus(jsonData.B2);
@@ -198,9 +196,9 @@ export class Model171D extends DeviceBase {
 	setFaultZoneStatus(key) {
 		switch (key) {
 			case 0:
-				return '故障区无故障置起';
+				return '无故障';
 			case 1:
-				return '故障区有故障置起';
+				return '有故障';
 			default:
 				return key;
 		}

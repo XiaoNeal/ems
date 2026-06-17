@@ -123,6 +123,7 @@ import { queryHighestChargeAndPower, getPowerData, queryDayElectricityStatistic,
 export default {
   components: { dyDate },
   name: "Storage-Management",
+  inject: ['get171FDeviceList'],
   data() {
     return {
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
@@ -151,7 +152,10 @@ export default {
         enableScroll: false,
         legend: {},
         xAxis: { labelCount: 8, disableGrid: true },
-        yAxis: { gridType: "dash", dashLength: 2 },
+        yAxis: { gridType: "dash",
+        showTitle: true,
+        data: [{ position: "left", title: "单位:kWh" }],
+         dashLength: 2 },
         extra: { line: { type: "straight", width: 1 } },
         animation: false,
       },
@@ -160,10 +164,13 @@ export default {
         dataLabel: false,
         animation: false,
         xAxis: { labelCount: 8, disableGrid: true },
-        yAxis: { gridType: "dash", dashLength: 2 },
+        yAxis: { gridType: "dash",
+        showTitle: true,
+       data: [{ position: "left", title: "单位:kWh" }],
+         dashLength: 2 },
       },
       storageQData: {
-        categories: [...Array(24).keys()].map(h => `${String(h).padStart(2, "0")}:00`),
+        categories: [...Array(24).keys()].map(h => `${h + 1}时`),
         series: [{ name: "充电量", data: Array(24).fill(0) }, { name: "放电量", data: Array(24).fill(0) }],
       },
       selectedDate: new Date().toISOString().split("T")[0],
@@ -176,7 +183,8 @@ export default {
     //   return this.currentSystem?.storageammeterDeviceids || [];
     // },
     device171F() {
-      console.log(this.deviceList, this.deviceList.find(item => item && item.deviceType === '171F'), "171F");
+      // console.log(this.deviceList, this.deviceList.find(item => item && item.deviceType === '171F'), "171F");
+      this.deviceList = realtimeDataProvider.getDeviceList()
       return this.deviceList.find(item => item && item.deviceType === '171F');
     },
     totalStorageData() {
@@ -205,9 +213,8 @@ export default {
   },
   mounted() {
     // 先加载数据，不渲染图表
-    this.findEnergyStorageInfo();
-    this.getHighestChargeAndPower();
-    this.getNyzRealTimeData();
+    // this.findEnergyStorageInfo();
+    // this.getNyzRealTimeData();
     this.handleDatePicker(this.selectedDate);
     // this.init170FDevice();
     this.init171FDevice();
@@ -225,16 +232,7 @@ export default {
   methods: {
 
     init171FDevice() {
-      const device171F = {
-        deviceType: '171F',
-        typeCode: '171F',
-        address: '01',
-        barCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
-        deviceId: '171F001',
-        name: 'DCDC设备171F'
-      };
-      realtimeDataProvider.initDeviceList([device171F]);
-      this.deviceList = realtimeDataProvider.getDeviceList();
+      this.deviceList = this.get171FDeviceList();
     },
     getFieldValue(key) {
       // console.log(this.device171F, this.device171F.energyData, key, "----121---------------");
@@ -296,83 +294,29 @@ export default {
       if (type === "年") this.findYearStorageQAndPower();
     },
 
-    getNyzRealTimeData() {
-      // const socket = getSocketinstance();
-      // socket.socket.emit("register");
-
-      // let lastUpdateTime = 0;
-      // socket.socket.on("nyzData", (json) => {
-      //   const now = Date.now();
-      //   if (now - lastUpdateTime < 500) return;
-      //   lastUpdateTime = now;
-
-      //   const { deviceType, dataType, address, data } = json;
-      //   if (deviceType == "1804_V2_2" && dataType == "2" && address == "18") {
-      //     this.nyzRealTimeData.storagePower1 = parseFloat(data.B8).toFixed(2);
-      //     this.nyzRealTimeData.charge1 = parseFloat(data.B12).toFixed(2);
-      //     this.nyzRealTimeData.discharge1 = parseFloat(data.B16).toFixed(2);
-      //   }
-      //   if (deviceType == "1804_V2_2" && dataType == "2" && address == "19") {
-      //     this.nyzRealTimeData.storagePower2 = parseFloat(data.B8).toFixed(2);
-      //     this.nyzRealTimeData.charge2 = parseFloat(data.B12).toFixed(2);
-      //     this.nyzRealTimeData.discharge2 = parseFloat(data.B16).toFixed(2);
-      //   }
-      //   if (deviceType == "1704_V1_2" && dataType == "2" && address == "02") {
-      //     this.nyzRealTimeData.soc = parseFloat(data.B4).toFixed(2);
-      //   }
-      // });
-    },
     enumStorageStatus(s) {
       return [, "充电", "放电", "静置"][s] || "--";
     },
-    findEnergyStorageInfo() {
-      queryHighestChargeAndPower({
-        areaLevelIds: [940],
-        date: new Date().toISOString().split("T")[0],
-        deviceIdList: [],
-        esId: 8
-      }).then((res) => {
-        console.log(res, "-------------------");
-        if (!res.data) return;
-        this.dayMaxChargeQ = res.data.dailyMaxCharge;
-        this.dayMaxChargeQTime = res.data.dailyMaxChargeTime;
-        this.dayMaxDischargeQ = res.data.dailyMaxDisCharge;
-        this.dayMaxDischargeQTime = res.data.dailyMaxDisChargeTime;
-        this.hisMaxChargePower = res.data.maxPower;
-        this.hisMaxChargePowerTime = res.data.timeOfMaxPower;
-        this.hisMaxDischargePower = res.data.mimPower;
-        this.hisMaxDischargePowerTime = res.data.timeOfMinPower;
-      });
-    },
     findDayStorageQAndPower() {
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+      const esId = currentDevice.esId || currentDevice.id;
+      const areaLevelIds = currentDevice.areaLevelId;
+      
       queryDayElectricityStatistic({
-        esId: 8,
+        esId: esId,
         date: this.selectedDate,
-        areaLevelIds: 940
+        areaLevelIds: areaLevelIds
       }).then((res) => {
-        const c = [], d = [];
-        console.log(res, "-------------------322");
-        if (res.data) {
-          // 提取充电量和放电量数据
-          const storageCharge = parseFloat(res.data.storageCharge) || 0;
-          const storageDischarge = parseFloat(res.data.storageDischarge) || 0;
-
-          // 按小时生成数据
-          for (let h = 0; h < 24; h++) {
-            c.push(storageCharge >= 0 ? parseFloat(storageCharge.toFixed(2)) : 0);
-            d.push(storageDischarge > 0 ? parseFloat(storageDischarge.toFixed(2)) : (storageCharge < 0 ? parseFloat((-storagecharge).toFixed(2)) : 0));
-          }
-        } else {
-          // 无数据时生成空数据
-          for (let h = 0; h < 24; h++) {
-            c.push(0);
-            d.push(0);
-          }
-        }
-
+        const dataList = res.data || [];
+        
+        const sortedData = dataList.sort((a, b) => (a.hour || 0) - (b.hour || 0));
+        
         this.storageQData = {
-          categories: [...Array(24).keys()].map(h => `${String(h).padStart(2, "0")}:00`),
-          series: [{ name: "充电量", data: c }, { name: "放电量", data: d }],
+          categories: sortedData.map(item => `${(item.hour || 0) + 1}时`),
+          series: [
+            { name: "充电量", data: sortedData.map(item => parseFloat(item.storageCharge) || 0) },
+            { name: "放电量", data: sortedData.map(item => parseFloat(item.storageDischarge) || 0) }
+          ],
         };
       });
     },
@@ -384,11 +328,15 @@ export default {
       const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
       const endDate = `${year}-${String(month).padStart(2, "0")}-${days}`;
 
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+      const esId = currentDevice.esId || currentDevice.id;
+      const areaLevelIds = currentDevice.areaLevelId;
+      
       queryMonthElectricityStatistic({
-        esId: 8,
+        esId: esId,
         startDate,
         endDate,
-        areaLevelIds: 940
+        areaLevelIds: areaLevelIds
       }).then((res) => {
         const c = [], d = [];
 
@@ -410,7 +358,7 @@ export default {
         }
 
         this.storageQData = {
-          categories: [...Array(days).keys()].map(i => i + 1),
+          categories: [...Array(days).keys()].map(i => `${i + 1}日`),
           series: [{ name: "充电量", data: c }, { name: "放电量", data: d }]
         };
       });
@@ -418,10 +366,14 @@ export default {
     findYearStorageQAndPower() {
       const year = new Date(this.selectedDate).getFullYear();
 
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+      const esId = currentDevice.esId || currentDevice.id ;
+      const areaLevelIds = currentDevice.areaLevelId ;
+      
       queryYearElectricityStatistic({
-        esId: 8,
+        esId: esId,
         year,
-        areaLevelIds: 940
+        areaLevelIds: areaLevelIds
       }).then((res) => {
 
         console.log(res, "-----------121--------");
@@ -444,26 +396,10 @@ export default {
         }
 
         this.storageQData = {
-          categories: [...Array(12).keys()].map(i => i + 1),
+          categories: [...Array(12).keys()].map(i => `${i + 1}月`),
           series: [{ name: "充电量", data: c }, { name: "放电量", data: d }]
         };
       });
-    },
-    getHighestChargeAndPower() {
-      // nyz_new.queryHighestChargeAndPower({
-      //   deviceIdList: [352, 354],
-      //   date: new Date().toISOString().split("T")[0],
-      // }).then((res) => {
-      //   if (!res.data) return;
-      //   this.dayMaxChargeQ = res.data.dailyMaxCharge;
-      //   this.dayMaxChargeQTime = res.data.dailyMaxChargeTime;
-      //   this.hisMaxChargePower = res.data.maxPower;
-      //   this.hisMaxChargePowerTime = res.data.timeOfMaxPower;
-      //   this.dayMaxDischargeQ = res.data.dailyMaxDisCharge;
-      //   this.dayMaxDischargeQTime = res.data.dailyMaxDisChargeTime;
-      //   this.hisMaxDischargePower = -res.data.mimPower;
-      //   this.hisMaxDischargePowerTime = res.data.timeOfMinPower;
-      // });
     },
     onPowerDateChange(value) {
       // 更新选中的日期
@@ -490,8 +426,7 @@ export default {
 
           // 按小时聚合数据（0-23小时，每小时取一个点）
           for (let h = 0; h < 24; h++) {
-            const time = `${String(h).padStart(2, "0")}:00`;
-            categories.push(time);
+            categories.push(`${h + 1}时`);
 
             // 找到该小时范围内的数据
             const hourData = dataList.filter(item => {
@@ -513,7 +448,7 @@ export default {
         } else {
           // 无数据时生成空数据
           for (let h = 0; h < 24; h++) {
-            categories.push(`${String(h).padStart(2, "0")}:00`);
+            categories.push(`${h + 1}时`);
             charge.push(0);
             discharge.push(0);
           }

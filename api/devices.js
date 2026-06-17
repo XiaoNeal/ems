@@ -1,5 +1,10 @@
 import request from '@/utils/request.js'
 
+// 根据区域ID获取设备信息
+export const getDeviceByAreaId = (areaId) => {
+    return request.get(`/api/es/deviceRl/getByAreaId?areaId=${areaId}`)
+}
+
 // 17.能源站设备数据
 export const queryAllEnergyStationSituation = (esId) => {
     return request.get(`/api/energyStation/queryAllEnergyStationSituation?esId=${esId}`)

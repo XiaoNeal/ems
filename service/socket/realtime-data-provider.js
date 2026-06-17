@@ -1,11 +1,11 @@
 import RealTimeWebSokcetProtocolHandler from '@/service/socket/realtime-websocket-protocolhandler';
-
+import store from '@/store';
 
 import io from '@hyoga/uni-socket.io';
 var socket = undefined;
 // let realtimeDataProvider = new RealtimeDataProviderService();
 
- export class RealtimeDataProviderService {
+export class RealtimeDataProviderService {
 	// upgradeProgramResponseFrame: EventEmitter<any>;
 	deviceList = [];
 	barCode = new Set()
@@ -38,46 +38,60 @@ var socket = undefined;
 
 	// IEMS_0106V2State_
 	// IEMS_1702State_
-	
+
 	initDeviceList(deviceList) {
 		this.deviceList = [];
-		this.barCode = new Set()
-
-// 		address: "1F"
-// barCode: "IEMS_00 00 02 20 25 06 05 09 37 11 2E 00 00 00 00"
-// deviceId: "170C001"
-// deviceType: "170C_V1_1"
-// name: "DCDC设备"
+		// 清空store中的设备状态
+		store.commit('CLEAR_DEVICE_STATE');
+		// this.barCode = new Set()
 		for (let i = 0; deviceList && i < deviceList.length; i++) {
 			let barCode = deviceList[i].barCode || deviceList[i].barcode
-			let findData = this.deviceList.find(ele => ele.address == deviceList[i].address && ele.barCode ==
-				barCode && ele.deviceType == deviceList[i].typeCode)
-				console.log('findData',findData);
+			let address = deviceList[i].address
+			let deviceType = deviceList[i].typeCode || deviceList[i].deviceType
 
-			if (findData) continue;
-			else {
+			// 使用barCode、address和deviceType组合作为唯一键
+			let deviceKey = `${barCode}_${address}_${deviceType}`
+			console.log(deviceKey, 'deviceKey')
+
+			// 从store中获取deviceMap
+			const currentDeviceMap = store.state.deviceMap;
+			// 检查设备是否已存在
+			if (!currentDeviceMap.has(deviceKey)) {
 				let device = {
 					deviceId: deviceList[i].deviceId,
 					name: deviceList[i].name != '' ? deviceList[i].name : '未命名',
-					address: deviceList[i].address,
+					address: address,
 					barCode: barCode,
-					deviceType: deviceList[i].typeCode||deviceList[i].deviceType,
+					deviceType: deviceType,
 					// parentId:deviceList[i].parentId,
 				}
+				// 记录当前deviceList的长度
+				let beforeLength = this.deviceList.length;
 
-				this.realTimeWebSocketProtocolHandler.initDevice(device, barCode, this.deviceList)
-				console.log('device',device,this.deviceList);
-				this.barCode.add(barCode)
+				// 调用initDevice，它会将模型添加到deviceList
+				this.realTimeWebSocketProtocolHandler.initDevice(device, barCode, this.deviceList);
+
+				// 获取initDevice添加的模型对象
+				let addedModel = this.deviceList[beforeLength];
+
+				// 存储到store的deviceMap中
+				store.commit('ADD_DEVICE_TO_MAP', { key: deviceKey, device: addedModel });
+				// 存储到store的barCodes中
+				store.commit('ADD_BAR_CODE', barCode);
+				console.log(addedModel, 'addedModel')
 			}
-
 		}
+		// 从store中获取barCodes
+		const storeBarCodes = store.state.barCodes;
+		console.log(storeBarCodes, 'storeBarCodes')
+		storeBarCodes.forEach((value) => {
 
-		console.log('barCode',this.deviceList,deviceList);
-		this.barCode && this.barCode.forEach((value, key) => {
 			this.bindDevicesRealtimeData(value)
 		})
 
-
+		console.log('初始化设备列表:', this.deviceList, store.state.deviceMap)
+		// 将this.deviceList值赋值给deviceLists
+		// deviceLists = this.deviceList;
 	}
 
 	unregister() {
@@ -137,7 +151,7 @@ var socket = undefined;
 			console.log('尝试重新连接中...', error);
 		});
 
-		socket.on('connect_failed', function(data) {
+		socket.on('connect_failed', function (data) {
 			console.log('连接失败...');
 		});
 
@@ -150,9 +164,28 @@ var socket = undefined;
 			console.log('连接错误：', error)
 		})
 		// 监听重连事件
-		socket.on('reconnect', () => {
-			console.log('重新连接成功')
-		})
+		// socket.on('reconnect', () => {
+		// 	console.log('重新连接成功')
+
+
+		// })
+
+
+		socket.on('reconnect', (attemptNumber) => {
+			// 从store中获取barCodes
+			const storeBarCodes = store.state.barCodes;
+			console.log('socket重新连接成功，尝试次数:', attemptNumber, storeBarCodes);
+			// this.initDeviceList(deviceLists)
+			// 重新注册设备
+			if (storeBarCodes && storeBarCodes.size > 0) {
+				console.log('重新注册设备:', storeBarCodes);
+				storeBarCodes.forEach((value) => {
+					if (socket) {
+						socket.emit('register', value);
+					}
+				});
+			}
+		});
 	}
 
 
@@ -186,11 +219,11 @@ var socket = undefined;
 
 	static closeSocket() {
 		// socket.colse()
-		if(socket){
+		if (socket) {
 			socket.disconnect()
 			socket = undefined;
 		}
-		
+
 	}
 
 

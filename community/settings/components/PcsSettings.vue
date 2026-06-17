@@ -45,7 +45,8 @@
               <view class="combined-header">
                 <text class="param-name">{{ param.label }}</text>
                 <view class="combined-btn-group">
-                  <view v-if="editingParam !== param.key" class="btn btn-edit" @click="handleParamEdit(param)">
+                  <view v-if="editingParam !== param.key" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }"
+                    @click="handleParamEdit(param)">
                     <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
                     <text>编辑</text>
                   </view>
@@ -65,11 +66,10 @@
                 <view v-if="param.modeOptions && !param.voltageMin" class="mode-row">
                   <text class="mode-label">并网模式的功率控制模式：</text>
                   <view class="mode-switch">
-                    <view v-for="option in param.modeOptions" :key="option.value" class="switch-btn" 
-                      :class="{
-                        'btn-active': (combinedParams && combinedParams[param.key] && combinedParams[param.key].selectedMode === option.value) || (tempSelectedMode === option.value),
-                        'btn-disabled': editingParam !== param.key
-                      }" @click="handleCombinedModeClick(param, option)">
+                    <view v-for="option in param.modeOptions" :key="option.value" class="switch-btn" :class="{
+                      'btn-active': (combinedParams && combinedParams[param.key] && combinedParams[param.key].selectedMode === option.value) || (tempSelectedMode === option.value),
+                      'btn-disabled': editingParam !== param.key
+                    }" @click="handleCombinedModeClick(param, option)">
                       {{ option.label }}
                     </view>
                   </view>
@@ -123,7 +123,8 @@
               <text class="unit-text">{{ param.unit || '' }}</text>
             </view>
             <view class="btn-group">
-              <view v-if="editingParam !== param.key" class="btn btn-edit" @click="handleParamEdit(param)">
+              <view v-if="editingParam !== param.key" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }"
+                @click="handleParamEdit(param)">
                 <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
                 <text>编辑</text>
               </view>
@@ -220,10 +221,15 @@ export default {
         timer: null
       },
       pcsParams: [
-        { key: 'pcs.B0', field: 'B0', address: '0x0017', label: '设置模块工作海拔值', unit: 'm', min: 1000, max: 5000 },
-        { key: 'pcs.B4', field: 'B4', address: '0x001E', label: '设置组号', unit: '', min: 0, max: 7 },
+        // { key: 'pcs.B0', field: 'B0', address: '0x0017', label: '设置模块工作海拔值', unit: 'm', min: 1000, max: 5000 },
+        // { key: 'pcs.B4', field: 'B4', address: '0x001E', label: '设置组号', unit: '', min: 0, max: 7 },
         { key: 'pcs.B40', field: 'B40', address: '0x0077', label: '设置直流侧电压', unit: 'V', scale: 1000 },
         { key: 'pcs.B44', field: 'B44', address: '0x0079', label: '设置直流侧电流', unit: 'A', min: -78, max: 73.5, scale: 1000 },
+        // { key: 'pcs.B52', field: 'B52', address: '0x0081', label: '设置交流侧总无功功率', unit: 'Var', min: -10648, max: 10648 },
+        // { key: 'pcs.B56', field: 'B56', address: '0x0082', label: '设置交流侧功率因素 PF', unit: '', min: -1, max: -0.8, min2: 0.8, max2: 1, scale: 1000 },
+
+        { key: 'pcs.B72', field: 'B72', address: '0x0087', label: '设置直流欠压保护电压', unit: 'V', min: 145, max: 500, scale: 10 },
+        { key: 'pcs.B76', field: 'B76', address: '0x0088', label: '设置直流过压保护电压', unit: 'V', min: 600, max: 1030, scale: 10 },
         {
           key: 'pcs.B48', field: 'B48', address: '0x0080', label: '设置交流侧总有功功率', type: 'combined',
           modeOptions: [
@@ -235,22 +241,20 @@ export default {
           min: 0,
           max: 22
         },
-        { key: 'pcs.B52', field: 'B52', address: '0x0081', label: '设置交流侧总无功功率', unit: 'Var', min: -10648, max: 10648 },
-        { key: 'pcs.B56', field: 'B56', address: '0x0082', label: '设置交流侧功率因素 PF', unit: '', min: -1, max: -0.8, min2: 0.8, max2: 1, scale: 1000 },
-        {
-          key: 'pcs.B66', field: 'B66', address: '0x0084', label: '设置交流相电压和频率', type: 'combined',
-          modeOptions: [
-            { label: '交流相电压', value: '0x0000' }
-          ],
-          powerLabel: '交流频率值',
-          unit: 'Hz',
-          min: 50,
-          max: 60,
-          voltageMin: 200,
-          voltageMax: 240
-        },
-        { key: 'pcs.B72', field: 'B72', address: '0x0087', label: '设置直流欠压保护电压', unit: 'V', min: 145, max: 500, scale: 10 },
-        { key: 'pcs.B76', field: 'B76', address: '0x0088', label: '设置直流过压保护电压', unit: 'V', min: 600, max: 1030, scale: 10 },
+
+        // {
+        //   key: 'pcs.B66', field: 'B66', address: '0x0084', label: '设置交流相电压和频率', type: 'combined',
+        //   modeOptions: [
+        //     { label: '交流相电压', value: '0x0000' }
+        //   ],
+        //   powerLabel: '交流频率值',
+        //   unit: 'Hz',
+        //   min: 50,
+        //   max: 60,
+        //   voltageMin: 200,
+        //   voltageMax: 240
+        // },
+
         {
           key: 'pcs.B80', field: 'B80', address: '0x0089', label: '设置一级交流欠压保护', type: 'combined',
           powerLabel: '保护时间',
@@ -357,12 +361,12 @@ export default {
         }
       ],
       pcsSwitchParams: [
-        {
-          key: 'pcs.B8', field: 'B8', address: '0x001F', label: '设置模块地址分配方式', options: [
-            { label: '自动分配', value: '0x00000000' },
-            { label: '拨码设置', value: '0x00010000' }
-          ]
-        },
+        // {
+        //   key: 'pcs.B8', field: 'B8', address: '0x001F', label: '设置模块地址分配方式', options: [
+        //     { label: '自动分配', value: '0x00000000' },
+        //     { label: '拨码设置', value: '0x00010000' }
+        //   ]
+        // },
         {
           key: 'pcs.B12', field: 'B12', address: '0x0024', label: '设置离网模式交流侧欠压复位', options: [
             { label: '禁止', value: '0x00000000' },
@@ -406,31 +410,31 @@ export default {
             { label: '复位', value: '0x00010000' }
           ]
         },
-        {
-          key: 'pcs.B60', field: 'B60', address: '0x0083', label: '设置交流侧无功功率类型', options: [
-            { label: '不设置无功功率输出功能', value: '0x00A00000' },
-            { label: '通过 PF 设置命令', value: '0x00A10000' },
-            { label: '通过无功功率设置命令', value: '0x00A20000' }
-          ]
-        },
-        {
-          key: 'pcs.B68', field: 'B68', address: '0x0085', label: '设置是否错相', options: [
-            { label: '不允许', value: '0x00000000' },
-            { label: '允许', value: '0x00010000' }
-          ]
-        },
-        {
-          key: 'pcs.B104', field: 'B104', address: '0x008F', label: '设置是否过载输出', options: [
-            { label: '禁用', value: '0x00000000' },
-            { label: '使能', value: '0x00010000' }
-          ]
-        },
-        {
-          key: 'pcs.B116', field: 'B116', address: '0x0092', label: '设置是否使能输入电压环', options: [
-            { label: '禁用', value: '0x00000000' },
-            { label: '使能', value: '0x00010000' }
-          ]
-        }
+        // {
+        //   key: 'pcs.B60', field: 'B60', address: '0x0083', label: '设置交流侧无功功率类型', options: [
+        //     { label: '不设置无功功率输出功能', value: '0x00A00000' },
+        //     { label: '通过 PF 设置命令', value: '0x00A10000' },
+        //     { label: '通过无功功率设置命令', value: '0x00A20000' }
+        //   ]
+        // },
+        // {
+        //   key: 'pcs.B68', field: 'B68', address: '0x0085', label: '设置是否错相', options: [
+        //     { label: '不允许', value: '0x00000000' },
+        //     { label: '允许', value: '0x00010000' }
+        //   ]
+        // },
+        // {
+        //   key: 'pcs.B104', field: 'B104', address: '0x008F', label: '设置是否过载输出', options: [
+        //     { label: '禁用', value: '0x00000000' },
+        //     { label: '使能', value: '0x00010000' }
+        //   ]
+        // },
+        // {
+        //   key: 'pcs.B116', field: 'B116', address: '0x0092', label: '设置是否使能输入电压环', options: [
+        //     { label: '禁用', value: '0x00000000' },
+        //     { label: '使能', value: '0x00010000' }
+        //   ]
+        // }
       ]
     }
   },
@@ -550,16 +554,16 @@ export default {
       if (!this.combinedParams) {
         this.combinedParams = {}
       }
-      
+
       const value = event.detail.value
       console.log('handleCombinedInput called:', param.key, value)
-      
+
       // 确保 combinedParams[param.key] 存在且包含所有必要字段
       if (!this.combinedParams[param.key]) {
-        this.$set(this.combinedParams, param.key, { 
-          selectedMode: '0x0000', 
-          powerValue: value, 
-          voltageValue: '' 
+        this.$set(this.combinedParams, param.key, {
+          selectedMode: '0x0000',
+          powerValue: value,
+          voltageValue: ''
         })
       } else {
         // 保留已有值，只更新 powerValue
@@ -573,7 +577,7 @@ export default {
           this.$set(existing, 'voltageValue', '')
         }
       }
-      
+
       console.log('handleCombinedInput result:', this.combinedParams[param.key])
     },
 
@@ -581,16 +585,16 @@ export default {
       if (!this.combinedParams) {
         this.combinedParams = {}
       }
-      
+
       const value = event.detail.value
       console.log('handleVoltageInput called:', param.key, value)
-      
+
       // 确保 combinedParams[param.key] 存在且包含所有必要字段
       if (!this.combinedParams[param.key]) {
-        this.$set(this.combinedParams, param.key, { 
-          selectedMode: '0x0000', 
-          powerValue: '', 
-          voltageValue: value 
+        this.$set(this.combinedParams, param.key, {
+          selectedMode: '0x0000',
+          powerValue: '',
+          voltageValue: value
         })
       } else {
         // 保留已有值，只更新 voltageValue
@@ -604,7 +608,7 @@ export default {
           this.$set(existing, 'powerValue', '')
         }
       }
-      
+
       console.log('handleVoltageInput result:', this.combinedParams[param.key])
     },
 
@@ -1068,11 +1072,11 @@ export default {
         if (!this.combinedParams) {
           this.combinedParams = {}
         }
-        
+
         // 确保 combinedParams[param.key] 存在且包含所有必要字段
         if (!this.combinedParams[param.key]) {
           // 使用 $set 确保响应式
-          this.$set(this.combinedParams, param.key, param.voltageMin 
+          this.$set(this.combinedParams, param.key, param.voltageMin
             ? { selectedMode: '0x0000', powerValue: '', voltageValue: '' }
             : { selectedMode: '', powerValue: '' }
           )
@@ -1099,7 +1103,7 @@ export default {
         this.originalParams[param.key] = JSON.parse(JSON.stringify(this.combinedParams[param.key]))
         console.log('saved originalParams[param.key]:', this.originalParams[param.key])
       }
-      
+
       console.log('combinedParams after:', this.combinedParams)
     },
 
@@ -1392,6 +1396,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding-bottom: 10rpx;
 }
 
 .combined-header .param-name {

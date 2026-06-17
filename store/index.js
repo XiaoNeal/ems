@@ -100,6 +100,9 @@ const store = new Vuex.Store({
 		currentSelectDevice: lifeData.currentSelectDevice ? lifeData.currentSelectDevice : undefined,
 		homeSelectedEsId: lifeData.homeSelectedEsId ? lifeData.homeSelectedEsId : undefined,
 		// centerList: lifeData.centerList ? lifeData.centerList : [],
+
+		barCodes: new Set(),
+		deviceMap: new Map()
 	},
 	mutations: {
 		$uStore(state, payload) {
@@ -144,7 +147,29 @@ const store = new Vuex.Store({
 			state.hasLogin = true
 			saveLifeData('userInfo', userInfo)
 			saveLifeData('hasLogin', true)
-		}
+		},
+
+		// 更新设备条形码集合
+		UPDATE_BAR_CODES(state, barCodes) {
+			state.barCodes = barCodes;
+		},
+		// 更新设备映射
+		UPDATE_DEVICE_MAP(state, deviceMap) {
+			state.deviceMap = deviceMap;
+		},
+		// 添加设备条形码
+		ADD_BAR_CODE(state, barCode) {
+			state.barCodes.add(barCode);
+		},
+		// 添加设备到映射
+		ADD_DEVICE_TO_MAP(state, { key, device }) {
+			state.deviceMap.set(key, device);
+		},
+		// 清空设备状态
+		CLEAR_DEVICE_STATE(state) {
+			state.barCodes.clear();
+			state.deviceMap.clear();
+		},
 	},
 	actions: {
 		// 自定义 action

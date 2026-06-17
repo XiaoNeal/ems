@@ -3,10 +3,10 @@
     <!-- 顶部导航栏 -->
     <u-navbar title="策略配置" :autoBack="true" :placeholder="true">
     </u-navbar>
-    
+
     <!-- 导航栏占位层 -->
     <!-- <view class="navbar-placeholder"></view> -->
-    
+
     <!-- 内容区域 -->
     <view class="content">
       <!-- 非编辑模式遮罩层（仅在配置模式下生效） -->
@@ -436,7 +436,8 @@ export default {
     // 加载策略配置
     async loadStrategyConfig() {
       try {
-        const areaLevelId = this.$store.state.areaInfoId || 940
+        const currentDevice = this.$store.state.currentSelectDevice || {}
+        const areaLevelId = currentDevice.areaLevelId
         const response = await request({
           url: '/api/energyStation/getEsStrategyConfig',
           method: 'GET',
@@ -498,10 +499,11 @@ export default {
       try {
 
         console.log(this.$store.state, "99999999999999")
-
+        const currentDevice = this.$store.state.currentSelectDevice || {}
+        const areaLevelId = currentDevice.areaLevelId
         // 构建请求数据
         const requestData = {
-          areaLevelId: this.$store.state.areaInfoId || 940,
+          areaLevelId: areaLevelId,
           strategyType: this.modeToStrategyType[this.activeMode],
           daysOfWeek: this.selectedWeekDays.map(d => d + 1).join(','), // 转换为1-based索引
           timeConfigs: this.timeSlots.map(slot => ({
@@ -597,42 +599,42 @@ export default {
       if (!this.device171F || !this.device171F.controlData) return '--'
       const data = this.device171F.controlData[key]
       if (!data || data.value === '--') return '--'
-      
+
       // B18 字段特殊转换：1出售储能电，0不出售储能电
       if (key === 'B18') {
         return data.value == 1 ? '出售储能电' : (data.value == 0 ? '不出售储能电' : data.value)
       }
-      
+
       // B20 限制消费策略中PCS设定功率值，单位：kW
       if (key === 'B20') {
         return `${data.value} kW`
       }
-      
+
       // B22 字段特殊转换：1启动防逆流功能，其他不启动防逆流
       if (key === 'B22') {
         return data.value == 1 ? '启动防逆流功能' : '不启动防逆流'
       }
-      
+
       // B24 防逆流服务端交流总表功率，单位：W
       if (key === 'B24') {
         return `${data.value} W`
       }
-      
+
       // B28 防逆流服务端控制能源站数量，单位：台
       if (key === 'B28') {
         return `${data.value} 台`
       }
-      
+
       // B32 防逆流电网侧目标功率，单位：kW
       if (key === 'B32') {
         return `${data.value} kW`
       }
-      
+
       // B34 防逆流电网侧目标功率上下边界波动幅度，单位：kW
       if (key === 'B34') {
         return `${data.value} kW`
       }
-      
+
       return data.value
     },
     // 获取星期值

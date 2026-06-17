@@ -135,6 +135,7 @@ export default {
     dyDate,
   },
   name: "PV-Management",
+  inject: ['get171FDeviceList'],
   data() {
     return {
       chartId: 'pv-' + Math.random().toString(36).substr(2, 9),
@@ -165,15 +166,13 @@ export default {
   computed: {
 
     device171F() {
-      // return this.deviceList
-      // console.log(this.deviceList, 'deviceList1211113333333333333', this.deviceList.find(item => item && item.deviceType === '171F'));
+      this.deviceList = realtimeDataProvider.getDeviceList()
       let device = this.deviceList.find(item => item && item.deviceType === '171F');
-
       return device;
     },
     powerCurveData() {
       return {
-        categories: this.powerCurveSeries.length > 0 ? ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'] : [],
+        categories: this.powerCurveSeries.length > 0 ? ['1时', '3时', '5时', '7时', '9时', '11时', '13时', '15时', '17时', '19时', '21时', '23时'] : [],
         series: [{ data: this.powerCurveSeries.length > 0 ? this.powerCurveSeries : [], name: '发电功率' }]
       }
     },
@@ -183,7 +182,9 @@ export default {
         dataPointShape: false,
         color: ["#6DE188"],
         xAxis: { labelCount: 6, disableGrid: true },
-        yAxis: { gridType: "dash", data: [{ position: "left", title: "单位:kW" }] },
+        yAxis: { gridType: "dash",
+        showTitle: true,
+         data: [{ position: "left", title: "单位:kW" }] },
         extra: { area: { type: "curve", gradient: true } }
       }
     },
@@ -199,13 +200,15 @@ export default {
         dataPointShape: false,
         color: ["#6DE188"],
         xAxis: { labelCount: 8, disableGrid: true },
-        yAxis: { gridType: "dash", data: [{ position: "left", title: "单位:kWh" }] },
+        yAxis: { gridType: "dash",
+        showTitle: true,
+         data: [{ position: "left", title: "单位:kWh" }] },
       }
     }
   },
   mounted() {
     this.init171FDevice();
-    this.getPhotovoltaicEnergyInfo();
+    // this.getPhotovoltaicEnergyInfo();
     this.getDayGeneratedPower();
     this.getElectricityStatistic();
   },
@@ -214,16 +217,7 @@ export default {
 
   methods: {
     init171FDevice() {
-      const device171F = {
-        deviceType: '171F',
-        typeCode: '171F',
-        address: '01',
-        barCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
-        deviceId: '171F001',
-        name: 'DCDC设备171F'
-      };
-      realtimeDataProvider.initDeviceList([device171F]);
-      this.deviceList = realtimeDataProvider.getDeviceList();
+      this.deviceList = this.get171FDeviceList();
 
       // console.log(this.deviceList, 'deviceList121111', this.deviceList.find(item => item && item.deviceType === '171F'));
     },
@@ -256,22 +250,6 @@ export default {
         return `${year}-${monthStr}-${dayStr} ${hourStr}:${minuteStr}`;
       }
       return "--";
-    },
-    getPhotovoltaicEnergyInfo() {
-      findPhotovoltaicEnergyInfo({
-        esId: 8,
-        areaLevelIds: 940
-      }).then((res) => {
-        if (!res.data) return;
-        this.dailyGeneration = res.data.dayProvideQ ?? "--";
-        this.totalGeneration = res.data.totalProvideQ ?? "--";
-        this.incomeValue = res.data.dayProvideIncome ?? "--";
-        this.runningDays = res.data.totalProvideTime ?? "--";
-        this.maxGeneration = res.data.dayMaxProvideQ ?? "--";
-        this.maxGenerationTime = res.data.dayMaxProvideQDatetime ?? "--";
-        this.historyGenerationPower = res.data.maxProvidePower ?? "--";
-        this.historyGenerationPowerTime = res.data.maxProvidePowerDatetime ?? "--";
-      });
     },
 
     getDayGeneratedPower() {
@@ -323,27 +301,21 @@ export default {
     },
 
     getDayElectricityStatistic() {
-      queryDayElectricityStatistic({
-        esId: 8,
-        date: this.selectedDate,
-        areaLevelIds: 940
-      }).then((res) => {
-        if (!res.data) {
-          this.generationSeries = Array.from({ length: 24 }, () => 0);
-          this.generationCategories = Array.from({ length: 24 }, (_, i) => i + 1);
-          return;
-        }
+      const currentDevice = this.$store.state.currentSelectDevice;
+      const esId = currentDevice.esId || currentDevice.id;
+      const areaLevelIds = currentDevice.areaLevelId;
 
-        const generatedPower = parseFloat(res.data.photovoltaicPower) || 0;
-        this.generationSeries = Array.from({ length: 24 }, (_, i) => {
-          const hour = i;
-          if (hour >= 6 && hour <= 18) {
-            const value = generatedPower * Math.sin((hour - 6) * Math.PI / 12);
-            return parseFloat(value.toFixed(2));
-          }
-          return 0;
-        });
-        this.generationCategories = Array.from({ length: 24 }, (_, i) => i + 1);
+      queryDayElectricityStatistic({
+        esId: esId,
+        date: this.selectedDate,
+        areaLevelIds: areaLevelIds
+      }).then((res) => {
+        const dataList = res.data || [];
+        console.log(dataList, 'dataList');
+        
+        const sortedData = dataList.sort((a, b) => a.hour - b.hour);
+        this.generationSeries = sortedData.map(item => parseFloat(item.photovoltaicPower) || 0);
+        this.generationCategories = sortedData.map(item => `${item.hour + 1}时`);
       });
     },
 
@@ -354,20 +326,23 @@ export default {
       const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
       const endDate = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
 
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+      const esId = currentDevice.esId || currentDevice.id;
+      const areaLevelIds = currentDevice.areaLevelId;
+
       queryMonthElectricityStatistic({
-        esId: 8,
+        esId: esId,
         startDate: startDate,
         endDate: endDate,
-        areaLevelIds: 940
+        areaLevelIds: areaLevelIds
       }).then((res) => {
-        if (!res.data || !res.data || res.data.length === 0) {
-          this.generationSeries = Array.from({ length: 30 }, () => 0);
-          this.generationCategories = Array.from({ length: 30 }, (_, i) => i + 1);
-          return;
-        }
-
-        this.generationSeries = res.data.map(item => parseFloat(item.photovoltaicPower) || 0);
-        this.generationCategories = res.data.map((item, i) => i + 1);
+        const dataList = res.data || [];
+        
+        this.generationSeries = dataList.map(item => parseFloat(item.photovoltaicPower) || 0);
+        this.generationCategories = dataList.map(item => {
+          const day = parseInt(item.date?.split('-')[2]) || item.day || 0;
+          return day > 0 ? `${day}日` : `${dataList.indexOf(item) + 1}日`;
+        });
       });
     },
 
@@ -375,21 +350,22 @@ export default {
       const date = new Date(this.selectedDate);
       const year = date.getFullYear();
 
-      queryYearElectricityStatistic({
-        esId: 8,
-        year: year,
-        areaLevelIds: 940
-      }).then((res) => {
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+      const esId = currentDevice.esId || currentDevice.id;
+      const areaLevelIds = currentDevice.areaLevelId;
 
-        console.log(res.data, "111111111111");
-        if (!res.data || !res.data || res.data.length === 0) {
-          this.generationSeries = Array.from({ length: 12 }, () => 0);
-          this.generationCategories = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-          return;
-        }
-        console.log(res.data, "111111111111");
-        this.generationSeries = res.data.map(item => parseFloat(item.photovoltaicPower) || 0);
-        this.generationCategories = res.data.map((item, i) => `${i + 1}月`);
+      queryYearElectricityStatistic({
+        esId: esId,
+        year: year,
+        areaLevelIds: areaLevelIds
+      }).then((res) => {
+        const dataList = res.data || [];
+        
+        this.generationSeries = dataList.map(item => parseFloat(item.photovoltaicPower) || 0);
+        this.generationCategories = dataList.map(item => {
+          const month = parseInt(item.date?.split('-')[1]) || item.month || 0;
+          return month > 0 ? `${month}月` : `${dataList.indexOf(item) + 1}月`;
+        });
       });
     },
 

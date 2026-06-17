@@ -56,7 +56,7 @@
               <text class="unit-text">{{ param.unit || '' }}</text>
             </view>
             <view class="btn-group">
-              <view v-if="editingParam !== param.key" class="btn btn-edit" @click="handleParamEdit(param)">
+              <view v-if="editingParam !== param.key" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }" @click="handleParamEdit(param)">
                 <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
                 <text>编辑</text>
               </view>
@@ -150,8 +150,8 @@ export default {
         timer: null
       },
       storageParams: [
-        { key: 'storage.B16', field: 'B16', address: '60024', label: '组ID号', unit: '', min: 1, max: 31, default: 1 },
-        { key: 'storage.B18', field: 'B18', address: '60025', label: '模块数量', unit: '', min: 1, max: 31, default: 1 },
+        // { key: 'storage.B16', field: 'B16', address: '60024', label: '组ID号', unit: '', min: 1, max: 31, default: 1 },
+        // { key: 'storage.B18', field: 'B18', address: '60025', label: '模块数量', unit: '', min: 1, max: 31, default: 1 },
         { key: 'storage.B22', field: 'B22', address: '60040', label: '直流母线电压', unit: 'V', min: 350, max: 850, scale: 10, default: 720 },
         { key: 'storage.B26', field: 'B26', address: '60043', label: '充放电功率设定', unit: '%', min: 0, max: 130, scale: 10, default: 100 },
         { key: 'storage.B28', field: 'B28', address: '60044', label: '电池均充电压', unit: 'V', min: 40, max: 360, scale: 10, default: 60 },
@@ -166,41 +166,41 @@ export default {
         { key: 'storage.B49', field: 'B49', address: '60055', label: '放电母线电压下限', unit: 'V', min: 350, max: 850, scale: 10, default: 570 }
       ],
       storageSwitchParams: [
-        {
-          key: 'storage.B0', field: 'B0', address: '60016', label: 'Can波特率设置', options: [
-            { label: '1000kbps', value: '0' },
-            { label: '500kbps', value: '1' },
-            { label: '250kbps', value: '2' },
-            { label: '125kbps', value: '3' }
-          ]
-        },
-        {
-          key: 'storage.B2', field: 'B2', address: '60017', label: '认证标准码', options: [
-            { label: '中国标准I', value: '0' },
-            { label: '中国标准II', value: '1' },
-            { label: '美国标准', value: '2' },
-            { label: '德国标准', value: '3' }
-          ]
-        },
-        {
-          key: 'storage.B4', field: 'B4', address: '60018', label: '机器类型', options: [
-            { label: 'IBDC30060', value: '1' },
-            { label: 'IBG30060', value: '2' }
-          ]
-        },
+        // {
+        //   key: 'storage.B0', field: 'B0', address: '60016', label: 'Can波特率设置', options: [
+        //     { label: '1000kbps', value: '0' },
+        //     { label: '500kbps', value: '1' },
+        //     { label: '250kbps', value: '2' },
+        //     { label: '125kbps', value: '3' }
+        //   ]
+        // },
+        // {
+        //   key: 'storage.B2', field: 'B2', address: '60017', label: '认证标准码', options: [
+        //     { label: '中国标准I', value: '0' },
+        //     { label: '中国标准II', value: '1' },
+        //     { label: '美国标准', value: '2' },
+        //     { label: '德国标准', value: '3' }
+        //   ]
+        // },
+        // {
+        //   key: 'storage.B4', field: 'B4', address: '60018', label: '机器类型', options: [
+        //     { label: 'IBDC30060', value: '1' },
+        //     { label: 'IBG30060', value: '2' }
+        //   ]
+        // },
         {
           key: 'storage.B6', field: 'B6', address: '60019', label: '故障清除', options: [
             { label: '清除所有故障', value: '0x0055', dangerous: true }
           ]
         },
-        {
-          key: 'storage.B8', field: 'B8', address: '60020', label: '运行模式设置', options: [
-            { label: '无输出模式', value: '0' },
-            { label: '正常运行模式', value: '1' },
-            { label: '开环调试模式', value: '2' },
-            { label: '发波调试模式', value: '3' }
-          ]
-        },
+        // {
+        //   key: 'storage.B8', field: 'B8', address: '60020', label: '运行模式设置', options: [
+        //     { label: '无输出模式', value: '0' },
+        //     { label: '正常运行模式', value: '1' },
+        //     { label: '开环调试模式', value: '2' },
+        //     { label: '发波调试模式', value: '3' }
+        //   ]
+        // },
         {
           key: 'storage.B10', field: 'B10', address: '60021', label: '运行状态设置', options: [
             { label: '自适应', value: '0' },
@@ -214,48 +214,48 @@ export default {
             { label: '关机', value: '0x00AA', dangerous: true }
           ]
         },
-        {
-          key: 'storage.B14', field: 'B14', address: '60023', label: '恢复出厂设置', options: [
-            { label: '恢复所有值', value: '0x0055', dangerous: true },
-            { label: '恢复用户值', value: '0x00AA', dangerous: true }
-          ]
-        },
-        {
-          key: 'storage.B20', field: 'B20', address: '60038', label: '电池类型', options: [
-            { label: '铅酸电池', value: '0' },
-            { label: '锂电池', value: '1' }
-          ]
-        },
+        // {
+        //   key: 'storage.B14', field: 'B14', address: '60023', label: '恢复出厂设置', options: [
+        //     { label: '恢复所有值', value: '0x0055', dangerous: true },
+        //     { label: '恢复用户值', value: '0x00AA', dangerous: true }
+        //   ]
+        // },
+        // {
+        //   key: 'storage.B20', field: 'B20', address: '60038', label: '电池类型', options: [
+        //     { label: '铅酸电池', value: '0' },
+        //     { label: '锂电池', value: '1' }
+        //   ]
+        // },
         {
           key: 'storage.B24', field: 'B24', address: '60042', label: '充放电指令', options: [
             { label: '待机', value: '0' },
             { label: '充电', value: '1' },
             { label: '放电', value: '2' },
-            { label: 'BAT自动', value: '3' },
+            // { label: 'BAT自动', value: '3' },
             { label: 'BUS自动', value: '4' },
-            { label: '关充电', value: '5' },
-            { label: '高压PV', value: '6' },
-            { label: '低压PV', value: '7' }
+            // { label: '关充电', value: '5' },
+            // { label: '高压PV', value: '6' },
+            // { label: '低压PV', value: '7' }
           ]
         },
-        {
-          key: 'storage.B44', field: 'B44', address: '60052', label: '电池激活功能', options: [
-            { label: '禁止', value: '0' },
-            { label: '使能', value: '1' }
-          ]
-        },
-        {
-          key: 'storage.B46', field: 'B46', address: '60053', label: '自动重启功能', options: [
-            { label: '禁止', value: '0' },
-            { label: '使能', value: '1' }
-          ]
-        },
-        {
-          key: 'storage.B53b1', field: 'B53b1', address: '60100', label: '告警屏蔽位1-Bit1', options: [
-            { label: 'CAN通讯使能位', value: '0' },
-            { label: '485通讯使能位', value: '1' }
-          ]
-        }
+        // {
+        //   key: 'storage.B44', field: 'B44', address: '60052', label: '电池激活功能', options: [
+        //     { label: '禁止', value: '0' },
+        //     { label: '使能', value: '1' }
+        //   ]
+        // },
+        // {
+        //   key: 'storage.B46', field: 'B46', address: '60053', label: '自动重启功能', options: [
+        //     { label: '禁止', value: '0' },
+        //     { label: '使能', value: '1' }
+        //   ]
+        // },
+        // {
+        //   key: 'storage.B53b1', field: 'B53b1', address: '60100', label: '告警屏蔽位1-Bit1', options: [
+        //     { label: 'CAN通讯使能位', value: '0' },
+        //     { label: '485通讯使能位', value: '1' }
+        //   ]
+        // }
         // {
         //   key: 'storage.B53b0', field: 'B53b0', address: '60100', label: 'CAN通讯使能位', options: [
         //     { label: '禁止', value: '0' },
@@ -552,6 +552,13 @@ export default {
     },
 
     handleParamEdit(param) {
+      if (!this.isEditing) {
+        uni.showToast({
+          title: '请先点击修改配置',
+          icon: 'none'
+        });
+        return;
+      }
       this.editingParam = param.key
       this.tempValue = this.params.storage[param.field] || ''
     },

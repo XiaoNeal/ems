@@ -25,7 +25,7 @@
         </view>
       </view>
     </view>
-    
+
     <!-- 负荷曲线区块 -->
     <view class="card">
       <view class="section-header">
@@ -55,21 +55,22 @@
           <!-- 设备图标 -->
           <view class="device-image">
             <img class="device-icon" v-if="item.type == '0305'" src="../../community/static/images/VRV.png" />
-            <img class="device-icon" v-if="item.type == 2" src="../../community/static/images/load-airconditioner.png" />
+            <img class="device-icon" v-if="item.type == 2"
+              src="../../community/static/images/load-airconditioner.png" />
             <img class="device-icon" v-if="item.type == 3" src="../../community/static/images/load-chargingPile.png" />
           </view>
           <!-- 设备信息 -->
           <view class="device-info">
             <view class="device-data">
-                <view class="data-item">
-                  <text class="data-label">功率</text>
-                  <text class="data-value">{{ item.power || '--' }} W</text>
-                </view>
-                <view class="data-item">
-                  <text class="data-label">用电量</text>
-                  <text class="data-value">{{ item.energyConsumption || '--' }} kWh</text>
-                </view>
+              <view class="data-item">
+                <text class="data-label">功率</text>
+                <text class="data-value">{{ item.power || '--' }} W</text>
               </view>
+              <view class="data-item">
+                <text class="data-label">用电量</text>
+                <text class="data-value">{{ item.energyConsumption || '--' }} kWh</text>
+              </view>
+            </view>
           </view>
         </view>
       </view>
@@ -85,7 +86,7 @@ import {
 import { queryDayGeneratedPower } from '../../api/power'
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 const commonArcbarOptions = {
-  padding: [15,15,0,15],
+  padding: [15, 15, 0, 15],
   title: { name: '75%', fontSize: 12, color: '#1890FF' },
   subtitle: { name: '完成率', fontSize: 12, color: '#666' },
   extra: {
@@ -168,8 +169,8 @@ export default {
   mounted() {
     this.datetimerange = ["2021-07-08 0:01:10", "2021-08-08 23:59:59"]
     this.getDeviceCount();
-    this.getDeviceInfo();
-    this.getNyzRealTimeData();
+    // this.getDeviceInfo();
+    // this.getNyzRealTimeData();
     this.findFlexibilityLoadPowerTotal();
   },
   methods: {
@@ -181,23 +182,24 @@ export default {
       const colors = { 1: '#FF4D4F', 2: '#FFC53D', 3: '#87D068' }
       return colors[level] || '#EEE'
     },
-    getNyzRealTimeData() {
-      getSocketinstance().socket.emit("register")
-      getSocketinstance().socket.on("nyzData", (jsonData) => {
-        const { deviceType, address, dataType, data } = jsonData
-        if (deviceType === "1712_V2" && address == "64" && dataType == "2") {
-          this.nyzData.dljQuantity = parseFloat(data.B4)
-          this.nyzData.mkjQuantity = parseFloat(data.B10)
-          this.nyzData.unknownDeviceQuantity = parseFloat(data.B12)
-          this.nyzData.nyzFlexibility = parseFloat(data.B14)
-          this.nyzData.totalLoadrate = parseFloat(data.B16)
-          this.nyzData.totalEnergyEfficiencyLevel = parseFloat(data.B18)
-        }
-      })
-    },
+    // getNyzRealTimeData() {
+    //   getSocketinstance().socket.emit("register")
+    //   getSocketinstance().socket.on("nyzData", (jsonData) => {
+    //     const { deviceType, address, dataType, data } = jsonData
+    //     if (deviceType === "1712_V2" && address == "64" && dataType == "2") {
+    //       this.nyzData.dljQuantity = parseFloat(data.B4)
+    //       this.nyzData.mkjQuantity = parseFloat(data.B10)
+    //       this.nyzData.unknownDeviceQuantity = parseFloat(data.B12)
+    //       this.nyzData.nyzFlexibility = parseFloat(data.B14)
+    //       this.nyzData.totalLoadrate = parseFloat(data.B16)
+    //       this.nyzData.totalEnergyEfficiencyLevel = parseFloat(data.B18)
+    //     }
+    //   })
+    // },
     async findFlexibilityLoadPowerTotal() {
-      const esId =  8;
-      const areaLevelIds = this.$store.state.areaInfoId || 940;
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+      const esId = currentDevice.esId || currentDevice.id;
+      const areaLevelIds = currentDevice.areaLevelId || this.$store.state.areaInfoId;
       const result = await queryDayGeneratedPower({
         esId: esId,
         date: this.selectedDate,
@@ -229,61 +231,6 @@ export default {
       const map = { '0': '离线', '1': '等待注册', '2': '等待配置', '3': '运行', '4': '在线' };
       return map[idx]
     },
-    async getDeviceInfo() {
-      // try {
-      //   const result = await energy.queryFlexibility({ 
-      //     barCode: "F2 00 12 00 00 00 00 00 00 00 00 00 00 00 00", 
-      //     typeCode: "1712_V2" 
-      //   });
-      //   if (result.data) {
-      //     const filterData = result.data.filter(item => item.deviceType != '0000')
-      //     this.deviceList = filterData.map((item, index) => {
-      //       item.deviceName = this.getDeviceName(item.deviceType)
-      //       item.deviceStatusName = this.getDeviceStatus(item.networkStatus)
-      //       item.deviceStatus = item.networkStatus
-      //       item.type = item.deviceType
-      //       item.power = Math.round(1000 + Math.random() * 4000)
-      //       item.energyConsumption = (5 + Math.random() * 15).toFixed(2)
-      //       return item
-      //     });
-      //     const generateDevice = (id, flexibility, loadRatio, efficiencyLevel) => ({
-      //       deviceType: '2',
-      //       networkStatus: 0,
-      //       devId: `AC-${String(id).padStart(3, '0')}`,
-      //       deviceFlexibility: flexibility,
-      //       deviceLoadRatio: loadRatio.toFixed(2),
-      //       deviceEnergyEfficiencyLevel: efficiencyLevel,
-      //       power: Math.round(1000 + Math.random() * 4000),
-      //       energyConsumption: (5 + Math.random() * 15).toFixed(2)
-      //     });
-      //     const newAirConditioners = [
-      //       { ...generateDevice(1, 0.7, 0.5, 2), deviceType: '3' },
-      //       ...Array.from({ length: 17 }, (_, i) => {
-      //         const base = i % 3;
-      //         return generateDevice(i + 2, 0.6 + base * 0.1, 0.4 + base * 0.1, base + 1);
-      //       })
-      //     ];
-      //     const newAirConditionersProcessed = newAirConditioners.map((item, index) => {
-      //       const newIndex = this.deviceList.length + index;
-      //       item.deviceName = this.getDeviceName(item.deviceType);
-      //       item.deviceStatusName = this.getDeviceStatus(item.networkStatus);
-      //       item.deviceStatus = item.networkStatus;
-      //       item.type = item.deviceType;
-      //       item.projectAddress = (newIndex % 4) + 1;
-      //       return item;
-      //     });
-      //     this.deviceList = [...this.deviceList, ...newAirConditionersProcessed];
-      //     this.dljTotalDeviceCount = this.deviceList.filter(item => item.deviceType === '0305' || item.deviceType === '2').length;
-      //   }
-      // } catch (err) { console.error(err); }
-    },
-    getDeviceName(idx) {
-      const map = {
-        "0": "未知设备", "1": "分体机", "0305": "多联机",
-        "3": "充电桩", "4": "照明", "306": "内机"
-      }
-      return map[idx]
-    },
     onDeviceClick(device) {
       console.log(device)
       uni.navigateTo({
@@ -307,24 +254,81 @@ export default {
 </script>
 
 <style scoped>
-.custom-picker { border: unset; max-width: fit-content; }
-.device-image { width: 120rpx; height: 120rpx; border-radius: 16rpx; overflow: hidden; flex-shrink: 0; transition: transform 0.2s ease; }
-.device-icon { width: 100%; height: 100%; }
-@media (max-width: 480px) { .device-image { width: 100rpx; height: 100rpx; } }
+.custom-picker {
+  border: unset;
+  max-width: fit-content;
+}
+
+.device-image {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.device-icon {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 480px) {
+  .device-image {
+    width: 100rpx;
+    height: 100rpx;
+  }
+}
 
 /* 基础容器 */
-.container { padding: 20rpx; background: #Eff4fb; }
-.card { background: #fff; border-radius: 12rpx; margin-bottom: 2px; box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05); overflow: hidden; }
-.section-header { border-bottom: 1px solid #f0f0f0; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;  }
-.title { font-size: 16px; font-weight: 600; color: #333; min-width: fit-content; }
-.chart-container { height: 300px; padding: 20px; }
-.date-picker { font-size: 14px; color: #666; }
-.main-chart { width: 100%; height: 100%; }
+.container {
+  padding: 20rpx;
+  background: #Eff4fb;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12rpx;
+  margin-bottom: 2px;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.section-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  min-width: fit-content;
+}
+
+.chart-container {
+  height: 300px;
+  padding: 20px;
+}
+
+.date-picker {
+  font-size: 14px;
+  color: #666;
+}
+
+.main-chart {
+  width: 100%;
+  height: 100%;
+}
 
 /* 设备统计 */
 .device-stats {
   padding: 12px 16px;
 }
+
 .device-grid {
   display: flex;
   justify-content: space-between;
@@ -362,22 +366,55 @@ export default {
 }
 
 /* 列表头部 */
-.list-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #f0f0f0; }
-.list-title { font-size: 16px; font-weight: 600; color: #333; }
-.access-setting-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #1890FF; color: white; border-radius: 4px; font-size: 14px; }
-.setting-icon { font-size: 14px; }
-.setting-text { font-size: 14px; }
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.list-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.access-setting-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #1890FF;
+  color: white;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.setting-icon {
+  font-size: 14px;
+}
+
+.setting-text {
+  font-size: 14px;
+}
 
 /* 核心：设备卡片一行两个 */
-.device-list { padding: 0; }
+.device-list {
+  padding: 0;
+}
+
 .device-card-grid {
   display: flex;
   flex-wrap: wrap;
   padding: 20rpx;
-  gap: 10rpx;    /* 卡片间距 */
+  gap: 10rpx;
+  /* 卡片间距 */
 }
+
 .device-card {
-  width: calc(50% - 10rpx); /* 严格一行两个 */
+  width: calc(50% - 10rpx);
+  /* 严格一行两个 */
   background: #FFFFFF;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -388,23 +425,101 @@ export default {
   text-align: center;
   box-sizing: border-box;
 }
-.device-name { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
-.device-image { width: 100px; height: 100px; border-radius: 12px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; margin: 12px 0; position: relative; overflow: hidden; }
-.device-image::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 10px; background: #e9ecef; border-radius: 0 0 12px 12px; }
-.device-icon { width: 60px; height: 60px; object-fit: contain; z-index: 1; position: relative; }
-.device-info { width: 100%; margin-top: 12px; }
-.device-data { width: 100%; }
-.data-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
-.data-label { font-size: 12px; color: #666; }
-.data-value { font-size: 14px; font-weight: 600; color: #333; }
+
+.device-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.device-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.device-image::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: #e9ecef;
+  border-radius: 0 0 12px 12px;
+}
+
+.device-icon {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  z-index: 1;
+  position: relative;
+}
+
+.device-info {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.device-data {
+  width: 100%;
+}
+
+.data-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.data-label {
+  font-size: 12px;
+  color: #666;
+}
+
+.data-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
 
 /* 响应式 */
 @media (max-width: 480px) {
-  .device-card { width: calc(50% - 10rpx); }
-  .device-image { width: 80px; height: 80px; }
-  .device-icon { width: 50px; height: 50px; }
+  .device-card {
+    width: calc(50% - 10rpx);
+  }
+
+  .device-image {
+    width: 80px;
+    height: 80px;
+  }
+
+  .device-icon {
+    width: 50px;
+    height: 50px;
+  }
 }
 
-::v-deep .uni-date-btn--ok { padding: 10rpx 15px }
-::v-deep .uni-calendar--fixed { margin-bottom: 50px }
+::v-deep .uni-date-btn--ok {
+  padding: 10rpx 15px
+}
+
+::v-deep .uni-calendar--fixed {
+  margin-bottom: 50px
+}
 </style>

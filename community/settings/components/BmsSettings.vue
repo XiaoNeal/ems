@@ -61,7 +61,7 @@
               <text class="unit-text">{{ param.unit || '' }}</text>
             </view>
             <view class="btn-group">
-              <view v-if="editingParam !== param.key" class="btn btn-edit" @click="handleParamEdit(param)">
+              <view v-if="editingParam !== param.key" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }" @click="handleParamEdit(param)">
                 <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
                 <text>编辑</text>
               </view>
@@ -627,6 +627,13 @@ export default {
     },
 
     handleParamEdit(param) {
+      if (!this.isEditing) {
+        uni.showToast({
+          title: '请先点击修改配置',
+          icon: 'none'
+        });
+        return;
+      }
       this.editingParam = param.key
       this.tempValue = this.params.bms[param.field] || ''
     },

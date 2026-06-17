@@ -76,8 +76,10 @@
             <dy-date timeType="day" @getData="onPowerDateChange" v-model="powerDate" class="compact-date-picker" />
           </view>
           <view class="chart-body">
+            <!-- <view class="axis-unit y-axis-unit">kW</view> -->
             <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
               :canvas2d="canvas2d" class="power-chart" :canvas-id="chartId + '-power'" />
+            <!-- <view class="axis-unit x-axis-unit">时</view> -->
           </view>
         </view>
 
@@ -106,6 +108,7 @@
               class="custom-picker date-picker" />
           </view>
           <view class="chart-body">
+            <!-- <view class="axis-unit y-axis-unit">kWh</view> -->
             <qiun-data-charts type="column" :chartData="energyData" :opts="energyOptions" :ontouch="true"
               :canvas2d="canvas2d" class="energy-chart" :canvas-id="chartId + '-energy'" />
           </view>
@@ -118,20 +121,21 @@
 <script>
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 import { realtimeDataProvider } from '@/service/websocket';
-import { getPowerData } from '../../api/power';
+import { getPowerData, queryDayElectricityStatistic, queryMonthElectricityStatistic, queryYearElectricityStatistic } from '../../api/power';
 export default {
   components: {
     dyDate,
   },
   name: "GridManagement",
+  inject: ['get171FDeviceList'],
   data() {
     return {
       chartId: 'grid-' + Math.random().toString(36).substr(2, 9),
       gridStatus: "正常",
       isFullScreen: false,
       fullScreenType: '', // 当前全屏的图表类型 'power' | 'energy'
-      activeDateTab: '年',
-      timeTypeIndex: 2,
+      activeDateTab: '日',
+      timeTypeIndex: 0,
       selectedDate: new Date().toISOString().split('T')[0],
       powerDate: new Date().toISOString().split('T')[0],
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
@@ -150,12 +154,17 @@ export default {
           float: 'right'
         },
         xAxis: {
-          labelCount: 6,
-          disableGrid: true
+          // labelCount: 6,
+          disableGrid: true,
+          // title: "时"
         },
         yAxis: {
           gridType: 'dash',
-          dashLength: 2
+          dashLength: 2,
+           showTitle: true,
+          tofix: 0,
+          data: [{ title: "单位:kW" }],
+          // title: "kW"
         },
         extra: {
           area: {
@@ -168,16 +177,16 @@ export default {
       },
       // 供馈电量统计数据
       energyData: {
-        categories: ['1月', '2月', '3月', '4月', '5月', '6月'],
+        categories: [],
         series: [
           {
             name: '供电量',
-            data: [0, 0, 0, 0, 0, 0],
+            data: [],
             color: '#52C41A'
           },
           {
             name: '馈电量',
-            data: [0, 0, 0, 0, 0, 0],
+            data: [],
             color: '#FAAD14'
           }
         ]
@@ -185,7 +194,7 @@ export default {
       energyOptions: {
         dataLabel: false,
         dataPointShape: false,
-        padding: [15, 15, 0, 5],
+        padding: [15, 20, 35, 20],
         enableScroll: false,
         legend: {
           show: true,
@@ -193,16 +202,28 @@ export default {
           float: 'right'
         },
         xAxis: {
-          disableGrid: true
+          labelCount: 0,
+          boundaryGap: 'center',
+          disableGrid: true,
+          axisLine: {
+            show: false
+          },
+          // title: "日"
         },
         yAxis: {
           gridType: 'dash',
-          dashLength: 2
+          dashLength: 2,
+           showTitle: true,
+          tofix: 0,
+          data: [{ title: "单位:kWh" }],
+          // title: "kWh"
         },
         extra: {
           column: {
             type: 'group',
             width: 20,
+            seriesGap: 2,
+            categoryGap: 8,
             activeBgColor: '#000000',
             activeBgOpacity: 0.08
           }
@@ -212,6 +233,7 @@ export default {
   },
   computed: {
     device171F() {
+      this.deviceList = realtimeDataProvider.getDeviceList()
       return this.deviceList.find(item => item && item.deviceType === '171F');
     },
     powerCurveData() {
@@ -249,16 +271,7 @@ export default {
   },
   methods: {
     init171FDevice() {
-      const device171F = {
-        deviceType: '171F',
-        typeCode: '171F',
-        address: '01',
-        barCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
-        deviceId: '171F001',
-        name: 'DCDC设备171F'
-      };
-      realtimeDataProvider.initDeviceList([device171F]);
-      this.deviceList = realtimeDataProvider.getDeviceList();
+      this.deviceList = this.get171FDeviceList();
     },
     getFieldValue(key) {
       if (!this.device171F || !this.device171F.energyData || this.device171F.energyData[key] === undefined) {
@@ -270,23 +283,21 @@ export default {
     async getPowerCurveData() {
       try {
         const currentDevice = this.$store.state.currentSelectDevice || {};
+
         const params = {
           esId: currentDevice.id || 28,
-          date: this.selectedDate,
+          date: this.powerDate,
           areaLevelIds: currentDevice.areaLevelId || 991
         };
 
         console.log(params, 'params');
         const res = await getPowerData(params);
         if (res && res.data && res.data.length > 0) {
-          // 处理接口返回数据
           const dataList = res.data;
           const categories = [];
           const series = [];
 
-          // 按每2小时聚合数据（0-23小时，每2小时取一个点）
           for (let i = 0; i < 24; i += 2) {
-            // 找到该小时范围内的数据
             const hourData = dataList.filter(item => {
               const time = item.dateTime || '';
               const hour = parseInt(time.substring(11, 13)) || 0;
@@ -294,10 +305,9 @@ export default {
             });
 
             if (hourData.length > 0) {
-              categories.push(`${String(i).padStart(2, "0")}:00`);
-              // 计算平均值
+              categories.push(`${i + 1}时`);
               const avgValue = hourData.reduce((sum, item) => sum + (parseFloat(item.gridPower || 0)), 0) / hourData.length;
-              series.push(parseFloat(avgValue.toFixed(2)));
+              series.push(Math.round(avgValue));
             }
           }
 
@@ -354,12 +364,91 @@ export default {
       } else if (type === '年') {
         this.timeTypeIndex = 2;
       }
-      console.log('日期类型切换为:', type);
+      this.getElectricityStatistic();
+    },
+
+    getElectricityStatistic() {
+      if (this.timeTypeIndex === 0) {
+        this.getDayElectricityStatistic();
+      } else if (this.timeTypeIndex === 1) {
+        this.getMonthElectricityStatistic();
+      } else if (this.timeTypeIndex === 2) {
+        this.getYearElectricityStatistic();
+      }
+    },
+
+    getDayElectricityStatistic() {
+      const currentDevice = this.$store.state.currentSelectDevice;
+      const esId = currentDevice.esId || currentDevice.id;
+      const areaLevelIds = currentDevice.areaLevelId;
+
+      queryDayElectricityStatistic({
+        esId: esId,
+        date: this.selectedDate,
+        areaLevelIds: areaLevelIds
+      }).then((res) => {
+        const dataList = res.data || [];
+        const sortedData = dataList.sort((a, b) => a.hour - b.hour);
+        this.energyData.categories = sortedData.map(item => `${item.hour + 1}时`);
+        this.energyData.series[0].data = sortedData.map(item => parseFloat(item.gridPowerSupply) || 0);
+        this.energyData.series[1].data = sortedData.map(item => parseFloat(item.gridPowerSupplyReverse) || 0);
+      });
+    },
+
+    getMonthElectricityStatistic() {
+      const date = new Date(this.selectedDate);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      const endDate = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
+
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+      const esId = currentDevice.esId || currentDevice.id;
+      const areaLevelIds = currentDevice.areaLevelId;
+
+      queryMonthElectricityStatistic({
+        esId: esId,
+        startDate: startDate,
+        endDate: endDate,
+        areaLevelIds: areaLevelIds
+      }).then((res) => {
+        const dataList = res.data || [];
+        this.energyData.categories = dataList.map(item => {
+          const day = parseInt(item.date?.split('-')[2]) || item.day || 0;
+          return day > 0 ? `${day}日` : `${dataList.indexOf(item) + 1}日`;
+        });
+        this.energyData.series[0].data = dataList.map(item => parseFloat(item.gridPowerSupply) || 0);
+        this.energyData.series[1].data = dataList.map(item => parseFloat(item.gridPowerSupplyReverse) || 0);
+      });
+    },
+
+    getYearElectricityStatistic() {
+      const date = new Date(this.selectedDate);
+      const year = date.getFullYear();
+
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+      const esId = currentDevice.esId || currentDevice.id;
+      const areaLevelIds = currentDevice.areaLevelId;
+
+      queryYearElectricityStatistic({
+        esId: esId,
+        year: year,
+        areaLevelIds: areaLevelIds
+      }).then((res) => {
+        const dataList = res.data || [];
+        this.energyData.categories = dataList.map(item => {
+          const month = parseInt(item.date?.split('-')[1]) || item.month || 0;
+          return month > 0 ? `${month}月` : `${dataList.indexOf(item) + 1}月`;
+        });
+        this.energyData.series[0].data = dataList.map(item => parseFloat(item.gridPowerSupply) || 0);
+        this.energyData.series[1].data = dataList.map(item => parseFloat(item.gridPowerSupplyReverse) || 0);
+      });
     },
     handleDatePicker(date) {
       console.log('选择的日期:', date);
       this.selectedDate = date;
       this.getPowerCurveData();
+      this.getElectricityStatistic();
     },
     onPowerDateChange(date) {
       console.log('功率曲线日期变化:', date);
@@ -370,6 +459,7 @@ export default {
   mounted() {
     this.init171FDevice();
     this.getPowerCurveData();
+    this.getElectricityStatistic();
   }
 };
 </script>
@@ -711,5 +801,30 @@ export default {
 .compact-date-picker {
   font-size: 12px;
   color: #4488FB;
+}
+
+/* 坐标轴单位 */
+.chart-body {
+  position: relative;
+}
+
+.axis-unit {
+  position: absolute;
+  font-size: 22rpx;
+  color: #999;
+  z-index: 10;
+}
+
+.y-axis-unit {
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+}
+
+.x-axis-unit {
+  bottom: 0;
+  right: 50%;
+  transform: translateX(50%);
 }
 </style>

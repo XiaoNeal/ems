@@ -1,154 +1,169 @@
 <template>
   <view class="quick-control">
-    <!-- 顶部导航栏 -->
     <u-navbar title="快捷控制" :autoBack="true" :placeholder="true" />
-    
-    <!-- 内容区域 -->
+
+    <!-- 全局编辑控制 -->
+    <view class="global-edit-bar">
+      <view v-if="!isEditing" class="edit-btn primary" @click="handleEditConfig">
+        <text class="edit-text">修改配置</text>
+      </view>
+      <view v-else class="edit-btn close" @click="closeEdit">
+        <text class="edit-text">关闭编辑</text>
+      </view>
+    </view>
+
     <view class="content">
-      <!-- PCS控制 -->
+      <!-- 储能DC一键控制 -->
       <view class="control-card">
-        <view class="card-header">
-          <text class="card-title">PCS一键控制</text>
-        </view>
-        <view class="switch-btns-wrapper">
-          <view class="switch-btns">
-            <view 
-              class="switch-btn" 
-              :class="{ 'btn-active': selectedPcsAction === 'start' }"
-              @click="pcsAction('start')"
-            >
-              开机
-            </view>
-            <view 
-              class="switch-btn" 
-              :class="{ 'btn-active': selectedPcsAction === 'stop' }"
-              @click="pcsAction('stop')"
-            >
-              关机
-            </view>
+        <view class="card-title">储能DC一键控制</view>
+        <view class="btn-group">
+          <view class="control-btn" :class="{ active: selectedStorageDcAction === 'start', 'btn-disabled': !isEditing }"
+            @click="selectStorageDcAction('start')">
+            一键开机
+          </view>
+          <view class="control-btn" :class="{ active: selectedStorageDcAction === 'stop', 'btn-disabled': !isEditing }"
+            @click="selectStorageDcAction('stop')">
+            关机
           </view>
         </view>
       </view>
-      
+
       <!-- 光伏DC控制 -->
       <view class="control-card">
-        <view class="card-header">
-          <text class="card-title">光伏DC控制</text>
-        </view>
-        <view class="switch-btns-wrapper">
-          <view class="switch-btns">
-            <view 
-              class="switch-btn" 
-              :class="{ 'btn-active': selectedPvDcAction === 'start' }"
-              @click="pvDcAction('start')"
-            >
-              开机
-            </view>
-            <view 
-              class="switch-btn" 
-              :class="{ 'btn-active': selectedPvDcAction === 'stop' }"
-              @click="pvDcAction('stop')"
-            >
-              关机
-            </view>
+        <view class="card-title">光伏DC控制</view>
+        <view class="btn-group">
+          <view class="control-btn" :class="{ active: selectedPvDcAction === 'start', 'btn-disabled': !isEditing }" @click="pvDcAction('start')">
+            一键开机
+          </view>
+          <view class="control-btn" :class="{ active: selectedPvDcAction === 'stop', 'btn-disabled': !isEditing }" @click="pvDcAction('stop')">
+            关机
           </view>
         </view>
       </view>
-      
-      <!-- 储能综合控制 -->
+
+      <!-- 综合控制 -->
       <view class="control-card">
-        <view class="card-header">
-          <text class="card-title">储能综合控制</text>
-        </view>
-        
-        <!-- 储能DC控制 -->
+        <view class="card-title">综合控制</view>
+
+        <!-- PCS模式选择 -->
         <view class="control-section">
-          <text class="section-title">储能DC控制方式</text>
-          <view class="switch-btns-wrapper">
-            <view class="switch-btns triple">
-              <view 
-                class="switch-btn" 
-                :class="{ 'btn-active': selectedStorageDcAction === 'grid-connect' }"
-                @click="selectStorageDcAction('grid-connect')"
-              >
-                并网开机
-              </view>
-              <view 
-                class="switch-btn" 
-                :class="{ 'btn-active': selectedStorageDcAction === 'stop' }"
-                @click="selectStorageDcAction('stop')"
-              >
-                一键关机
-              </view>
-              <view 
-                class="switch-btn" 
-                :class="{ 'btn-active': selectedStorageDcAction === 'off-grid' }"
-                @click="selectStorageDcAction('off-grid')"
-              >
-                离网开机
-              </view>
+          <view class="section-title">PCS模式选择</view>
+          <view class="btn-group triple">
+            <view
+              class="control-btn"
+              :class="{ active: selectedPcsMode === 'charge', 'btn-disabled': !isEditing }"
+              @click="handlePcsModeClick('charge')"
+            >
+              并网充电
+            </view>
+            <view
+              class="control-btn"
+              :class="{ active: selectedPcsMode === 'discharge', 'btn-disabled': !isEditing }"
+              @click="handlePcsModeClick('discharge')"
+            >
+              并网放电
+            </view>
+            <view
+              class="control-btn"
+              :class="{ active: selectedPcsMode === 'off-grid', 'btn-disabled': !isEditing }"
+              @click="handlePcsModeClick('off-grid')"
+            >
+              离网
             </view>
           </view>
         </view>
-        
-        <!-- 储能模式选择 -->
+
+        <!-- 充电功率设置 -->
         <view class="control-section">
-          <text class="section-title">储能工作模式</text>
-          <view class="switch-btns-wrapper">
-            <view class="switch-btns">
-              <view 
-                class="switch-btn charge" 
-                :class="{ 'btn-active': selectedStorageMode === 'charge' }"
-                @click="selectStorageMode('charge')"
-              >
-                充电
-              </view>
-              <view 
-                class="switch-btn discharge" 
-                :class="{ 'btn-active': selectedStorageMode === 'discharge' }"
-                @click="selectStorageMode('discharge')"
-              >
-                放电
-              </view>
-            </view>
-          </view>
-        </view>
-        
-        <!-- 功率设置 -->
-        <view class="control-section">
-          <text class="section-title">充放电总功率</text>
+          <view class="section-title">充电功率设置</view>
           <view class="param-row">
             <view class="param-info">
+              <text class="param-name">充电功率</text>
               <text class="param-range">范围: 1~10kW</text>
             </view>
             <view class="param-right-wrapper">
               <view class="param-right">
-                <view class="param-value-box" :class="{ editing: powerValue }">
-                  <input 
-                    type="digit" 
-                    v-model="powerValue" 
-                    placeholder="请输入" 
-                    @input="validatePower" 
-                    maxlength="2"
-                    class="val-input"
-                  />
+                <view class="param-value-box" :class="{ editing: editingChargePower }">
+                  <text v-if="!editingChargePower" class="val-text">{{ chargePower || '--' }}</text>
+                  <input v-else class="val-input" type="digit" v-model="tempChargePower" placeholder="请输入"
+                    @input="validateTempChargePower" />
                 </view>
                 <text class="unit-text">kW</text>
+              </view>
+              <view class="btn-group vertical">
+                <view v-if="!editingChargePower" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }" @click="handleEditChargePower">
+                  <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
+                  <text>编辑</text>
+                </view>
+                <template v-else>
+                  <view class="btn btn-sure" :class="{ 'btn-loading': isSubmittingChargePower }"
+                    @click="submitChargePower">
+                    <text v-if="!isSubmittingChargePower">下发</text>
+                    <view v-else class="loading-spinner"></view>
+                  </view>
+                  <view class="btn btn-cancel" @click="cancelEditChargePower">
+                    <uni-icons type="closeempty" size="14" color="#999"></uni-icons>
+                  </view>
+                </template>
               </view>
             </view>
           </view>
         </view>
-        
-        <!-- 统一下发按钮 -->
-        <view class="submit-wrapper">
-          <view class="btn btn-sure" @click="submitAll">
-            <text>下发</text>
+
+        <!-- 放电功率设置 -->
+        <view class="control-section">
+          <view class="section-title">放电功率设置</view>
+          <view class="param-row">
+            <view class="param-info">
+              <text class="param-name">放电功率</text>
+              <text class="param-range">范围: 1~10kW</text>
+            </view>
+            <view class="param-right-wrapper">
+              <view class="param-right">
+                <view class="param-value-box" :class="{ editing: editingDischargePower }">
+                  <text v-if="!editingDischargePower" class="val-text">{{ dischargePower || '--' }}</text>
+                  <input v-else class="val-input" type="digit" v-model="tempDischargePower" placeholder="请输入"
+                    @input="validateTempDischargePower" />
+                </view>
+                <text class="unit-text">kW</text>
+              </view>
+              <view class="btn-group vertical">
+                <view v-if="!editingDischargePower" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }" @click="handleEditDischargePower">
+                  <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
+                  <text>编辑</text>
+                </view>
+                <template v-else>
+                  <view class="btn btn-sure" :class="{ 'btn-loading': isSubmittingDischargePower }"
+                    @click="submitDischargePower">
+                    <text v-if="!isSubmittingDischargePower">下发</text>
+                    <view v-else class="loading-spinner"></view>
+                  </view>
+                  <view class="btn btn-cancel" @click="cancelEditDischargePower">
+                    <uni-icons type="closeempty" size="14" color="#999"></uni-icons>
+                  </view>
+                </template>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- PCS开关机 -->
+        <view class="control-section">
+          <view class="section-title">PCS开关机</view>
+          <view class="btn-group">
+            <view class="control-btn" :class="{ active: selectedPcsAction === 'start', 'btn-disabled': !isEditing }" @click="pcsAction('start')">
+              开机
+            </view>
+            <view class="control-btn" :class="{ active: selectedPcsAction === 'stop', 'btn-disabled': !isEditing }" @click="pcsAction('stop')">
+              关机
+            </view>
           </view>
         </view>
       </view>
+
+
     </view>
-    
-    <!-- 底部安全区域适配 -->
+
     <view class="safe-bottom"></view>
   </view>
 </template>
@@ -160,20 +175,29 @@ export default {
   name: "QuickControl",
   data() {
     return {
-      powerValue: '',
-      // 设备配置参数（根据实际情况配置）
+      chargePower: '',
+      dischargePower: '',
       deviceConfig: {
         idCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
         typeCode: '3401',
         address: '01'
       },
-      // 当前选中的操作状态（空表示未选中/不启用）
       selectedPcsAction: '',
       selectedPvDcAction: '',
       selectedStorageDcAction: '',
-      selectedStorageMode: '',
-      // 参数级别发送时间记录
-      lastSendTimes: {}
+      selectedPcsMode: '',
+      lastSendTimes: {},
+      // 编辑模式
+      isEditing: false,
+      // 编辑状态
+      editingChargePower: false,
+      editingDischargePower: false,
+      // 临时值
+      tempChargePower: '',
+      tempDischargePower: '',
+      // 提交状态
+      isSubmittingChargePower: false,
+      isSubmittingDischargePower: false
     };
   },
   computed: {
@@ -182,11 +206,9 @@ export default {
     }
   },
   methods: {
-    // 通用命令执行方法
     async executeCommand(options) {
       const { title, content, apiSufix, commandBuilder, action, stateKey, successMsg, failMsg } = options;
-      
-      // 参数级别时间限制检查
+
       const now = Date.now();
       const paramLastSendTime = this.lastSendTimes[apiSufix] || 0;
       if (now - paramLastSendTime < 5000) {
@@ -196,7 +218,7 @@ export default {
         });
         return Promise.resolve(false);
       }
-      
+
       return new Promise((resolve) => {
         uni.showModal({
           title,
@@ -206,14 +228,13 @@ export default {
               resolve(false);
               return;
             }
-            
+
             try {
-              // 记录发送时间
               this.lastSendTimes[apiSufix] = Date.now();
-              
+
               uni.showLoading({ title: '下发中...' });
               const commands = typeof commandBuilder === 'function' ? commandBuilder(action) : commandBuilder;
-              
+
               await sendCommandFrame({
                 apiSufix,
                 idCode: this.deviceConfig.idCode,
@@ -222,11 +243,16 @@ export default {
                 userId: this.userId,
                 commands
               });
-              
+
               uni.hideLoading();
-              // 更新选中状态
               if (stateKey) {
                 this[stateKey] = action;
+                // 5秒后清除状态，颜色恢复
+                setTimeout(() => {
+                  if (this[stateKey] === action) {
+                    this[stateKey] = '';
+                  }
+                }, 5000);
               }
               uni.showToast({
                 title: successMsg || `${title}成功`,
@@ -246,8 +272,7 @@ export default {
         });
       });
     },
-    
-    // 构建通用命令
+
     buildCommand(registerAddress, registerValue) {
       return [{
         deviceCategory: '171F',
@@ -262,25 +287,37 @@ export default {
         extra3: '00'
       }];
     },
-    
-    // PCS操作
+
     pcsAction(action) {
+      if (!this.isEditing) {
+        uni.showToast({
+          title: '请先点击修改配置',
+          icon: 'none'
+        });
+        return;
+      }
       const actionText = action === 'start' ? '开机' : '关机';
       this.executeCommand({
-        title: 'PCS一键控制',
+        title: 'PCS开关机',
         content: `确定要执行PCS${actionText}操作吗？`,
         apiSufix: 'pcsControl',
-        commandBuilder: () => this.buildCommand('100', action === 'start' ? '1' : '0'),
+        commandBuilder: () => this.buildCommand('100', action === 'start' ? '1' : '2'),
         action,
         stateKey: 'selectedPcsAction',
         successMsg: `PCS${actionText}成功`,
         failMsg: `PCS${actionText}失败`
       });
     },
-    
-    // 光伏DC操作
+
     pvDcAction(action) {
-      const actionText = action === 'start' ? '开机' : '关机';
+      if (!this.isEditing) {
+        uni.showToast({
+          title: '请先点击修改配置',
+          icon: 'none'
+        });
+        return;
+      }
+      const actionText = action === 'start' ? '一键开机' : '关机';
       this.executeCommand({
         title: '光伏DC控制',
         content: `确定要执行光伏DC${actionText}操作吗？`,
@@ -292,166 +329,279 @@ export default {
         failMsg: `光伏DC${actionText}失败`
       });
     },
-    
-    // 选择储能DC操作
+
     selectStorageDcAction(action) {
-      this.selectedStorageDcAction = action;
+      if (!this.isEditing) {
+        uni.showToast({
+          title: '请先点击修改配置',
+          icon: 'none'
+        });
+        return;
+      }
+      const actionText = action === 'start' ? '一键开机' : '关机';
+      this.executeCommand({
+        title: '储能DC一键控制',
+        content: `确定要执行储能DC${actionText}操作吗？`,
+        apiSufix: 'storageDcControl',
+        commandBuilder: () => this.buildCommand('104', action === 'start' ? '1' : '2'),
+        action,
+        stateKey: 'selectedStorageDcAction',
+        successMsg: `储能DC${actionText}成功`,
+        failMsg: `储能DC${actionText}失败`
+      });
     },
-    
-    // 选择储能模式
-    selectStorageMode(mode) {
-      this.selectedStorageMode = mode;
+
+    // PCS模式点击下发
+    async handlePcsModeClick(mode) {
+      const now = Date.now();
+      const paramLastSendTime = this.lastSendTimes['pcsMode'] || 0;
+      if (now - paramLastSendTime < 5000) {
+        uni.showToast({
+          title: '请间隔5秒后再下发',
+          icon: 'none'
+        });
+        return;
+      }
+
+      this.lastSendTimes['pcsMode'] = Date.now();
+
+      const modeMap = {
+        'charge': '1',
+        'discharge': '2',
+        'off-grid': '3'
+      };
+
+      try {
+        await sendCommandFrame({
+          apiSufix: 't3401_171F_control',
+          idCode: this.deviceConfig.idCode,
+          typeCode: this.deviceConfig.typeCode,
+          address: this.deviceConfig.address,
+          userId: this.userId,
+          commands: this.buildCommand('106', modeMap[mode] || '0')
+        });
+        this.selectedPcsMode = mode;
+        uni.showToast({
+          title: 'PCS模式下发成功',
+          icon: 'success'
+        });
+      } catch (error) {
+        console.error('pcsModeControl error:', error);
+        uni.showToast({
+          title: 'PCS模式下发失败',
+          icon: 'none'
+        });
+      }
     },
-    
-    // 功率输入验证
-    validatePower() {
-      let value = String(this.powerValue);
-      // 只能输入数字0-9
+
+    // 编辑配置相关方法
+    handleEditConfig() {
+      this.isEditing = true;
+      uni.showToast({
+        title: '已进入编辑模式',
+        icon: 'success'
+      });
+    },
+
+    closeEdit() {
+      this.isEditing = false;
+      this.editingChargePower = false;
+      this.editingDischargePower = false;
+      uni.showToast({
+        title: '已退出编辑模式',
+        icon: 'success'
+      });
+    },
+
+    // 充电功率编辑相关方法
+    handleEditChargePower() {
+      if (!this.isEditing) {
+        uni.showToast({
+          title: '请先点击修改配置',
+          icon: 'none'
+        });
+        return;
+      }
+      this.editingChargePower = true;
+      this.tempChargePower = this.chargePower || '';
+    },
+
+    cancelEditChargePower() {
+      this.editingChargePower = false;
+      this.tempChargePower = '';
+    },
+
+    validateTempChargePower() {
+      let value = String(this.tempChargePower);
       value = value.replace(/[^\d]/g, '');
-      // 限制最多2位数字
       if (value.length > 2) {
         value = value.substring(0, 2);
       }
-      // 去除前导0
       if (value.length > 1 && value[0] === '0') {
         value = value.replace(/^0+/, '');
       }
-      // 范围限制：1-10kW
       const numValue = parseInt(value, 10);
       if (isNaN(numValue) || numValue < 1) {
         value = '';
       } else if (numValue > 10) {
         value = '10';
       }
-      if (value !== this.powerValue) {
-        this.powerValue = value;
+      if (value !== this.tempChargePower) {
+        this.tempChargePower = value;
       }
     },
-    
-    // 统一下发（同时调用三次接口）
-    async submitAll() {
-      // 验证选择
-      if (!this.selectedStorageDcAction) {
+
+    async submitChargePower() {
+      if (!this.tempChargePower) {
         uni.showToast({
-          title: '请选择储能DC控制方式',
+          title: '请输入充电功率',
           icon: 'none'
         });
         return;
       }
-      
-      if (!this.selectedStorageMode) {
+
+      const now = Date.now();
+      const paramLastSendTime = this.lastSendTimes['chargePower'] || 0;
+      if (now - paramLastSendTime < 5000) {
         uni.showToast({
-          title: '请选择储能模式',
+          title: '请间隔5秒后再下发',
           icon: 'none'
         });
         return;
       }
-      
-      if (!this.powerValue || parseFloat(this.powerValue) < 1) {
+
+      this.isSubmittingChargePower = true;
+      this.lastSendTimes['chargePower'] = Date.now();
+
+      try {
+        await sendCommandFrame({
+          apiSufix: 't3401_171F_control',
+          idCode: this.deviceConfig.idCode,
+          typeCode: this.deviceConfig.typeCode,
+          address: this.deviceConfig.address,
+          userId: this.userId,
+          commands: this.buildCommand('108', this.tempChargePower * 10)
+        });
+        this.chargePower = this.tempChargePower;
+        this.editingChargePower = false;
         uni.showToast({
-          title: '请输入1-10kW范围内的功率值',
+          title: '充电功率下发成功',
+          icon: 'success'
+        });
+      } catch (error) {
+        console.error('chargePowerControl error:', error);
+        uni.showToast({
+          title: '充电功率下发失败',
+          icon: 'none'
+        });
+      } finally {
+        this.isSubmittingChargePower = false;
+      }
+    },
+
+    // 放电功率编辑相关方法
+    handleEditDischargePower() {
+      if (!this.isEditing) {
+        uni.showToast({
+          title: '请先点击修改配置',
           icon: 'none'
         });
         return;
       }
-      
-      // 构建确认信息
-      const actionMap = {
-        'grid-connect': '并网一键开机',
-        'stop': '一键关机',
-        'off-grid': '离网一键开机'
+      this.editingDischargePower = true;
+      this.tempDischargePower = this.dischargePower || '';
+    },
+
+    cancelEditDischargePower() {
+      this.editingDischargePower = false;
+      this.tempDischargePower = '';
+    },
+
+    validateTempDischargePower() {
+      let value = String(this.tempDischargePower);
+      value = value.replace(/[^\d]/g, '');
+      if (value.length > 2) {
+        value = value.substring(0, 2);
+      }
+      if (value.length > 1 && value[0] === '0') {
+        value = value.replace(/^0+/, '');
+      }
+      const numValue = parseInt(value, 10);
+      if (isNaN(numValue) || numValue < 1) {
+        value = '';
+      } else if (numValue > 10) {
+        value = '10';
+      }
+      if (value !== this.tempDischargePower) {
+        this.tempDischargePower = value;
+      }
+    },
+
+    async submitDischargePower() {
+      if (!this.tempDischargePower) {
+        uni.showToast({
+          title: '请输入放电功率',
+          icon: 'none'
+        });
+        return;
+      }
+
+      const now = Date.now();
+      const paramLastSendTime = this.lastSendTimes['dischargePower'] || 0;
+      if (now - paramLastSendTime < 5000) {
+        uni.showToast({
+          title: '请间隔5秒后再下发',
+          icon: 'none'
+        });
+        return;
+      }
+
+      this.isSubmittingDischargePower = true;
+      this.lastSendTimes['dischargePower'] = Date.now();
+
+      try {
+        await sendCommandFrame({
+          apiSufix: 't3401_171F_control',
+          idCode: this.deviceConfig.idCode,
+          typeCode: this.deviceConfig.typeCode,
+          address: this.deviceConfig.address,
+          userId: this.userId,
+          commands: this.buildCommand('10A', this.tempDischargePower * 10)
+        });
+        this.dischargePower = this.tempDischargePower;
+        this.editingDischargePower = false;
+        uni.showToast({
+          title: '放电功率下发成功',
+          icon: 'success'
+        });
+      } catch (error) {
+        console.error('dischargePowerControl error:', error);
+        uni.showToast({
+          title: '放电功率下发失败',
+          icon: 'none'
+        });
+      } finally {
+        this.isSubmittingDischargePower = false;
+      }
+    },
+
+    getPcsModeText(mode) {
+      const map = {
+        'charge': '并网充电',
+        'discharge': '并网放电',
+        'off-grid': '离网'
       };
-      const modeText = this.selectedStorageMode === 'charge' ? '充电' : '放电';
-      
-      uni.showModal({
-        title: '储能综合控制',
-        content: `确定要执行以下操作吗？\n• 储能DC: ${actionMap[this.selectedStorageDcAction]}\n• 储能模式: ${modeText}\n• 充放电功率: ${this.powerValue}kW`,
-        success: async (res) => {
-          if (!res.confirm) {
-            return;
-          }
-          
-          uni.showLoading({ title: '下发中...' });
-          
-          let successCount = 0;
-          const totalCount = 3;
-          
-          // 1. 调用储能DC控制接口
-          try {
-            const valueMap = {
-              'grid-connect': '1',
-              'stop': '2',
-              'off-grid': '3'
-            };
-            await sendCommandFrame({
-              apiSufix: 't3401_171F_control',
-              idCode: this.deviceConfig.idCode,
-              typeCode: this.deviceConfig.typeCode,
-              address: this.deviceConfig.address,
-              userId: this.userId,
-              commands: this.buildCommand('104', valueMap[this.selectedStorageDcAction] || '0')
-            });
-            successCount++;
-          } catch (error) {
-            console.error('storageDcControl error:', error);
-          }
-          
-          // 2. 调用储能模式控制接口
-          try {
-            await sendCommandFrame({
-              apiSufix: 't3401_171F_control',
-              idCode: this.deviceConfig.idCode,
-              typeCode: this.deviceConfig.typeCode,
-              address: this.deviceConfig.address,
-              userId: this.userId,
-              commands: this.buildCommand('106', this.selectedStorageMode === 'charge' ? '1' : '2')
-            });
-            successCount++;
-          } catch (error) {
-            console.error('storageModeControl error:', error);
-          }
-          
-          // 3. 调用功率控制接口
-          try {
-            await sendCommandFrame({
-              apiSufix: 't3401_171F_control',
-              idCode: this.deviceConfig.idCode,
-              typeCode: this.deviceConfig.typeCode,
-              address: this.deviceConfig.address,
-              userId: this.userId,
-              commands: this.buildCommand('108', this.powerValue * 10)
-            });
-            successCount++;
-          } catch (error) {
-            console.error('powerControl error:', error);
-          }
-          
-          uni.hideLoading();
-          
-          if (successCount === totalCount) {
-            uni.showToast({
-              title: '下发成功',
-              icon: 'success'
-            });
-          } else if (successCount > 0) {
-            uni.showToast({
-              title: `${successCount}/${totalCount} 下发成功`,
-              icon: 'none'
-            });
-          } else {
-            uni.showToast({
-              title: '下发失败',
-              icon: 'none'
-            });
-          }
-        }
-      });
+      return map[mode] || '';
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+$main-color: #4080f0;
+$text-dark: #2d3036;
+$text-gray: #868c98;
+
 .quick-control {
   background: linear-gradient(180deg, #f0f4f8 0%, #f5f7fa 100%);
   min-height: 100vh;
@@ -460,7 +610,16 @@ export default {
 
 .content {
   padding: 24rpx;
-  padding-bottom: 48rpx;
+}
+
+// 全局编辑栏
+.global-edit-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 20rpx 24rpx;
+  padding-bottom: 0;
+  // background: #ffffff;
+  // margin-bottom: 16rpx;
 }
 
 .control-card {
@@ -468,19 +627,22 @@ export default {
   border-radius: 20rpx;
   overflow: hidden;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
-  margin-bottom: 24rpx;
-  transition: all 0.3s ease;
-  
-  &:active {
-    transform: scale(0.99);
-    box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
-  }
+  margin-bottom: 12rpx;
+}
+
+.card-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: $text-dark;
+  padding: 8px 32rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+  letter-spacing: 2rpx;
 }
 
 .control-section {
-  padding: 24rpx 32rpx;
+  padding: 12rpx 32rpx;
   border-bottom: 1rpx solid #f5f5f5;
-  
+
   &:last-of-type {
     border-bottom: none;
   }
@@ -488,262 +650,360 @@ export default {
 
 .section-title {
   font-size: 28rpx;
-  font-weight: 600;
-  color: #2c3e50;
+  font-weight: bold;
+  color: $text-dark;
   margin-bottom: 20rpx;
   display: block;
-  position: relative;
-  padding-left: 20rpx;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 6rpx;
-    height: 24rpx;
-    background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
-    border-radius: 3rpx;
-  }
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 32rpx 36rpx;
-  border-bottom: 1rpx solid #f5f5f5;
-  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
-}
-
-.card-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #2c3e50;
-  position: relative;
-  padding-left: 24rpx;
-  letter-spacing: 1rpx;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 8rpx;
-    height: 32rpx;
-    background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
-    border-radius: 4rpx;
-    box-shadow: 0 0 12rpx rgba(102, 153, 255, 0.4);
-  }
-}
-
-// 开关按钮样式
-.switch-btns-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32rpx 24rpx;
-  
-  &.border-top {
-    border-top: 1rpx solid #f5f5f5;
-  }
-}
-
-.switch-btns {
-  display: flex;
-  gap: 20rpx;
-  width: 100%;
-  
-  &.triple {
-    & > .switch-btn {
-      flex: 1;
-      min-width: calc(33.33% - 14rpx);
-    }
-  }
-}
-
-.switch-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20rpx 32rpx;
-  font-size: 28rpx;
-  font-weight: 500;
-  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
-  border-radius: 12rpx;
-  border: 2rpx solid #e8eaed;
-  color: #666;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-  text-align: center;
-  min-width: 120rpx;
-  
-  &:active {
-    transform: scale(0.96);
-    background: #f0f2f5;
-  }
-  
-  &.btn-active {
-    background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
-    border-color: #6699ff;
-    color: #ffffff;
-    box-shadow: 0 8rpx 24rpx rgba(102, 153, 255, 0.4);
-    transform: translateY(-2rpx);
-    
-    &:active {
-      background: linear-gradient(135deg, #5588ee 0%, #3377ea 100%);
-      box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
-      transform: translateY(0);
-    }
-  }
-  
-  &.charge.btn-active {
-    background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
-    border-color: #00d4aa;
-    box-shadow: 0 8rpx 24rpx rgba(0, 212, 170, 0.4);
-  }
-  
-  &.discharge.btn-active {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
-    border-color: #ff6b6b;
-    box-shadow: 0 8rpx 24rpx rgba(255, 107, 107, 0.4);
-  }
 }
 
 // 参数行样式
 .param-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 20rpx;
-  padding: 32rpx 24rpx;
-  border-bottom: 1rpx solid #f5f5f5;
-  
-  &:last-child {
-    border-bottom: none;
-  }
+  justify-content: space-between;
+  padding: 20rpx 0;
 }
 
 .param-info {
-  flex: 0 0 auto;
-  width: 40%;
   display: flex;
   flex-direction: column;
-  gap: 10rpx;
+  gap: 8rpx;
 }
 
 .param-name {
-  font-size: 30rpx;
-  color: #2c3e50;
+  font-size: 28rpx;
+  color: $text-dark;
   font-weight: 500;
-  line-height: 1.4;
+}
+
+.param-value {
+  font-size: 24rpx;
+  color: $text-gray;
 }
 
 .param-range {
-  font-size: 24rpx;
-  color: #999;
+  font-size: 22rpx;
+  color: $text-gray;
   background: #f5f7fa;
-  padding: 6rpx 12rpx;
+  padding: 4rpx 10rpx;
   border-radius: 6rpx;
-  display: inline-block;
   width: fit-content;
 }
 
 .param-right-wrapper {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 20rpx;
-  flex: 1;
-  min-width: 320rpx;
+}
+
+.switch-btns-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10rpx 0;
+}
+
+.switch-btns {
+  display: flex;
+  gap: 12rpx;
+}
+
+.switch-btn {
+  padding: 12rpx 20rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  background: #ffffff;
+  border-radius: 8rpx;
+  border: 2rpx solid #e8eaed;
+  color: #666;
+  transition: all 0.3s;
+  white-space: nowrap;
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &.btn-active {
+    background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
+    border-color: #6699ff;
+    color: #ffffff;
+    box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
+  }
 }
 
 .param-right {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 10rpx;
 }
 
 .param-value-box {
-  width: 180rpx;
-  height: 72rpx;
-  line-height: 72rpx;
-  background: linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%);
-  border-radius: 12rpx;
-  text-align: center;
-  border: 2rpx solid #e8eaed;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
+  width: 140rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border: 1rpx solid #e8eaed;
+  border-radius: 8rpx;
+  transition: all 0.3s;
+
   &.editing {
     background: #ffffff;
-    border-color: #6699ff;
-    box-shadow: 0 0 0 6rpx rgba(102, 153, 255, 0.12), 0 4rpx 16rpx rgba(102, 153, 255, 0.15);
-    transform: translateY(-2rpx);
+    border-color: $main-color;
+    box-shadow: 0 0 0 4rpx rgba(64, 128, 240, 0.1);
   }
+}
+
+.val-text {
+  font-size: 26rpx;
+  color: $text-dark;
 }
 
 .val-input {
   width: 100%;
   height: 100%;
-  font-size: 32rpx;
-  font-weight: 600;
+  font-size: 26rpx;
   text-align: center;
   background: transparent;
   border: none;
-  color: #2c3e50;
-  
-  &:focus {
-    outline: none;
-  }
+  color: $text-dark;
 }
 
 .unit-text {
-  font-size: 28rpx;
+  font-size: 24rpx;
   color: #666;
-  min-width: 70rpx;
-  text-align: left;
-  font-weight: 500;
+}
+
+// 按钮样式
+.btn-group {
+  display: flex;
+  gap: 12rpx;
+}
+
+.btn-group.vertical {
+  flex-direction: column;
+  flex-shrink: 0;
 }
 
 .btn {
-  padding: 16rpx 28rpx;
-  font-size: 28rpx;
-  font-weight: 500;
-  border-radius: 12rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8rpx;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 6rpx;
+  padding: 12rpx 20rpx;
+  font-size: 24rpx;
+  border-radius: 8rpx;
+  transition: all 0.3s;
+  white-space: nowrap;
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.btn-edit {
+  color: $main-color;
+  background: rgba(64, 128, 240, 0.1);
 }
 
 .btn-sure {
   color: #ffffff;
   background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
-  box-shadow: 0 8rpx 24rpx rgba(102, 153, 255, 0.4);
-  min-width: 120rpx;
-  
-  &:active {
-    transform: scale(0.96);
-    box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
+  box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
+
+  &.btn-loading {
+    opacity: 0.7;
   }
 }
 
-.btn-submit {
-  color: #ffffff;
-  background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
-  box-shadow: 0 8rpx 24rpx rgba(0, 212, 170, 0.4);
-  min-width: 280rpx;
-  height: 88rpx;
-  font-size: 32rpx;
-  font-weight: 600;
-  
+.btn-cancel {
+  color: #666;
+  background: #f5f7fa;
+}
+
+// 加载动画
+.loading-spinner {
+  width: 24rpx;
+  height: 24rpx;
+  border: 3rpx solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+
+  &.small {
+    width: 20rpx;
+    height: 20rpx;
+    border-width: 2rpx;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 模式选择器
+.mode-selector {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+}
+
+.action-btns {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 20rpx;
+
+  .btn {
+    flex: 1;
+  }
+}
+
+// 卡片头部
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+}
+
+.edit-btn {
+  padding: 12rpx 28rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  transition: all 0.2s ease;
+
+  &.primary {
+    background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
+    color: #ffffff;
+    box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
+
+    &:active {
+      transform: scale(0.95);
+      box-shadow: 0 2rpx 6rpx rgba(102, 153, 255, 0.2);
+    }
+  }
+
+  &.close {
+    background: #f5f5f5;
+    color: #666;
+    border: 1rpx solid #e0e0e0;
+
+    &:active {
+      background: #e8e8e8;
+    }
+  }
+}
+
+.edit-text {
+  font-size: 26rpx;
+}
+
+.btn-group {
+  display: flex;
+  gap: 20rpx;
+  padding: 12rpx 32rpx;
+
+  &.triple {
+    &>.control-btn {
+      flex: 1;
+      min-width: calc(33.33% - 14rpx);
+    }
+  }
+}
+
+.control-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  background: #ffffff;
+  border-radius: 12rpx;
+  border: 2rpx solid #e8eaed;
+  color: #333;
+  transition: all 0.3s;
+  white-space: nowrap;
+
   &:active {
     transform: scale(0.96);
-    box-shadow: 0 4rpx 12rpx rgba(0, 212, 170, 0.3);
   }
+
+  &.active {
+    background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
+    border-color: #6699ff;
+    color: #ffffff;
+    box-shadow: 0 8rpx 24rpx rgba(102, 153, 255, 0.4);
+  }
+
+  &.btn-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+.power-setting {
+  padding: 10rpx 0;
+}
+
+.power-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 0;
+
+  &:not(:last-child) {
+    border-bottom: 1rpx dashed #f0f0f0;
+  }
+}
+
+.power-label-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.power-label {
+  font-size: 28rpx;
+  color: $text-dark;
+  font-weight: 500;
+}
+
+.power-range {
+  font-size: 22rpx;
+  color: $text-gray;
+  background: #f5f7fa;
+  padding: 4rpx 10rpx;
+  border-radius: 6rpx;
+  width: fit-content;
+}
+
+.power-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.power-input {
+  width: 160rpx;
+  height: 64rpx;
+  font-size: 28rpx;
+  text-align: center;
+  background: #f8f9fa;
+  border: 1rpx solid #e8eaed;
+  border-radius: 8rpx;
+}
+
+.power-unit {
+  font-size: 26rpx;
+  color: #666;
 }
 
 .submit-wrapper {
@@ -752,6 +1012,25 @@ export default {
   justify-content: center;
   padding: 24rpx;
   border-top: 1rpx solid #f5f5f5;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
+  border-radius: 44rpx;
+  box-shadow: 0 8rpx 24rpx rgba(102, 153, 255, 0.4);
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
+  }
 }
 
 input::placeholder {

@@ -259,3 +259,15 @@ export const bindEsUserByQrId = (qrId, esUserId) => {
 		}
 	})
 }
+
+// 删除设备
+export const deleteEsUser = (data) => {
+	return request({
+		url: `/api/Homecommunity/deleteEsUser`,
+		method: 'POST',
+		data: data,
+		header: {
+			'Content-Type': 'application/json'
+		}
+	})
+}

@@ -37,6 +37,7 @@ import PvManagement from './components/pv-management.vue'
 import EnergyStorage from './components/energy-storage.vue'
 import LoadManagement from './components/load-management.vue'
 import GridManagement from './components/grid-management.vue'
+import { realtimeDataProvider } from '@/service/websocket'
 
 export default {
   components: {
@@ -50,6 +51,13 @@ export default {
     return {
       currentTab: 0,
       tabList: ['架构图', '光伏', '储能', '电网', '负荷'],
+      device171FList: [], // 171F设备列表
+      device171FRegistered: false, // 是否已注册
+    };
+  },
+  provide() {
+    return {
+      get171FDeviceList: this.get171FDeviceList
     };
   },
   computed: {
@@ -59,6 +67,51 @@ export default {
     }
   },
   methods: {
+    register171FDevice() {
+      // if (this.device171FRegistered) {
+      //   console.log('171F设备已注册，跳过', this.device171FList);
+      //   this.device171FList = realtimeDataProvider.getDeviceList();
+      //   return this.device171FList;
+      // }
+
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+      console.log('注册171F设备:', currentDevice);
+
+      let address = '';
+      let barCode = '';
+
+      if (currentDevice.list && Array.isArray(currentDevice.list)) {
+        const foundDevice = currentDevice.list.find(item =>
+          item.typeCode === '171F' || item.deviceType === '171F' || item.description?.includes('171F')
+        );
+        if (foundDevice) {
+          address = foundDevice.address || address;
+          barCode = foundDevice.barCode || foundDevice.homeBarCode || barCode;
+          console.log('找到171F设备:', foundDevice);
+        }
+      }
+
+      const deviceConfig = {
+        deviceType: '171F',
+        typeCode: '171F',
+        address: address,
+        barCode: barCode,
+        deviceId: '171F001',
+        name: 'DCDC设备171F'
+      };
+      console.log('注册171F设备:', deviceConfig);
+      realtimeDataProvider.initDeviceList([deviceConfig]);
+      this.device171FList = realtimeDataProvider.getDeviceList();
+      this.device171FRegistered = true;
+      console.log('171F设备注册完成:', this.device171FList);
+      return this.device171FList;
+    },
+    get171FDeviceList() {
+      if (!this.device171FRegistered) {
+        return this.register171FDevice();
+      }
+      return this.device171FList;
+    },
     switchTab(tab) {
       if (tab !== this.currentTab) {
         this.currentTab = tab;
@@ -86,9 +139,9 @@ export default {
           'loadManagement',
           'gridManagement'
         ];
-        
+
         const currentComponent = this.$refs[currentComponentRefs[this.currentTab]];
-        
+
         if (currentComponent && currentComponent.refresh) {
           currentComponent.refresh();
         } else {
@@ -107,6 +160,8 @@ export default {
 
   },
   mounted() {
+    // 注册171F设备（只注册一次）
+    this.register171FDevice();
     // 监听屏幕旋转事件
     uni.onWindowResize(this.onOrientationChange);
   },
