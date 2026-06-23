@@ -83,7 +83,7 @@
 import {
   getSocketinstance
 } from "@/service/websocket";
-import { queryDayGeneratedPower } from '../../api/power'
+import { queryDayGeneratedPower, getPowerData } from '../../api/power'
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 const commonArcbarOptions = {
   padding: [15, 15, 0, 15],
@@ -148,7 +148,7 @@ export default {
       },
       loadChartData: {
         categories: [],
-        series: [{ name: '空调总负荷功率', data: [] }]
+        series: [{ name: '总功率', data: [] }]
       },
       opts: {},
       softChartOptions: { ...commonArcbarOptions, title: { name: `--%`, fontSize: 12 }, subtitle: { name: '系统柔度', fontSize: 12 }, color: ['#1890FF', '#36CFC9'] },
@@ -200,20 +200,20 @@ export default {
       const currentDevice = this.$store.state.currentSelectDevice || {};
       const esId = currentDevice.esId || currentDevice.id;
       const areaLevelIds = currentDevice.areaLevelId || this.$store.state.areaInfoId;
-      const result = await queryDayGeneratedPower({
+      const result = await getPowerData({
         esId: esId,
         date: this.selectedDate,
         areaLevelIds: areaLevelIds
       });
-      if (result && result.data) {
+      if (result && result.data && Array.isArray(result.data)) {
         const data = result.data;
-        if (data.list && data.list.length > 0) {
-          this.loadChartData.categories = data.list.map(item => {
-            const time = item.time || item.datetime || '';
+        if (data.length > 0) {
+          this.loadChartData.categories = data.map(item => {
+            const time = item.dateTime || '';
             return time.substring(11, 16) || time;
           });
-          this.loadChartData.series[0].data = data.list.map(item => {
-            return Number(item.value || item.power || 0);
+          this.loadChartData.series[0].data = data.map(item => {
+            return Number(item.loadPower || 0);
           });
         } else {
           this.loadChartData.categories = [];

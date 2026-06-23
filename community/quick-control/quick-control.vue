@@ -301,7 +301,7 @@ export default {
         title: 'PCS开关机',
         content: `确定要执行PCS${actionText}操作吗？`,
         apiSufix: 'pcsControl',
-        commandBuilder: () => this.buildCommand('100', action === 'start' ? '1' : '2'),
+        commandBuilder: () => this.buildCommand('108', action === 'start' ? '1' : '2'),
         action,
         stateKey: 'selectedPcsAction',
         successMsg: `PCS${actionText}成功`,
@@ -322,7 +322,7 @@ export default {
         title: '光伏DC控制',
         content: `确定要执行光伏DC${actionText}操作吗？`,
         apiSufix: 'pvDcControl',
-        commandBuilder: () => this.buildCommand('102', action === 'start' ? '1' : '2'),
+        commandBuilder: () => this.buildCommand('110', action === 'start' ? '1' : '2'),
         action,
         stateKey: 'selectedPvDcAction',
         successMsg: `光伏DC${actionText}成功`,
@@ -343,7 +343,7 @@ export default {
         title: '储能DC一键控制',
         content: `确定要执行储能DC${actionText}操作吗？`,
         apiSufix: 'storageDcControl',
-        commandBuilder: () => this.buildCommand('104', action === 'start' ? '1' : '2'),
+        commandBuilder: () => this.buildCommand('100', action === 'start' ? '1' : '2'),
         action,
         stateKey: 'selectedStorageDcAction',
         successMsg: `储能DC${actionText}成功`,
@@ -378,7 +378,7 @@ export default {
           typeCode: this.deviceConfig.typeCode,
           address: this.deviceConfig.address,
           userId: this.userId,
-          commands: this.buildCommand('106', modeMap[mode] || '0')
+          commands: this.buildCommand('102', modeMap[mode] || '0')
         });
         this.selectedPcsMode = mode;
         uni.showToast({
@@ -480,7 +480,7 @@ export default {
           typeCode: this.deviceConfig.typeCode,
           address: this.deviceConfig.address,
           userId: this.userId,
-          commands: this.buildCommand('108', this.tempChargePower * 10)
+          commands: this.buildCommand('104', this.tempChargePower * 10)
         });
         this.chargePower = this.tempChargePower;
         this.editingChargePower = false;
@@ -566,7 +566,7 @@ export default {
           typeCode: this.deviceConfig.typeCode,
           address: this.deviceConfig.address,
           userId: this.userId,
-          commands: this.buildCommand('10A', this.tempDischargePower * 10)
+          commands: this.buildCommand('106', this.tempDischargePower * 10)
         });
         this.dischargePower = this.tempDischargePower;
         this.editingDischargePower = false;

@@ -215,8 +215,8 @@ export class Model171C extends DeviceBase {
 		this.energyData.B162.value = jsonData.B162;
 		this.energyData.B164.value = jsonData.B164;
 		this.energyData.B166.value = jsonData.B166;
-		this.energyData.B168.value = (jsonData.B168 / 1000);
-		this.energyData.B170.value = (jsonData.B170 / 1000);
+		this.energyData.B168.value = (jsonData.B168);
+		this.energyData.B170.value = (jsonData.B170);
 		this.energyData.B172.value = jsonData.B172;
 		this.energyData.B174.value = jsonData.B174;
 		this.energyData.B176.value = jsonData.B176;

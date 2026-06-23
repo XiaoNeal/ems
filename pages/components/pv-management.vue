@@ -77,8 +77,17 @@
             <dy-date timeType="day" @getData="onPowerDateChange" v-model="powerDate" class="compact-date-picker" />
           </view>
           <view class="chart-body">
-            <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
-              :canvas2d="canvas2d" class="power-chart" :canvas-id="chartId + '-power'" />
+            <view v-if="powerCurveLoading" class="chart-loading">
+              <view class="loading-spinner"></view>
+              <text class="loading-text">加载中...</text>
+            </view>
+            <view v-else-if="powerCurveSeries.length > 0" class="chart-loaded">
+              <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
+                :canvas2d="canvas2d" class="power-chart" :canvas-id="chartId + '-power'" />
+            </view>
+            <view v-else class="chart-empty">
+              <text class="empty-text">暂无数据</text>
+            </view>
           </view>
         </view>
 
@@ -109,8 +118,17 @@
               class="custom-picker date-picker" />
           </view>
           <view class="chart-body">
-            <qiun-data-charts type="column" :chartData="generationData" :opts="generationOptions" :ontouch="true"
-              :canvas2d="canvas2d" class="generation-chart" :canvas-id="chartId + '-generation'" />
+            <view v-if="generationLoading"  class="chart-loading">
+              <view class="loading-spinner"></view>
+              <text class="loading-text">加载中...</text>
+            </view>
+            <view v-else-if="generationSeries.length > 0" class="chart-loaded">
+              <qiun-data-charts type="column" :chartData="generationData" :opts="generationOptions" :ontouch="true"
+                :canvas2d="canvas2d" class="generation-chart" :canvas-id="chartId + '-generation'" />
+            </view>
+            <view v-else class="chart-empty">
+              <text class="empty-text">暂无数据</text>
+            </view>
           </view>
         </view>
       </view>
@@ -157,22 +175,28 @@ export default {
       fullScreenType: '', // 当前全屏的图表类型 'power' | 'generation'
 
       powerCurveSeries: [],
+      powerCurveCategories: [],
       generationSeries: [],
       generationCategories: [],
-      deviceList: []
+      powerCurveLoading: false,
+      generationLoading: false,
+      deviceList: [],
+      device171F: null
     };
   },
-
+  watch: {
+    '$store.state.currentSelectDevice': {
+      handler() {
+        this.updateDevice171F()
+      },
+      immediate: true,
+      deep: true
+    }
+  },
   computed: {
-
-    device171F() {
-      this.deviceList = realtimeDataProvider.getDeviceList()
-      let device = this.deviceList.find(item => item && item.deviceType === '171F');
-      return device;
-    },
     powerCurveData() {
       return {
-        categories: this.powerCurveSeries.length > 0 ? ['1时', '3时', '5时', '7时', '9时', '11时', '13时', '15时', '17时', '19时', '21时', '23时'] : [],
+        categories: this.powerCurveCategories.length > 0 ? this.powerCurveCategories : [],
         series: [{ data: this.powerCurveSeries.length > 0 ? this.powerCurveSeries : [], name: '发电功率' }]
       }
     },
@@ -199,7 +223,7 @@ export default {
         dataLabel: false,
         dataPointShape: false,
         color: ["#6DE188"],
-        xAxis: { labelCount: 8, disableGrid: true },
+        xAxis: { labelCount: 6, disableGrid: true },
         yAxis: { gridType: "dash",
         showTitle: true,
          data: [{ position: "left", title: "单位:kWh" }] },
@@ -216,6 +240,10 @@ export default {
 
 
   methods: {
+    updateDevice171F() {
+      this.deviceList = realtimeDataProvider.getDeviceList()
+      this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
+    },
     init171FDevice() {
       this.deviceList = this.get171FDeviceList();
 
@@ -253,6 +281,7 @@ export default {
     },
 
     getDayGeneratedPower() {
+      this.powerCurveLoading = true;
       const currentDevice = this.$store.state.currentSelectDevice || {};
       const params = {
         esId: currentDevice.id || 28,
@@ -260,37 +289,41 @@ export default {
         areaLevelIds: currentDevice.areaLevelId || 991
       };
       getPowerData(params).then((res) => {
-        if (!res.data || res.data.length === 0) {
-          this.powerCurveSeries = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-          return;
-        }
-
-        const dataList = res.data;
-        const hourlyData = [];
-
-        // 按每2小时聚合数据（0-23小时，每2小时取一个点）
-        for (let i = 0; i < 24; i += 2) {
-          // 找到该小时范围内的数据
-          const hourData = dataList.filter(item => {
-            const time = item.dateTime || '';
-            const hour = parseInt(time.substring(11, 13)) || 0;
-            return hour >= i && hour < i + 2;
-          });
-
-          if (hourData.length > 0) {
-            // 计算平均值
-            const avgValue = hourData.reduce((sum, item) => sum + (parseFloat(item.generatedPower || 0)), 0) / hourData.length;
-            hourlyData.push(parseFloat(avgValue.toFixed(2)));
+        setTimeout(() => {
+          if (!res.data || res.data.length === 0) {
+            this.powerCurveSeries = [];
+            this.powerCurveCategories = [];
           } else {
-            hourlyData.push(0);
-          }
-        }
+            const dataList = res.data;
+            const series = [];
+            const categories = [];
 
-        this.powerCurveSeries = hourlyData;
+            // 直接使用原始数据
+            dataList.forEach(item => {
+              const dateTime = item.dateTime || '';
+              const timeStr = dateTime.substring(11, 16);
+              categories.push(timeStr);
+
+              const generatedPower = parseFloat(item.generatedPower);
+              series.push(isNaN(generatedPower) ? 0 : parseFloat(generatedPower.toFixed(2)));
+            });
+
+            this.powerCurveSeries = series;
+            this.powerCurveCategories = categories;
+          }
+          this.powerCurveLoading = false;
+        }, 2000); // 2秒后显示结果
+      }).catch(() => {
+        setTimeout(() => {
+          this.powerCurveSeries = [];
+          this.powerCurveCategories = [];
+          this.powerCurveLoading = false;
+        }, 2000);
       });
     },
 
     getElectricityStatistic() {
+      this.generationLoading = true;
       if (this.timeTypeIndex === 0) {
         this.getDayElectricityStatistic();
       } else if (this.timeTypeIndex === 1) {
@@ -310,12 +343,21 @@ export default {
         date: this.selectedDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        const dataList = res.data || [];
-        console.log(dataList, 'dataList');
-        
-        const sortedData = dataList.sort((a, b) => a.hour - b.hour);
-        this.generationSeries = sortedData.map(item => parseFloat(item.photovoltaicPower) || 0);
-        this.generationCategories = sortedData.map(item => `${item.hour + 1}时`);
+        setTimeout(() => {
+          const dataList = res.data || [];
+          console.log(dataList, 'dataList');
+          
+          const sortedData = dataList.sort((a, b) => a.hour - b.hour);
+          this.generationSeries = sortedData.map(item => parseFloat(item.photovoltaicPower) || 0);
+          this.generationCategories = sortedData.map(item => `${item.hour}时`);
+          this.generationLoading = false;
+        }, 2000);
+      }).catch(() => {
+        setTimeout(() => {
+          this.generationSeries = [];
+          this.generationCategories = [];
+          this.generationLoading = false;
+        }, 2000);
       });
     },
 
@@ -336,13 +378,22 @@ export default {
         endDate: endDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        const dataList = res.data || [];
-        
-        this.generationSeries = dataList.map(item => parseFloat(item.photovoltaicPower) || 0);
-        this.generationCategories = dataList.map(item => {
-          const day = parseInt(item.date?.split('-')[2]) || item.day || 0;
-          return day > 0 ? `${day}日` : `${dataList.indexOf(item) + 1}日`;
-        });
+        setTimeout(() => {
+          const dataList = res.data || [];
+          
+          this.generationSeries = dataList.map(item => parseFloat(item.photovoltaicPower) || 0);
+          this.generationCategories = dataList.map(item => {
+            const day = parseInt(item.date?.split('-')[2]) || item.day || 0;
+            return day > 0 ? `${day}日` : `${dataList.indexOf(item) + 1}日`;
+          });
+          this.generationLoading = false;
+        }, 2000);
+      }).catch(() => {
+        setTimeout(() => {
+          this.generationSeries = [];
+          this.generationCategories = [];
+          this.generationLoading = false;
+        }, 2000);
       });
     },
 
@@ -359,13 +410,22 @@ export default {
         year: year,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        const dataList = res.data || [];
-        
-        this.generationSeries = dataList.map(item => parseFloat(item.photovoltaicPower) || 0);
-        this.generationCategories = dataList.map(item => {
-          const month = parseInt(item.date?.split('-')[1]) || item.month || 0;
-          return month > 0 ? `${month}月` : `${dataList.indexOf(item) + 1}月`;
-        });
+        setTimeout(() => {
+          const dataList = res.data || [];
+          
+          this.generationSeries = dataList.map(item => parseFloat(item.photovoltaicPower) || 0);
+          this.generationCategories = dataList.map(item => {
+            const month = parseInt(item.date?.split('-')[1]) || item.month || 0;
+            return month > 0 ? `${month}月` : `${dataList.indexOf(item) + 1}月`;
+          });
+          this.generationLoading = false;
+        }, 2000);
+      }).catch(() => {
+        setTimeout(() => {
+          this.generationSeries = [];
+          this.generationCategories = [];
+          this.generationLoading = false;
+        }, 2000);
       });
     },
 
@@ -712,6 +772,75 @@ export default {
 
 .chart-body {
   margin-top: 10rpx;
+  position: relative;
+  height: 450rpx;
+}
+
+.chart-loading {
+  width: 100%;
+  height: 450rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #e0e0e0;
+  border-top-color: #4488FB;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.loading-text {
+  color: #999;
+  font-size: 28rpx;
+  margin-top: 16rpx;
+}
+
+.chart-loaded {
+  width: 100%;
+  height: 450rpx;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.chart-empty {
+  width: 100%;
+  height: 450rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.empty-text {
+  color: #999;
+  font-size: 28rpx;
 }
 
 .power-chart,

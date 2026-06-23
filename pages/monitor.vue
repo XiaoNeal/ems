@@ -68,11 +68,12 @@ export default {
   },
   methods: {
     register171FDevice() {
-      // if (this.device171FRegistered) {
-      //   console.log('171F设备已注册，跳过', this.device171FList);
-      //   this.device171FList = realtimeDataProvider.getDeviceList();
-      //   return this.device171FList;
-      // }
+      return;
+      if (this.device171FRegistered) {
+        console.log('171F设备已注册，跳过', this.device171FList);
+        this.device171FList = realtimeDataProvider.getDeviceList();
+        return this.device171FList;
+      }
 
       const currentDevice = this.$store.state.currentSelectDevice || {};
       console.log('注册171F设备:', currentDevice);
@@ -161,7 +162,7 @@ export default {
   },
   mounted() {
     // 注册171F设备（只注册一次）
-    this.register171FDevice();
+    // this.register171FDevice();
     // 监听屏幕旋转事件
     uni.onWindowResize(this.onOrientationChange);
   },

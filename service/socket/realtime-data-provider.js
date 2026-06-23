@@ -40,9 +40,11 @@ export class RealtimeDataProviderService {
 	// IEMS_1702State_
 
 	initDeviceList(deviceList) {
-		this.deviceList = [];
+		// this.deviceList = [];
+
+
 		// 清空store中的设备状态
-		store.commit('CLEAR_DEVICE_STATE');
+		// store.commit('CLEAR_DEVICE_STATE');
 		// this.barCode = new Set()
 		for (let i = 0; deviceList && i < deviceList.length; i++) {
 			let barCode = deviceList[i].barCode || deviceList[i].barcode

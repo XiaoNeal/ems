@@ -19,15 +19,27 @@
           <text class="start-text">{{ getSystemStatus() }}</text>
         </view>
       </view>
+
+
+      <view
+        style=" position:absolute;top:41%;left:36%;background: #fff;width:50px;height:100px;z-index: 1000;opacity: 0.5;">
+      </view>
+      <view
+        style=" position:absolute;top:41%;left:66%;background: #fff;width:50px;height:100px;z-index: 1000;opacity: 0.5;">
+      </view>
+      <view
+        style=" position:absolute;top:41%;left:81%;background: #fff;width:50px;height:100px;z-index: 1000;opacity: 0.5;">
+      </view>
+
+
       <image src="/static/images/system-architecture-new.png"
         style="width:100%; height:96%; position: absolute; top:0; left:0; z-index: 1;padding: 20rpx;"></image>
       <!-- 光伏 -->
       <view class="device-label-top-left">
         <text class="device-name">光伏</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B0 &&
-            device171F.energyData.B0.value != '--' ?
-            device171F.energyData.B0.value : '--' }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B0 ?
+            this.formatValue(device171F.energyData.B0.value, 2) : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
@@ -35,9 +47,8 @@
       <view class="device-label-top-right">
         <text class="device-name">电网</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B4 &&
-            device171F.energyData.B4.value != '--' ?
-            device171F.energyData.B4.value : '--' }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B4 ?
+            this.formatValue(device171F.energyData.B4.value, 2) : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
@@ -46,9 +57,8 @@
       <view class="device-label" style="left:36%;top: 31%;">
         <!-- <text class="device-name">交流负荷</text> -->
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B14 &&
-            device171F.energyData.B14.value != '--' ?
-            parseFloat(device171F.energyData.B14.value).toFixed(2) : '--' }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B14 ?
+            this.formatValue(device171F.energyData.B14.value, 2) : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
@@ -56,9 +66,8 @@
       <view class="device-label" style="left: 3%;top: 75%">
         <text class="device-name">交流负荷</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B68 &&
-            device171F.energyData.B68.value != '--' ?
-            parseFloat(device171F.energyData.B68.value).toFixed(2) : '--' }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B68 ?
+            this.formatValue(device171F.energyData.B68.value, 2) : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
       </view>
@@ -66,62 +75,51 @@
         <text class="device-name">储能</text>
         <view class="power-row">
           <text class="device-power">
-            <text
-              v-if="device171F && device171F.energyData && device171F.energyData.B60 && device171F.energyData.B60.value != '--'">
+            <text v-if="device171F && device171F.energyData && device171F.energyData.B60">
               {{ parseFloat(device171F.energyData.B60.value) > 0 ? '充电' : (parseFloat(device171F.energyData.B60.value) <
-                0 ? '放电' : '静置' ) }} </text>
-                <text
-                  v-if="device171F && device171F.energyData && device171F.energyData.B60 && device171F.energyData.B60.value != '--'">
+                0 ? '放电' : '静置') }} </text>
+                <text v-if="device171F && device171F.energyData && device171F.energyData.B60">
                   {{ ' ' }}
                 </text>
-                {{ device171F && device171F.energyData && device171F.energyData.B8 &&
-                  device171F.energyData.B8.value != '--' ?
-                  parseFloat(device171F.energyData.B8.value).toFixed(2) : '--' }}</text>
+                {{ device171F && device171F.energyData && device171F.energyData.B8 ?
+                  this.formatValue(device171F.energyData.B8.value, 2) : '--' }}</text>
             <text class="power-unit">kW</text>
         </view>
-        <text class="device-soc">{{ device171F && device171F.energyData && device171F.energyData.B128 &&
-          device171F.energyData.B128.value != '--' ?
-          device171F.energyData.B128.value : '--' }}%</text>
+        <text class="device-soc">{{ device171F && device171F.energyData && device171F.energyData.B128 ?
+          this.formatValue(device171F.energyData.B128.value, 2) : '--' }}%</text>
       </view>
-      <view class="device-label" style="left: 38%;top: 78%">
+      <!-- <view class="device-label" style="left: 38%;top: 78%">
         <text class="device-name">空调</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B18 &&
-            device171F.energyData.B18.value != '--' ?
-            device171F.energyData.B18.value : '--' }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B18 ?
+            this.formatValue(device171F.energyData.B18.value, 2) : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
-      </view>
-      <view class="device-label" style="left: 47%;top: 78%">
+      </view> -->
+      <!-- <view class="device-label" style="left: 47%;top: 78%">
         <text class="device-name">柔性直流充电桩</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B26 &&
-            device171F.energyData.B26.value != '--' ?
-            device171F.energyData.B26.value : '--' }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B26 ?
+            this.formatValue(device171F.energyData.B26.value, 2) : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
-      </view>
-      <view class="device-label" style="left: 70%;top: 78%">
+      </view> -->
+      <!-- <view class="device-label" style="left: 70%;top: 78%">
         <text class="device-name">照明</text>
         <view class="power-row">
-          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B30 &&
-            device171F.energyData.B30.value != '--' ?
-            device171F.energyData.B30.value : '--' }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B30 ?
+            this.formatValue(device171F.energyData.B30.value, 2) : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
-      </view>
-      <view class="device-label" style="left: 83%;top: 78%">
+      </view> -->
+      <!-- <view class="device-label" style="left: 83%;top: 78%">
         <text class="device-name">其他负荷</text>
         <view class="power-row">
-          <!-- <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B22 &&
-            device171F.energyData.B22.value != '--' ?
-            device171F.energyData.B22.value : '--' }}</text> -->
-              <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B14 &&
-            device171F.energyData.B14.value != '--' ?
-            parseFloat(device171F.energyData.B14.value).toFixed(2) : '--' }}</text>
+          <text class="device-power">{{ device171F && device171F.energyData && device171F.energyData.B14 ?
+            this.formatValue(device171F.energyData.B14.value, 2) : '--' }}</text>
           <text class="power-unit">kW</text>
         </view>
-      </view>
+      </view> -->
     </view>
 
     <!-- 数据卡片 -->
@@ -133,9 +131,8 @@
             <text class="card-title">今日发电</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B34 &&
-              device171F.energyData.B34.value != '--' ?
-              device171F.energyData.B34.value : '--' }} </text>
+            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B34 ?
+              this.formatValue(device171F.energyData.B34.value, 2) : '--' }} </text>
             <text class="card-unit"> kWh</text>
           </view>
         </view>
@@ -146,9 +143,8 @@
             <text class="card-title">今日用电</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B38 &&
-              device171F.energyData.B38.value != '--' ?
-              device171F.energyData.B38.value : '--' }} </text>
+            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B38 ?
+              this.formatValue(device171F.energyData.B38.value, 2) : '--' }} </text>
             <text class="card-unit"> kWh</text>
           </view>
         </view>
@@ -161,9 +157,8 @@
             <text class="card-title">储能剩余</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B128 &&
-              device171F.energyData.B128.value != '--' ?
-              device171F.energyData.B128.value : '--' }}</text>
+            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B128 ?
+              this.formatValue(device171F.energyData.B128.value, 2) : '--' }}</text>
             <text class="card-unit">%</text>
           </view>
         </view>
@@ -174,9 +169,8 @@
             <text class="card-title">电网供电</text>
           </view>
           <view class="card-item">
-            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B42 &&
-              device171F.energyData.B42.value != '--' ?
-              device171F.energyData.B42.value : '--' }} </text>
+            <text class="card-value">{{ device171F && device171F.energyData && device171F.energyData.B42 ?
+              this.formatValue(device171F.energyData.B42.value, 2) : '--' }} </text>
             <text class="card-unit"> kWh</text>
           </view>
         </view>
@@ -208,11 +202,12 @@
       </view>
       <view class="chart-card" :style="chartCardStyle">
         <view v-if="electricityLoading" class="loading-chart">
+          <view class="loading-spinner"></view>
           <text class="loading-text">加载中...</text>
         </view>
-        <qiun-data-charts v-else-if="electricityData.categories && electricityData.categories.length > 0" type="area"
-          :chartData="electricityData" :ontouch="true" :canvas2d="canvas2d" :opts="electricityOpts"
-          :canvasId="chartId + '-energy'" />
+        <qiun-data-charts v-else-if="electricityData.categories && electricityData.categories.length > 0"
+          :type="electricityChartType" :chartData="electricityData" :ontouch="true" :canvas2d="canvas2d"
+          :opts="electricityOpts" :canvasId="chartId + '-energy'" />
         <view v-else class="empty-chart">
           <text class="empty-text">暂无能源数据</text>
         </view>
@@ -326,7 +321,7 @@ export default {
       nyzData: { SOC: "--" },
       // 设备配置参数
       deviceConfig: {
-        idCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
+        idCode: '',
         typeCode: '3401',
         address: '01'
       },
@@ -352,8 +347,9 @@ export default {
           gridType: "dash",
           dashLength: 2,
           showTitle: true,
+          fontSize: 10,
           // tofix: 0,
-          data: [{ title: "单位:kW" }],
+          data: [{ title: "功率(kW)" }],
           // title: "kW"
         },
         extra: {
@@ -377,7 +373,18 @@ export default {
       isFullScreen: false,
       statusBarHeight: 93, // 默认状态栏高度
       navBarHeight: 44, // 导航栏高度
-      topSafeArea: 0 // 顶部安全区域总高度
+      topSafeArea: 0, // 顶部安全区域总高度
+      device171F: null
+    }
+  },
+  watch: {
+    '$store.state.currentSelectDevice': {
+      handler() {
+        console.log('currentSelectDevice111111111', this.$store.state.currentSelectDevice)
+        this.updateDevice171F()
+      },
+      immediate: true,
+      deep: true
     }
   },
   computed: {
@@ -408,12 +415,13 @@ export default {
       }
       return '';
     },
-    device171F() {
-      this.deviceList = realtimeDataProvider.getDeviceList()
-      return this.deviceList.find(item => item && item.deviceType === '171F');
-    },
+
     userId() {
       return this.$store.state.userInfo?.userId || 0
+    },
+    electricityChartType() {
+      // 月和年数据用柱状图，小时数据用面积图
+      return this.type === 'hour' ? 'area' : 'column';
     }
   },
   onLoad() {
@@ -424,11 +432,23 @@ export default {
   },
   mounted() {
     // realtimeDataProvider.createScoket(uni.getStorageSync('currentTemplate'), uni.getStorageSync('urlPrefix'));
-    this.init171FDevice();
+    // this.init171FDevice();
     // this.getSqRealTimeData();
     // this.getNyzRealTimeData();
     this.initPage();
     this.dataInterval = setInterval(() => { this.initPage() }, 1000 * 60 * 5);
+
+    console.log('this.$store.state.currentSelectDevice', this.$store.state.currentSelectDevice)
+    // this.deviceConfig.idCode = this.$store.state.currentSelectDevice.idCode;
+    const currentDevice = this.$store.state.currentSelectDevice || {}
+
+    const deviceControl = currentDevice.list.find(item => item.controlType == 1);
+    console.log('deviceControl', deviceControl,currentDevice)
+    this.deviceConfig.idCode = deviceControl?.homeBarCode || '';
+    // this.deviceConfig.typeCode = deviceControl || '3401';
+    // this.deviceConfig.address = deviceControl?.address || '01';
+
+
 
     // 获取系统信息并设置CSS变量
     const systemInfo = uni.getSystemInfoSync();
@@ -461,12 +481,21 @@ export default {
     // #endif
   },
   methods: {
+    updateDevice171F() {
+      this.deviceList = realtimeDataProvider.getDeviceList()
+      console.log('deviceList架构图', this.deviceList)
+      this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
+    },
+    formatValue(value, decimals = 2) {
+      const num = parseFloat(value);
+      return isNaN(num) ? "--" : num.toFixed(decimals);
+    },
     init171FDevice() {
-     
-      
-      
+
+
+
       this.get171FDeviceList();
-       this.deviceList = realtimeDataProvider.getDeviceList()
+      this.deviceList = realtimeDataProvider.getDeviceList()
       console.log('deviceList--------', this.deviceList);
     },
     handle171FData(jsonData) {
@@ -530,10 +559,10 @@ export default {
       else if (this.type === "day") this.findMonthElectricity();
       else if (this.type === "month") this.findYearEnergyAndIncome();
     },
-    
-   
-  
-   
+
+
+
+
     enumStorageStatus(status) {
       const statusMap = { 0: "初始化", 1: "充电", 2: "放电", 3: "静置" };
       return statusMap[status] || "--";
@@ -554,155 +583,164 @@ export default {
 
       // 调用新接口
       getPowerData(params).then(result => {
-        if (result.data && result.data.length > 0) {
-          const dataList = result.data;
-          const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
-
-          // 按小时聚合数据（0-23小时）
-          for (let h = 0; h < 24; h++) {
-            xAxisData.push(`${h + 1}时`);
-
-            // 找到该小时范围内的数据
-            const hourData = dataList.filter(item => {
+        setTimeout(() => {
+          if (result.data && result.data.length > 0) {
+            const dataList = result.data;
+            const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
+            // console.log('dataList11111111111111', dataList);
+            // 直接使用原始数据，不按小时聚合
+            dataList.forEach(item => {
               const dateTime = item.dateTime || '';
-              const hour = parseInt(dateTime.substring(11, 13)) || 0;
-              return hour === h;
+              const timeStr = dateTime.substring(11, 16);
+              xAxisData.push(timeStr);
+
+              const generatedPower = parseFloat(item.generatedPower || 0);
+              const loadPower = parseFloat(item.loadPower || 0);
+              const storagePower = parseFloat(item.storagePowerReverse || 0);
+
+
+              generationData.push(isNaN(generatedPower) ? 0 : parseFloat(generatedPower.toFixed(2)));
+              loadData.push(isNaN(loadPower) ? 0 : parseFloat(loadPower.toFixed(2)));
+              chargeData.push(isNaN(storagePower) ? 0 : (storagePower >= 0 ? parseFloat(storagePower.toFixed(2)) : 0));
+              dischargeData.push(isNaN(storagePower) ? 0 : (storagePower < 0 ? parseFloat((-storagePower).toFixed(2)) : 0));
             });
+            this.electricityOpts.yAxis.data[0].title = '功率(kW)';
 
-            if (hourData.length > 0) {
-              // 计算平均值
-              const avgGeneration = hourData.reduce((sum, item) => sum + (parseFloat(item.generatedPower || 0)), 0) / hourData.length;
-              const avgLoad = hourData.reduce((sum, item) => sum + (parseFloat(item.loadPower || 0)), 0) / hourData.length;
-              const avgStorage = hourData.reduce((sum, item) => sum + (parseFloat(item.storagePowerReverse || 0)), 0) / hourData.length;
-
-              generationData.push(parseFloat(avgGeneration.toFixed(2)));
-              loadData.push(parseFloat(avgLoad.toFixed(2)));
-              chargeData.push(avgStorage >= 0 ? parseFloat(avgStorage.toFixed(2)) : 0);
-              dischargeData.push(avgStorage < 0 ? parseFloat((-avgStorage).toFixed(2)) : 0);
-            } else {
-              // 该小时无数据，补充0值确保曲线连贯
-              generationData.push(0);
-              loadData.push(0);
-              chargeData.push(0);
-              dischargeData.push(0);
-            }
+            this.electricityData = {
+              categories: xAxisData,
+              series: [
+                { data: generationData, name: '发电' },
+                { data: loadData, name: '用电' },
+                { data: chargeData, name: '充电' },
+                { data: dischargeData, name: '放电' },
+              ]
+            };
           }
 
-          this.electricityData = {
-            categories: xAxisData,
-            series: [
-              { data: generationData, name: '发电' },
-              { data: loadData, name: '用电' },
-              { data: chargeData, name: '充电' },
-              { data: dischargeData, name: '放电' },
-            ]
-          };
-        }
-
-        console.log(this.electricityData, 'electricityData');
-        this.electricityLoading = false;
+          console.log(this.electricityData, 'electricityData');
+          this.electricityLoading = false;
+        }, 2000);
       }).catch(() => {
-        this.electricityLoading = false;
+        setTimeout(() => {
+          this.electricityLoading = false;
+        }, 2000);
       });
     },
     findMonthElectricity() {
+      this.electricityLoading = true;
       const currentDevice = this.$store.state.currentSelectDevice || {};
       const esId = currentDevice.esId || currentDevice.id || 0;
       const areaLevelIds = currentDevice.areaLevelId || 0;
-      
+
       const now = new Date();
       const startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
       const endDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()}`;
-      
+
       queryMonthElectricityStatistic({
         esId: esId,
         startDate: startDate,
         endDate: endDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        const dataList = res.data || [];
-        
-        if (dataList.length > 0) {
-          const sortedData = dataList.sort((a, b) => new Date(a.date) - new Date(b.date));
-          
-          this.electricityData = {
-            categories: sortedData.map(item => {
-              const date = new Date(item.date);
-              return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-            }),
-            series: [
-              { data: sortedData.map(item => parseFloat(item.photovoltaicPower) || 0), name: '发电' },
-              { data: sortedData.map(item => parseFloat(item.loadPower) || 0), name: '用电' },
-              { data: sortedData.map(item => parseFloat(item.storageCharge) || 0), name: '充电' },
-              { data: sortedData.map(item => parseFloat(item.storageDischarge) || 0), name: '放电' },
-            ]
-          };
-        }
-        console.log('月电量数据:', res.data);
+        setTimeout(() => {
+          const dataList = res.data || [];
+
+          if (dataList.length > 0) {
+            const sortedData = dataList.sort((a, b) => new Date(a.date) - new Date(b.date));
+            this.electricityOpts.yAxis.data[0].title = '电量(kWh)';
+
+            this.electricityData = {
+              categories: sortedData.map(item => {
+                const date = new Date(item.date);
+                return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+              }),
+              series: [
+                { data: sortedData.map(item => parseFloat(item.photovoltaicPower) || 0), name: '发电' },
+                { data: sortedData.map(item => parseFloat(item.loadPower) || 0), name: '用电' },
+                { data: sortedData.map(item => parseFloat(item.storageCharge) || 0), name: '充电' },
+                { data: sortedData.map(item => parseFloat(item.storageDischarge) || 0), name: '放电' },
+              ]
+            };
+          }
+          console.log('月电量数据:', res.data);
+          this.electricityLoading = false;
+        }, 2000);
       }).catch((err) => {
+        setTimeout(() => {
+          this.electricityLoading = false;
+        }, 2000);
         console.error('获取月电量数据失败:', err);
       });
     },
     findYearEnergyAndIncome() {
+      this.electricityLoading = true;
       const currentDevice = this.$store.state.currentSelectDevice || {};
       const esId = currentDevice.esId || currentDevice.id || 0;
       const areaLevelIds = currentDevice.areaLevelId || 0;
-      
+
       const now = new Date();
       const year = now.getFullYear();
-      
+
       queryYearElectricityStatistic({
         esId: esId,
         year: year,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        if (res.data && res.data.length > 0) {
-          const dataList = res.data;
-          const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
-          
-          for (let m = 0; m < 12; m++) {
-            const month = m + 1;
-            xAxisData.push(`${month}月`);
-            
-            const monthData = dataList.filter(item => {
-              const itemMonth = parseInt(item.date?.split('-')[1]) || 0;
-              return itemMonth === month;
-            });
-            
-            if (monthData.length > 0) {
-              const totalGeneration = monthData.reduce((sum, item) => sum + (parseFloat(item.photovoltaicPower) || 0), 0);
-              const totalLoad = monthData.reduce((sum, item) => sum + (parseFloat(item.loadPower) || 0), 0);
-              const totalCharge = monthData.reduce((sum, item) => sum + (parseFloat(item.storageCharge) || 0), 0);
-              const totalDischarge = monthData.reduce((sum, item) => sum + (parseFloat(item.storageDischarge) || 0), 0);
-              
-              generationData.push(parseFloat(totalGeneration.toFixed(2)));
-              loadData.push(parseFloat(totalLoad.toFixed(2)));
-              chargeData.push(parseFloat(totalCharge.toFixed(2)));
-              dischargeData.push(parseFloat(totalDischarge.toFixed(2)));
-            } else {
-              generationData.push(0);
-              loadData.push(0);
-              chargeData.push(0);
-              dischargeData.push(0);
+        setTimeout(() => {
+          if (res.data && res.data.length > 0) {
+            const dataList = res.data;
+            const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
+
+            for (let m = 0; m < 12; m++) {
+              const month = m + 1;
+              xAxisData.push(`${month}月`);
+
+              const monthData = dataList.filter(item => {
+                const itemMonth = parseInt(item.month) || 0;
+                return itemMonth === month;
+              });
+              console.log(monthData, 'monthData');
+              if (monthData.length > 0) {
+                const totalGeneration = monthData.reduce((sum, item) => sum + (parseFloat(item.photovoltaicPower) || 0), 0);
+                const totalLoad = monthData.reduce((sum, item) => sum + (parseFloat(item.loadPower) || 0), 0);
+                const totalCharge = monthData.reduce((sum, item) => sum + (parseFloat(item.storageCharge) || 0), 0);
+                const totalDischarge = monthData.reduce((sum, item) => sum + (parseFloat(item.storageDischarge) || 0), 0);
+
+                generationData.push(parseFloat(totalGeneration.toFixed(2)));
+                loadData.push(parseFloat(totalLoad.toFixed(2)));
+                chargeData.push(parseFloat(totalCharge.toFixed(2)));
+                dischargeData.push(parseFloat(totalDischarge.toFixed(2)));
+              } else {
+                generationData.push(0);
+                loadData.push(0);
+                chargeData.push(0);
+                dischargeData.push(0);
+              }
             }
+
+            this.electricityOpts.yAxis.data[0].title = '电量(kWh)';
+
+            this.electricityData = {
+              categories: xAxisData,
+              series: [
+                { data: generationData, name: '发电' },
+                { data: loadData, name: '用电' },
+                { data: chargeData, name: '充电' },
+                { data: dischargeData, name: '放电' },
+              ]
+            };
           }
-          
-          this.electricityData = {
-            categories: xAxisData,
-            series: [
-              { data: generationData, name: '发电' },
-              { data: loadData, name: '用电' },
-              { data: chargeData, name: '充电' },
-              { data: dischargeData, name: '放电' },
-            ]
-          };
-        }
-        console.log('年电量数据:', res.data);
+          console.log('年电量数据:', res.data);
+          this.electricityLoading = false;
+        }, 2000);
       }).catch((err) => {
+        setTimeout(() => {
+          this.electricityLoading = false;
+        }, 2000);
         console.error('获取年电量数据失败:', err);
       });
     },
-   
+
     showStartModal() { this.showModal = true; },
     closeModal() { this.showModal = false; },
     openStopModal() { this.showStopModal = true; },
@@ -1226,29 +1264,63 @@ export default {
 
 .chart-card {
   margin-top: 10rpx;
-}
-
-.empty-chart {
-  height: 300rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f8f9fa;
-  border-radius: 12rpx;
+  height: 450rpx;
 }
 
 .loading-chart {
-  height: 300rpx;
+  height: 450rpx;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: #f8f9fa;
   border-radius: 12rpx;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #e0e0e0;
+  border-top-color: #4488FB;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .loading-text {
   font-size: 28rpx;
   color: #999;
+  margin-top: 16rpx;
+}
+
+.empty-chart {
+  height: 450rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  animation: fadeIn 0.5s ease-out;
 }
 
 .chart-legend {

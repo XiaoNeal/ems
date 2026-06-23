@@ -77,8 +77,17 @@
           </view>
           <view class="chart-body">
             <!-- <view class="axis-unit y-axis-unit">kW</view> -->
-            <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
-              :canvas2d="canvas2d" class="power-chart" :canvas-id="chartId + '-power'" />
+            <view v-if="powerCurveLoading" class="chart-loading">
+              <view class="loading-spinner"></view>
+              <text class="loading-text">加载中...</text>
+            </view>
+            <view v-else-if="powerCurveSeries.length > 0" class="chart-loaded">
+              <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
+                :canvas2d="canvas2d" class="power-chart" :canvas-id="chartId + '-power'" />
+            </view>
+            <view v-else class="chart-empty">
+              <text class="empty-text">暂无数据</text>
+            </view>
             <!-- <view class="axis-unit x-axis-unit">时</view> -->
           </view>
         </view>
@@ -109,8 +118,17 @@
           </view>
           <view class="chart-body">
             <!-- <view class="axis-unit y-axis-unit">kWh</view> -->
-            <qiun-data-charts type="column" :chartData="energyData" :opts="energyOptions" :ontouch="true"
-              :canvas2d="canvas2d" class="energy-chart" :canvas-id="chartId + '-energy'" />
+            <view v-if="energyLoading" class="chart-loading">
+              <view class="loading-spinner"></view>
+              <text class="loading-text">加载中...</text>
+            </view>
+            <view v-else-if="energyData.series && energyData.series[0] && energyData.series[0].data && energyData.series[0].data.length > 0" class="chart-loaded">
+              <qiun-data-charts type="column" :chartData="energyData" :opts="energyOptions" :ontouch="true"
+                :canvas2d="canvas2d" class="energy-chart" :canvas-id="chartId + '-energy'" />
+            </view>
+            <view v-else class="chart-empty">
+              <text class="empty-text">暂无数据</text>
+            </view>
           </view>
         </view>
       </view>
@@ -140,9 +158,12 @@ export default {
       powerDate: new Date().toISOString().split('T')[0],
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
       deviceList: [],
+      device171F: null,
       // 电网功率曲线数据
       powerCurveSeries: [],
       powerCurveCategories: [],
+      powerCurveLoading: false,
+      energyLoading: false,
       powerCurveOptions: {
         dataLabel: false,
         dataPointShape: false,
@@ -154,7 +175,7 @@ export default {
           float: 'right'
         },
         xAxis: {
-          // labelCount: 6,
+          labelCount: 6,
           disableGrid: true,
           // title: "时"
         },
@@ -231,11 +252,16 @@ export default {
       }
     };
   },
+  watch: {
+    '$store.state.currentSelectDevice': {
+      handler() {
+        this.updateDevice171F()
+      },
+      immediate: true,
+      deep: true
+    }
+  },
   computed: {
-    device171F() {
-      this.deviceList = realtimeDataProvider.getDeviceList()
-      return this.deviceList.find(item => item && item.deviceType === '171F');
-    },
     powerCurveData() {
       return {
         categories: this.powerCurveCategories.length > 0 ? this.powerCurveCategories : [],
@@ -270,6 +296,10 @@ export default {
     },
   },
   methods: {
+    updateDevice171F() {
+      this.deviceList = realtimeDataProvider.getDeviceList()
+      this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
+    },
     init171FDevice() {
       this.deviceList = this.get171FDeviceList();
     },
@@ -281,6 +311,7 @@ export default {
     },
     // 获取电网功率曲线数据
     async getPowerCurveData() {
+      this.powerCurveLoading = true;
       try {
         const currentDevice = this.$store.state.currentSelectDevice || {};
 
@@ -292,35 +323,37 @@ export default {
 
         console.log(params, 'params');
         const res = await getPowerData(params);
-        if (res && res.data && res.data.length > 0) {
-          const dataList = res.data;
-          const categories = [];
-          const series = [];
+        setTimeout(() => {
+          if (res && res.data && res.data.length > 0) {
+            const dataList = res.data;
+            const categories = [];
+            const series = [];
 
-          for (let i = 0; i < 24; i += 2) {
-            const hourData = dataList.filter(item => {
-              const time = item.dateTime || '';
-              const hour = parseInt(time.substring(11, 13)) || 0;
-              return hour >= i && hour < i + 2;
+            // 直接使用原始数据
+            dataList.forEach(item => {
+              const dateTime = item.dateTime || '';
+              const timeStr = dateTime.substring(11, 16);
+              categories.push(timeStr);
+
+              const gridPower = parseFloat(item.gridPower);
+              series.push(isNaN(gridPower) ? 0 : parseFloat(gridPower.toFixed(2)));
             });
 
-            if (hourData.length > 0) {
-              categories.push(`${i + 1}时`);
-              const avgValue = hourData.reduce((sum, item) => sum + (parseFloat(item.gridPower || 0)), 0) / hourData.length;
-              series.push(Math.round(avgValue));
-            }
+            this.powerCurveCategories = categories;
+            this.powerCurveSeries = series;
+          } else {
+            this.powerCurveCategories = [];
+            this.powerCurveSeries = [];
           }
-
-          this.powerCurveCategories = categories;
-          this.powerCurveSeries = series;
-        } else {
-          this.powerCurveCategories = [];
-          this.powerCurveSeries = [];
-        }
+          this.powerCurveLoading = false;
+        }, 2000);
       } catch (error) {
         console.error('获取电网功率曲线数据失败:', error);
-        this.powerCurveCategories = [];
-        this.powerCurveSeries = [];
+        setTimeout(() => {
+          this.powerCurveCategories = [];
+          this.powerCurveSeries = [];
+          this.powerCurveLoading = false;
+        }, 2000);
       }
     },
     refresh() {
@@ -368,6 +401,7 @@ export default {
     },
 
     getElectricityStatistic() {
+      this.energyLoading = true;
       if (this.timeTypeIndex === 0) {
         this.getDayElectricityStatistic();
       } else if (this.timeTypeIndex === 1) {
@@ -387,11 +421,21 @@ export default {
         date: this.selectedDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        const dataList = res.data || [];
-        const sortedData = dataList.sort((a, b) => a.hour - b.hour);
-        this.energyData.categories = sortedData.map(item => `${item.hour + 1}时`);
-        this.energyData.series[0].data = sortedData.map(item => parseFloat(item.gridPowerSupply) || 0);
-        this.energyData.series[1].data = sortedData.map(item => parseFloat(item.gridPowerSupplyReverse) || 0);
+        setTimeout(() => {
+          const dataList = res.data || [];
+          const sortedData = dataList.sort((a, b) => a.hour - b.hour);
+          this.energyData.categories = sortedData.map(item => `${item.hour}时`);
+          this.energyData.series[0].data = sortedData.map(item => parseFloat(item.gridPowerSupply) || 0);
+          this.energyData.series[1].data = sortedData.map(item => parseFloat(item.gridPowerSupplyReverse) || 0);
+          this.energyLoading = false;
+        }, 2000);
+      }).catch(() => {
+        setTimeout(() => {
+          this.energyData.categories = [];
+          this.energyData.series[0].data = [];
+          this.energyData.series[1].data = [];
+          this.energyLoading = false;
+        }, 2000);
       });
     },
 
@@ -412,13 +456,23 @@ export default {
         endDate: endDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        const dataList = res.data || [];
-        this.energyData.categories = dataList.map(item => {
-          const day = parseInt(item.date?.split('-')[2]) || item.day || 0;
-          return day > 0 ? `${day}日` : `${dataList.indexOf(item) + 1}日`;
-        });
-        this.energyData.series[0].data = dataList.map(item => parseFloat(item.gridPowerSupply) || 0);
-        this.energyData.series[1].data = dataList.map(item => parseFloat(item.gridPowerSupplyReverse) || 0);
+        setTimeout(() => {
+          const dataList = res.data || [];
+          this.energyData.categories = dataList.map(item => {
+            const day = parseInt(item.date?.split('-')[2]) || item.day || 0;
+            return day > 0 ? `${day}日` : `${dataList.indexOf(item) + 1}日`;
+          });
+          this.energyData.series[0].data = dataList.map(item => parseFloat(item.gridPowerSupply) || 0);
+          this.energyData.series[1].data = dataList.map(item => parseFloat(item.gridPowerSupplyReverse) || 0);
+          this.energyLoading = false;
+        }, 2000);
+      }).catch(() => {
+        setTimeout(() => {
+          this.energyData.categories = [];
+          this.energyData.series[0].data = [];
+          this.energyData.series[1].data = [];
+          this.energyLoading = false;
+        }, 2000);
       });
     },
 
@@ -435,13 +489,23 @@ export default {
         year: year,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        const dataList = res.data || [];
-        this.energyData.categories = dataList.map(item => {
-          const month = parseInt(item.date?.split('-')[1]) || item.month || 0;
-          return month > 0 ? `${month}月` : `${dataList.indexOf(item) + 1}月`;
-        });
-        this.energyData.series[0].data = dataList.map(item => parseFloat(item.gridPowerSupply) || 0);
-        this.energyData.series[1].data = dataList.map(item => parseFloat(item.gridPowerSupplyReverse) || 0);
+        setTimeout(() => {
+          const dataList = res.data || [];
+          this.energyData.categories = dataList.map(item => {
+            const month = parseInt(item.date?.split('-')[1]) || item.month || 0;
+            return month > 0 ? `${month}月` : `${dataList.indexOf(item) + 1}月`;
+          });
+          this.energyData.series[0].data = dataList.map(item => parseFloat(item.gridPowerSupply) || 0);
+          this.energyData.series[1].data = dataList.map(item => parseFloat(item.gridPowerSupplyReverse) || 0);
+          this.energyLoading = false;
+        }, 2000);
+      }).catch(() => {
+        setTimeout(() => {
+          this.energyData.categories = [];
+          this.energyData.series[0].data = [];
+          this.energyData.series[1].data = [];
+          this.energyLoading = false;
+        }, 2000);
       });
     },
     handleDatePicker(date) {
@@ -806,6 +870,7 @@ export default {
 /* 坐标轴单位 */
 .chart-body {
   position: relative;
+  height: 450rpx;
 }
 
 .axis-unit {
@@ -826,5 +891,72 @@ export default {
   bottom: 0;
   right: 50%;
   transform: translateX(50%);
+}
+
+.chart-loading {
+  width: 100%;
+  height: 450rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #e0e0e0;
+  border-top-color: #4488FB;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.loading-text {
+  color: #999;
+  font-size: 28rpx;
+  margin-top: 16rpx;
+}
+
+.chart-loaded {
+  width: 100%;
+  height: 450rpx;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.chart-empty {
+  width: 100%;
+  height: 450rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.empty-text {
+  color: #999;
+  font-size: 28rpx;
 }
 </style>

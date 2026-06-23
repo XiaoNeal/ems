@@ -79,6 +79,7 @@ import System from '../system.vue'
 import DeviceList from '../components/device-list.vue'
 import { findUserInfoByCodeId } from '@/api/user'
 import { getDeviceByAreaId } from '@/api/devices'
+import { realtimeDataProvider } from '@/service/websocket'
 
 export default {
   components: {
@@ -142,7 +143,9 @@ export default {
       isDeviceListLoaded: false,
       deviceListLoading: false,
       isNavigating: false, // 防止重复跳转的节流锁
-      lastClickTime: 0 // 上次点击时间戳，用于防重复点击
+      lastClickTime: 0, // 上次点击时间戳，用于防重复点击
+      device171FList: [],
+      device171FRegistered: false
     }
   },
   mounted() {
@@ -172,6 +175,8 @@ export default {
       this.fromProfile = false
       uni.removeStorageSync('fromProfile')
       this.$store.commit('changeCurrentSelectDevice', device)
+
+
     } else {
       // 恢复上次选择的设备
       const savedDevice = uni.getStorageSync('currentSelectDevice')
@@ -260,8 +265,11 @@ export default {
           const deviceId = device.id || device.esId || device
           this.selectedDeviceId = deviceId
           console.log('自动选中设备:', deviceId, '设备信息:', device)
-          this.$store.commit('changeCurrentSelectDevice', device)
-          uni.setStorageSync('currentSelectDevice', device)
+          // this.$store.commit('changeCurrentSelectDevice', device)
+          // uni.setStorageSync('currentSelectDevice', device)
+
+        
+
           const areaId = device.areaId
           try {
             const deviceInfo = await getDeviceByAreaId(areaId)
@@ -269,6 +277,7 @@ export default {
             if (deviceInfo && deviceInfo.data && deviceInfo.data.list) {
               device.list = deviceInfo.data.list
               console.log('获取设备信息:', device)
+                this.register171FDevice()
               this.$store.commit('changeCurrentSelectDevice', device)
               uni.setStorageSync('currentSelectDevice', device)
             }
@@ -388,6 +397,46 @@ export default {
           this.isNavigating = false
         }
       })
+    },
+
+    register171FDevice() {
+      if (this.device171FRegistered) {
+        console.log('171F设备已注册，跳过', this.device171FList);
+        this.device171FList = realtimeDataProvider.getDeviceList();
+        return this.device171FList;
+      }
+
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+      console.log('注册171F设备:', currentDevice);
+
+      let address = '';
+      let barCode = '';
+
+      if (currentDevice.list && Array.isArray(currentDevice.list)) {
+        const foundDevice = currentDevice.list.find(item =>
+          item.typeCode === '171F' || item.deviceType === '171F' || item.description?.includes('171F')
+        );
+        if (foundDevice) {
+          address = foundDevice.address || address;
+          barCode = foundDevice.barCode || foundDevice.homeBarCode || barCode;
+          console.log('找到171F设备:', foundDevice);
+        }
+      }
+
+      const deviceConfig = {
+        deviceType: '171F',
+        typeCode: '171F',
+        address: address,
+        barCode: barCode,
+        deviceId: '171F001',
+        name: 'DCDC设备171F'
+      };
+      console.log('注册171F设备:', deviceConfig);
+      realtimeDataProvider.initDeviceList([deviceConfig]);
+      this.device171FList = realtimeDataProvider.getDeviceList();
+      this.device171FRegistered = true;
+      console.log('171F设备注册完成:', this.device171FList);
+      return this.device171FList;
     },
 
     // 返回设备列表

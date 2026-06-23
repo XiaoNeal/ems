@@ -74,8 +74,17 @@
             <dy-date timeType="day" @getData="onPowerDateChange" v-model="powerDate" class="compact-date-picker" />
           </view>
           <view class="chart-view">
-            <qiun-data-charts type="line" :chartData="storageChartData" :opts="storagePowerOptions"
-              canvasId="CamoFLVBqPYEJXtAEDIxdbLdHpZAvPitPOEWER" :ontouch="false" :canvas2d="canvas2d" />
+            <view v-if="powerCurveLoading" class="chart-loading">
+              <view class="loading-spinner"></view>
+              <text class="loading-text">加载中...</text>
+            </view>
+            <view v-else-if="storageChartData.categories && storageChartData.categories.length > 0" class="chart-loaded">
+              <qiun-data-charts type="line" :chartData="storageChartData" :opts="storagePowerOptions"
+                canvasId="CamoFLVBqPYEJXtAEDIxdbLdHpZAvPitPOEWER" :ontouch="false" :canvas2d="canvas2d" />
+            </view>
+            <view v-else class="chart-empty">
+              <text class="empty-text">暂无数据</text>
+            </view>
           </view>
         </view>
 
@@ -100,8 +109,17 @@
           </view>
 
           <view class="chart-view">
-            <qiun-data-charts type="column" :chartData="storageQData" :opts="storageQOptions" :canvasId="chartId + '-q'"
-              :ontouch="false" :canvas2d="canvas2d" />
+            <view v-if="energyLoading" class="chart-loading">
+              <view class="loading-spinner"></view>
+              <text class="loading-text">加载中...</text>
+            </view>
+            <view v-else-if="storageQData.categories && storageQData.categories.length > 0" class="chart-loaded">
+              <qiun-data-charts type="column" :chartData="storageQData" :opts="storageQOptions" :canvasId="chartId + '-q'"
+                :ontouch="false" :canvas2d="canvas2d" />
+            </view>
+            <view v-else class="chart-empty">
+              <text class="empty-text">暂无数据</text>
+            </view>
           </view>
         </view>
       </view>
@@ -147,11 +165,11 @@ export default {
       },
       storagePowerOptions: {
         dataLabel: false,
-        padding: [15, 20, 0, 15],
+        padding: [15, 20, 25, 15],
         dataPointShape: false,
         enableScroll: false,
         legend: {},
-        xAxis: { labelCount: 8, disableGrid: true },
+        xAxis: { labelCount: 6, disableGrid: true },
         yAxis: { gridType: "dash",
         showTitle: true,
         data: [{ position: "left", title: "单位:kWh" }],
@@ -162,8 +180,9 @@ export default {
       storageChartData: {},
       storageQOptions: {
         dataLabel: false,
+         padding: [15, 20, 25, 15],
         animation: false,
-        xAxis: { labelCount: 8, disableGrid: true },
+        xAxis: { labelCount: 6, disableGrid: true },
         yAxis: { gridType: "dash",
         showTitle: true,
        data: [{ position: "left", title: "单位:kWh" }],
@@ -174,19 +193,27 @@ export default {
         series: [{ name: "充电量", data: Array(24).fill(0) }, { name: "放电量", data: Array(24).fill(0) }],
       },
       selectedDate: new Date().toISOString().split("T")[0],
-      timeTypeMap: { 日: "day", 月: "month", 年: "year" },
+      timeTypeMap: { 日: "day", 月: "year" },
       updateTimer: null,
+      device171F: null,
+      powerCurveLoading: false,
+      energyLoading: false
     };
+  },
+  watch: {
+    '$store.state.currentSelectDevice': {
+      handler() {
+        this.updateDevice171F()
+      },
+      immediate: true,
+      deep: true
+    }
   },
   computed: {
     // storageammeterDeviceids() {
     //   return this.currentSystem?.storageammeterDeviceids || [];
     // },
-    device171F() {
-      // console.log(this.deviceList, this.deviceList.find(item => item && item.deviceType === '171F'), "171F");
-      this.deviceList = realtimeDataProvider.getDeviceList()
-      return this.deviceList.find(item => item && item.deviceType === '171F');
-    },
+
     totalStorageData() {
       const storagePower = parseFloat(this.getFieldValue('B60')) || 0;
       let status = '不充不放';
@@ -230,7 +257,10 @@ export default {
     if (this.updateTimer) clearTimeout(this.updateTimer);
   },
   methods: {
-
+    updateDevice171F() {
+      this.deviceList = realtimeDataProvider.getDeviceList()
+      this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
+    },
     init171FDevice() {
       this.deviceList = this.get171FDeviceList();
     },
@@ -289,6 +319,7 @@ export default {
     handleDatePicker(value) {
       const typeMap = { 0: '日', 1: '月', 2: '年' };
       const type = typeMap[this.timeTypeIndex];
+      this.energyLoading = true;
       if (type === "日") this.findDayStorageQAndPower();
       if (type === "月") this.findMonthStorageQAndPower();
       if (type === "年") this.findYearStorageQAndPower();
@@ -307,17 +338,31 @@ export default {
         date: this.selectedDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        const dataList = res.data || [];
-        
-        const sortedData = dataList.sort((a, b) => (a.hour || 0) - (b.hour || 0));
-        
-        this.storageQData = {
-          categories: sortedData.map(item => `${(item.hour || 0) + 1}时`),
-          series: [
-            { name: "充电量", data: sortedData.map(item => parseFloat(item.storageCharge) || 0) },
-            { name: "放电量", data: sortedData.map(item => parseFloat(item.storageDischarge) || 0) }
-          ],
-        };
+        setTimeout(() => {
+          const dataList = res.data || [];
+          
+          const sortedData = dataList.sort((a, b) => (a.hour || 0) - (b.hour || 0));
+          
+          this.storageQData = {
+            categories: sortedData.map(item => `${(item.hour || 0) }时`),
+            series: [
+              { name: "充电量", data: sortedData.map(item => parseFloat(item.storageCharge) || 0) },
+              { name: "放电量", data: sortedData.map(item => parseFloat(item.storageDischarge) || 0) }
+            ],
+          };
+          this.energyLoading = false;
+        }, 2000);
+      }).catch(() => {
+        setTimeout(() => {
+          this.storageQData = {
+            categories: [],
+            series: [
+              { name: "充电量", data: [] },
+              { name: "放电量", data: [] }
+            ],
+          };
+          this.energyLoading = false;
+        }, 2000);
       });
     },
     findMonthStorageQAndPower() {
@@ -338,29 +383,40 @@ export default {
         endDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        const c = [], d = [];
+        setTimeout(() => {
+          const c = [], d = [];
 
-        if (res.data) {
-          // 假设接口返回日数据数组
-          const dailyData = res.data;
-          for (let i = 1; i <= days; i++) {
-            const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
-            const item = dailyData.find((it) => it.date === dateStr);
-            c.push(item?.storageCharge || 0);
-            d.push(item?.storageDischarge || 0);
+          if (res.data) {
+            // 假设接口返回日数据数组
+            const dailyData = res.data;
+            for (let i = 1; i <= days; i++) {
+              const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+              const item = dailyData.find((it) => it.date === dateStr);
+              c.push(item?.storageCharge || 0);
+              d.push(item?.storageDischarge || 0);
+            }
+          } else {
+            // 无数据时生成空数据
+            for (let i = 1; i <= days; i++) {
+              c.push(0);
+              d.push(0);
+            }
           }
-        } else {
-          // 无数据时生成空数据
-          for (let i = 1; i <= days; i++) {
-            c.push(0);
-            d.push(0);
-          }
-        }
 
-        this.storageQData = {
-          categories: [...Array(days).keys()].map(i => `${i + 1}日`),
-          series: [{ name: "充电量", data: c }, { name: "放电量", data: d }]
-        };
+          this.storageQData = {
+            categories: [...Array(days).keys()].map(i => `${i + 1}日`),
+            series: [{ name: "充电量", data: c }, { name: "放电量", data: d }]
+          };
+          this.energyLoading = false;
+        }, 2000);
+      }).catch(() => {
+        setTimeout(() => {
+          this.storageQData = {
+            categories: [],
+            series: [{ name: "充电量", data: [] }, { name: "放电量", data: [] }]
+          };
+          this.energyLoading = false;
+        }, 2000);
       });
     },
     findYearStorageQAndPower() {
@@ -375,30 +431,40 @@ export default {
         year,
         areaLevelIds: areaLevelIds
       }).then((res) => {
+        setTimeout(() => {
+          console.log(res, "-----------121--------");
+          const c = [], d = [];
 
-        console.log(res, "-----------121--------");
-        const c = [], d = [];
-
-        if (res.data) {
-          // 假设接口返回月数据数组
-          const monthlyData = res.data;
-          for (let i = 1; i <= 12; i++) {
-            const item = monthlyData.find((it) => it.month === i);
-            c.push(item?.storageCharge || 0);
-            d.push(item?.storageDischarge || 0);
+          if (res.data) {
+            // 假设接口返回月数据数组
+            const monthlyData = res.data;
+            for (let i = 1; i <= 12; i++) {
+              const item = monthlyData.find((it) => it.month === i);
+              c.push(item?.storageCharge || 0);
+              d.push(item?.storageDischarge || 0);
+            }
+          } else {
+            // 无数据时生成空数据
+            for (let i = 1; i <= 12; i++) {
+              c.push(0);
+              d.push(0);
+            }
           }
-        } else {
-          // 无数据时生成空数据
-          for (let i = 1; i <= 12; i++) {
-            c.push(0);
-            d.push(0);
-          }
-        }
 
-        this.storageQData = {
-          categories: [...Array(12).keys()].map(i => `${i + 1}月`),
-          series: [{ name: "充电量", data: c }, { name: "放电量", data: d }]
-        };
+          this.storageQData = {
+            categories: [...Array(12).keys()].map(i => `${i + 1}月`),
+            series: [{ name: "充电量", data: c }, { name: "放电量", data: d }]
+          };
+          this.energyLoading = false;
+        }, 2000);
+      }).catch(() => {
+        setTimeout(() => {
+          this.storageQData = {
+            categories: [],
+            series: [{ name: "充电量", data: [] }, { name: "放电量", data: [] }]
+          };
+          this.energyLoading = false;
+        }, 2000);
       });
     },
     onPowerDateChange(value) {
@@ -411,6 +477,7 @@ export default {
     },
 
     getPowerCurve() {
+      this.powerCurveLoading = true;
       const currentDevice = this.$store.state.currentSelectDevice || {};
 
       const params = {
@@ -419,42 +486,37 @@ export default {
         areaLevelIds: currentDevice.areaLevelId || 991
       };
       getPowerData(params).then((res) => {
-        const categories = [], charge = [], discharge = [];
+        setTimeout(() => {
+          const categories = [], charge = [], discharge = [];
 
-        if (res.data && res.data.length > 0) {
-          const dataList = res.data;
+          if (res.data && res.data.length > 0) {
+            const dataList = res.data;
 
-          // 按小时聚合数据（0-23小时，每小时取一个点）
-          for (let h = 0; h < 24; h++) {
-            categories.push(`${h + 1}时`);
-
-            // 找到该小时范围内的数据
-            const hourData = dataList.filter(item => {
+            // 直接使用原始数据
+            dataList.forEach(item => {
               const dateTime = item.dateTime || '';
-              const hour = parseInt(dateTime.substring(11, 13)) || 0;
-              return hour === h;
+              const timeStr = dateTime.substring(11, 16);
+              categories.push(timeStr);
+
+              const storagePower = parseFloat(item.storagePowerReverse);
+              if (isNaN(storagePower)) {
+                charge.push(0);
+                discharge.push(0);
+              } else {
+                charge.push(storagePower >= 0 ? parseFloat(storagePower.toFixed(2)) : 0);
+                discharge.push(storagePower < 0 ? parseFloat((-storagePower).toFixed(2)) : 0);
+              }
             });
-
-            if (hourData.length > 0) {
-              // 计算平均值
-              const avgValue = hourData.reduce((sum, item) => sum + (parseFloat(item.storagePowerReverse || 0)), 0) / hourData.length;
-              charge.push(avgValue >= 0 ? parseFloat(avgValue.toFixed(2)) : 0);
-              discharge.push(avgValue < 0 ? parseFloat((-avgValue).toFixed(2)) : 0);
-            } else {
-              charge.push(0);
-              discharge.push(0);
-            }
           }
-        } else {
-          // 无数据时生成空数据
-          for (let h = 0; h < 24; h++) {
-            categories.push(`${h + 1}时`);
-            charge.push(0);
-            discharge.push(0);
-          }
-        }
 
-        this.storageChartData = { categories, series: [{ name: "充电功率", data: charge }, { name: "放电功率", data: discharge }] };
+          this.storageChartData = { categories, series: [{ name: "充电功率", data: charge }, { name: "放电功率", data: discharge }] };
+          this.powerCurveLoading = false;
+        }, 2000);
+      }).catch(() => {
+        setTimeout(() => {
+          this.storageChartData = { categories: [], series: [{ name: "充电功率", data: [] }, { name: "放电功率", data: [] }] };
+          this.powerCurveLoading = false;
+        }, 2000);
       });
     },
   },
@@ -638,7 +700,7 @@ export default {
 
 .chart-view {
   width: 100%;
-  height: 400rpx;
+  height: 450rpx;
 }
 
 .card {
@@ -646,5 +708,87 @@ export default {
   border-radius: 12rpx;
   margin-bottom: 10rpx;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.chart-loaded {
+  width: 100%;
+  min-height: 450rpx;
+}
+
+.chart-empty {
+  width: 100%;
+  min-height: 450rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+}
+
+.empty-text {
+  color: #999;
+  font-size: 28rpx;
+}
+
+.chart-loading {
+  width: 100%;
+  min-height: 450rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #e0e0e0;
+  border-top-color: #4488FB;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.loading-text {
+  color: #999;
+  font-size: 28rpx;
+  margin-top: 16rpx;
+}
+
+.chart-loaded {
+  width: 100%;
+  min-height: 450rpx;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.chart-empty {
+  width: 100%;
+  min-height: 450rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+  animation: fadeIn 0.5s ease-out;
 }
 </style>
