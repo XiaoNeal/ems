@@ -38,9 +38,16 @@
 				return '请选择'
 			}
 		},
-		childValue: {
+		value: {
+			type: String,
 			default () {
-				return new Date().toISOString().split('T')[0] // 设置为当前日期
+				return null
+			}
+		},
+		childValue: {
+			type: String,
+			default () {
+				return null
 			}
 		},
 		minSelect: {
@@ -52,6 +59,17 @@
 			default: () => '2050/12/31'
 		}
 	},
+	computed: {
+		defaultDate() {
+			if (this.value) return this.value;
+			if (this.childValue) return this.childValue;
+			const now = new Date();
+			const year = now.getFullYear();
+			const month = String(now.getMonth() + 1).padStart(2, '0');
+			const day = String(now.getDate()).padStart(2, '0');
+			return `${year}-${month}-${day}`;
+		}
+	},
 	data() {
 		return {
 			index: [0],
@@ -59,7 +77,7 @@
 			yearArr: [], // 年份数组
 			monthArr: [], // 月份数组
 			yearIndex: 0, // 年份选中下标
-			showTime: this.formatDate(this.childValue)
+			showTime: ''
 		}
 	},
 
@@ -382,14 +400,23 @@
 				this.dateInit()
 				this.setDefaultValue()
 			},
-			childValue() {
+			value(val) {
 				this.showTime = ''
-				this.showTime = this.formatDate(this.childValue)
+				this.showTime = this.formatDate(val || this.defaultDate)
 				this.dateInit()
 				this.setDefaultValue()
+			},
+			childValue(val) {
+				if (!this.value) {
+					this.showTime = ''
+					this.showTime = this.formatDate(val || this.defaultDate)
+					this.dateInit()
+					this.setDefaultValue()
+				}
 			}
 		},
 		created() {
+			this.showTime = this.formatDate(this.defaultDate)
 			this.dateInit()
 			this.valueEchoed()
 			if (!this.childValue) {

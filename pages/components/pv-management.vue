@@ -118,12 +118,12 @@
               class="custom-picker date-picker" />
           </view>
           <view class="chart-body">
-            <view v-if="generationLoading"  class="chart-loading">
+            <view v-if="generationLoading" class="chart-loading">
               <view class="loading-spinner"></view>
               <text class="loading-text">加载中...</text>
             </view>
             <view v-else-if="generationSeries.length > 0" class="chart-loaded">
-              <qiun-data-charts type="column" :chartData="generationData" :opts="generationOptions" :ontouch="true"
+              <qiun-data-charts type="column" :chartData="generationData" :opts="generationOptions" :ontouch="false"
                 :canvas2d="canvas2d" class="generation-chart" :canvas-id="chartId + '-generation'" />
             </view>
             <view v-else class="chart-empty">
@@ -139,8 +139,6 @@
 <script>
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 import {
-  findPhotovoltaicEnergyInfo,
-  // queryDayGeneratedPower,
   getPowerData,
   queryDayElectricityStatistic,
   queryMonthElectricityStatistic,
@@ -155,6 +153,11 @@ export default {
   name: "PV-Management",
   inject: ['get171FDeviceList'],
   data() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
     return {
       chartId: 'pv-' + Math.random().toString(36).substr(2, 9),
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
@@ -169,8 +172,8 @@ export default {
 
       activeDateTab: "日",
       timeTypeIndex: 0,
-      selectedDate: new Date().toISOString().split('T')[0],
-      powerDate: new Date().toISOString().split('T')[0],
+      selectedDate: today,
+      powerDate: today,
       isFullScreen: false,
       fullScreenType: '', // 当前全屏的图表类型 'power' | 'generation'
 
@@ -198,6 +201,8 @@ export default {
       return {
         categories: this.powerCurveCategories.length > 0 ? this.powerCurveCategories : [],
         series: [{ data: this.powerCurveSeries.length > 0 ? this.powerCurveSeries : [], name: '发电功率' }]
+
+       
       }
     },
     powerCurveOptions() {
@@ -206,9 +211,13 @@ export default {
         dataPointShape: false,
         color: ["#6DE188"],
         xAxis: { labelCount: 6, disableGrid: true },
-        yAxis: { gridType: "dash",
-        showTitle: true,
-         data: [{ position: "left", title: "单位:kW" }] },
+        yAxis: {
+          gridType: "dash",
+          showTitle: true,
+          data: [{ position: "left", title: "单位:kW", min: null, max: null }],
+          dashLength: 2,
+          tofix: 2
+        },
         extra: { area: { type: "curve", gradient: true } }
       }
     },
@@ -224,20 +233,28 @@ export default {
         dataPointShape: false,
         color: ["#6DE188"],
         xAxis: { labelCount: 6, disableGrid: true },
-        yAxis: { gridType: "dash",
-        showTitle: true,
-         data: [{ position: "left", title: "单位:kWh" }] },
+        yAxis: {
+          gridType: "dash",
+          showTitle: true,
+          data: [{ position: "left", title: "单位:kWh" }]
+        },
+        extra: {
+
+          column: {
+            type: "group", // 必须开启分组多柱子
+            // width: 14,     // 单根柱子宽度
+            // seriesGap: 3,  
+            categoryGap: 2 // 两组时间点之间的空隙百分比
+          }
+        }
       }
     }
   },
   mounted() {
     this.init171FDevice();
-    // this.getPhotovoltaicEnergyInfo();
     this.getDayGeneratedPower();
     this.getElectricityStatistic();
   },
-
-
 
   methods: {
     updateDevice171F() {
@@ -246,8 +263,6 @@ export default {
     },
     init171FDevice() {
       this.deviceList = this.get171FDeviceList();
-
-      // console.log(this.deviceList, 'deviceList121111', this.deviceList.find(item => item && item.deviceType === '171F'));
     },
     formatMaxGenerationTime(device) {
       if (!device || !device.energyData) return "--";
@@ -289,7 +304,6 @@ export default {
         areaLevelIds: currentDevice.areaLevelId || 991
       };
       getPowerData(params).then((res) => {
-        setTimeout(() => {
           if (!res.data || res.data.length === 0) {
             this.powerCurveSeries = [];
             this.powerCurveCategories = [];
@@ -312,13 +326,11 @@ export default {
             this.powerCurveCategories = categories;
           }
           this.powerCurveLoading = false;
-        }, 2000); // 2秒后显示结果
+
       }).catch(() => {
-        setTimeout(() => {
           this.powerCurveSeries = [];
           this.powerCurveCategories = [];
           this.powerCurveLoading = false;
-        }, 2000);
       });
     },
 
@@ -343,21 +355,15 @@ export default {
         date: this.selectedDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        setTimeout(() => {
           const dataList = res.data || [];
-          console.log(dataList, 'dataList');
-          
           const sortedData = dataList.sort((a, b) => a.hour - b.hour);
           this.generationSeries = sortedData.map(item => parseFloat(item.photovoltaicPower) || 0);
           this.generationCategories = sortedData.map(item => `${item.hour}时`);
           this.generationLoading = false;
-        }, 2000);
       }).catch(() => {
-        setTimeout(() => {
           this.generationSeries = [];
           this.generationCategories = [];
           this.generationLoading = false;
-        }, 2000);
       });
     },
 
@@ -378,22 +384,18 @@ export default {
         endDate: endDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        setTimeout(() => {
           const dataList = res.data || [];
-          
+
           this.generationSeries = dataList.map(item => parseFloat(item.photovoltaicPower) || 0);
           this.generationCategories = dataList.map(item => {
             const day = parseInt(item.date?.split('-')[2]) || item.day || 0;
             return day > 0 ? `${day}日` : `${dataList.indexOf(item) + 1}日`;
           });
           this.generationLoading = false;
-        }, 2000);
       }).catch(() => {
-        setTimeout(() => {
           this.generationSeries = [];
           this.generationCategories = [];
           this.generationLoading = false;
-        }, 2000);
       });
     },
 
@@ -410,22 +412,18 @@ export default {
         year: year,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        setTimeout(() => {
           const dataList = res.data || [];
-          
+
           this.generationSeries = dataList.map(item => parseFloat(item.photovoltaicPower) || 0);
           this.generationCategories = dataList.map(item => {
             const month = parseInt(item.date?.split('-')[1]) || item.month || 0;
             return month > 0 ? `${month}月` : `${dataList.indexOf(item) + 1}月`;
           });
           this.generationLoading = false;
-        }, 2000);
       }).catch(() => {
-        setTimeout(() => {
           this.generationSeries = [];
           this.generationCategories = [];
           this.generationLoading = false;
-        }, 2000);
       });
     },
 
@@ -801,6 +799,7 @@ export default {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -810,6 +809,7 @@ export default {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

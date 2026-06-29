@@ -45,14 +45,29 @@ function sleep(value = 30) {
  * @link 运行期判断平台 https://uniapp.dcloud.io/frame?id=判断平台
  */
 function os() {
-	return uni.getSystemInfoSync().platform.toLowerCase()
+	try {
+		return uni.getDeviceInfo().platform.toLowerCase()
+	} catch (e) {
+		return uni.getSystemInfoSync().platform.toLowerCase()
+	}
 }
 /**
  * @description 获取系统信息同步接口
  * @link 获取系统信息同步接口 https://uniapp.dcloud.io/api/system/info?id=getsysteminfosync
  */
 function sys() {
-	return uni.getSystemInfoSync()
+	try {
+		const deviceInfo = uni.getDeviceInfo()
+		const windowInfo = uni.getWindowInfo()
+		const appBaseInfo = uni.getAppBaseInfo()
+		return {
+			...deviceInfo,
+			...windowInfo,
+			...appBaseInfo
+		}
+	} catch (e) {
+		return uni.getSystemInfoSync()
+	}
 }
 
 /**

@@ -78,8 +78,9 @@
               <view class="loading-spinner"></view>
               <text class="loading-text">加载中...</text>
             </view>
-            <view v-else-if="storageChartData.categories && storageChartData.categories.length > 0" class="chart-loaded">
-              <qiun-data-charts type="line" :chartData="storageChartData" :opts="storagePowerOptions"
+            <view v-else-if="storageChartData.categories && storageChartData.categories.length > 0"
+              class="chart-loaded">
+              <qiun-data-charts type="area" :chartData="storageChartData" :opts="storagePowerOptions"
                 canvasId="CamoFLVBqPYEJXtAEDIxdbLdHpZAvPitPOEWER" :ontouch="false" :canvas2d="canvas2d" />
             </view>
             <view v-else class="chart-empty">
@@ -114,8 +115,8 @@
               <text class="loading-text">加载中...</text>
             </view>
             <view v-else-if="storageQData.categories && storageQData.categories.length > 0" class="chart-loaded">
-              <qiun-data-charts type="column" :chartData="storageQData" :opts="storageQOptions" :canvasId="chartId + '-q'"
-                :ontouch="false" :canvas2d="canvas2d" />
+              <qiun-data-charts type="column" :chartData="storageQData" :opts="storageQOptions"
+                :canvasId="chartId + '-q'" :ontouch="false" :canvas2d="canvas2d" />
             </view>
             <view v-else class="chart-empty">
               <text class="empty-text">暂无数据</text>
@@ -143,6 +144,11 @@ export default {
   name: "Storage-Management",
   inject: ['get171FDeviceList'],
   data() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
     return {
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
 
@@ -151,7 +157,7 @@ export default {
       activeChartTab: "日",
       timeTypeIndex: 0,
       current: "Storage-Management",
-      powerDate: new Date().toISOString().split("T")[0],
+      powerDate: today,
       deviceList: [],
       nyzRealTimeData: {
         status: "--",
@@ -170,29 +176,39 @@ export default {
         enableScroll: false,
         legend: {},
         xAxis: { labelCount: 6, disableGrid: true },
-        yAxis: { gridType: "dash",
-        showTitle: true,
-        data: [{ position: "left", title: "单位:kWh" }],
-         dashLength: 2 },
-        extra: { line: { type: "straight", width: 1 } },
+        yAxis: {
+          gridType: "dash",
+          showTitle: true,
+          data: [{ position: "left", title: "单位:kW", min: null, max: null }],
+          dashLength: 2
+        },
+        extra: { line: { type: "straight", width: 2, activeType: "hollow" } },
         animation: false,
       },
       storageChartData: {},
       storageQOptions: {
         dataLabel: false,
-         padding: [15, 20, 25, 15],
+        padding: [15, 20, 25, 15],
         animation: false,
         xAxis: { labelCount: 6, disableGrid: true },
-        yAxis: { gridType: "dash",
-        showTitle: true,
-       data: [{ position: "left", title: "单位:kWh" }],
-         dashLength: 2 },
+        yAxis: {
+          gridType: "dash",
+          showTitle: true,
+          data: [{ position: "left", title: "单位:kWh" }],
+          dashLength: 2
+        },
+        extra: {
+          column: {
+            type: "group", // 必须开启分组多柱子
+            categoryGap: 2 // 两组时间点之间的空隙百分比
+          }
+        }
       },
       storageQData: {
         categories: [...Array(24).keys()].map(h => `${h + 1}时`),
         series: [{ name: "充电量", data: Array(24).fill(0) }, { name: "放电量", data: Array(24).fill(0) }],
       },
-      selectedDate: new Date().toISOString().split("T")[0],
+      selectedDate: today,
       timeTypeMap: { 日: "day", 月: "year" },
       updateTimer: null,
       device171F: null,
@@ -210,10 +226,6 @@ export default {
     }
   },
   computed: {
-    // storageammeterDeviceids() {
-    //   return this.currentSystem?.storageammeterDeviceids || [];
-    // },
-
     totalStorageData() {
       const storagePower = parseFloat(this.getFieldValue('B60')) || 0;
       let status = '不充不放';
@@ -239,11 +251,7 @@ export default {
     },
   },
   mounted() {
-    // 先加载数据，不渲染图表
-    // this.findEnergyStorageInfo();
-    // this.getNyzRealTimeData();
     this.handleDatePicker(this.selectedDate);
-    // this.init170FDevice();
     this.init171FDevice();
 
     // 页面稳定后再画图表
@@ -309,10 +317,13 @@ export default {
       const map = { '日': 0, '月': 1, '年': 2 };
       this.timeTypeIndex = map[tab];
       const currentDate = new Date();
+      const y = currentDate.getFullYear();
+      const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const d = String(currentDate.getDate()).padStart(2, '0');
       this.selectedDate = {
-        0: currentDate.toISOString().split('T')[0],
-        1: `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`,
-        2: `${currentDate.getFullYear()}`
+        0: `${y}-${m}-${d}`,
+        1: `${y}-${m}`,
+        2: `${y}`
       }[this.timeTypeIndex];
       this.handleDatePicker(this.selectedDate);
     },
@@ -332,28 +343,25 @@ export default {
       const currentDevice = this.$store.state.currentSelectDevice || {};
       const esId = currentDevice.esId || currentDevice.id;
       const areaLevelIds = currentDevice.areaLevelId;
-      
+
       queryDayElectricityStatistic({
         esId: esId,
         date: this.selectedDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        setTimeout(() => {
           const dataList = res.data || [];
-          
+
           const sortedData = dataList.sort((a, b) => (a.hour || 0) - (b.hour || 0));
-          
+
           this.storageQData = {
-            categories: sortedData.map(item => `${(item.hour || 0) }时`),
+            categories: sortedData.map(item => `${(item.hour || 0)}时`),
             series: [
               { name: "充电量", data: sortedData.map(item => parseFloat(item.storageCharge) || 0) },
               { name: "放电量", data: sortedData.map(item => parseFloat(item.storageDischarge) || 0) }
             ],
           };
           this.energyLoading = false;
-        }, 2000);
       }).catch(() => {
-        setTimeout(() => {
           this.storageQData = {
             categories: [],
             series: [
@@ -362,7 +370,6 @@ export default {
             ],
           };
           this.energyLoading = false;
-        }, 2000);
       });
     },
     findMonthStorageQAndPower() {
@@ -376,14 +383,13 @@ export default {
       const currentDevice = this.$store.state.currentSelectDevice || {};
       const esId = currentDevice.esId || currentDevice.id;
       const areaLevelIds = currentDevice.areaLevelId;
-      
+
       queryMonthElectricityStatistic({
         esId: esId,
         startDate,
         endDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        setTimeout(() => {
           const c = [], d = [];
 
           if (res.data) {
@@ -408,33 +414,27 @@ export default {
             series: [{ name: "充电量", data: c }, { name: "放电量", data: d }]
           };
           this.energyLoading = false;
-        }, 2000);
       }).catch(() => {
-        setTimeout(() => {
           this.storageQData = {
             categories: [],
             series: [{ name: "充电量", data: [] }, { name: "放电量", data: [] }]
           };
           this.energyLoading = false;
-        }, 2000);
       });
     },
     findYearStorageQAndPower() {
       const year = new Date(this.selectedDate).getFullYear();
 
       const currentDevice = this.$store.state.currentSelectDevice || {};
-      const esId = currentDevice.esId || currentDevice.id ;
-      const areaLevelIds = currentDevice.areaLevelId ;
-      
+      const esId = currentDevice.esId || currentDevice.id;
+      const areaLevelIds = currentDevice.areaLevelId;
+
       queryYearElectricityStatistic({
         esId: esId,
         year,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        setTimeout(() => {
-          console.log(res, "-----------121--------");
           const c = [], d = [];
-
           if (res.data) {
             // 假设接口返回月数据数组
             const monthlyData = res.data;
@@ -456,15 +456,12 @@ export default {
             series: [{ name: "充电量", data: c }, { name: "放电量", data: d }]
           };
           this.energyLoading = false;
-        }, 2000);
       }).catch(() => {
-        setTimeout(() => {
           this.storageQData = {
             categories: [],
             series: [{ name: "充电量", data: [] }, { name: "放电量", data: [] }]
           };
           this.energyLoading = false;
-        }, 2000);
       });
     },
     onPowerDateChange(value) {
@@ -486,37 +483,36 @@ export default {
         areaLevelIds: currentDevice.areaLevelId || 991
       };
       getPowerData(params).then((res) => {
-        setTimeout(() => {
-          const categories = [], charge = [], discharge = [];
+          const categories = [], powerData = [];
 
           if (res.data && res.data.length > 0) {
             const dataList = res.data;
 
-            // 直接使用原始数据
+            // 合并充放电为一条线，正数表示充电（上象限），负数表示放电（下象限）
             dataList.forEach(item => {
               const dateTime = item.dateTime || '';
               const timeStr = dateTime.substring(11, 16);
               categories.push(timeStr);
 
-              const storagePower = parseFloat(item.storagePowerReverse);
-              if (isNaN(storagePower)) {
-                charge.push(0);
-                discharge.push(0);
+              let storagePower;
+              if (item.storagePowerReverse !== undefined && item.storagePowerReverse !== null && item.storagePowerReverse !== '') {
+                storagePower = -parseFloat(item.storagePowerReverse);
               } else {
-                charge.push(storagePower >= 0 ? parseFloat(storagePower.toFixed(2)) : 0);
-                discharge.push(storagePower < 0 ? parseFloat((-storagePower).toFixed(2)) : 0);
+                storagePower = parseFloat(item.storagePower || 0);
+              }
+              if (isNaN(storagePower) || storagePower === null) {
+                powerData.push(0);
+              } else {
+                powerData.push(parseFloat(storagePower.toFixed(2)));
               }
             });
           }
 
-          this.storageChartData = { categories, series: [{ name: "充电功率", data: charge }, { name: "放电功率", data: discharge }] };
+          this.storageChartData = { categories, series: [{ name: "储能功率", data: powerData }] };
           this.powerCurveLoading = false;
-        }, 2000);
       }).catch(() => {
-        setTimeout(() => {
-          this.storageChartData = { categories: [], series: [{ name: "充电功率", data: [] }, { name: "放电功率", data: [] }] };
+          this.storageChartData = { categories: [], series: [{ name: "储能功率", data: [] }] };
           this.powerCurveLoading = false;
-        }, 2000);
       });
     },
   },
@@ -755,6 +751,7 @@ export default {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -764,6 +761,7 @@ export default {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

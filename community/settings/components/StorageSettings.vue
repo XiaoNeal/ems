@@ -575,7 +575,7 @@ export default {
 .storage-settings {
   background: #f5f5f5;
   min-height: 100vh;
-  padding: 20rpx;
+  // padding: 20rpx;
 }
 
 .param-card {
@@ -721,7 +721,7 @@ export default {
 }
 
 .param-value-box {
-  width: 160rpx;
+  width: 150rpx;
   height: 64rpx;
   line-height: 64rpx;
   background: #f8f9fa;
@@ -760,7 +760,7 @@ export default {
 .unit-text {
   font-size: 24rpx;
   color: #999;
-  min-width: 60rpx;
+  min-width: 40rpx;
   text-align: left;
 }
 

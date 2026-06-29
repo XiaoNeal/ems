@@ -205,6 +205,7 @@
           <view class="loading-spinner"></view>
           <text class="loading-text">加载中...</text>
         </view>
+        <!--  -->
         <qiun-data-charts v-else-if="electricityData.categories && electricityData.categories.length > 0"
           :type="electricityChartType" :chartData="electricityData" :ontouch="true" :canvas2d="canvas2d"
           :opts="electricityOpts" :canvasId="chartId + '-energy'" />
@@ -238,15 +239,15 @@
       <image src="/static/images/img-警告.png" class="modal-icon-absolute" />
       <view class="modal-content" @click.stop>
         <view class="modal-header">
-          <text class="modal-title">确认停止系统运行？</text>
+          <text class="modal-title">是否停止策略</text>
         </view>
         <view class="modal-body">
-          <text class="modal-text">停止系统运行将影响所有设备的电力供应，</text>
-          <text class="modal-text">请确保已做好相关准备工作。</text>
+          <text class="modal-text">请确认您是专业人士，已知悉相关影响和责任，并取得授权。</text>
+          <!-- <text class="modal-text">请确保已做好相关准备工作。</text> -->
         </view>
         <view class="modal-footer">
           <button class="modal-cancel" @click="closeStopModal">取消</button>
-          <button class="modal-confirm" @click="confirmStop">确认停止</button>
+          <button class="modal-confirm" @click="confirmStop">确认</button>
         </view>
       </view>
     </view>
@@ -281,7 +282,6 @@
 </template>
 
 <script>
-import { dateStandardFormat } from "@/utils/date-format";
 
 import { getPowerData, queryMonthElectricityStatistic, queryYearElectricityStatistic } from '../../api/power';
 import dyDate from '@/components/dy-Date/dy-Date.vue';
@@ -299,7 +299,13 @@ export default {
       activeChartTab: '日',
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
       timeTypeIndex: 0,
-      selectedDate: new Date().toISOString().split('T')[0],
+      selectedDate: (() => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      })(),
       storageStatus: "放电中",
       currentStatus: {},
       gridStatus: "供电中",
@@ -317,7 +323,6 @@ export default {
         totalConsumeElectricityQ: 0,
       },
       deviceList: [],
-      dcdc171FData: null,
       nyzData: { SOC: "--" },
       // 设备配置参数
       deviceConfig: {
@@ -327,19 +332,11 @@ export default {
       },
       electricityOpts: {
         color: ["#57dd76", "#ffa13c", "#71a6ff", "#a670ff"],
-        // padding: [15, 20, 0, 15],
-        // dataLabel: false,
-        // xAxis: { labelCount: 6, disableGrid: true },
-        // yAxis: { gridType: "dash", showTitle: true, data: [{ position: "left", title: "单位:kW" }] },
-        // extra: { area: { type: "straight", width: 2 } },
-        // yAxis: {
-        //   gridType: "dash",
-        //   dashLength: 2
-        // },
+        animation: false,
 
         dataLabel: false,
         dataPointShape: false,
-        padding: [15, 15, 0, 15],
+        padding: [15, 20, 0, 15],
         enableScroll: false,
         legend: {},
         xAxis: { labelCount: 6, disableGrid: true },
@@ -355,16 +352,24 @@ export default {
         extra: {
           area: {
             type: "curve",
-            opacity: 0.2,
+            opacity: 0.15, // 降低填充透明度，解决遮挡（关键！示例浅色填充）
             addLine: true,
-            width: 2,
-            // gradient: true,
-            activeType: "hollow"
-          }
+            width: 2, // 加粗曲线，线条更清晰
+            gradient: true,
+            activeType: "hollow",
+            stack: false, // 关闭堆叠，每条曲线独立计算y值
+            zIndex: [4, 3, 2, 1] // 层级：发电最上层，放电最下层，避免浅色被盖住 // 关键：关闭堆叠，四条曲线独立分开，和柱子逻辑一致
+          },
+          column: {
+            type: "group", // 必须开启分组多柱子
+            // width: 14,     // 单根柱子宽度
+            categoryGap: 2 // 两组时间点之间的空隙百分比
+          },
         }
 
       },
-      electricityData: { categories: [], series: [{ data: [], name: '发电功率' }] },
+      type: 'hour',
+      electricityData: {},
       electricityLoading: false,
       showModal: false,
       showStopModal: false,
@@ -421,41 +426,29 @@ export default {
     },
     electricityChartType() {
       // 月和年数据用柱状图，小时数据用面积图
-      return this.type === 'hour' ? 'area' : 'column';
+      const type = this.type === 'hour' ? 'area' : 'column';
+      return type;
     }
   },
   onLoad() {
     // 获取设备状态栏高度
-    const systemInfo = uni.getSystemInfoSync();
-    this.statusBarHeight = systemInfo.statusBarHeight || 93;
+    const windowInfo = uni.getWindowInfo();
+    this.statusBarHeight = windowInfo.statusBarHeight || 93;
     console.log('statusBarHeight', this.statusBarHeight);
   },
   mounted() {
-    // realtimeDataProvider.createScoket(uni.getStorageSync('currentTemplate'), uni.getStorageSync('urlPrefix'));
-    // this.init171FDevice();
-    // this.getSqRealTimeData();
-    // this.getNyzRealTimeData();
-    this.initPage();
-    this.dataInterval = setInterval(() => { this.initPage() }, 1000 * 60 * 5);
 
-    console.log('this.$store.state.currentSelectDevice', this.$store.state.currentSelectDevice)
-    // this.deviceConfig.idCode = this.$store.state.currentSelectDevice.idCode;
     const currentDevice = this.$store.state.currentSelectDevice || {}
-
     const deviceControl = currentDevice.list.find(item => item.controlType == 1);
-    console.log('deviceControl', deviceControl,currentDevice)
     this.deviceConfig.idCode = deviceControl?.homeBarCode || '';
     // this.deviceConfig.typeCode = deviceControl || '3401';
     // this.deviceConfig.address = deviceControl?.address || '01';
-
-
 
     // 获取系统信息并设置CSS变量
     const systemInfo = uni.getSystemInfoSync();
     this.statusBarHeight = systemInfo.statusBarHeight || 20;
     this.navBarHeight = systemInfo.platform === 'android' ? 48 : 44;
     this.topSafeArea = this.statusBarHeight + this.navBarHeight;
-
     // 设置CSS变量用于全屏模式（仅在H5环境中执行）
     const safeAreaTop = systemInfo.safeArea?.top || systemInfo.statusBarHeight || 0;
     const safeAreaBottom = systemInfo.safeArea?.bottom || 0;
@@ -468,8 +461,7 @@ export default {
         console.warn('Failed to set CSS variables:', e);
       }
     }
-
-    console.log('statusBarHeight:', this.statusBarHeight, 'navBarHeight:', this.navBarHeight, 'topSafeArea:', this.topSafeArea);
+    this.getPowerData();
   },
   beforeDestroy() {
     this.dataInterval && clearInterval(this.dataInterval);
@@ -490,20 +482,10 @@ export default {
       const num = parseFloat(value);
       return isNaN(num) ? "--" : num.toFixed(decimals);
     },
-    init171FDevice() {
-
-
-
-      this.get171FDeviceList();
-      this.deviceList = realtimeDataProvider.getDeviceList()
-      console.log('deviceList--------', this.deviceList);
-    },
-    handle171FData(jsonData) {
-      console.log('171F设备数据:', jsonData);
-      this.dcdc171FData = jsonData;
-    },
-    // handle170CData(jsonData) {
-    //   console.log('170C设备数据:', jsonData);
+    // init171FDevice() {
+    //   this.get171FDeviceList();
+    //   this.deviceList = realtimeDataProvider.getDeviceList()
+    //   console.log('deviceList--------', this.deviceList);
     // },
     async handleFullScreen() {
       this.isFullScreen = !this.isFullScreen;
@@ -534,17 +516,13 @@ export default {
       }
       // #endif
     },
-    initPage() {
-
-      this.getPowerData2();
-    },
     handleDateTypeChange(tab) {
       this.activeChartTab = tab;
       const map = { '日': 0, '月': 1, '年': 2 };
       this.timeTypeIndex = map[tab];
       const currentDate = new Date();
       this.selectedDate = {
-        0: currentDate.toISOString().split('T')[0],
+        0: `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`,
         1: `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`,
         2: `${currentDate.getFullYear()}`
       }[this.timeTypeIndex];
@@ -555,75 +533,63 @@ export default {
       this.selectedDate = value;
       const typeMap = { 0: 'hour', 1: 'day', 2: 'month' };
       this.type = typeMap[this.timeTypeIndex];
-      if (this.type === "hour") this.getPowerData2();
+      if (this.type === "hour") this.getPowerData();
       else if (this.type === "day") this.findMonthElectricity();
       else if (this.type === "month") this.findYearEnergyAndIncome();
     },
-
-
-
 
     enumStorageStatus(status) {
       const statusMap = { 0: "初始化", 1: "充电", 2: "放电", 3: "静置" };
       return statusMap[status] || "--";
     },
 
-    getPowerData2() {
+    getPowerData() {
       this.electricityLoading = true;
       // 从store获取当前设备信息
       const currentDevice = this.$store.state.currentSelectDevice || {};
 
-      console.log('currentDevice:', currentDevice, this.$store.state.currentSelectDevice, this.$store.state);
+      console.log('currentDevice:', this.selectedDate, currentDevice, this.$store.state.currentSelectDevice, this.$store.state);
       // 准备接口参数
       const params = {
-        esId: currentDevice.id || 28,
+        esId: currentDevice.id,
         date: this.selectedDate,
-        areaLevelIds: currentDevice.areaLevelId || 991
+        areaLevelIds: currentDevice.areaLevelId
       };
-
-      // 调用新接口
       getPowerData(params).then(result => {
-        setTimeout(() => {
-          if (result.data && result.data.length > 0) {
-            const dataList = result.data;
-            const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
-            // console.log('dataList11111111111111', dataList);
-            // 直接使用原始数据，不按小时聚合
-            dataList.forEach(item => {
-              const dateTime = item.dateTime || '';
-              const timeStr = dateTime.substring(11, 16);
-              xAxisData.push(timeStr);
+        if (result.data && result.data.length > 0) {
+          const dataList = result.data;
+          const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
+          dataList.forEach(item => {
+            const dateTime = item.dateTime || '';
+            const timeStr = dateTime.substring(11, 16);
+            xAxisData.push(timeStr);
 
-              const generatedPower = parseFloat(item.generatedPower || 0);
-              const loadPower = parseFloat(item.loadPower || 0);
-              const storagePower = parseFloat(item.storagePowerReverse || 0);
+            const generatedPower = parseFloat(item.generatedPower || 0);
+            const loadPower = parseFloat(item.loadPower || 0);
+            const dischargePower = -parseFloat(item.storagePowerReverse || 0);
+            const chargePower = parseFloat(item.storagePower || 0);
 
+            generationData.push(isNaN(generatedPower) ? 0 : parseFloat(generatedPower.toFixed(2)));
+            loadData.push(isNaN(loadPower) ? 0 : parseFloat(loadPower.toFixed(2)));
+            chargeData.push(isNaN(chargePower) ? 0 : parseFloat(chargePower.toFixed(2)));
+            dischargeData.push(isNaN(dischargePower) ? 0 : parseFloat(dischargePower.toFixed(2)));
+          });
+          // console.log('xAxisData', generationData, loadData, chargeData, dischargeData);
+          this.electricityOpts.yAxis.data[0].title = '功率(kW)';
 
-              generationData.push(isNaN(generatedPower) ? 0 : parseFloat(generatedPower.toFixed(2)));
-              loadData.push(isNaN(loadPower) ? 0 : parseFloat(loadPower.toFixed(2)));
-              chargeData.push(isNaN(storagePower) ? 0 : (storagePower >= 0 ? parseFloat(storagePower.toFixed(2)) : 0));
-              dischargeData.push(isNaN(storagePower) ? 0 : (storagePower < 0 ? parseFloat((-storagePower).toFixed(2)) : 0));
-            });
-            this.electricityOpts.yAxis.data[0].title = '功率(kW)';
-
-            this.electricityData = {
-              categories: xAxisData,
-              series: [
-                { data: generationData, name: '发电' },
-                { data: loadData, name: '用电' },
-                { data: chargeData, name: '充电' },
-                { data: dischargeData, name: '放电' },
-              ]
-            };
-          }
-
-          console.log(this.electricityData, 'electricityData');
-          this.electricityLoading = false;
-        }, 2000);
+          this.electricityData = {
+            categories: xAxisData,
+            series: [
+              { data: generationData, name: '发电' },
+              { data: loadData, name: '用电' },
+              { data: chargeData, name: '充电' },
+              { data: dischargeData, name: '放电' },
+            ]
+          };
+        }
+        this.electricityLoading = false;
       }).catch(() => {
-        setTimeout(() => {
-          this.electricityLoading = false;
-        }, 2000);
+        this.electricityLoading = false;
       });
     },
     findMonthElectricity() {
@@ -642,33 +608,28 @@ export default {
         endDate: endDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        setTimeout(() => {
-          const dataList = res.data || [];
+        const dataList = res.data || [];
 
-          if (dataList.length > 0) {
-            const sortedData = dataList.sort((a, b) => new Date(a.date) - new Date(b.date));
-            this.electricityOpts.yAxis.data[0].title = '电量(kWh)';
+        if (dataList.length > 0) {
+          const sortedData = dataList.sort((a, b) => new Date(a.date) - new Date(b.date));
+          this.electricityOpts.yAxis.data[0].title = '电量(kWh)';
 
-            this.electricityData = {
-              categories: sortedData.map(item => {
-                const date = new Date(item.date);
-                return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-              }),
-              series: [
-                { data: sortedData.map(item => parseFloat(item.photovoltaicPower) || 0), name: '发电' },
-                { data: sortedData.map(item => parseFloat(item.loadPower) || 0), name: '用电' },
-                { data: sortedData.map(item => parseFloat(item.storageCharge) || 0), name: '充电' },
-                { data: sortedData.map(item => parseFloat(item.storageDischarge) || 0), name: '放电' },
-              ]
-            };
-          }
-          console.log('月电量数据:', res.data);
-          this.electricityLoading = false;
-        }, 2000);
+          this.electricityData = {
+            categories: sortedData.map(item => {
+              const date = new Date(item.date);
+              return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            }),
+            series: [
+              { data: sortedData.map(item => parseFloat(item.photovoltaicPower) || 0), name: '发电' },
+              { data: sortedData.map(item => parseFloat(item.loadPower) || 0), name: '用电' },
+              { data: sortedData.map(item => parseFloat(item.storageCharge) || 0), name: '充电' },
+              { data: sortedData.map(item => parseFloat(item.storageDischarge) || 0), name: '放电' },
+            ]
+          };
+        }
+        this.electricityLoading = false;
       }).catch((err) => {
-        setTimeout(() => {
-          this.electricityLoading = false;
-        }, 2000);
+        this.electricityLoading = false;
         console.error('获取月电量数据失败:', err);
       });
     },
@@ -677,66 +638,58 @@ export default {
       const currentDevice = this.$store.state.currentSelectDevice || {};
       const esId = currentDevice.esId || currentDevice.id || 0;
       const areaLevelIds = currentDevice.areaLevelId || 0;
-
       const now = new Date();
       const year = now.getFullYear();
-
       queryYearElectricityStatistic({
         esId: esId,
         year: year,
         areaLevelIds: areaLevelIds
       }).then((res) => {
-        setTimeout(() => {
-          if (res.data && res.data.length > 0) {
-            const dataList = res.data;
-            const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
+        if (res.data && res.data.length > 0) {
+          const dataList = res.data;
+          const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
 
-            for (let m = 0; m < 12; m++) {
-              const month = m + 1;
-              xAxisData.push(`${month}月`);
+          for (let m = 0; m < 12; m++) {
+            const month = m + 1;
+            xAxisData.push(`${month}月`);
 
-              const monthData = dataList.filter(item => {
-                const itemMonth = parseInt(item.month) || 0;
-                return itemMonth === month;
-              });
-              console.log(monthData, 'monthData');
-              if (monthData.length > 0) {
-                const totalGeneration = monthData.reduce((sum, item) => sum + (parseFloat(item.photovoltaicPower) || 0), 0);
-                const totalLoad = monthData.reduce((sum, item) => sum + (parseFloat(item.loadPower) || 0), 0);
-                const totalCharge = monthData.reduce((sum, item) => sum + (parseFloat(item.storageCharge) || 0), 0);
-                const totalDischarge = monthData.reduce((sum, item) => sum + (parseFloat(item.storageDischarge) || 0), 0);
+            const monthData = dataList.filter(item => {
+              const itemMonth = parseInt(item.month) || 0;
+              return itemMonth === month;
+            });
+            if (monthData.length > 0) {
+              const totalGeneration = monthData.reduce((sum, item) => sum + (parseFloat(item.photovoltaicPower) || 0), 0);
+              const totalLoad = monthData.reduce((sum, item) => sum + (parseFloat(item.loadPower) || 0), 0);
+              const totalCharge = monthData.reduce((sum, item) => sum + (parseFloat(item.storageCharge) || 0), 0);
+              const totalDischarge = monthData.reduce((sum, item) => sum + (parseFloat(item.storageDischarge) || 0), 0);
 
-                generationData.push(parseFloat(totalGeneration.toFixed(2)));
-                loadData.push(parseFloat(totalLoad.toFixed(2)));
-                chargeData.push(parseFloat(totalCharge.toFixed(2)));
-                dischargeData.push(parseFloat(totalDischarge.toFixed(2)));
-              } else {
-                generationData.push(0);
-                loadData.push(0);
-                chargeData.push(0);
-                dischargeData.push(0);
-              }
+              generationData.push(parseFloat(totalGeneration.toFixed(2)));
+              loadData.push(parseFloat(totalLoad.toFixed(2)));
+              chargeData.push(parseFloat(totalCharge.toFixed(2)));
+              dischargeData.push(parseFloat(totalDischarge.toFixed(2)));
+            } else {
+              generationData.push(0);
+              loadData.push(0);
+              chargeData.push(0);
+              dischargeData.push(0);
             }
-
-            this.electricityOpts.yAxis.data[0].title = '电量(kWh)';
-
-            this.electricityData = {
-              categories: xAxisData,
-              series: [
-                { data: generationData, name: '发电' },
-                { data: loadData, name: '用电' },
-                { data: chargeData, name: '充电' },
-                { data: dischargeData, name: '放电' },
-              ]
-            };
           }
-          console.log('年电量数据:', res.data);
-          this.electricityLoading = false;
-        }, 2000);
+
+          this.electricityOpts.yAxis.data[0].title = '电量(kWh)';
+
+          this.electricityData = {
+            categories: xAxisData,
+            series: [
+              { data: generationData, name: '发电' },
+              { data: loadData, name: '用电' },
+              { data: chargeData, name: '充电' },
+              { data: dischargeData, name: '放电' },
+            ]
+          };
+        }
+        this.electricityLoading = false;
       }).catch((err) => {
-        setTimeout(() => {
-          this.electricityLoading = false;
-        }, 2000);
+        this.electricityLoading = false;
         console.error('获取年电量数据失败:', err);
       });
     },
@@ -750,50 +703,41 @@ export default {
     async executeCommand(options) {
       const { title, content, apiSufix, commandBuilder, action, stateKey } = options;
 
-      return new Promise((resolve) => {
-        uni.showModal({
-          title,
-          content,
-          success: async (res) => {
-            if (!res.confirm) {
-              resolve(false);
-              return;
-            }
+      return new Promise(async (resolve) => {
 
-            try {
-              uni.showLoading({ title: '下发中...' });
-              const commands = typeof commandBuilder === 'function' ? commandBuilder(action) : commandBuilder;
+        try {
+          uni.showLoading({ title: '下发中...' });
+          const commands = typeof commandBuilder === 'function' ? commandBuilder(action) : commandBuilder;
 
-              await sendCommandFrame({
-                apiSufix,
-                idCode: this.deviceConfig.idCode,
-                typeCode: this.deviceConfig.typeCode,
-                address: this.deviceConfig.address,
-                userId: this.userId,
-                commands
-              });
+          let res = await sendCommandFrame({
+            apiSufix,
+            idCode: this.deviceConfig.idCode,
+            typeCode: this.deviceConfig.typeCode,
+            address: this.deviceConfig.address,
+            userId: this.userId,
+            commands
+          });
 
-              uni.hideLoading();
-              // 更新选中状态
-              if (stateKey) {
-                this[stateKey] = action;
-              }
-              uni.showToast({
-                title: `${title}成功`,
-                icon: 'success'
-              });
-              resolve(true);
-            } catch (error) {
-              uni.hideLoading();
-              uni.showToast({
-                title: `${title}失败`,
-                icon: 'none'
-              });
-              console.error(`${apiSufix} error:`, error);
-              resolve(false);
-            }
+          uni.hideLoading();
+          // 更新选中状态
+          if (stateKey) {
+            this[stateKey] = action;
           }
-        });
+          uni.showToast({
+            title: `${title}成功`,
+            icon: 'success'
+          });
+          resolve(true);
+        } catch (error) {
+          uni.hideLoading();
+          uni.showToast({
+            title: `${title}失败`,
+            icon: 'none'
+          });
+          console.error(`${apiSufix} error:`, error);
+          resolve(false);
+        }
+        return
       });
     },
 
@@ -817,10 +761,10 @@ export default {
     async confirmStart() {
       this.showModal = false;
       const success = await this.executeCommand({
-        title: '系统启动',
-        content: '确定要启动系统吗？',
+        title: '策略启动',
+        content: '确定要启动策略吗？',
         apiSufix: 'systemControl',
-        commandBuilder: () => this.buildCommand('100', '1'),
+        commandBuilder: () => this.buildCommand('112', '1'),
         action: 'start',
         stateKey: 'systemRunning'
       });
@@ -833,10 +777,10 @@ export default {
     async confirmStop() {
       this.showStopModal = false;
       const success = await this.executeCommand({
-        title: '系统停止',
-        content: '确定要停止系统吗？',
+        title: '策略停止',
+        content: '确定要停止策略吗？',
         apiSufix: 'systemControl',
-        commandBuilder: () => this.buildCommand('100', '0'),
+        commandBuilder: () => this.buildCommand('112', '0'),
         action: 'stop',
         stateKey: 'systemRunning'
       });
@@ -846,7 +790,8 @@ export default {
     },
 
     handleStartStop() {
-      if (this.systemRunning) {
+      const status = this.getSystemStatus();
+      if (status === '运行中') {
         this.showStopModal = true;
       } else {
         this.showModal = true;

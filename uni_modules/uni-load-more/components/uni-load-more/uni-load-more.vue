@@ -37,7 +37,11 @@
 <script>
 	let platform
 	setTimeout(() => {
-		platform = uni.getSystemInfoSync().platform
+		try {
+			platform = uni.getDeviceInfo().platform
+		} catch (e) {
+			platform = uni.getSystemInfoSync().platform
+		}
 	}, 16)
 
 	import {

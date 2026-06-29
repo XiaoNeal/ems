@@ -110,10 +110,10 @@ export class Model171C extends DeviceBase {
 		this.energyData.B9b5.value = this.setAlarmStatus(jsonData.B9b5);
 		this.energyData.B9b6.value = this.setAlarmStatus(jsonData.B9b6);
 		this.energyData.B9b7.value = this.setAlarmStatus(jsonData.B9b7);
-		
+
 		this.energyData.B10b0.value = this.setAlarmStatus(jsonData.B10b0);
 		this.energyData.B10b1.value = this.setAlarmStatus(jsonData.B10b1);
-		
+
 		this.energyData.B12.value = jsonData.B12;
 		this.energyData.B14.value = jsonData.B14;
 		this.energyData.B16.value = jsonData.B16;
@@ -121,7 +121,7 @@ export class Model171C extends DeviceBase {
 		this.energyData.B20.value = jsonData.B20;
 		this.energyData.B22.value = jsonData.B22;
 		this.energyData.B24.value = jsonData.B24;
-		this.energyData.B26.value = jsonData.B26;
+		this.energyData.B26.value = this.setBatteryStatus(jsonData.B26);
 		this.energyData.B28b0.value = jsonData.B28b0;
 		this.energyData.B28b1.value = jsonData.B28b1;
 		this.energyData.B28b2.value = jsonData.B28b2;
@@ -199,20 +199,30 @@ export class Model171C extends DeviceBase {
 		this.energyData.B148.value = jsonData.B148;
 		this.energyData.B150.value = jsonData.B150;
 		this.energyData.B152.value = jsonData.B152;
-		this.energyData.B154.value = jsonData.B154;
+		this.energyData.B154.value = jsonData.B154 === 0 ? '关闭' : (jsonData.B154 === 1 ? '开启' : jsonData.B154);
 		// 处理 B156 的位字段
 		// if (jsonData.B156 != null) {
 		// 	const b156 = parseInt(jsonData.B156);
-		this.energyData.B156b0.value = jsonData.B156b0;
-		this.energyData.B156b1.value = jsonData.B156b1;
-		this.energyData.B156b2.value = jsonData.B156b2;
-		this.energyData.B156b3.value = jsonData.B156b3;
-		this.energyData.B156b4.value = jsonData.B156b4;
+		this.energyData.B156b0.value = jsonData.B156b0 === 0 ? '无效' : (jsonData.B156b0 === 1 ? '有效' : jsonData.B156b0);
+		this.energyData.B156b1.value = jsonData.B156b1 === 0 ? '无效' : (jsonData.B156b1 === 1 ? '有效' : jsonData.B156b1);
+		this.energyData.B156b2.value = jsonData.B156b2 === 0 ? '无效' : (jsonData.B156b2 === 1 ? '有效' : jsonData.B156b2);
+		this.energyData.B156b3.value = jsonData.B156b3 === 0 ? '无效' : (jsonData.B156b3 === 1 ? '有效' : jsonData.B156b3);
+		this.energyData.B156b4.value = jsonData.B156b4 === 0 ? '无效' : (jsonData.B156b4 === 1 ? '有效' : jsonData.B156b4);
 
 
 		this.energyData.B158.value = jsonData.B158;
-		this.energyData.B160.value = jsonData.B160;
-		this.energyData.B162.value = jsonData.B162;
+		const releaseConditionMap = {
+			0: '初始值',
+			1: '故障解除',
+			2: '反向电流',
+			3: '反向电流或电压低于限值',
+			4: '时间',
+			5: '时间或反向电流',
+			6: '故障复归解除',
+			'00FF': '无效值'
+		};
+		this.energyData.B160.value = releaseConditionMap[jsonData.B160] || jsonData.B160;
+		this.energyData.B162.value = this.setTime(jsonData);
 		this.energyData.B164.value = jsonData.B164;
 		this.energyData.B166.value = jsonData.B166;
 		this.energyData.B168.value = (jsonData.B168);
@@ -378,20 +388,81 @@ export class Model171C extends DeviceBase {
 		}
 	}
 
-	// 工具方法：故障等级转换（与PCS模板结构完全一致）
-	setFaultLevel(key) {
+	setBatteryStatus(key) {
 		switch (key) {
-			case 0:
-				return '正常';
 			case 1:
-				return '轻微故障';
+				return '初始化状态';
 			case 2:
-				return '中度故障';
+				return '自检';
+
 			case 3:
-				return '严重故障';
+				return '上电';
+			case 4:
+				return '上电完成';
+			case 5:
+				return '禁充';
+			case 6:
+				return '禁放';
+			case 7:
+				return '待机';
+
+			case 8:
+				return '故障下电';
+
+			case 9:
+				return '故障下电后故障已清除';
+			case 10:
+				return '测试模式';
+			case 11:
+				return '单簇维护';
+
+			case 12:
+				return '下电中';
+
+			case 13:
+				return '下电完成';
+
 			default:
 				return key;
 		}
+	}
+
+	// 工具方法：故障等级转换（与PCS模板结构完全一致）
+	setFaultLevel(key) {
+	
+		switch (key) {
+			case 0:
+				return '初始值';
+			case 1:
+				return '故障解除';
+			case 2:
+				return '反向电流';
+			case 3:
+				return '反向电流或电压低于限值';
+			case 4:
+				return '时间';
+			case 5:
+				return '时间或反向电流';
+			case 6:
+				return '故障复归解除';
+			case '00FF':
+				return '无效值';
+			default:
+				return key;
+		}
+	}
+
+	setTime(jsonData) {
+
+		if (jsonData.B162 == '00FF') {
+			return '-- 分钟';
+		}
+		if (jsonData.B160 == 4 || jsonData.B160 == 5) {
+			return jsonData.B162 + ' 分钟';
+		} else {
+			return jsonData.B162;
+		}
+
 	}
 
 	// 工具方法：工作模式转换（与PCS模板结构完全一致）

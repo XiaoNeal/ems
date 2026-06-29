@@ -110,6 +110,11 @@
 export default {
   name: 'device-detail',
   data() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
     return {
       deviceInfo: {
         deviceName: '1#直流多联机',
@@ -122,9 +127,9 @@ export default {
         deviceLoadRatio: 0.04,
         deviceEnergyEfficiencyLevel: 1
       },
-      selectedDate: new Date().toISOString().split('T')[0],
+      selectedDate: today,
       startDate: '2020-01-01',
-      endDate: new Date().toISOString().split('T')[0]
+      endDate: today
     };
   },
   onLoad(options) {

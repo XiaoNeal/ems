@@ -46,7 +46,11 @@
 <script>
 	let platform = 'other'
 	// #ifdef APP-NVUE
-	platform = uni.getSystemInfoSync().platform
+	try {
+		platform = uni.getDeviceInfo().platform
+	} catch (e) {
+		platform = uni.getSystemInfoSync().platform
+	}
 	// #endif
 
 	/**
@@ -163,7 +167,12 @@
 			},
 			// 计算 nvue bottom
 			nvueBottom() {
-				const safeBottom = uni.getSystemInfoSync().windowBottom;
+				let safeBottom
+				try {
+					safeBottom = uni.getWindowInfo().windowBottom
+				} catch (e) {
+					safeBottom = uni.getSystemInfoSync().windowBottom
+				}
 				// #ifdef APP-NVUE
 				return 30 + safeBottom
 				// #endif

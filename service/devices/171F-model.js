@@ -37,7 +37,24 @@ export class Model171F extends DeviceBase {
         const data = jsonData.data || jsonData;
         for (const key in data) {
             if (this.controlData.hasOwnProperty(key) && this.controlData[key]) {
-                this.controlData[key].value = data[key];
+                if (key === 'B14') {
+                    const strategyMap = {
+                        0: '峰谷',
+                        1: '恒限功率',
+                        2: '柔度',
+                        3: '自发自用',
+                        4: '电池优先',
+                        5: '削峰填谷',
+                        6: '售卖优先',
+                        7: '限制消费',
+                        8: '零出口',
+                        9: '1113+防逆流',
+                        10: 'AI调度'
+                    };
+                    this.controlData[key].value = strategyMap[data[key]] || data[key];
+                } else {
+                    this.controlData[key].value = data[key];
+                }
             }
         }
         // console.log(this.controlData, "controlData");

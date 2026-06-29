@@ -65,7 +65,11 @@
 			}
 		},
 		mounted() {
-			this.isIOS = (uni.getSystemInfoSync().platform === 'ios')
+			try {
+				this.isIOS = (uni.getDeviceInfo().platform === 'ios')
+			} catch (e) {
+				this.isIOS = (uni.getSystemInfoSync().platform === 'ios')
+			}
 			uni.onNetworkStatusChange((res) => {
 				this.isConnected = res.isConnected
 				this.networkType = res.networkType

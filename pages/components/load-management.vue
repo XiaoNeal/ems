@@ -33,7 +33,7 @@
         <dy-date timeType="day" @getData="handleDatePicker" v-model="selectedDate" class="custom-picker date-picker" />
       </view>
       <view class="chart-container">
-        <qiun-data-charts type="line" :chartData="loadChartData" :opts="loadChartOptions" :canvasId="chartId"
+        <qiun-data-charts type="area" :chartData="loadChartData" :opts="loadChartOptions" :canvasId="chartId"
           class="main-chart" :ontouch="true" :canvas2d="canvas2d" />
       </view>
     </view>
@@ -103,6 +103,11 @@ export default {
   components: { dyDate },
   name: 'load-management',
   data() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
     return {
       chartId: 'load-' + Math.random().toString(36).substr(2, 9),
       datetimesingle: '',
@@ -163,7 +168,7 @@ export default {
         { deviceName: '设备名称', devId: "--", projectAddress: "--", deviceFlexibility: 0.6, deviceLoadRatio: 0.6, deviceEnergyEfficiencyLevel: 3 },
         { deviceName: '设备名称', devId: "--", projectAddress: "--", deviceFlexibility: 0.6, deviceLoadRatio: 0.9, deviceEnergyEfficiencyLevel: 1 },
       ],
-      selectedDate: new Date().toISOString().split('T')[0],
+      selectedDate: today,
     };
   },
   mounted() {

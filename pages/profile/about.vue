@@ -78,7 +78,8 @@
 		},
 		mounted() {
 			// #ifdef APP-PLUS
-			let version = uni.getSystemInfoSync().appWgtVersion;
+			let appBaseInfo = uni.getAppBaseInfo();
+			let version = appBaseInfo.appWgtVersion;
 			this.appVersion = version.replace(/\./g, '.');
 			// #endif
 			// #ifdef APP

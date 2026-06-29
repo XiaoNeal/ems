@@ -9,7 +9,7 @@ export const getPowerData = (params) => {
 	return request({
 		// url: '/api/energyStation/v2/queryDayGeneratedPower',
 		// url: '/api/energyStation/v1/queryComprehensivePowerByMinute',
-		url: '/api/energyStation/v1/queryComprehensivePowerBy5Minute',
+		url: '/api/energyStation/v1/queryComprehensivePowerBy10Minute',
 
 		method: 'GET',
 		data: params

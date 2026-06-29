@@ -210,7 +210,19 @@
 					safeArea,
 					screenHeight,
 					safeAreaInsets
-				} = uni.getSystemInfoSync()
+				let windowWidth, windowHeight, windowTop, safeArea, screenHeight, safeAreaInsets
+				try {
+					const windowInfo = uni.getWindowInfo()
+					const deviceInfo = uni.getDeviceInfo()
+					windowWidth = windowInfo.windowWidth
+					windowHeight = windowInfo.windowHeight
+					windowTop = windowInfo.windowTop
+					safeArea = windowInfo.safeArea
+					screenHeight = deviceInfo.screenHeight
+					safeAreaInsets = windowInfo.safeAreaInsets
+				} catch (e) {
+					({ windowWidth, windowHeight, windowTop, safeArea, screenHeight, safeAreaInsets } = uni.getSystemInfoSync())
+				}
 				// #endif
 				this.popupWidth = windowWidth
 				this.popupHeight = windowHeight + (windowTop || 0)

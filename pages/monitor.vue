@@ -63,7 +63,8 @@ export default {
   computed: {
     // 屏幕方向检测
     isLandscape() {
-      return uni.getSystemInfoSync().windowWidth > uni.getSystemInfoSync().windowHeight;
+      const windowInfo = uni.getWindowInfo();
+      return windowInfo.windowWidth > windowInfo.windowHeight;
     }
   },
   methods: {

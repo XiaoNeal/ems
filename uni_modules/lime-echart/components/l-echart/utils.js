@@ -31,7 +31,7 @@ export function wrapTouch(event) {
   }
   return event;
 }
-export const devicePixelRatio = wx.getSystemInfoSync().pixelRatio
+export const devicePixelRatio = wx.getWindowInfo().pixelRatio
 // #endif
 // #ifdef APP-NVUE
 export function base64ToPath(base64) {

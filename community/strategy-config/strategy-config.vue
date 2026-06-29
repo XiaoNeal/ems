@@ -1,11 +1,18 @@
 <template>
   <view class="container">
     <!-- 顶部导航栏 -->
-    <u-navbar title="策略配置" :autoBack="true" :placeholder="true">
-    </u-navbar>
-
-    <!-- 导航栏占位层 -->
-    <!-- <view class="navbar-placeholder"></view> -->
+    <view class="header">
+      <view class="header-safe-area"></view>
+      <view class="header-content">
+        <view class="back-btn" @click="goBack">
+          <uni-icons type="back" size="20" color="#303133"></uni-icons>
+        </view>
+        <view class="header-center">
+          <text class="title">策略配置</text>
+        </view>
+        <view class="header-right"></view>
+      </view>
+    </view>
 
     <!-- 内容区域 -->
     <view class="content">
@@ -22,33 +29,39 @@
           </view>
         </view>
         <view class="mode-buttons">
-          <view class="mode-btn" :class="{ active: activeMode === 'peakValley' }" @click="switchMode('peakValley')">峰谷运行
+          <view class="mode-btn" v-if="false" :class="{ active: activeMode === 'peakValley' }"
+            @click="switchMode('peakValley')">峰谷运行
           </view>
-          <view class="mode-btn" :class="{ active: activeMode === 'flexControl' }" @click="switchMode('flexControl')">
-            柔性控制</view>
-          <view class="mode-btn" :class="{ active: activeMode === 'aiStrategy' }" @click="switchMode('aiStrategy')">AI策略
-          </view>
-        </view>
-        <view class="mode-buttons">
           <view class="mode-btn" :class="{ active: activeMode === 'selfUse' }" @click="switchMode('selfUse')">自发自用
           </view>
-          <view class="mode-btn" :class="{ active: activeMode === 'dischargeFirst' }"
-            @click="switchMode('dischargeFirst')">放电优先</view>
-          <view class="mode-btn" :class="{ active: activeMode === 'peakShaving' }" @click="switchMode('peakShaving')">
-            削峰填谷</view>
+          <view class="mode-btn" v-if="false" :class="{ active: activeMode === 'batteryFirst' }"
+            @click="switchMode('batteryFirst')">电池优先
+          </view>
         </view>
         <view class="mode-buttons">
-          <view class="mode-btn" :class="{ active: activeMode === 'sellFirst' }" @click="switchMode('sellFirst')">售电优先
+          <view class="mode-btn" v-if="false" :class="{ active: activeMode === 'peakShaving' }"
+            @click="switchMode('peakShaving')">
+            削峰填谷</view>
+          <view class="mode-btn" v-if="false" :class="{ active: activeMode === 'sellFirst' }"
+            @click="switchMode('sellFirst')">售电优先
           </view>
-          <view class="mode-btn" :class="{ active: activeMode === 'limitLoad' }" @click="switchMode('limitLoad')">限制负荷
+          <view class="mode-btn" v-if="false" :class="{ active: activeMode === 'limitLoad' }"
+            @click="switchMode('limitLoad')">限制消费
           </view>
-          <view class="mode-btn" :class="{ active: activeMode === 'zeroExport' }" @click="switchMode('zeroExport')">零出口
+        </view>
+        <view class="mode-buttons">
+          <view class="mode-btn" v-if="false" :class="{ active: activeMode === 'zeroExport' }"
+            @click="switchMode('zeroExport')">零出口
+          </view>
+          <view class="mode-btn" v-if="false" :class="{ active: activeMode === 'antiBackflow' }"
+            @click="switchMode('antiBackflow')">1113+防逆流
           </view>
         </view>
       </view>
 
       <!-- 星期选择 -->
-      <view class="week-section" v-if="!showStatus">
+      <view class="week-section"
+        v-if="false && !showStatus && (activeMode === 'peakValley' || activeMode === 'peakShaving')">
         <text class="section-title">星期选择</text>
         <view class="week-selector" @click.stop="showWeekPicker">
           <text class="week-text">{{ selectedWeekText }}</text>
@@ -59,7 +72,8 @@
       </view>
 
       <!-- 充放电时段设置 -->
-      <view class="time-section" v-if="!showStatus">
+      <view class="time-section"
+        v-if="false && !showStatus && (activeMode === 'peakValley' || activeMode === 'peakShaving')">
         <view class="time-section-header">
           <text class="section-title">充、放电时间设置</text>
           <text class="add-time-link" v-if="isEditing" @click="addTimeSlot">添加时段</text>
@@ -109,6 +123,77 @@
             <view class="td-delete">
               <view class="delete-btn" @click="deleteTimeSlot(index)">删除</view>
             </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 策略参数配置 -->
+      <view class="strategy-params-section"
+        v-if="false && !showStatus && activeMode !== 'peakValley' && activeMode !== 'peakShaving'">
+        <view class="strategy-params-header" v-if="false">
+          <text class="section-title">策略参数</text>
+        </view>
+
+        <!-- 电池优先策略参数 -->
+        <view class="param-group" v-if="activeMode === 'batteryFirst'">
+          <view class="param-item">
+            <text class="param-label">目标SOC值(%)</text>
+            <input type="digit" v-model="strategyParams.targetSOC" class="param-input" placeholder="0-100" />
+          </view>
+        </view>
+
+        <!-- 售卖优先策略参数 -->
+        <view class="param-group" v-if="activeMode === 'sellFirst'">
+          <view class="param-item">
+            <text class="param-label">是否卖储能电</text>
+            <view class="param-switch" @click="toggleSellStorage">
+              <view class="switch-track" :class="{ active: strategyParams.sellStorage }">
+                <view class="switch-thumb"></view>
+              </view>
+              <text class="switch-text">{{ strategyParams.sellStorage ? '出售' : '不出售' }}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 限制消费策略参数 -->
+        <view class="param-group" v-if="activeMode === 'limitLoad'">
+          <view class="param-item">
+            <text class="param-label">PCS设定功率值(kW)</text>
+            <input type="digit" v-model="strategyParams.pcsPower" class="param-input" placeholder="0" />
+          </view>
+        </view>
+
+        <!-- 防逆流参数（适用多个策略） -->
+        <view class="param-group"
+          v-if="['selfUse', 'batteryFirst', 'sellFirst', 'limitLoad', 'zeroExport'].includes(activeMode)">
+          <view class="param-item">
+            <!-- <text class="param-label">启动防逆流</text> -->
+            <!-- <view class="param-switch" @click="toggleAntiBackflow">
+              <view class="switch-track" :class="{ active: strategyParams.antiBackflow }">
+                <view class="switch-thumb"></view>
+              </view>
+              <text class="switch-text">{{ strategyParams.antiBackflow ? '启动' : '不启动' }}</text>
+            </view> -->
+          </view>
+          <!-- <view class="param-item">
+            <text class="param-label">防逆流服务端交流总表功率(W)</text>
+            <input type="digit" v-model="antiBackflowPower" class="param-input" placeholder="0" />
+          </view>
+          <view class="param-item">
+            <text class="param-label">防逆流服务端控制能源站数量(台)</text>
+            <input type="digit" v-model="antiBackflowStationCount" class="param-input" placeholder="0" />
+          </view> -->
+        </view>
+
+        <!-- 1113策略参数 -->
+        <view class="param-group" v-if="activeMode === 'antiBackflow'">
+          <view class="param-item">
+            <text class="param-label">防逆流电网侧目标功率(kW)</text>
+            <input type="digit" v-model="strategyParams.gridTargetPower" class="param-input" placeholder="0" />
+          </view>
+          <view class="param-item">
+            <text class="param-label">防逆流电网侧目标功率上下边界波动幅度(kW)</text>
+            <input type="digit" v-model="strategyParams.gridPowerFluctuation" class="param-input" placeholder="0" />
           </view>
         </view>
       </view>
@@ -263,6 +348,7 @@
 <script>
 import request from '@/utils/request.js'
 import { realtimeDataProvider } from '@/service/websocket'
+import { sendCommandFrame } from '@/api/control.js'
 
 export default {
   data() {
@@ -276,22 +362,33 @@ export default {
       weekDays: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
       // 模式到策略类型的映射
       modeToStrategyType: {
-        peakValley: 1,
-        flexControl: 2,
-        aiStrategy: 3,
-        selfUse: 4,
-        dischargeFirst: 5,
-        peakShaving: 6,
-        sellFirst: 7,
-        limitLoad: 8,
-        zeroExport: 9
+        peakValley: 0,
+        selfUse: 3,
+        batteryFirst: 4,
+        peakShaving: 5,
+        sellFirst: 6,
+        limitLoad: 7,
+        zeroExport: 8,
+        antiBackflow: 9
       },
       modeData: {},
       configurable: true, // 是否可配置
       isEditing: false, // 是否处于编辑模式
       showStatus: true, // 是否显示状态模式（默认显示状态）
       statusGroups: [], // 状态参数分组数据
-      deviceList: [] // 设备列表
+      deviceList: [], // 设备列表
+      // 策略参数
+      strategyParams: {
+        targetSOC: '', // 电池优先策略：目标SOC值
+        sellStorage: false, // 售卖优先策略：是否卖储能电
+        pcsPower: '', // 限制消费策略：中PCS设定功率值
+        antiBackflow: false, // 防逆流：是否启动
+        gridTargetPower: '', // 1113策略：防逆流电网侧目标功率(kW)
+        gridPowerFluctuation: '' // 1113策略：防逆流电网侧目标功率上下边界波动幅度(kW)
+      },
+      // 防逆流参数
+      antiBackflowPower: '', // 防逆流服务端交流总表功率(W)
+      antiBackflowStationCount: '' // 防逆流服务端控制能源站数量(台)
     }
   },
   mounted() {
@@ -322,9 +419,29 @@ export default {
     device171F() {
       const deviceList = realtimeDataProvider.getDeviceList()
       return deviceList.find(item => item && item.deviceType.includes('171F'))
+    },
+    userId() {
+      return this.$store.state.userInfo?.userId || 0
     }
   },
   methods: {
+    buildCommand(registerAddress, registerValue) {
+      return [{
+        deviceCategory: '171F',
+        addr: '01',
+        deviceId: '01',
+        registerAddress,
+        registerValue: registerValue.toString(),
+        valueType: '01',
+        registerType: '03',
+        extra1: '00',
+        extra2: '00',
+        extra3: '00'
+      }];
+    },
+    goBack() {
+      uni.navigateBack();
+    },
     switchMode(mode) {
       this.activeMode = mode
     },
@@ -340,6 +457,28 @@ export default {
         // 退出编辑模式，回到状态显示
         this.isEditing = false
         this.showStatus = true
+        // 清空所有策略参数
+        this.strategyParams = {
+          targetSOC: '',
+          sellStorage: false,
+          pcsPower: '',
+          antiBackflow: false,
+          gridTargetPower: '',
+          gridPowerFluctuation: ''
+        }
+        // 清空防逆流参数
+        this.antiBackflowPower = ''
+        this.antiBackflowStationCount = ''
+        // 清空模式数据
+        const modeKeys = Object.keys(this.modeToStrategyType)
+        modeKeys.forEach(mode => {
+          this.$set(this.modeData, mode, {
+            selectedWeekDays: [0, 1, 2, 3, 4, 5, 6],
+            timeSlots: []
+          })
+        })
+        // 重置为默认策略
+        this.activeMode = 'peakValley'
         uni.showToast({
           title: '已退出编辑模式',
           icon: 'none'
@@ -423,6 +562,14 @@ export default {
         this.modeData[this.activeMode].timeSlots[index].endTime = e.detail.value
       }
     },
+    // 切换是否卖储能电
+    toggleSellStorage() {
+      this.strategyParams.sellStorage = !this.strategyParams.sellStorage
+    },
+    // 切换防逆流开关
+    toggleAntiBackflow() {
+      this.strategyParams.antiBackflow = !this.strategyParams.antiBackflow
+    },
     showConfirmModal() {
       this.showConfirmDialog = true
     },
@@ -497,14 +644,18 @@ export default {
     // 保存策略配置
     async saveStrategyConfig() {
       try {
+        const strategyType = this.modeToStrategyType[this.activeMode];
+        if (strategyType === 0) {
+          uni.showToast({ title: '请选择策略模式', icon: 'none' });
+          return;
+        }
 
-        console.log(this.$store.state, "99999999999999")
         const currentDevice = this.$store.state.currentSelectDevice || {}
         const areaLevelId = currentDevice.areaLevelId
         // 构建请求数据
         const requestData = {
           areaLevelId: areaLevelId,
-          strategyType: this.modeToStrategyType[this.activeMode],
+          strategyType: strategyType,
           daysOfWeek: this.selectedWeekDays.map(d => d + 1).join(','), // 转换为1-based索引
           timeConfigs: this.timeSlots.map(slot => ({
             timeType: slot.timeType,
@@ -515,6 +666,9 @@ export default {
           }))
         }
 
+
+
+
         const response = await request({
           url: '/api/energyStation/upsertEsStrategyConfig',
           method: 'POST',
@@ -522,7 +676,26 @@ export default {
         })
 
         if (response.status === 200) {
-          uni.showToast({ title: '保存成功', icon: 'success' })
+          // const device = this.device171F;
+
+          let deviceConfig = {
+            idCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
+            typeCode: '3401',
+            address: '01'
+          }
+          if (deviceConfig && deviceConfig.idCode && deviceConfig.typeCode && deviceConfig.address) {
+            await sendCommandFrame({
+              apiSufix: 't3401_171F_control',
+              idCode: deviceConfig.idCode,
+              typeCode: deviceConfig.typeCode,
+              address: deviceConfig.address,
+              userId: this.userId,
+              commands: this.buildCommand('114', strategyType)
+            });
+            uni.showToast({ title: '保存并下发成功', icon: 'success' });
+          } else {
+            uni.showToast({ title: '保存成功', icon: 'success' });
+          }
         } else {
           uni.showToast({ title: '保存失败', icon: 'error' })
         }
@@ -553,42 +726,42 @@ export default {
             type: 'normal',
             params: [
               { key: 'B14', name: '运行策略' },
-              { key: 'B16', name: '电池优先策略的目标SOC值' },
-              { key: 'B18', name: '售卖优先策略（是否卖储能电）' },
-              { key: 'B20', name: '限制消费策略功率' },
-              { key: 'B22', name: '启动防逆流' },
-              { key: 'B24', name: '防逆流服务端交流总表功率' },
-              { key: 'B28', name: '防逆流服务端控制能源站数量' },
-              { key: 'B32', name: '防逆流电网侧目标功率' },
-              { key: 'B34', name: '防逆流电网侧目标功率上下边界波动幅度' }
+              // { key: 'B16', name: '电池优先策略的目标SOC值' },
+              // { key: 'B18', name: '售卖优先策略（是否卖储能电）' },
+              // { key: 'B20', name: '限制消费策略功率' },
+              // { key: 'B22', name: '启动防逆流' },
+              // { key: 'B24', name: '防逆流服务端交流总表功率' },
+              // { key: 'B28', name: '防逆流服务端控制能源站数量' },
+              // { key: 'B32', name: '防逆流电网侧目标功率' },
+              // { key: 'B34', name: '防逆流电网侧目标功率上下边界波动幅度' }
             ]
           },
-          {
-            title: '削峰填谷策略',
-            type: 'strategy',
-            weekday: { keys: ['B38', 'B40', 'B42', 'B44', 'B46', 'B48', 'B50'], days: ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期天'] },
-            params: [
-              { key: 'B52-B62', name: '削峰填谷策略1', enabledKey: 'B54', startHourKey: 'B56', startMinKey: 'B58', endHourKey: 'B60', endMinKey: 'B62' },
-              { key: 'B64-B74', name: '削峰填谷策略2', enabledKey: 'B66', startHourKey: 'B68', startMinKey: 'B70', endHourKey: 'B72', endMinKey: 'B74' },
-              { key: 'B76-B86', name: '削峰填谷策略3', enabledKey: 'B78', startHourKey: 'B80', startMinKey: 'B82', endHourKey: 'B84', endMinKey: 'B86' },
-              { key: 'B88-B98', name: '削峰填谷策略4', enabledKey: 'B90', startHourKey: 'B92', startMinKey: 'B94', endHourKey: 'B96', endMinKey: 'B98' },
-              { key: 'B100-B110', name: '削峰填谷策略5', enabledKey: 'B102', startHourKey: 'B104', startMinKey: 'B106', endHourKey: 'B108', endMinKey: 'B110' },
-              { key: 'B112-B122', name: '削峰填谷策略6', enabledKey: 'B114', startHourKey: 'B116', startMinKey: 'B118', endHourKey: 'B120', endMinKey: 'B122' }
-            ]
-          },
-          {
-            title: '峰谷策略',
-            type: 'strategy',
-            weekday: { keys: ['B126', 'B128', 'B130', 'B132', 'B134', 'B136', 'B138'], days: ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期天'] },
-            params: [
-              { key: 'B140-B152', name: '峰谷策略1', powerKey: 'B142', enabledKey: 'B144', startHourKey: 'B146', startMinKey: 'B148', endHourKey: 'B150', endMinKey: 'B152' },
-              { key: 'B154-B166', name: '峰谷策略2', powerKey: 'B156', enabledKey: 'B158', startHourKey: 'B160', startMinKey: 'B162', endHourKey: 'B164', endMinKey: 'B166' },
-              { key: 'B168-B180', name: '峰谷策略3', powerKey: 'B170', enabledKey: 'B172', startHourKey: 'B174', startMinKey: 'B176', endHourKey: 'B178', endMinKey: 'B180' },
-              { key: 'B182-B194', name: '峰谷策略4', powerKey: 'B184', enabledKey: 'B186', startHourKey: 'B188', startMinKey: 'B190', endHourKey: 'B192', endMinKey: 'B194' },
-              { key: 'B196-B208', name: '峰谷策略5', powerKey: 'B198', enabledKey: 'B200', startHourKey: 'B202', startMinKey: 'B204', endHourKey: 'B206', endMinKey: 'B208' },
-              { key: 'B210-B222', name: '峰谷策略6', powerKey: 'B212', enabledKey: 'B214', startHourKey: 'B216', startMinKey: 'B218', endHourKey: 'B220', endMinKey: 'B222' }
-            ]
-          }
+          // {
+          //   title: '削峰填谷策略',
+          //   type: 'strategy',
+          //   weekday: { keys: ['B38', 'B40', 'B42', 'B44', 'B46', 'B48', 'B50'], days: ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期天'] },
+          //   params: [
+          //     { key: 'B52-B62', name: '削峰填谷策略1', enabledKey: 'B54', startHourKey: 'B56', startMinKey: 'B58', endHourKey: 'B60', endMinKey: 'B62' },
+          //     { key: 'B64-B74', name: '削峰填谷策略2', enabledKey: 'B66', startHourKey: 'B68', startMinKey: 'B70', endHourKey: 'B72', endMinKey: 'B74' },
+          //     { key: 'B76-B86', name: '削峰填谷策略3', enabledKey: 'B78', startHourKey: 'B80', startMinKey: 'B82', endHourKey: 'B84', endMinKey: 'B86' },
+          //     { key: 'B88-B98', name: '削峰填谷策略4', enabledKey: 'B90', startHourKey: 'B92', startMinKey: 'B94', endHourKey: 'B96', endMinKey: 'B98' },
+          //     { key: 'B100-B110', name: '削峰填谷策略5', enabledKey: 'B102', startHourKey: 'B104', startMinKey: 'B106', endHourKey: 'B108', endMinKey: 'B110' },
+          //     { key: 'B112-B122', name: '削峰填谷策略6', enabledKey: 'B114', startHourKey: 'B116', startMinKey: 'B118', endHourKey: 'B120', endMinKey: 'B122' }
+          //   ]
+          // },
+          // {
+          //   title: '峰谷策略',
+          //   type: 'strategy',
+          //   weekday: { keys: ['B126', 'B128', 'B130', 'B132', 'B134', 'B136', 'B138'], days: ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期天'] },
+          //   params: [
+          //     { key: 'B140-B152', name: '峰谷策略1', powerKey: 'B142', enabledKey: 'B144', startHourKey: 'B146', startMinKey: 'B148', endHourKey: 'B150', endMinKey: 'B152' },
+          //     { key: 'B154-B166', name: '峰谷策略2', powerKey: 'B156', enabledKey: 'B158', startHourKey: 'B160', startMinKey: 'B162', endHourKey: 'B164', endMinKey: 'B166' },
+          //     { key: 'B168-B180', name: '峰谷策略3', powerKey: 'B170', enabledKey: 'B172', startHourKey: 'B174', startMinKey: 'B176', endHourKey: 'B178', endMinKey: 'B180' },
+          //     { key: 'B182-B194', name: '峰谷策略4', powerKey: 'B184', enabledKey: 'B186', startHourKey: 'B188', startMinKey: 'B190', endHourKey: 'B192', endMinKey: 'B194' },
+          //     { key: 'B196-B208', name: '峰谷策略5', powerKey: 'B198', enabledKey: 'B200', startHourKey: 'B202', startMinKey: 'B204', endHourKey: 'B206', endMinKey: 'B208' },
+          //     { key: 'B210-B222', name: '峰谷策略6', powerKey: 'B212', enabledKey: 'B214', startHourKey: 'B216', startMinKey: 'B218', endHourKey: 'B220', endMinKey: 'B222' }
+          //   ]
+          // }
         ]
       } catch (error) {
         console.error('加载状态数据失败:', error)
@@ -666,14 +839,65 @@ export default {
   background-color: #f5f7fa;
 }
 
-.navbar-placeholder {
-  height: calc(env(safe-area-inset-top) + 88rpx);
+.header {
+  position: fixed;
+  top: 0px;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: #fff;
+}
+
+.header-safe-area {
+  height: calc(var(--status-bar-height) + 20px);
+  background-color: #fff;
+}
+
+.header-content {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 15px;
+  box-sizing: border-box;
+}
+
+.header-center {
+  flex: 1;
+  text-align: center;
+}
+
+.back-btn {
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  font-size: 36rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.header-right {
+  width: 44px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
 }
 
 .content {
   padding: 20rpx;
   position: relative;
   box-sizing: border-box;
+  padding-top: calc(var(--status-bar-height) + 64px);
+  margin-top: 20rpx;
+  height: calc(100vh - 140rpx);
+  overflow-y: auto;
 }
 
 .content-mask {
@@ -769,6 +993,7 @@ export default {
   background-color: #f5f7fa;
   color: #333;
   transition: all 0.2s;
+  max-width: 30%;
 }
 
 .mode-btn.active {
@@ -1502,5 +1727,103 @@ export default {
   font-size: 28rpx;
   color: #666;
   font-weight: 500;
+}
+
+/* 策略参数配置 */
+.strategy-params-section {
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.strategy-params-header {
+  margin-bottom: 20rpx;
+}
+
+.param-group {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.param-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.param-label {
+  font-size: 28rpx;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.param-input {
+  width: 200rpx;
+  height: 60rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  text-align: right;
+  background-color: #f5f7fa;
+  border: 1rpx solid #d9d9d9;
+  border-radius: 8rpx;
+  box-sizing: border-box;
+}
+
+.param-input:focus {
+  background-color: #fff;
+  border-color: #1890ff;
+}
+
+.param-value-readonly {
+  font-size: 28rpx;
+  color: #666;
+  text-align: right;
+}
+
+.param-switch {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.switch-track {
+  width: 80rpx;
+  height: 44rpx;
+  background-color: #d9d9d9;
+  border-radius: 22rpx;
+  position: relative;
+  transition: background-color 0.3s;
+
+  &.active {
+    background-color: #1890ff;
+  }
+}
+
+.switch-thumb {
+  width: 40rpx;
+  height: 40rpx;
+  background-color: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2rpx;
+  left: 2rpx;
+  transition: transform 0.3s;
+}
+
+.switch-track.active .switch-thumb {
+  transform: translateX(36rpx);
+}
+
+.switch-text {
+  font-size: 28rpx;
+  color: #666;
 }
 </style>

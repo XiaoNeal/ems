@@ -249,15 +249,15 @@ export default {
         { key: 'bms.B222', field: 'B222', label: '从控站址自动分配', unit: '' }
       ],
       bmsSwitchParams: [
-        { key: 'bms.B168', label: '控制指令模式', options: [
-          { label: '单簇系统', value: '1' },
-          { label: '并簇系统', value: '2' },
-          { label: '强控模式', value: '3' }
-        ]},
-        { key: 'bms.B170', label: '上下电控制指令', options: [
-          { label: '上电', value: '0x55', dangerous: true },
-          { label: '下电', value: '0xAA', dangerous: true }
-        ]},
+        // { key: 'bms.B168', label: '控制指令模式', options: [
+        //   { label: '单簇系统', value: '1' },
+        //   { label: '并簇系统', value: '2' },
+        //   { label: '强控模式', value: '3' }
+        // ]},
+        // { key: 'bms.B170', label: '上下电控制指令', options: [
+        //   { label: '上电', value: '0x55', dangerous: true },
+        //   { label: '下电', value: '0xAA', dangerous: true }
+        // ]},
         { key: 'bms.B172', label: 'DO 控制', options: [
           { label: '闭合', value: '1' },
           { label: '断开', value: '0' }
@@ -275,26 +275,26 @@ export default {
           { label: '默认状态', value: '0' },
           { label: '跳机', value: '1', dangerous: true }
         ]},
-        { key: 'bms.B190', label: '显控检测故障', options: [
-          { label: '无故障', value: '0' },
-          { label: '故障', value: '1' }
-        ]},
+        // { key: 'bms.B190', label: '显控检测故障', options: [
+        //   { label: '无故障', value: '0' },
+        //   { label: '故障', value: '1' }
+        // ]},
         { key: 'bms.B192', label: '主控均衡控制', options: [
           { label: '关闭均衡', value: '0' },
           { label: '开启均衡', value: '1' },
           { label: '主控自主', value: '2' }
         ]},
-        { key: 'bms.B202', label: '电池类型', options: [
-          { label: '磷酸铁锂电池', value: '1' },
-          { label: '钛酸锂电池', value: '2' },
-          { label: '锰酸锂电池', value: '3' },
-          { label: '三元电池', value: '4' }
-        ]},
-        { key: 'bms.B224', label: '风扇控制功能', options: [
-          { label: '风扇开启', value: '0x1' },
-          { label: '风扇关闭', value: '0x2' },
-          { label: '退出控制', value: '0x3' }
-        ]}
+        // { key: 'bms.B202', label: '电池类型', options: [
+        //   { label: '磷酸铁锂电池', value: '1' },
+        //   { label: '钛酸锂电池', value: '2' },
+        //   { label: '锰酸锂电池', value: '3' },
+        //   { label: '三元电池', value: '4' }
+        // ]},
+        // { key: 'bms.B224', label: '风扇控制功能', options: [
+        //   { label: '风扇开启', value: '0x1' },
+        //   { label: '风扇关闭', value: '0x2' },
+        //   { label: '退出控制', value: '0x3' }
+        // ]}
       ]
     }
   },
@@ -650,7 +650,7 @@ export default {
 .bms-settings {
   background: #f5f5f5;
   min-height: 100vh;
-  padding: 20rpx;
+  // padding: 20rpx;
 }
 
 .param-card {
@@ -798,7 +798,7 @@ export default {
 }
 
 .param-value-box {
-  width: 160rpx;
+  width: 150rpx;
   height: 64rpx;
   line-height: 64rpx;
   background: #f8f9fa;
@@ -837,7 +837,7 @@ export default {
 .unit-text {
   font-size: 24rpx;
   color: #999;
-  min-width: 60rpx;
+  min-width: 40rpx;
   text-align: left;
 }
 

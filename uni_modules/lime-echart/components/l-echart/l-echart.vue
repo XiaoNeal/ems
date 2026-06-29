@@ -155,7 +155,20 @@ export default {
 		}
 		// #endif
 		// #ifdef MP-WEIXIN || MP-TOUTIAO || MP-ALIPAY
-		const { SDKVersion, version, platform, environment } = uni.getSystemInfoSync();
+		let SDKVersion, version, platform, environment;
+		try {
+			const deviceInfo = uni.getDeviceInfo();
+			platform = deviceInfo.platform;
+			const accountInfo = uni.getAccountInfoSync();
+			SDKVersion = accountInfo.miniProgram ? accountInfo.miniProgram.version : '';
+			version = accountInfo.miniProgram ? accountInfo.miniProgram.version : '';
+		} catch (e) {
+			const systemInfo = uni.getSystemInfoSync();
+			SDKVersion = systemInfo.SDKVersion;
+			version = systemInfo.version;
+			platform = systemInfo.platform;
+			environment = systemInfo.environment;
+		}
 		// #endif
 		// #ifdef MP-WEIXIN
 		this.isPC = /windows/i.test(platform)

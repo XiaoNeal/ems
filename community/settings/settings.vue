@@ -5,35 +5,40 @@
 
     <!-- 标签页 -->
     <view class="tab-container">
-      <view class="tab-list">
-        <view v-for="(item, index) in tabs" :key="index" class="tab-item" :class="{ active: activeTab === index }"
-          @click="switchTab(index)">
-          <text>{{ item }}</text>
+      <scroll-view scroll-x="true" class="tab-scroll">
+        <view class="tab-list">
+          <view v-for="(item, index) in tabs" :key="index" class="tab-item" :class="{ active: activeTab === index }"
+            @click="switchTab(index)">
+            <text>{{ item }}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 内容区域 -->
+    <scroll-view class="content-scroll" scroll-y="true">
+      <view class="content">
+        <!-- 网侧 PCS -->
+        <view v-if="activeTab === 0" class="tab-content">
+          <PcsSettings />
+        </view>
+
+        <!-- 储能 DC/DC -->
+        <view v-if="activeTab === 1" class="tab-content">
+          <StorageSettings />
+        </view>
+
+        <!-- 光伏 DC/DC -->
+        <view v-if="activeTab === 2" class="tab-content">
+          <PvSettings />
+        </view>
+
+        <!-- BMS -->
+        <view v-if="activeTab === 3" class="tab-content">
+          <BmsSettings />
         </view>
       </view>
-    </view>
-
-
-
-    <!-- 网侧 PCS -->
-    <view v-if="activeTab === 0" class="tab-content">
-      <PcsSettings />
-    </view>
-
-    <!-- 储能 DC/DC -->
-    <view v-if="activeTab === 1" class="tab-content">
-      <StorageSettings />
-    </view>
-
-    <!-- 光伏 DC/DC -->
-    <view v-if="activeTab === 2" class="tab-content">
-      <PvSettings />
-    </view>
-
-    <!-- BMS -->
-    <view v-if="activeTab === 3" class="tab-content">
-      <BmsSettings />
-    </view>
+    </scroll-view>
   </view>
 
 </template>
@@ -54,7 +59,7 @@ export default {
   data() {
     return {
       activeTab: 0,
-      tabs: ['网侧PCS', '储能DC', '光伏DC', 'BMS'],
+      tabs: ['PCS', '储能DC', '光伏', 'BMS'],
       isEditing: false,
       editingParam: '',
       originalParams: {},
@@ -180,62 +185,50 @@ export default {
 
 <style lang="scss" scoped>
 .container {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #EEF2F7 0%, #F5F7FA 100%);
-  padding-bottom: 40rpx;
+  width: 100%;
+  height: 100vh;
+  background-color: #f2f2f2;
+  font-size: 28rpx;
 }
 
 .tab-container {
-  background: #fff;
-  margin: 24rpx;
-  border-radius: 20rpx;
-  overflow: hidden;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
+  background-color: #fff;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.tab-scroll {
+  white-space: nowrap;
 }
 
 .tab-list {
   display: flex;
-  background: linear-gradient(135deg, #FAFBFC 0%, #F0F2F5 100%);
+  padding: 0 20rpx;
+  justify-content: space-around;
 }
 
 .tab-item {
-  flex: 1;
-  padding: 32rpx 0;
-  text-align: center;
-  font-size: 28rpx;
-  color: #606266;
-  position: relative;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  font-weight: 500;
-
-  &:active {
-    transform: scale(0.98);
-    opacity: 0.8;
-  }
+  padding: 20rpx 60rpx;
+  border-bottom: 3px solid transparent;
+  flex-shrink: 0;
 }
 
 .tab-item.active {
-  color: #4488FB;
-  font-weight: 600;
-  background: #fff;
+  border-bottom: 3px solid #007aff;
 }
 
-.tab-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 56rpx;
-  height: 6rpx;
-  background: linear-gradient(90deg, #4488FB 0%, #6B9DFF 100%);
-  border-radius: 6rpx;
-  box-shadow: 0 2rpx 8rpx rgba(68, 136, 251, 0.3);
+.tab-item.active text {
+  color: #007aff;
+  font-weight: bold;
 }
 
-// .tab-content {
-//   padding: 0 24rpx 24rpx;
-// }
+.content-scroll {
+  height: calc(100vh - 140rpx);
+  background-color: #EFF4FB;
+}
+
+.content {
+  padding: 20rpx;
+}
 
 .global-actions {
   padding: 16rpx 24rpx;
