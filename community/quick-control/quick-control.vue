@@ -178,7 +178,7 @@ export default {
       chargePower: '',
       dischargePower: '',
       deviceConfig: {
-        idCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
+        idCode: '',
         typeCode: '3401',
         address: '01'
       },
@@ -203,6 +203,15 @@ export default {
   computed: {
     userId() {
       return this.$store.state.userInfo?.userId || 0
+    }
+  },
+  mounted() {
+    const currentDevice = this.$store.state.currentSelectDevice || {}
+    const deviceControl = currentDevice.list.find(item => item.controlType == 1);
+    if (deviceControl) {
+      this.deviceConfig.idCode = deviceControl.homeBarCode || deviceControl.barCode || '';
+      this.deviceConfig.typeCode = deviceControl.typeCode || '3401';
+      // this.deviceConfig.address = deviceControl.address || '01';
     }
   },
   methods: {

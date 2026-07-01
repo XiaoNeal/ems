@@ -9,10 +9,15 @@ export const getPowerData = (params) => {
 	return request({
 		// url: '/api/energyStation/v2/queryDayGeneratedPower',
 		// url: '/api/energyStation/v1/queryComprehensivePowerByMinute',
-		url: '/api/energyStation/v1/queryComprehensivePowerBy10Minute',
+		// url: '/api/energyStation/v1/queryComprehensivePowerBy10Minute',
+
+		url: '/api/energyStation/getPowerStatistics',
 
 		method: 'GET',
-		data: params
+		params: {
+			interval: 10,
+			...params
+		}
 	})
 }
 

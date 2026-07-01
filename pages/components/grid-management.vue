@@ -168,14 +168,17 @@ export default {
       device171F: null,
       // 电网功率曲线数据
       powerCurveSeries: [],
+      powerCurveReverseSeries: [],
       powerCurveCategories: [],
       powerCurveLoading: false,
       energyLoading: false,
       powerCurveOptions: {
         dataLabel: false,
         dataPointShape: false,
-        padding: [15, 15, 0, 5],
+        padding: [15, 20, 0, 15],
         enableScroll: false,
+        animation: false,
+        legend: {select: true,tapLegend: true,},
         xAxis: {
           labelCount: 6,
           disableGrid: true,
@@ -185,8 +188,14 @@ export default {
           gridType: 'dash',
           dashLength: 2,
           showTitle: true,
-          tofix: 0,
+          // tofix: 0,
           data: [{ title: "单位:kW" }],
+          zeroLine: true,
+          scale: true,
+          splitNumber: 5,
+          axisLabel: {
+            format: val => val.toFixed(2)
+          }
           // title: "kW"
         },
         extra: {
@@ -223,12 +232,12 @@ export default {
         padding: [15, 20, 0, 15],
         enableScroll: false,
         animation: false,
-        legend: {},
+        legend: {select: true},
         xAxis: { labelCount: 6, disableGrid: true },
         yAxis: {
           gridType: "dash",
           showTitle: true,
-          data: [{ position: "left", title: "单位:kWh", forceZero: true, }],
+          data: [{ position: "left", title: "单位:kWh" }],
           dashLength: 2
         },
         extra: {
@@ -242,11 +251,18 @@ export default {
     powerCurveData() {
       return {
         categories: this.powerCurveCategories.length > 0 ? this.powerCurveCategories : [],
-        series: [{
-          name: '电网功率',
-          data: this.powerCurveSeries.length > 0 ? this.powerCurveSeries : [],
-          color: '#1890FF'
-        }]
+        series: [
+          {
+            name: '供电',
+            data: this.powerCurveSeries.length > 0 ? this.powerCurveSeries : [],
+            color: '#1890FF'
+          },
+          {
+            name: '馈电',
+            data: this.powerCurveReverseSeries.length > 0 ? this.powerCurveReverseSeries : [],
+            color: '#52C41A'
+          }
+        ]
       }
     },
     gridFrequency() {
@@ -302,33 +318,45 @@ export default {
           const dataList = res.data;
           const categories = [];
           const series = [];
+          const reverseSeries = [];
 
-          // 直接使用原始数据
+          // 分别获取正向和反向电网功率
           dataList.forEach(item => {
             const dateTime = item.dateTime || '';
             const timeStr = dateTime.substring(11, 16);
             categories.push(timeStr);
 
-            let gridPower;
-            if (item.gridPowerReverse !== undefined && item.gridPowerReverse !== null && item.gridPowerReverse !== '') {
-              gridPower = -parseFloat(item.gridPowerReverse);
-            } else {
-              gridPower = parseFloat(item.gridPower || 0);
-            }
+            // 正向电网功率
+            const gridPower = parseFloat(item.gridPower || 0);
             series.push(isNaN(gridPower) ? 0 : parseFloat(gridPower.toFixed(2)));
+
+            // 反向电网功率
+            // const gridPowerReverse = parseFloat(item.gridPowerReverse || 0);
+            // reverseSeries.push(isNaN(gridPowerReverse) ? 0 : parseFloat(gridPowerReverse.toFixed(2)));
+            let gridPowerReverse = parseFloat(item.gridPowerReverse || 0);
+            // if (!isNaN(gridPowerReverse)) {
+            //   // 统一：无论原始正负，反向功率强制为负
+            //   gridPowerReverse = -Math.abs(gridPowerReverse);
+            // }
+            reverseSeries.push(parseFloat(gridPowerReverse.toFixed(2)));
           });
 
           this.powerCurveCategories = categories;
           this.powerCurveSeries = series;
+          this.powerCurveReverseSeries = reverseSeries;
+
+          // console.log('电网功率曲线数据:', this.powerCurveCategories, this.powerCurveSeries, this.powerCurveReverseSeries);
         } else {
           this.powerCurveCategories = [];
           this.powerCurveSeries = [];
+          this.powerCurveReverseSeries = [];
         }
         this.powerCurveLoading = false;
       } catch (error) {
         console.error('获取电网功率曲线数据失败:', error);
         this.powerCurveCategories = [];
         this.powerCurveSeries = [];
+        this.powerCurveReverseSeries = [];
         this.powerCurveLoading = false;
       }
     },
@@ -538,7 +566,7 @@ export default {
 .grid-management {
   padding: 20rpx;
   background: #EFF4FB;
-  min-height: 100vh;
+  min-height: calc(100vh - 40rpx);
   box-sizing: border-box;
   transition: all 0.3s ease;
 }
@@ -762,7 +790,7 @@ export default {
   background: #fff;
   border-radius: 16rpx;
   padding: 24rpx;
-  margin-bottom: 20rpx;
+  // margin-bottom: 20rpx;
 }
 
 .divider {

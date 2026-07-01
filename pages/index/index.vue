@@ -327,16 +327,6 @@ export default {
     async handleDeviceSelect(esId) {
 
 
-      console.log('handleDeviceSelect---------------------------------------', esId)
-
-
-
-
-
-
-
-
-
       // 节流锁1：防止重复点击（500ms内只响应一次）
       const now = Date.now()
       if (now - this.lastClickTime < 500) {

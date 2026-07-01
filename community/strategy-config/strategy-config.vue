@@ -706,12 +706,28 @@ export default {
     },
     // 初始化实时数据
     initRealtimeData() {
+      let address = '01'
+      let barCode = '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00'
+      
+      const currentDevice = this.$store.state.currentSelectDevice || {}
+      if (currentDevice.list && Array.isArray(currentDevice.list)) {
+        const foundDevice = currentDevice.list.find(item =>
+          item.typeCode === '171F' || item.deviceType === '171F' || (item.description && item.description.includes('171F'))
+        );
+        if (foundDevice) {
+          address = foundDevice.address || address;
+          barCode = foundDevice.barCode || foundDevice.homeBarCode || barCode;
+          console.log('找到171F设备:', foundDevice);
+        }
+      }
+
       const device171F = {
         deviceType: '171F',
-        address: '01',
-        barCode: '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00',
-        deviceId: '171F',
-        name: 'DCDC设备'
+        typeCode: '171F',
+        address: address,
+        barCode: barCode,
+        deviceId: '171F001',
+        name: 'DCDC设备171F'
       };
       realtimeDataProvider.initDeviceList([device171F])
       this.deviceList = realtimeDataProvider.getDeviceList()

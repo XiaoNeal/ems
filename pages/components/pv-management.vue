@@ -211,6 +211,7 @@ export default {
         dataPointShape: false,
         color: ["#6DE188"],
         xAxis: { labelCount: 6, disableGrid: true },
+           padding: [15, 20, 0, 15],
         yAxis: {
           gridType: "dash",
           showTitle: true,
@@ -231,6 +232,7 @@ export default {
       return {
         dataLabel: false,
         dataPointShape: false,
+        padding: [15, 20, 0, 15],
         color: ["#6DE188"],
         xAxis: { labelCount: 6, disableGrid: true },
         yAxis: {

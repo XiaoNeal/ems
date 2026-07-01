@@ -338,7 +338,7 @@ export default {
         dataPointShape: false,
         padding: [15, 20, 0, 15],
         enableScroll: false,
-        legend: {},
+        legend: {select: true},
         xAxis: { labelCount: 6, disableGrid: true },
         yAxis: {
           gridType: "dash",
@@ -558,7 +558,7 @@ export default {
       getPowerData(params).then(result => {
         if (result.data && result.data.length > 0) {
           const dataList = result.data;
-          const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
+          const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [], gridData = [],gridReverseData = [];
           dataList.forEach(item => {
             const dateTime = item.dateTime || '';
             const timeStr = dateTime.substring(11, 16);
@@ -566,13 +566,19 @@ export default {
 
             const generatedPower = parseFloat(item.generatedPower || 0);
             const loadPower = parseFloat(item.loadPower || 0);
-            const dischargePower = -parseFloat(item.storagePowerReverse || 0);
+            const dischargePower = parseFloat(item.storagePowerReverse || 0);
             const chargePower = parseFloat(item.storagePower || 0);
+            const gridPower = parseFloat(item.gridPower || 0);
+            const gridReversePower = parseFloat(item.gridPowerReverse || 0);
+
+            // console.log('gridData', gridPower, gridReversePower);
 
             generationData.push(isNaN(generatedPower) ? 0 : parseFloat(generatedPower.toFixed(2)));
             loadData.push(isNaN(loadPower) ? 0 : parseFloat(loadPower.toFixed(2)));
             chargeData.push(isNaN(chargePower) ? 0 : parseFloat(chargePower.toFixed(2)));
             dischargeData.push(isNaN(dischargePower) ? 0 : parseFloat(dischargePower.toFixed(2)));
+            gridData.push(isNaN(gridPower) ? 0 : parseFloat(gridPower.toFixed(2)));
+            gridReverseData.push(isNaN(gridReversePower) ? 0 : parseFloat(gridReversePower.toFixed(2)));
           });
           // console.log('xAxisData', generationData, loadData, chargeData, dischargeData);
           this.electricityOpts.yAxis.data[0].title = '功率(kW)';
@@ -584,8 +590,11 @@ export default {
               { data: loadData, name: '用电' },
               { data: chargeData, name: '充电' },
               { data: dischargeData, name: '放电' },
+              { data: gridData, name: '供电' },
+              { data: gridReverseData, name: '馈电' },
             ]
           };
+            console.log('this.electricityData', this.electricityData);
         }
         this.electricityLoading = false;
       }).catch(() => {
@@ -818,9 +827,9 @@ export default {
 
 <style scoped>
 .container {
-  min-height: 100vh;
+  min-height: calc(100vh - 120rpx);
   background: #f5f7fa;
-  padding-bottom: 30rpx;
+  /* padding-bottom: 30rpx; */
 }
 
 .warning-and-start {

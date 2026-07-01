@@ -171,7 +171,7 @@ export default {
       },
       storagePowerOptions: {
         dataLabel: false,
-        padding: [15, 20, 25, 15],
+        padding: [15, 20, 0, 15],
         dataPointShape: false,
         enableScroll: false,
         legend: {},
@@ -188,7 +188,7 @@ export default {
       storageChartData: {},
       storageQOptions: {
         dataLabel: false,
-        padding: [15, 20, 25, 15],
+        padding: [15, 20, 0, 15],
         animation: false,
         xAxis: { labelCount: 6, disableGrid: true },
         yAxis: {
@@ -483,35 +483,35 @@ export default {
         areaLevelIds: currentDevice.areaLevelId || 991
       };
       getPowerData(params).then((res) => {
-          const categories = [], powerData = [];
+          const categories = [], chargeData = [], dischargeData = [];
 
           if (res.data && res.data.length > 0) {
             const dataList = res.data;
 
-            // 合并充放电为一条线，正数表示充电（上象限），负数表示放电（下象限）
+            // 用两条线分别显示充电功率和放电功率
             dataList.forEach(item => {
               const dateTime = item.dateTime || '';
               const timeStr = dateTime.substring(11, 16);
               categories.push(timeStr);
 
-              let storagePower;
-              if (item.storagePowerReverse !== undefined && item.storagePowerReverse !== null && item.storagePowerReverse !== '') {
-                storagePower = -parseFloat(item.storagePowerReverse);
-              } else {
-                storagePower = parseFloat(item.storagePower || 0);
-              }
-              if (isNaN(storagePower) || storagePower === null) {
-                powerData.push(0);
-              } else {
-                powerData.push(parseFloat(storagePower.toFixed(2)));
-              }
+              const chargePower = parseFloat(item.storagePower || 0);
+              const dischargePower = parseFloat(item.storagePowerReverse || 0);
+
+              chargeData.push(isNaN(chargePower) ? 0 : parseFloat(chargePower.toFixed(2)));
+              dischargeData.push(isNaN(dischargePower) ? 0 : parseFloat(dischargePower.toFixed(2)));
             });
           }
 
-          this.storageChartData = { categories, series: [{ name: "储能功率", data: powerData }] };
+          this.storageChartData = {
+            categories,
+            series: [
+              { name: "充电功率", data: chargeData },
+              { name: "放电功率", data: dischargeData }
+            ]
+          };
           this.powerCurveLoading = false;
       }).catch(() => {
-          this.storageChartData = { categories: [], series: [{ name: "储能功率", data: [] }] };
+          this.storageChartData = { categories: [], series: [{ name: "充电功率", data: [] }, { name: "放电功率", data: [] }] };
           this.powerCurveLoading = false;
       });
     },
@@ -708,12 +708,12 @@ export default {
 
 .chart-loaded {
   width: 100%;
-  min-height: 450rpx;
+  height: 450rpx;
 }
 
 .chart-empty {
   width: 100%;
-  min-height: 450rpx;
+  height: 450rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -728,7 +728,7 @@ export default {
 
 .chart-loading {
   width: 100%;
-  min-height: 450rpx;
+  height: 450rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -775,13 +775,13 @@ export default {
 
 .chart-loaded {
   width: 100%;
-  min-height: 450rpx;
+  height: 450rpx;
   animation: fadeIn 0.5s ease-out;
 }
 
 .chart-empty {
   width: 100%;
-  min-height: 450rpx;
+  height: 450rpx;
   display: flex;
   align-items: center;
   justify-content: center;

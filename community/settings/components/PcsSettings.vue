@@ -189,9 +189,17 @@ export default {
       return this.$store.state.userInfo?.userId || 0
     }
   },
+  mounted() {
+    const currentDevice = this.$store.state.currentSelectDevice || {}
+    const deviceControl = currentDevice.list.find(item => item.controlType == 1);
+    if (deviceControl) {
+      this.idCode = deviceControl.homeBarCode || deviceControl.barCode || '';
+      // this.deviceAddress = deviceControl.address || '01';
+    }
+  },
   data() {
     return {
-      idCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
+      idCode: '',
       deviceAddress: '01',
       isEditing: false,
       clickedButton: '',
@@ -503,7 +511,7 @@ export default {
 
     showCombinedValue(key) {
       console.log('showCombinedValue called with key:', key)
-      console.log('combinedParams:', this.combinedParams)
+      // console.log('combinedParams:', this.combinedParams)
       if (this.combinedParams && this.combinedParams[key]) {
         const powerValue = this.combinedParams[key].powerValue
         console.log('powerValue:', powerValue)
@@ -516,12 +524,12 @@ export default {
     },
 
     getVoltageValue(key) {
-      console.log('getVoltageValue called with key:', key)
-      console.log('combinedParams:', this.combinedParams)
+      // console.log('getVoltageValue called with key:', key)  
+      // console.log('combinedParams:', this.combinedParams) 
       if (this.combinedParams && this.combinedParams[key]) {
         const voltageValue = this.combinedParams[key].voltageValue
-        console.log('voltageValue:', voltageValue)
-        console.log('voltageValue !== undefined && voltageValue !== "":', voltageValue !== undefined && voltageValue !== '')
+        // console.log('voltageValue:', voltageValue)
+        // console.log('voltageValue !== undefined && voltageValue !== "":', voltageValue !== undefined && voltageValue !== '')
         if (voltageValue !== undefined && voltageValue !== '') {
           return voltageValue
         }
@@ -1104,7 +1112,7 @@ export default {
         console.log('saved originalParams[param.key]:', this.originalParams[param.key])
       }
 
-      console.log('combinedParams after:', this.combinedParams)
+      // console.log('combinedParams after:', this.combinedParams)
     },
 
     handleParamCancel() {

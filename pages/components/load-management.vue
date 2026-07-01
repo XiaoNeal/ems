@@ -33,8 +33,17 @@
         <dy-date timeType="day" @getData="handleDatePicker" v-model="selectedDate" class="custom-picker date-picker" />
       </view>
       <view class="chart-container">
-        <qiun-data-charts type="area" :chartData="loadChartData" :opts="loadChartOptions" :canvasId="chartId"
-          class="main-chart" :ontouch="true" :canvas2d="canvas2d" />
+        <view v-if="curveLoading" class="chart-loading">
+          <view class="loading-spinner"></view>
+          <text class="loading-text">加载中...</text>
+        </view>
+        <view v-else-if="loadChartData.series[0] && loadChartData.series[0].data.length > 0" class="chart-loaded">
+          <qiun-data-charts type="area" :chartData="loadChartData" :opts="loadChartOptions" :ontouch="true"
+            :canvas2d="canvas2d" class="main-chart" :canvas-id="chartId + '-load'" />
+        </view>
+        <view v-else class="chart-empty">
+          <text class="empty-text">暂无数据</text>
+        </view>
       </view>
     </view>
 
@@ -142,14 +151,31 @@ export default {
       efficiencyOptions: {},
       loadChartOptions: {
         color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
-        padding: [15, 10, 0, 15],
+        // padding: [15, 20, 0, 15],
+        // dataLabel: false,
+        // dataPointShape: false,
+        // enableScroll: false,
+        // legend: {},
+        // xAxis: { labelCount: 6, disableGrid: true },
+        // yAxis: { gridType: "dash", dashLength: 2, showTitle: true, data: [{ title: "单位:kW" }] },
+        // extra: { line: { type: "curve", width: 2, activeType: "hollow", linearType: "custom" } }
+
+
         dataLabel: false,
         dataPointShape: false,
-        enableScroll: false,
-        legend: {},
-        xAxis: { labelCount: 7, disableGrid: true },
-        yAxis: { gridType: "dash", dashLength: 2, showTitle: true, data: [{ title: "W" }] },
-        extra: { line: { type: "curve", width: 2, activeType: "hollow", linearType: "custom" } }
+        // color: ["#6DE188"],
+        xAxis: { labelCount: 6, disableGrid: true },
+        padding: [15, 20, 0, 15],
+        yAxis: {
+          gridType: "dash",
+          showTitle: true,
+          data: [{ position: "left", title: "单位:kW", min: null, max: null }],
+          dashLength: 2,
+          tofix: 2
+        },
+        extra: { area: { type: "curve", gradient: true } }
+
+
       },
       loadChartData: {
         categories: [],
@@ -202,28 +228,33 @@ export default {
     //   })
     // },
     async findFlexibilityLoadPowerTotal() {
-      const currentDevice = this.$store.state.currentSelectDevice || {};
-      const esId = currentDevice.esId || currentDevice.id;
-      const areaLevelIds = currentDevice.areaLevelId || this.$store.state.areaInfoId;
-      const result = await getPowerData({
-        esId: esId,
-        date: this.selectedDate,
-        areaLevelIds: areaLevelIds
-      });
-      if (result && result.data && Array.isArray(result.data)) {
-        const data = result.data;
-        if (data.length > 0) {
-          this.loadChartData.categories = data.map(item => {
-            const time = item.dateTime || '';
-            return time.substring(11, 16) || time;
-          });
-          this.loadChartData.series[0].data = data.map(item => {
-            return Number(item.loadPower || 0);
-          });
-        } else {
-          this.loadChartData.categories = [];
-          this.loadChartData.series[0].data = [];
+      this.curveLoading = true
+      try {
+        const currentDevice = this.$store.state.currentSelectDevice || {};
+        const esId = currentDevice.esId || currentDevice.id;
+        const areaLevelIds = currentDevice.areaLevelId || this.$store.state.areaInfoId;
+        const result = await getPowerData({
+          esId: esId,
+          date: this.selectedDate,
+          areaLevelIds: areaLevelIds
+        });
+        if (result && result.data && Array.isArray(result.data)) {
+          const data = result.data;
+          if (data.length > 0) {
+            this.loadChartData.categories = data.map(item => {
+              const time = item.dateTime || '';
+              return time.substring(11, 16) || time;
+            });
+            this.loadChartData.series[0].data = data.map(item => {
+              return Number(item.loadPower || 0);
+            });
+          } else {
+            this.loadChartData.categories = [];
+            this.loadChartData.series[0].data = [];
+          }
         }
+      } finally {
+        this.curveLoading = false
       }
     },
     async getDeviceCount() {
@@ -315,8 +346,9 @@ export default {
 }
 
 .chart-container {
-  height: 300px;
-  padding: 20px;
+  margin-top: 10rpx;
+  position: relative;
+  height: 450rpx;
 }
 
 .date-picker {
@@ -327,6 +359,46 @@ export default {
 .main-chart {
   width: 100%;
   height: 100%;
+}
+
+.chart-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f0f0f0;
+  border-top: 4px solid #4488FB;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 14px;
+  color: #999;
+}
+
+.chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #999;
 }
 
 /* 设备统计 */

@@ -604,6 +604,7 @@ export default {
                     userName: res.user_name,
                     mobile_phone: res.mobile_phone,
                     balance: res.accountBalance,
+                    sessionId: res.sessionId,
                     // avatarUrl: res.wxAvaterUrl && res.wxAvaterUrl.trim() !== '' ? "https://iems.neiic.com" + res.wxAvaterUrl : undefined,
                     areaLevelId: res.areaLevelId,
                     esIds: res.energyStations

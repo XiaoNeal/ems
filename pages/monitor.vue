@@ -69,7 +69,7 @@ export default {
   },
   methods: {
     register171FDevice() {
-      return;
+      // return;
       if (this.device171FRegistered) {
         console.log('171F设备已注册，跳过', this.device171FList);
         this.device171FList = realtimeDataProvider.getDeviceList();

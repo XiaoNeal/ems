@@ -121,9 +121,17 @@ export default {
       return this.$store.state.userInfo?.userId || 0
     }
   },
+  mounted() {
+    const currentDevice = this.$store.state.currentSelectDevice || {}
+    const deviceControl = currentDevice.list.find(item => item.controlType == 1);
+    if (deviceControl) {
+      this.idCode = deviceControl.homeBarCode || deviceControl.barCode || '';
+      // this.deviceAddress = deviceControl.address || '02';
+    }
+  },
   data() {
     return {
-      idCode: '00 00 02 20 26 06 05 15 34 58 01 00 00 00 00',
+      idCode: '',
       deviceAddress: '02',
       isEditing: false,
       clickedButton: '',

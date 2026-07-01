@@ -77,7 +77,29 @@ const request = (options) => {
     const sendRequest = () => {
       // 每次请求前重新生成签名（避免签名过期）
       const token = store.state.token || uni.getStorageSync('token');
-      const sessionId = store.state.sessionId;
+      const userInfo = store.state.userInfo;
+      const sessionId = (userInfo && userInfo.sessionId) || store.state.sessionId;
+      
+      if (!sessionId) {
+        const pages = getCurrentPages();
+        const currentPage = pages[pages.length - 1];
+        if (!(currentPage && currentPage.route === "pages/login/login")) {
+          uni.showToast({
+            title: '请先登录',
+            icon: 'none',
+            success() {
+              RealtimeDataProviderService.closeSocket();
+              uni.clearStorageSync();
+              uni.reLaunch({
+                url: '/pages/login/login'
+              });
+            }
+          });
+          reject(new Error('sessionId为空，请先登录'));
+          return;
+        }
+      }
+      
       const currentTime = new Date().toISOString().replace('T', ' ').slice(0, 23);
       const sign = aesMinEncrypt(
         'ABCDEFGHIJKL_key',
