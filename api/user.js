@@ -271,3 +271,35 @@ export const deleteEsUser = (data) => {
 		}
 	})
 }
+
+export const getUserInfoByEsId = (esId) => {
+	return request({
+		url: `/api/Homecommunity/GetUserInfoByEsId`,
+		method: 'GET',
+		params: {
+			esId: esId
+		}
+	})
+}
+
+export const bindEsUserByTelAndEsId = (tel, esId) => {
+	return request({
+		url: `/api/Homecommunity/BindEsUserByTelAndEsId`,
+		method: 'GET',
+		params: {
+			Tel: tel,
+			esId: esId
+		}
+	})
+}
+
+export const changeEsUserByTelAndEsId = (tel, esId) => {
+	return request({
+		url: `/api/Homecommunity/ChangeEsUserByTelAndEsId`,
+		method: 'GET',
+		params: {
+			Tel: tel,
+			esId: esId
+		}
+	})
+}

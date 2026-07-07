@@ -1,9 +1,9 @@
 <template>
-	<view class="content" :style="'background-color:' + bGColor">
+	<view class="content" :style="'background-color:' + bGColor" :class="platformClass">
 		<!-- <u-navbar v-if="type != 4" title=" 1111" leftIconColor="#fff" :titleStyle="{ 'color': fontColor, 'width': '100%' }"
 			:leftText="null" :autoBack="true" :placeholder="true" :bgColor="headerTabBg"></u-navbar> -->
-		<u-navbar :title="pageTitle" :titleStyle="{ 'color': fontColor, 'width': '100%', 'font-weight': '600' }" :leftText="null" :autoBack="true"
-			:placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
+		<DyNavbar :title="pageTitle" :titleStyle="{ 'color': fontColor, 'width': '100%', 'font-weight': '600' }" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
+		<view class="fixed-placeholder"></view>
 		<u-toast ref="uToast"></u-toast>
 		<!-- 改用户名 -->
 		<view class="modify" v-if="type == 1">
@@ -97,7 +97,10 @@
 import { updateUserInfo, sendSmsCode, UpdatePasswordBySms } from "@/api/user.js"
 import { mapState } from 'vuex';
 import md5 from "@/utils/md5.min.js"
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+
 export default {
+	components: { DyNavbar },
 	data() {
 		return {
 			showConfirmPassword: false,
@@ -123,10 +126,10 @@ export default {
 			passwordMatchError: false,
 			verificationCode: '',
 			isCounting: false,
-			countdown: 0,
 			codeSending: false,
 			codeFocus: false,
-			timer: null
+			timer: null,
+			platformClass: ''
 		}
 	},
 	computed: {
@@ -150,6 +153,13 @@ export default {
 		strengthIndex() {
 			return ['弱', '中', '良', '强'].indexOf(this.passwordStrength);
 		},
+	},
+	onLoad() {
+		uni.getSystemInfo({
+			success: (res) => {
+				this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+			},
+		});
 	},
 	mounted() {
 		let pages = getCurrentPages()
@@ -505,8 +515,22 @@ export default {
 	min-height: 100vh;
 	background: linear-gradient(180deg, #f0f5ff 0%, #f5f7fb 30%);
 	padding: 32rpx;
-	padding-top: calc(var(--status-bar-height) + 100rpx);
+	padding-top: calc(25px + 100rpx);
 	box-sizing: border-box;
+
+	.fixed-placeholder {
+		height: calc(25px + 44px);
+	}
+
+	&.android-platform {
+		.fixed-placeholder { height: calc(25px + 44px + 20px); }
+	}
+
+	&.ios-platform {
+		.fixed-placeholder { height: calc( 44px); 
+			background: #fff;
+		}
+	}
 }
 
 // 卡片容器

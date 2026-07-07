@@ -1,11 +1,9 @@
-﻿<script>
+<script>
 import {
 	decrypt
 } from "@/utils/decryptData.js"
 export default {
 	onLaunch: function () {
-
-
 		// #ifdef MP-WEIXIN
 		const updateManager = wx.getUpdateManager()
 
@@ -114,10 +112,9 @@ page {
 	box-sizing: border-box;
 }
 
-
-
 :not(noe) {
 	box-sizing: border-box;
 }
 
-//#endif</style>
+//#endif
+</style>

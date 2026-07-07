@@ -85,9 +85,7 @@
               <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
                 :canvas2d="canvas2d" class="power-chart" :canvas-id="chartId + '-power'" />
             </view>
-            <view v-else class="chart-empty">
-              <text class="empty-text">暂无数据</text>
-            </view>
+            <EmptyState v-else title="暂无数据" desc="当前时段暂无发电功率数据" @refresh="getDayGeneratedPower" />
           </view>
         </view>
 
@@ -126,9 +124,7 @@
               <qiun-data-charts type="column" :chartData="generationData" :opts="generationOptions" :ontouch="false"
                 :canvas2d="canvas2d" class="generation-chart" :canvas-id="chartId + '-generation'" />
             </view>
-            <view v-else class="chart-empty">
-              <text class="empty-text">暂无数据</text>
-            </view>
+            <EmptyState v-else title="暂无数据" desc="当前时段暂无发电量统计数据" @refresh="getElectricityStatistic" />
           </view>
         </view>
       </view>
@@ -145,10 +141,13 @@ import {
   queryYearElectricityStatistic
 } from '../../api/power';
 import { realtimeDataProvider } from '@/service/websocket';
+import EmptyState from '@/components/empty-state/empty-state.vue';
+import { calculateYAxisMax } from '@/utils/tools';
 
 export default {
   components: {
     dyDate,
+    EmptyState,
   },
   name: "PV-Management",
   inject: ['get171FDeviceList'],
@@ -206,22 +205,26 @@ export default {
       }
     },
     powerCurveOptions() {
+      const maxValue = calculateYAxisMax(this.powerCurveSeries);
+      console.log(maxValue, 'maxValue')
       return {
         dataLabel: false,
         dataPointShape: false,
         color: ["#6DE188"],
         xAxis: { labelCount: 6, disableGrid: true },
-           padding: [15, 20, 0, 15],
+        padding: [15, 20, 0, 15],
         yAxis: {
           gridType: "dash",
           showTitle: true,
-          data: [{ position: "left", title: "单位:kW", min: null, max: null }],
+          data: [{ position: "left", title: "单位:kW", tofix: 0, max: maxValue }],
           dashLength: 2,
-          tofix: 2
+          splitNumber: 4,
         },
         extra: { area: { type: "curve", gradient: true } }
       }
     },
+
+   
     generationData() {
       return {
         categories: this.generationCategories.length > 0 ? this.generationCategories : [],
@@ -229,6 +232,8 @@ export default {
       }
     },
     generationOptions() {
+      const maxValue = calculateYAxisMax(this.generationSeries);
+      console.log(maxValue, 'maxValue', this.generationSeries)
       return {
         dataLabel: false,
         dataPointShape: false,
@@ -238,7 +243,7 @@ export default {
         yAxis: {
           gridType: "dash",
           showTitle: true,
-          data: [{ position: "left", title: "单位:kWh" }]
+          data: [{ position: "left", title: "单位:kWh", tofix: 0, max: maxValue }],
         },
         extra: {
 
@@ -302,7 +307,7 @@ export default {
       const currentDevice = this.$store.state.currentSelectDevice || {};
       const params = {
         esId: currentDevice.id || 28,
-        date: this.selectedDate,
+        date: this.powerDate,
         areaLevelIds: currentDevice.areaLevelId || 991
       };
       getPowerData(params).then((res) => {
@@ -321,7 +326,7 @@ export default {
               categories.push(timeStr);
 
               const generatedPower = parseFloat(item.generatedPower);
-              series.push(isNaN(generatedPower) ? 0 : parseFloat(generatedPower.toFixed(2)));
+              series.push(isNaN(generatedPower) ? 0 : parseFloat(generatedPower));
             });
 
             this.powerCurveSeries = series;
@@ -451,7 +456,6 @@ export default {
     onPowerDateChange(date) {
       console.log('发电功率曲线日期变化:', date);
       this.powerDate = date;
-      this.selectedDate = date;
       this.getDayGeneratedPower();
     },
 

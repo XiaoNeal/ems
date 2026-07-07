@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view class="container" :class="platformClass">
 
 
     <!-- 头部导航 -->
@@ -11,8 +11,8 @@
       <view class="header-right"></view>
     </view> -->
 
-    <u-navbar title="接入设置" :autoBack="true" :placeholder="true">
-    </u-navbar>
+    <DyNavbar title="接入设置" :placeholder="true" />
+    <view class="fixed-placeholder"></view>
 
     <!-- 设备列表 -->
     <view class="device-list">
@@ -40,10 +40,16 @@
 </template>
 
 <script>
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+
 export default {
+  components: {
+    DyNavbar
+  },
   name: 'access-setting',
   data() {
     return {
+      platformClass: "",
       deviceList: [
         { deviceName: '01.直流空调', flexibility: 0.11, category: '无' },
         { deviceName: '01.直流空调', flexibility: 0.11, category: '无' },
@@ -54,6 +60,13 @@ export default {
         { deviceName: '01.直流空调', flexibility: 0.11, category: '无' }
       ]
     };
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
   },
   methods: {
     goBack() {
@@ -69,10 +82,24 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .container {
   background-color: #f5f5f5;
   min-height: 100vh;
+  
+  .fixed-placeholder {
+    height: calc(25px + 44px);
+  }
+  
+  &.android-platform {
+    .fixed-placeholder { height: calc(25px + 44px + 20px); }
+  }
+  
+  &.ios-platform {
+    .fixed-placeholder { height: calc( 44px); 
+      background: #fff;
+    }
+  }
 }
 
 /* 头部导航 */

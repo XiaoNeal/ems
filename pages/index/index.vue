@@ -257,6 +257,7 @@ export default {
 
         const userInfo = { ...this.userInfo }
         userInfo.esIds = energyStations
+        userInfo.roleId = res.data.roleId
         this.$store.commit('SET_LOGIN', userInfo)
 
         // 如果只有一个设备，自动选中
@@ -522,7 +523,7 @@ page {
 }
 
 .header-safe-area {
-  height: calc(var(--status-bar-height) + 20px);
+  height: calc(25px + 20px);
   background-color: #fff;
 }
 
@@ -552,7 +553,7 @@ page {
   position: fixed;
   left: 0;
   right: 0;
-  top: calc(var(--status-bar-height) + 64px);
+  top: calc(25px + 64px);
   bottom: calc(50px + env(safe-area-inset-bottom));
   box-sizing: border-box;
   -webkit-overflow-scrolling: touch;

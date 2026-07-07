@@ -209,9 +209,7 @@
         <qiun-data-charts v-else-if="electricityData.categories && electricityData.categories.length > 0"
           :type="electricityChartType" :chartData="electricityData" :ontouch="true" :canvas2d="canvas2d"
           :opts="electricityOpts" :canvasId="chartId + '-energy'" />
-        <view v-else class="empty-chart">
-          <text class="empty-text">暂无能源数据</text>
-        </view>
+        <EmptyState v-else title="暂无能源数据" desc="当前时段暂无能源数据记录" @refresh="handleRefresh" />
       </view>
     </view>
 
@@ -286,11 +284,12 @@
 import { getPowerData, queryMonthElectricityStatistic, queryYearElectricityStatistic } from '../../api/power';
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 import { realtimeDataProvider } from '@/service/websocket';
+import EmptyState from '@/components/empty-state/empty-state.vue';
 
 import { sendCommandFrame } from '@/api/control.js'
 
 export default {
-  components: { dyDate },
+  components: { dyDate, EmptyState },
   name: "ArchitectureDiagram",
   inject: ['get171FDeviceList'],
   data() {
@@ -338,7 +337,7 @@ export default {
         dataPointShape: false,
         padding: [15, 20, 0, 15],
         enableScroll: false,
-        legend: {select: true},
+        legend: { select: true },
         xAxis: { labelCount: 6, disableGrid: true },
         yAxis: {
           gridType: "dash",
@@ -346,7 +345,7 @@ export default {
           showTitle: true,
           fontSize: 10,
           // tofix: 0,
-          data: [{ title: "功率(kW)" }],
+          data: [{ title: "功率(kW)", tofix: 0 }],
           // title: "kW"
         },
         extra: {
@@ -558,7 +557,7 @@ export default {
       getPowerData(params).then(result => {
         if (result.data && result.data.length > 0) {
           const dataList = result.data;
-          const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [], gridData = [],gridReverseData = [];
+          const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [], gridData = [], gridReverseData = [];
           dataList.forEach(item => {
             const dateTime = item.dateTime || '';
             const timeStr = dateTime.substring(11, 16);
@@ -583,6 +582,22 @@ export default {
           // console.log('xAxisData', generationData, loadData, chargeData, dischargeData);
           this.electricityOpts.yAxis.data[0].title = '功率(kW)';
 
+          // this.electricityOpts.yAxis.data[0].max = Math.max(...generationData, ...loadData, ...chargeData, ...dischargeData, ...gridData, ...gridReverseData);
+          const rawMax = Math.max(...generationData, ...loadData, ...chargeData, ...dischargeData, ...gridData, ...gridReverseData);
+          let targetMax;
+
+          if (rawMax < 0) {
+            // 负数向下取整：-0.02 → -1，-3.1 → -4
+            targetMax = Math.floor(rawMax);
+          } else if (rawMax < 1) {
+            // 0~1之间统一设为1
+            targetMax = 1;
+          } else {
+            // 正数向上取整
+            targetMax = Math.ceil(rawMax);
+          }
+
+          this.electricityOpts.yAxis.data[0].max = targetMax;
           this.electricityData = {
             categories: xAxisData,
             series: [
@@ -594,7 +609,7 @@ export default {
               { data: gridReverseData, name: '馈电' },
             ]
           };
-            console.log('this.electricityData', this.electricityData);
+          console.log('this.electricityData', this.electricityData);
         }
         this.electricityLoading = false;
       }).catch(() => {
@@ -623,6 +638,32 @@ export default {
           const sortedData = dataList.sort((a, b) => new Date(a.date) - new Date(b.date));
           this.electricityOpts.yAxis.data[0].title = '电量(kWh)';
 
+          const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
+          sortedData.forEach(item => {
+            const date = new Date(item.date);
+            xAxisData.push(`${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`);
+            generationData.push(isNaN(parseFloat(item.photovoltaicPower) || 0) ? 0 : parseFloat(item.photovoltaicPower.toFixed(2)));
+            loadData.push(isNaN(parseFloat(item.loadPower) || 0) ? 0 : parseFloat(item.loadPower.toFixed(2)));
+            chargeData.push(isNaN(parseFloat(item.storageCharge) || 0) ? 0 : parseFloat(item.storageCharge.toFixed(2)));
+            dischargeData.push(isNaN(parseFloat(item.storageDischarge) || 0) ? 0 : parseFloat(item.storageDischarge.toFixed(2)));
+          });
+
+          // console.log('xAxisData', generationData, loadData, chargeData, dischargeData);
+          const rawMax = Math.max(...generationData, ...loadData, ...chargeData, ...dischargeData);
+          let targetMax;
+
+          if (rawMax < 0) {
+            // 负数向下取整：-0.02 → -1，-3.1 → -4
+            targetMax = Math.floor(rawMax);
+          } else if (rawMax < 1) {
+            // 0~1之间统一设为1
+            targetMax = 1;
+          } else {
+            // 正数向上取整
+            targetMax = Math.ceil(rawMax);
+          }
+
+          this.electricityOpts.yAxis.data[0].max = targetMax;
           this.electricityData = {
             categories: sortedData.map(item => {
               const date = new Date(item.date);
@@ -636,6 +677,8 @@ export default {
             ]
           };
         }
+
+
         this.electricityLoading = false;
       }).catch((err) => {
         this.electricityLoading = false;
@@ -685,6 +728,21 @@ export default {
           }
 
           this.electricityOpts.yAxis.data[0].title = '电量(kWh)';
+          const rawMax = Math.max(...generationData, ...loadData, ...chargeData, ...dischargeData);
+          let targetMax;
+
+          if (rawMax < 0) {
+            // 负数向下取整：-0.02 → -1，-3.1 → -4
+            targetMax = Math.floor(rawMax);
+          } else if (rawMax < 1) {
+            // 0~1之间统一设为1
+            targetMax = 1;
+          } else {
+            // 正数向上取整
+            targetMax = Math.ceil(rawMax);
+          }
+
+          this.electricityOpts.yAxis.data[0].max = targetMax;
 
           this.electricityData = {
             categories: xAxisData,
@@ -820,6 +878,9 @@ export default {
         return '启动';
       }
       return '启动';
+    },
+    handleRefresh() {
+      this.handleDatePicker(this.selectedDate);
     },
   }
 };

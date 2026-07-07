@@ -1,9 +1,7 @@
 <template>
-  <view class="container">
-    <!-- 头部导航 -->
-    <u-navbar title="AI客服" :autoBack="true" :placeholder="true">
-      <view slot="right"></view>
-    </u-navbar>
+  <view class="container" :class="platformClass">
+    <DyNavbar title="AI客服" :placeholder="true" />
+    <view class="fixed-placeholder"></view>
 
     <!-- 聊天区域 -->
     <scroll-view class="chat-container" scroll-y="true" :scroll-into-view="scrollToView" scroll-with-animation="true">
@@ -69,10 +67,14 @@
 </template>
 
 <script>
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+
 export default {
+  components: { DyNavbar },
   name: 'ai-service',
   data() {
     return {
+      platformClass: "",
       messages: [],
       inputText: '',
       isLoading: false,
@@ -81,6 +83,13 @@ export default {
       systemPrompt: '您是一个专业的能源管理系统AI客服助手，负责回答用户关于系统使用、设备管理、数据监控等方面的问题。请保持回答专业、简洁、友好。',
       conversationHistory: []
     };
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
   },
   mounted() {
     this.loadHistory();
@@ -233,12 +242,24 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .container {
   height: 100vh;
   background-color: #f5f5f5;
   display: flex;
   flex-direction: column;
+  
+  .fixed-placeholder {
+    height: calc(25px + 44px);
+  }
+  
+  &.android-platform {
+    .fixed-placeholder { height: calc(25px + 44px + 20px); }
+  }
+  
+  &.ios-platform {
+    .fixed-placeholder { height: calc( 44px); }
+  }
 }
 
 /* 头部导航 */

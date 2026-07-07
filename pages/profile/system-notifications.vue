@@ -1,7 +1,8 @@
 <template>
-  <view class="sub-page">
-    <u-navbar title="系统通知" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :leftText="null" :autoBack="true"
-      :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
+  <view class="sub-page" :class="platformClass">
+    <DyNavbar title="系统通知" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :placeholder="true"
+      :leftIconColor="fontColor"></DyNavbar>
+    <view class="fixed-placeholder"></view>
 
     <scroll-view class="content" scroll-y>
       <view v-if="notifications.length === 0" class="empty-state">
@@ -10,13 +11,8 @@
       </view>
 
       <view v-else class="notification-list">
-        <view 
-          v-for="item in notifications" 
-          :key="item.id" 
-          class="notification-item"
-          :class="{ 'read': item.read }"
-          @click="markAsRead(item)"
-        >
+        <view v-for="item in notifications" :key="item.id" class="notification-item" :class="{ 'read': item.read }"
+          @click="markAsRead(item)">
           <view class="notification-icon" :class="item.type">
             <uni-icons :type="getIconType(item.type)" :size="24" color="#fff" />
           </view>
@@ -38,11 +34,14 @@
 
 <script>
 import { mapState } from 'vuex'
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
 export default {
+  components: { DyNavbar },
   data() {
     return {
-      notifications: []
+      notifications: [],
+      platformClass: ""
     }
   },
   computed: {
@@ -50,6 +49,13 @@ export default {
       headerTabBg: state => state.headerTabBg,
       fontColor: state => state.fontColor
     })
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
   },
   onShow() {
     this.loadNotifications()
@@ -109,12 +115,16 @@ export default {
       return icons[type] || 'info'
     },
     formatTime(time) {
+      if (!time) return '--'
+      const safeTime = time.replace(/-/g, '/').replace(' ', 'T')
       const now = new Date()
-      const msgTime = new Date(time)
+      const msgTime = new Date(safeTime)
       const diff = now - msgTime
       const days = Math.floor(diff / (1000 * 60 * 60 * 24))
       const hours = Math.floor(diff / (1000 * 60 * 60))
       const minutes = Math.floor(diff / (1000 * 60))
+
+      if (isNaN(diff)) return '--'
 
       if (days > 0) {
         return `${days}天前`
@@ -139,6 +149,19 @@ export default {
 .sub-page {
   background: #f5f5f5;
   min-height: 100vh;
+
+  &.android-platform {
+    .fixed-placeholder {
+      height: calc(25px + 44px + 20px);
+    }
+  }
+
+  &.ios-platform {
+    .fixed-placeholder {
+      height: calc(25px + 44px);
+      background: #fff;
+    }
+  }
 }
 
 .content {
@@ -185,6 +208,7 @@ export default {
     .notification-title {
       color: #999;
     }
+
     .notification-desc {
       color: #bbb;
     }
@@ -204,12 +228,15 @@ export default {
   &.system {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   }
+
   &.info {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   }
+
   &.warning {
     background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
   }
+
   &.success {
     background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   }
@@ -263,4 +290,5 @@ export default {
 .footer-space {
   height: 40rpx;
 }
+
 </style>

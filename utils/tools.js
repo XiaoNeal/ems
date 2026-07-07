@@ -20,3 +20,24 @@ export function debounce(func, wait = 300, immediate = false) {
     if (callNow) func.apply(context, args);
   };
 }
+
+/**
+ * 计算图表Y轴最大值
+ * @param {number[]} dataArrays - 多个数据数组
+ * @returns {number} - Y轴最大值
+ */
+export function calculateYAxisMax(...dataArrays) {
+  const allData = dataArrays.flat();
+  const rawMax = Math.max(...allData, 0);
+  let targetMax;
+
+  if (rawMax < 0) {
+    targetMax = Math.floor(rawMax);
+  } else if (rawMax < 1) {
+    targetMax = 1;
+  } else {
+    targetMax = Math.ceil(rawMax);
+  }
+
+  return targetMax;
+}

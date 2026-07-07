@@ -100,7 +100,33 @@ const request = (options) => {
         }
       }
       
+      const loginTime = (userInfo && userInfo.loginTime) || store.state.user?.loginTime;
+      const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+      if (loginTime) {
+        const now = new Date().getTime();
+        if (now - loginTime > SEVEN_DAYS) {
+          const pages = getCurrentPages();
+          const currentPage = pages[pages.length - 1];
+          if (!(currentPage && currentPage.route === "pages/login/login")) {
+            uni.showToast({
+              title: '登录已过期，请重新登录',
+              icon: 'none',
+              success() {
+                RealtimeDataProviderService.closeSocket();
+                uni.clearStorageSync();
+                uni.reLaunch({
+                  url: '/pages/login/login'
+                });
+              }
+            });
+            reject(new Error('sessionId已过期，请重新登录'));
+            return;
+          }
+        }
+      }
+      
       const currentTime = new Date().toISOString().replace('T', ' ').slice(0, 23);
+      console.log(sessionId, 'currentTime:', currentTime);
       const sign = aesMinEncrypt(
         'ABCDEFGHIJKL_key',
         'ABCDEFGHIJKLM_iv',

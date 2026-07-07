@@ -1,6 +1,7 @@
 <template>
-	<view class="container" :style="'background-color:'+ bGColor">
-		<u-navbar title="关于我们" leftIconColor="#fff" :titleStyle="{'color':fontColor,'width':'100%'}" :leftText="null" :autoBack="true" :placeholder="true" :bgColor="headerTabBg"></u-navbar>
+	<view class="container" :style="'background-color:'+ bGColor" :class="platformClass">
+		<DyNavbar title="关于我们" :titleStyle="{'color':fontColor,'width':'100%'}" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
+		<view class="fixed-placeholder"></view>
 		<view class="logo">
 			<image src="https://serviceiems.gree.com/sso/img/logo_blue.56e357ea.svg" mode="widthFix" style="width: 80px; border-radius: 10px;margin-bottom: 10px;height:80px"></image>
 			<text class="title-container" :style="'color:'+ fontColor">微能站</text>
@@ -34,9 +35,13 @@
 </template>
 
 <script>
+	import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+
 	export default {
+		components: { DyNavbar },
 		data() {
 			return {
+				platformClass: '',
 				appVersion: '',
 				isNew: '无新版本',
 				isLoading: false
@@ -50,6 +55,11 @@
 			}
 		},
 		onLoad() {
+			uni.getSystemInfo({
+				success: (res) => {
+					this.platformClass = res.platform === 'ios' ? 'ios-platform' : 'android-platform'
+				}
+			})
 		},
 		mounted() {
 			// #ifdef APP-PLUS
@@ -185,6 +195,19 @@
 			transform: translateX(-50%);
 			bottom: 5rem;
 			font-size: 26rpx;
+		}
+
+		&.android-platform {
+			.fixed-placeholder {
+				height: calc(25px + 44px + 20px);
+			}
+		}
+
+		&.ios-platform {
+			.fixed-placeholder {
+				height: calc(44px);
+				background: #fff;
+			}
 		}
 	}
 </style>

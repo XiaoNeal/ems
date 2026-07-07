@@ -1,7 +1,8 @@
 <template>
-  <view class="quick-control">
+  <view class="quick-control" :class="platformClass">
     <!-- 顶部导航栏 -->
-    <u-navbar title="快捷控制" :autoBack="true" :placeholder="true" />
+    <DyNavbar title="快捷控制" :placeholder="true" />
+    <view class="fixed-placeholder"></view>
     
     <!-- 内容区域 -->
     <view class="content">
@@ -155,11 +156,16 @@
 
 <script>
 import { sendCommandFrame } from '@/api/control.js'
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
 export default {
+  components: {
+    DyNavbar
+  },
   name: "QuickControl50kW",
   data() {
     return {
+      platformClass: "",
       powerValue: '',
       // 设备配置参数（根据实际情况配置）
       deviceConfig: {
@@ -180,6 +186,13 @@ export default {
     userId() {
       return this.$store.state.userInfo?.userId || 0
     }
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
   },
   mounted() {
     const currentDevice = this.$store.state.currentSelectDevice || {}
@@ -469,6 +482,16 @@ $text-gray: #868c98;
   background: linear-gradient(180deg, #f0f4f8 0%, #f5f7fa 100%);
   min-height: 100vh;
   padding-bottom: env(safe-area-inset-bottom);
+
+  &.android-platform {
+    .fixed-placeholder { height: calc(25px + 44px + 20px); }
+  }
+
+  &.ios-platform {
+    .fixed-placeholder { height: calc( 44px); 
+      background: #fff;
+    }
+  }
 }
 
 .content {

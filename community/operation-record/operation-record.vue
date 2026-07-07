@@ -1,10 +1,10 @@
 <template>
-  <view class="container">
-    <!-- 顶部导航栏 -->
-    <u-navbar title="操作记录" :autoBack="true" :placeholder="true" />
+  <view class="container" :class="platformClass">
+    <DyNavbar title="操作记录" :placeholder="true" />
+    <view class="fixed-placeholder"></view>
     
     <!-- 内容区域 -->
-    <view class="content">
+    <scroll-view class="content" scroll-y :scroll-top="scrollTop" :scroll-with-animation="true" @scrolltolower="onScrollToLower" @scroll="onScroll">
       <!-- 加载中状态 -->
       <view v-if="loading" class="loading-state">
         <view class="loading-illustration">
@@ -37,45 +37,49 @@
       <view v-else>
         <view class="operation-item" v-for="operation in operationList" :key="operation._key">
           <view class="operation-header">
-            <view class="header-left">
-              <view class="operation-time">{{ formatTime(operation.createTime) }}</view>
-              <view class="username-row">
-                <text class="username-label">操作者：</text>
-                <text class="operation-username">{{ operation.username || '--' }}</text>
-              </view>
-            </view>
-            <text class="device-type-tag">{{ getDeviceTypeName(operation) }}</text>
+            <text class="header-title">操作名称：{{ getOperationName(operation) }}</text>
+            <text class="header-device">操作设备：{{ getDeviceTypeName(operation) }}</text>
           </view>
-          <view class="operation-content">
-            <view class="operation-details">
-              <view v-for="param in operation.parsedParams" :key="param._key" class="param-card">
-                <view class="param-header">
-                  <text class="param-label">设备类型</text>
-                  <text class="param-value">{{ (param.commands && param.commands[0] && param.commands[0].deviceCategory) || '--' }}</text>
-                </view>
-                <view class="param-row">
-                  <text class="param-label">idCode</text>
-                  <text class="param-value">{{ param.idCode || '--' }}</text>
-                </view>
-                <view v-for="cmd in (param.commands || [])" :key="cmd._key" class="command-item">
-                  <view class="cmd-row">
-                    <text class="cmd-label">寄存器地址</text>
-                    <text class="cmd-value">{{ cmd.registerAddress || '--' }}</text>
-                  </view>
-                  <view class="cmd-row">
-                    <text class="cmd-label">参数名称</text>
-                    <text class="cmd-value cmd-name">{{ getParamName(cmd.deviceCategory, cmd.registerAddress) }}</text>
-                  </view>
-                  <view class="cmd-row">
-                    <text class="cmd-label">参数值</text>
-                    <text class="cmd-value">{{ getParamValue(cmd.deviceCategory, cmd.registerAddress, cmd.registerValue) }}</text>
-                  </view>
-                </view>
+          <view class="operation-body">
+            <view v-for="param in operation.parsedParams" :key="param._key">
+              <view v-for="cmd in (param.commands || [])" :key="cmd._key" class="cmd-row">
+                <text class="cmd-label">参数值：</text>
+                <text class="cmd-value">{{ getParamValue(cmd.deviceCategory, cmd.registerAddress, cmd.registerValue) }}</text>
+              </view>
+              <view class="cmd-row">
+                <text class="cmd-label">设备类型：</text>
+                <text class="cmd-value">{{ (param.commands && param.commands[0] && param.commands[0].deviceCategory) || '--' }}</text>
+              </view>
+              <view v-if="isAdmin" class="cmd-row">
+                <text class="cmd-label">idcode：</text>
+                <text class="cmd-value">{{ param.idCode || '--' }}</text>
+              </view>
+              <view v-if="isAdmin" class="cmd-row">
+                <text class="cmd-label">寄存器地址：</text>
+                <text class="cmd-value">{{ (param.commands && param.commands[0] && param.commands[0].registerAddress) || '--' }}</text>
               </view>
             </view>
+          </view>
+          <view class="operation-footer">
+            <text class="footer-username">操作者：{{ operation.username || '--' }}</text>
+            <text class="footer-time">{{ formatTime(operation.createTime) }}</text>
           </view>
         </view>
       </view>
+      
+      <view v-if="isLoadingMore" class="loading-more">
+        <uni-loading-icon size="18" color="#4488FB"></uni-loading-icon>
+        <text>加载中...</text>
+      </view>
+      <view v-else-if="operationList.length > 0 && operationList.length >= totalCount" class="no-more">
+        已加载全部
+      </view>
+      
+      <view class="footer-space"></view>
+    </scroll-view>
+    
+    <view v-if="showBackTop" class="back-top-btn" @click="onBackTop">
+      <uni-icons type="arrowup" size="28" color="#fff" />
     </view>
   </view>
 </template>
@@ -83,31 +87,77 @@
 <script>
 import { queryQuickControlLog, getOperationLogByUserId } from '@/api/alarm.js'
 import { getParamInfo } from '@/utils/device-params.js'
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
 export default {
+  components: { DyNavbar },
   name: "OperationRecord",
   data() {
     return {
+      platformClass: "",
       loading: true,
-      operationList: []
+      operationList: [],
+      showBackTop: false,
+      scrollTop: 0,
+      pageNum: 1,
+      pageSize: 10,
+      totalCount: 0,
+      isLoadingMore: false
     };
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
   },
   computed: {
     userId() {
       return this.$store.state.userInfo?.userId || this.$store.state.user?.id || 0
+    },
+    isAdmin() {
+      return this.$store.state.userInfo?.roleId === 1 || this.$store.state.user?.roleId === 1
     }
   },
   mounted() {
     this.getOperationList()
   },
   methods: {
-    async getOperationList() {
+    async getOperationList(isLoadMore = false) {
+      if (isLoadMore && this.isLoadingMore) return
+      if (isLoadMore) {
+        this.isLoadingMore = true
+      }
+      
       try {
-        const res = await getOperationLogByUserId(this.userId)
 
-        const rawList = res.data || []
+        console.log(this.userInfo, this.$store.state, 'this.userId')
+        const params = {
+          pageNum: this.pageNum,
+          pageSize: this.pageSize
+        }
+        if (!this.isAdmin) {
+          params.userId = this.userId
+        }
+        const res = await getOperationLogByUserId(params)
+
+        console.log(res, "-----------------operationLog-------")
+
+        const rawList = res.data?.content || res.data?.list || res.data || []
+        const total = res.data?.totalElements || res.data?.total || null
         
-        this.operationList = rawList.map((op, opIndex) => {
+        if (total !== null) {
+          this.totalCount = total
+        } else if (!isLoadMore) {
+          this.totalCount = rawList.length
+        }
+        
+        if (rawList.length < this.pageSize) {
+          this.totalCount = Math.min(this.totalCount, this.operationList.length + rawList.length)
+        }
+        
+        const parsedList = rawList.map((op, opIndex) => {
           const parsedParams = this.parseJson(op.params)
           return {
             ...op,
@@ -128,11 +178,18 @@ export default {
           return new Date(b.createTime) - new Date(a.createTime)
         })
 
+        if (isLoadMore) {
+          this.operationList = [...this.operationList, ...parsedList]
+        } else {
+          this.operationList = parsedList
+        }
+
         console.log(res, "-----------------operationLog-------")
       } catch (e) {
         uni.showToast({ title: '加载失败', icon: 'none' })
       } finally {
         this.loading = false
+        this.isLoadingMore = false
       }
     },
     formatTime(timeStr) {
@@ -180,6 +237,16 @@ export default {
       
       return '--'
     },
+    getOperationName(operation) {
+      if (operation.parsedParams && operation.parsedParams.length > 0) {
+        const param = operation.parsedParams[0]
+        if (param.commands && param.commands.length > 0) {
+          const cmd = param.commands[0]
+          return getParamInfo(cmd.deviceCategory, cmd.registerAddress)?.label || '参数设置'
+        }
+      }
+      return '参数设置'
+    },
     getParamName(deviceCategory, registerAddress) {
       if (!deviceCategory || !registerAddress) {
         return '--'
@@ -189,9 +256,9 @@ export default {
 
       // console.log(paramInfo,field, deviceCategory,"-----------------paramInfo-------")
       if (paramInfo) {
-        return paramInfo.label || '--'
+        return paramInfo.label || '--'  
       }
-      return field
+      return field 
     },
     getParamValue(deviceCategory, registerAddress, registerValue) {
       if (!registerValue) {
@@ -260,7 +327,22 @@ export default {
       this.getOperationList().then(() => {
         uni.hideLoading();
         uni.showToast({ title: '刷新成功', icon: 'success' });
+      });
+    },
+    onScroll(e) {
+      this.showBackTop = e.detail.scrollTop > 300
+    },
+    onBackTop() {
+      this.scrollTop = 1
+      this.$nextTick(() => {
+        this.scrollTop = 0
       })
+    },
+    onScrollToLower() {
+      if (this.isLoadingMore) return
+      if (this.operationList.length >= this.totalCount) return
+      this.pageNum++
+      this.getOperationList(true)
     }
   }
 };
@@ -268,13 +350,35 @@ export default {
 
 <style lang="scss" scoped>
 .container {
-  min-height: 100vh;
+  height: 100vh;
   background: #f5f7fa;
-}
-
-.content {
-  padding: 24rpx;
-  flex: 1;
+  overflow: hidden;
+  
+  &.android-platform {
+    .fixed-placeholder {
+      height: calc(25px + 44px + 20px);
+    }
+    .content {
+      height: calc(100vh - 25px - 44px - 20px);
+    }
+  }
+  
+  &.ios-platform {
+    .fixed-placeholder {
+      height: calc(44px);
+      background: #fff;
+    }
+    .content {
+      height: calc(100vh - 44px);
+    }
+  }
+  
+  .content {
+    padding: 24rpx;
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
 }
 
 .loading-state {
@@ -320,120 +424,56 @@ export default {
 .operation-item {
   background: #fff;
   border-radius: 12rpx;
-  padding: 16rpx;
-  margin-bottom: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+  border: 1rpx solid #e8e8e8;
 }
 
 .operation-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12rpx;
-}
-
-.operation-time {
-  font-size: 24rpx;
-  color: #999;
-}
-
-.header-left {
-  display: flex;
-  flex-direction: column;
   align-items: flex-start;
+  margin-bottom: 20rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx dashed #e8e8e8;
 }
 
-.username-row {
-  display: flex;
-  align-items: center;
-  margin-top: 2rpx;
-}
-
-.username-label {
-  font-size: 22rpx;
-  color: #999;
-}
-
-.operation-username {
-  font-size: 22rpx;
-  color: #666;
-}
-
-.operation-status {
-  font-size: 22rpx;
-  padding: 2rpx 12rpx;
-  border-radius: 16rpx;
-  
-  &.success {
-    color: #52C41A;
-    background: #F6FFED;
-  }
-  
-  &.fail {
-    color: #FF4D4F;
-    background: #FFF2F0;
-  }
-}
-
-.operation-content {
-  padding-top: 12rpx;
-  border-top: 1rpx solid #f5f5f5;
-}
-
-.device-type-tag {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #fff;
-  background: linear-gradient(135deg, #4A90D9, #6BB3FF);
-  padding: 4rpx 16rpx;
-  border-radius: 20rpx;
-}
-
-.operation-details {
-  background: #fafbfc;
-  border-radius: 8rpx;
-  padding: 12rpx;
-}
-
-.param-card {
-  background: #fff;
-  border-radius: 6rpx;
-  padding: 12rpx;
-  border: 1rpx solid #f0f0f0;
-}
-
-.param-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 8rpx;
-  border-bottom: 1rpx dashed #f0f0f0;
-  margin-bottom: 8rpx;
-}
-
-.param-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8rpx;
-}
-
-.param-label {
-  font-size: 22rpx;
-  color: #999;
-}
-
-.param-value {
-  font-size: 22rpx;
+.header-title {
+  font-size: 30rpx;
+  font-weight: bold;
   color: #333;
+  flex: 1;
+}
+
+.header-device {
+  font-size: 26rpx;
+  color: #4488FB;
   font-weight: 500;
 }
 
-.command-item {
-  background: #f8fafc;
-  border-radius: 6rpx;
-  padding: 8rpx;
-  margin-top: 6rpx;
+
+
+.operation-body {
+  padding: 20rpx 0;
+  border-bottom: 1rpx dashed #e8e8e8;
+  margin-bottom: 16rpx;
+}
+
+.operation-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-username {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.footer-time {
+  font-size: 24rpx;
+  color: #999;
 }
 
 .cmd-row {
@@ -442,23 +482,20 @@ export default {
   align-items: center;
   
   &:not(:last-child) {
-    margin-bottom: 6rpx;
+    margin-bottom: 8rpx;
   }
 }
 
 .cmd-label {
-  font-size: 22rpx;
-  color: #888;
+  font-size: 26rpx;
+  color: #999;
+  font-weight: 500;
 }
 
 .cmd-value {
-  font-size: 22rpx;
+  font-size: 26rpx;
   color: #333;
   font-weight: 500;
-  
-  &.cmd-name {
-    color: #1890FF;
-  }
 }
 
 .empty-state {
@@ -469,7 +506,7 @@ export default {
   padding: 80rpx 60rpx;
   background: #fff;
   border-radius: 24rpx;
-  margin-top: 30rpx;
+  // margin-top: 30rpx;
   box-shadow: 0 8rpx 30rpx rgba(68, 136, 251, 0.08);
 }
 
@@ -565,5 +602,38 @@ export default {
 .empty-hint {
   font-size: 24rpx;
   color: #a0aec0;
+}
+
+.footer-space {
+  height: 120rpx;
+}
+
+.back-top-btn {
+  position: fixed;
+  right: 30rpx;
+  bottom: 120rpx;
+  width: 80rpx;
+  height: 80rpx;
+  background: linear-gradient(135deg, #4A90D9, #6BB3FF);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 16rpx rgba(74, 144, 217, 0.4);
+  z-index: 999;
+}
+
+.loading-more, .no-more {
+  text-align: center;
+  padding: 30rpx 0;
+  color: #999;
+  font-size: 24rpx;
+}
+
+.loading-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
 }
 </style>

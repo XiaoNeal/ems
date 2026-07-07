@@ -1,7 +1,7 @@
 <template>
-  <view class="container">
+  <view class="container" :class="platformClass">
     <!-- 顶部导航栏 -->
-    <view class="header">
+    <!-- <view class="header">
       <view class="header-safe-area"></view>
       <view class="header-content">
         <view class="back-btn" @click="goBack">
@@ -12,7 +12,9 @@
         </view>
         <view class="header-right"></view>
       </view>
-    </view>
+    </view> -->
+    <DyNavbar title="策略配置" :placeholder="true" />
+    <view class="fixed-placeholder"></view>
 
     <!-- 内容区域 -->
     <view class="content">
@@ -349,8 +351,11 @@
 import request from '@/utils/request.js'
 import { realtimeDataProvider } from '@/service/websocket'
 import { sendCommandFrame } from '@/api/control.js'
-
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 export default {
+  components: {
+    DyNavbar
+  },
   data() {
     return {
       activeMode: 'peakValley',
@@ -388,8 +393,16 @@ export default {
       },
       // 防逆流参数
       antiBackflowPower: '', // 防逆流服务端交流总表功率(W)
-      antiBackflowStationCount: '' // 防逆流服务端控制能源站数量(台)
+      antiBackflowStationCount: '', // 防逆流服务端控制能源站数量(台)
+      platformClass: ''
     }
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
   },
   mounted() {
     this.loadStrategyConfig()
@@ -446,6 +459,28 @@ export default {
       this.activeMode = mode
     },
     handleEditConfig() {
+      const deviceList = realtimeDataProvider.getDeviceList()
+      const device171F = deviceList.find(item => item && item.deviceType === '171F')
+      const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
+      
+      if (b12Value === undefined || b12Value === null) {
+        uni.showModal({
+          title: '提示',
+          content: '当前设备离线，暂不支持修改',
+          showCancel: false
+        })
+        return
+      }
+      
+      if (b12Value !== 0 && b12Value !== '0') {
+        uni.showModal({
+          title: '提示',
+          content: '策略运行中，参数修改需停止策略！！！',
+          showCancel: false
+        })
+        return
+      }
+      
       if (!this.configurable) {
         uni.showToast({
           title: '当前不可配置',
@@ -707,8 +742,8 @@ export default {
     // 初始化实时数据
     initRealtimeData() {
       let address = '01'
-      let barCode = '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00'
-      
+      // let barCode = '00 00 02 20 26 05 18 15 21 04 02 00 00 00 00'
+      let barCode = ''
       const currentDevice = this.$store.state.currentSelectDevice || {}
       if (currentDevice.list && Array.isArray(currentDevice.list)) {
         const foundDevice = currentDevice.list.find(item =>
@@ -853,6 +888,26 @@ export default {
 .container {
   min-height: 100vh;
   background-color: #f5f7fa;
+
+
+  width: 100%;
+  height: 100vh;
+  background-color: #EFF4FB;
+  overflow: hidden;
+  position: relative;
+
+  &.android-platform {
+    .fixed-placeholder {
+      height: calc(25px + 44px + 20px);
+      background: #fff;
+    }
+  }
+  &.ios-platform {
+    .fixed-placeholder {
+      height: calc(44px);
+      background: #fff;
+    }
+  }
 }
 
 .header {
@@ -865,16 +920,24 @@ export default {
 }
 
 .header-safe-area {
-  height: calc(var(--status-bar-height) + 20px);
+  height: calc(25px + 20px);
   background-color: #fff;
 }
 
 .header-content {
-  height: 44px;
+  // height: 44px;
+  // display: flex;
+  // align-items: center;
+  // justify-content: space-between;
+  // padding: 0 15px;
+  // box-sizing: border-box;
+
+
+   height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 15px;
+  padding: 0 44px 0 15px;
   box-sizing: border-box;
 }
 
@@ -907,13 +970,23 @@ export default {
 }
 
 .content {
-  padding: 20rpx;
-  position: relative;
+  // padding: 20rpx;
+  // position: relative;
+  // box-sizing: border-box;
+  // padding-top: calc(var(--status-bar-height) + 64px);
+  // margin-top: 20rpx;
+  // height: calc(100vh - 140rpx);
+  // overflow-y: auto;
+
+
+  // position: fixed;
+  left: 0;
+  right: 0;
+  top: calc(25px + 64px);
+  bottom: calc(50px + env(safe-area-inset-bottom));
   box-sizing: border-box;
-  padding-top: calc(var(--status-bar-height) + 64px);
-  margin-top: 20rpx;
-  height: calc(100vh - 140rpx);
-  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20rpx;
 }
 
 .content-mask {

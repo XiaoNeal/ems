@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view class="container" :class="platformClass">
     <!-- 头部导航 -->
     <!-- <view class="header">
       <view class="back-btn" @click="goBack">
@@ -9,8 +9,8 @@
       <view class="header-right"></view>
     </view> -->
 
-    <u-navbar title="设备详情" :autoBack="true" :placeholder="true">
-    </u-navbar>
+    <DyNavbar title="设备详情" :placeholder="true" />
+    <view class="fixed-placeholder"></view>
 
     <!-- 设备基本信息 -->
     <view class="device-info-card">
@@ -107,7 +107,12 @@
 </template>
 
 <script>
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+
 export default {
+  components: {
+    DyNavbar
+  },
   name: 'device-detail',
   data() {
     const now = new Date();
@@ -116,6 +121,7 @@ export default {
     const day = String(now.getDate()).padStart(2, '0');
     const today = `${year}-${month}-${day}`;
     return {
+      platformClass: "",
       deviceInfo: {
         deviceName: '1#直流多联机',
         deviceStatusName: '在线',
@@ -133,10 +139,14 @@ export default {
     };
   },
   onLoad(options) {
-    // 从路由参数中获取设备信息
     if (options.deviceInfo) {
       this.deviceInfo = JSON.parse(options.deviceInfo);
     }
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
   },
   methods: {
     goBack() {
@@ -151,11 +161,23 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .container {
   background-color: #f5f5f5;
   min-height: 100vh;
   padding-bottom: 80px;
+  
+  .fixed-placeholder {
+    height: calc(25px + 44px);
+  }
+  
+  &.android-platform {
+    .fixed-placeholder { height: calc(25px + 44px + 20px); }
+  }
+  
+  &.ios-platform {
+    .fixed-placeholder { height: calc( 44px); }
+  }
 }
 
 /* 头部导航 */

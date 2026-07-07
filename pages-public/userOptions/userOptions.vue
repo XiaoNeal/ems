@@ -1,8 +1,8 @@
 <template>
-	<view :style="'background-color:'+ bGColor" class="container">
+	<view :style="'background-color:'+ bGColor" class="container" :class="platformClass">
 		<!-- <u-navbar title="G-FIEMS" :titleStyle="{'color':'#fff','width':'100%','text-align':'left','padding-left':'40rpx'}" :leftIcon="null" :leftText="null" :placeholder="true" :bgColor="headerTabBg"></u-navbar> -->
-		<u-navbar title="设置" leftIconColor="#fff" :titleStyle="{'color':fontColor,'width':'100%'}" :leftText="null"
-			:autoBack="true" :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
+		<DyNavbar title="设置" :titleStyle="{'color':fontColor,'width':'100%'}" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
+		<view class="fixed-placeholder"></view>
 		<view class="list" :style="'color:'+fontColor">
 			<text style="flex: 1;">个人头像</text>
 			<image :src="imgSrc" mode="widthFix" style="margin-right: 10px;border-radius: 50%;" @click="changeAvatar">
@@ -42,7 +42,10 @@
 		updateUserInfo
 	} from "@/api/user.js"
 	import md5 from "@/utils/md5.min.js"
+	import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+
 	export default {
+		components: { DyNavbar },
 		data() {
 			return {
 				setUserName: '',
@@ -52,7 +55,8 @@
 				oldPassword: '',
 				// iconColor:'#000',
 				imgSrc: 'https://serviceiems.gree.com/api/upload/wximages/img/logo.png',
-				isAdmin: null
+				isAdmin: null,
+				platformClass: ''
 			}
 		},
 		mounted() {
@@ -65,6 +69,11 @@
 			// 	this.iconColor ='#000'
 			// }
 			this.isAdmin = option.admin
+			uni.getSystemInfo({
+				success: (res) => {
+					this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+				},
+			});
 		},
 
 
@@ -197,7 +206,21 @@
 
 <style scoped lang="scss">
 	.container {
-		height: 100%
+		height: 100%;
+
+		.fixed-placeholder {
+			height: calc(25px + 44px);
+		}
+
+		&.android-platform {
+			.fixed-placeholder { height: calc(25px + 44px + 20px); }
+		}
+
+		&.ios-platform {
+			.fixed-placeholder { height: calc( 44px); 
+				background: #fff;
+			}
+		}
 	}
 
 	.list {

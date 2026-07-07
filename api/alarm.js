@@ -8,7 +8,10 @@ export const queryQuickControlLog = (data) => {
     return request.post('/api/homeCommunity/queryQuickControlLog', data)
 }
 
-export const getOperationLogByUserId = (userId) => {
-    // return request.get('/api/GetOperationLogByUserId?userId=' + userId)
-    return request.get('/api/GetOperationLogByUserId')
+export const getOperationLogByUserId = (params) => {
+    return request.get('/api/GetOperationLogByUserId', params)
+}
+
+export const getAlarmRecord = (params) => {
+    return request.get('/api/energyStation/alarm/getAlarmRecord', params)
 }

@@ -23,7 +23,7 @@
       <view class="item-title">
         <view class="user-name">{{ user.userName }}</view>
         <view class="phone">
-            {{ user.mobile ? user.mobile.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : '' }}
+          {{ user.mobile ? user.mobile.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : '' }}
         </view>
       </view>
       <!-- <view > -->
@@ -44,7 +44,7 @@
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view> -->
-       <view class="list-item" @click="navigateToDeviceList">
+      <view class="list-item" @click="navigateToDeviceList">
         <view class="item-content">
           <uni-icons type="list" size="20" color="#007AFF"></uni-icons>
           <view class="item-title-wrapper">
@@ -61,6 +61,10 @@
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
+
+
+
+
       <view class="list-item" @click="navigateToU('/pages/profile/security')">
         <view class="item-content">
           <uni-icons type="locked" size="20" color="#007AFF"></uni-icons>
@@ -68,7 +72,16 @@
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
-     
+      <view v-if="user.roleId === 1" class="list-item" @click="navigateToU('/pages/profile/user-management')">
+        <view class="item-content">
+          <uni-icons type="contact" size="20" color="#007AFF"></uni-icons>
+          <text class="item-title">用户管理</text>
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
+        </view>
+      </view>
+
+
+
       <view class="list-item" @click="navigateToU('/pages/profile/settings')">
         <view class="item-content">
           <uni-icons type="gear" size="20" color="#007AFF"></uni-icons>
@@ -110,17 +123,17 @@ export default {
       if (!currentDevice) {
         return ''
       }
-      
+
       // 如果用户没有设备列表，直接返回空
       if (!this.userInfo?.esIds || !Array.isArray(this.userInfo.esIds) || this.userInfo.esIds.length === 0) {
         return ''
       }
-      
+
       // 如果 currentDevice 有 name 属性，直接返回
       if (currentDevice.name) {
         return currentDevice.name
       }
-      
+
       // 如果 currentDevice 是对象但没有 name，从 esIds 中查找
       const deviceId = currentDevice.id || currentDevice.esId
       const device = this.userInfo.esIds.find(item => {
@@ -132,24 +145,24 @@ export default {
       if (device && typeof device === 'object' && device.name) {
         return device.name
       }
-      
+
       return ''
     }
   },
   mounted() {
-    console.log(this.user,"this.user")
-    
+    console.log(this.user, "this.user")
+
   },
   async created() {
     try {
       // 获取用户ID，优先从 userInfo（根 store）中获取，其次从 user 模块中获取
       const userId = this.$store.state.userInfo?.userId || this.$store.state.user?.id || '';
-      
+
       if (!userId) {
         console.warn('用户ID为空，跳过获取用户信息');
         return;
       }
-      
+
       let res = await uni.request({
         url: 'https://iems.neiic.com/SsoServer/es/FindUserInfoByCodeId',
         method: 'GET',
@@ -161,7 +174,7 @@ export default {
         }
       })
       res = JSON.parse(decrypt(res[1].data));
-      console.log(res,"res121212")
+      console.log(res, "res121212")
       if (res.code === 200) {
 
         // 替换原有赋值方式
@@ -171,7 +184,9 @@ export default {
           mobile: res.data.mobile_phone,
           userName: res.data.user_name,
           email: res.data.email,
-          imageFile: res.data.imageFile && res.data.imageFile.trim() ? 'https://iems.neiic.com/' + res.data.imageFile.replace(/`/g, '') : undefined, // 去除接口返回的冗余反引号
+          imageFile: res.data.imageFile && res.data.imageFile.trim() ? 'https://iems.neiic.com/' + res.data.imageFile.replace(/`/g, '') : undefined,
+          roleId: res.data.roleId,
+          roleName: res.data.roleName
         });
       } else {
         throw new Error(res.data.msg || '请求失败')
@@ -223,7 +238,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
 .profile-container {
   padding: 20rpx;
 }
@@ -371,7 +385,7 @@ export default {
 
 .user-info {
   background-color: #fff;
-  padding:16px 20px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
 }
@@ -535,7 +549,7 @@ button[type="warn"] {
   color: #ccc;
   flex-shrink: 0;
   transition: all 0.2s ease;
-  
+
   .list-item:active &,
   .user-info:active & {
     color: #007AFF;

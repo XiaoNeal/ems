@@ -1,7 +1,7 @@
 <template>
-  <view class="sub-page">
-    <u-navbar title="系统设置" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :leftText="null" :autoBack="true"
-      :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
+  <view class="sub-page" :class="platformClass">
+    <DyNavbar title="系统设置" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
+    <view class="fixed-placeholder"></view>
     
     <view class="custom-list">
       <view class="list-item" @click="changeLanguage">
@@ -65,14 +65,17 @@
 
 <script>
 import { mapState } from 'vuex'
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
 export default {
+  components: { DyNavbar },
   data() {
     return {
       language: '简体中文',
       theme: '默认',
       cacheSize: '0MB',
-      fontSize: 1 // 0:小, 1:中, 2:大
+      fontSize: 1,
+      platformClass: ""
     }
   },
   computed: {
@@ -83,6 +86,13 @@ export default {
     fontSizeText() {
       return ['小', '中', '大'][this.fontSize]
     }
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
   },
   onShow() {
     this.loadSettings()
@@ -276,6 +286,22 @@ export default {
   .list-item:active & {
     color: #007AFF;
     transform: translateX(4rpx);
+  }
+}
+
+.sub-page {
+  .fixed-placeholder {
+    height: calc(25px + 44px);
+  }
+  
+  &.android-platform {
+    .fixed-placeholder { height: calc(25px + 44px + 20px); }
+  }
+  
+  &.ios-platform {
+    .fixed-placeholder { height: calc( 44px); 
+      background: #fff;
+    }
   }
 }
 </style>

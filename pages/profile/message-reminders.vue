@@ -1,7 +1,7 @@
 <template>
-  <view class="sub-page">
-    <u-navbar title="消息提醒" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :leftText="null" :autoBack="true"
-      :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
+  <view class="sub-page" :class="platformClass">
+    <DyNavbar title="消息提醒" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
+    <view class="fixed-placeholder"></view>
 
     <scroll-view class="content" scroll-y>
       <view v-if="messages.length === 0" class="empty-state">
@@ -40,17 +40,27 @@
 
 <script>
 import { mapState } from 'vuex'
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
 export default {
+  components: { DyNavbar },
   data() {
     return {
-      messages: []
+      messages: [],
+      platformClass: ''
     }
   },
   computed: {
     ...mapState({
       headerTabBg: state => state.headerTabBg,
       fontColor: state => state.fontColor
+    })
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === 'ios' ? 'ios-platform' : 'android-platform'
+      }
     })
   },
   onShow() {
@@ -260,5 +270,24 @@ export default {
 
 .footer-space {
   height: 40rpx;
+}
+
+.container {
+  .fixed-placeholder {
+    height: calc(25px + 44px);
+  }
+  
+  &.android-platform {
+    .fixed-placeholder { height: calc(25px + 44px + 20px); }
+    // .content { height: calc(100vh - 88rpx - 40px); }
+    // .footer-space { height: calc(40rpx + 40px); }
+  }
+  
+  &.ios-platform {
+    .fixed-placeholder { height: calc( 44px); 
+      background: #fff;
+    }
+    // .content { height: calc(100vh - 88rpx); }
+  }
 }
 </style>

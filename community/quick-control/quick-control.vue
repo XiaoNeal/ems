@@ -1,6 +1,7 @@
 <template>
-  <view class="quick-control">
-    <u-navbar title="快捷控制" :autoBack="true" :placeholder="true" />
+  <view class="quick-control" :class="platformClass">
+    <DyNavbar title="快捷控制" :placeholder="true" />
+    <view class="fixed-placeholder"></view>
 
     <!-- 全局编辑控制 -->
     <view class="global-edit-bar">
@@ -32,10 +33,12 @@
       <view class="control-card">
         <view class="card-title">光伏DC控制</view>
         <view class="btn-group">
-          <view class="control-btn" :class="{ active: selectedPvDcAction === 'start', 'btn-disabled': !isEditing }" @click="pvDcAction('start')">
+          <view class="control-btn" :class="{ active: selectedPvDcAction === 'start', 'btn-disabled': !isEditing }"
+            @click="pvDcAction('start')">
             一键开机
           </view>
-          <view class="control-btn" :class="{ active: selectedPvDcAction === 'stop', 'btn-disabled': !isEditing }" @click="pvDcAction('stop')">
+          <view class="control-btn" :class="{ active: selectedPvDcAction === 'stop', 'btn-disabled': !isEditing }"
+            @click="pvDcAction('stop')">
             关机
           </view>
         </view>
@@ -49,25 +52,16 @@
         <view class="control-section">
           <view class="section-title">PCS模式选择</view>
           <view class="btn-group triple">
-            <view
-              class="control-btn"
-              :class="{ active: selectedPcsMode === 'charge', 'btn-disabled': !isEditing }"
-              @click="handlePcsModeClick('charge')"
-            >
+            <view class="control-btn" :class="{ active: selectedPcsMode === 'charge', 'btn-disabled': !isEditing }"
+              @click="handlePcsModeClick('charge')">
               并网充电
             </view>
-            <view
-              class="control-btn"
-              :class="{ active: selectedPcsMode === 'discharge', 'btn-disabled': !isEditing }"
-              @click="handlePcsModeClick('discharge')"
-            >
+            <view class="control-btn" :class="{ active: selectedPcsMode === 'discharge', 'btn-disabled': !isEditing }"
+              @click="handlePcsModeClick('discharge')">
               并网放电
             </view>
-            <view
-              class="control-btn"
-              :class="{ active: selectedPcsMode === 'off-grid', 'btn-disabled': !isEditing }"
-              @click="handlePcsModeClick('off-grid')"
-            >
+            <view class="control-btn" :class="{ active: selectedPcsMode === 'off-grid', 'btn-disabled': !isEditing }"
+              @click="handlePcsModeClick('off-grid')">
               离网
             </view>
           </view>
@@ -91,7 +85,8 @@
                 <text class="unit-text">kW</text>
               </view>
               <view class="btn-group vertical">
-                <view v-if="!editingChargePower" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }" @click="handleEditChargePower">
+                <view v-if="!editingChargePower" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }"
+                  @click="handleEditChargePower">
                   <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
                   <text>编辑</text>
                 </view>
@@ -128,7 +123,8 @@
                 <text class="unit-text">kW</text>
               </view>
               <view class="btn-group vertical">
-                <view v-if="!editingDischargePower" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }" @click="handleEditDischargePower">
+                <view v-if="!editingDischargePower" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }"
+                  @click="handleEditDischargePower">
                   <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
                   <text>编辑</text>
                 </view>
@@ -151,10 +147,12 @@
         <view class="control-section">
           <view class="section-title">PCS开关机</view>
           <view class="btn-group">
-            <view class="control-btn" :class="{ active: selectedPcsAction === 'start', 'btn-disabled': !isEditing }" @click="pcsAction('start')">
+            <view class="control-btn" :class="{ active: selectedPcsAction === 'start', 'btn-disabled': !isEditing }"
+              @click="pcsAction('start')">
               开机
             </view>
-            <view class="control-btn" :class="{ active: selectedPcsAction === 'stop', 'btn-disabled': !isEditing }" @click="pcsAction('stop')">
+            <view class="control-btn" :class="{ active: selectedPcsAction === 'stop', 'btn-disabled': !isEditing }"
+              @click="pcsAction('stop')">
               关机
             </view>
           </view>
@@ -170,11 +168,17 @@
 
 <script>
 import { sendCommandFrame } from '@/api/control.js'
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+import { realtimeDataProvider } from '@/service/websocket'
 
 export default {
+  components: {
+    DyNavbar
+  },
   name: "QuickControl",
   data() {
     return {
+      platformClass: "",
       chargePower: '',
       dischargePower: '',
       deviceConfig: {
@@ -204,6 +208,13 @@ export default {
     userId() {
       return this.$store.state.userInfo?.userId || 0
     }
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
   },
   mounted() {
     const currentDevice = this.$store.state.currentSelectDevice || {}
@@ -405,6 +416,28 @@ export default {
 
     // 编辑配置相关方法
     handleEditConfig() {
+      const deviceList = realtimeDataProvider.getDeviceList()
+      const device171F = deviceList.find(item => item && item.deviceType === '171F')
+      const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
+      
+      if (b12Value === undefined || b12Value === null) {
+        uni.showModal({
+          title: '提示',
+          content: '当前设备离线，暂不支持修改',
+          showCancel: false
+        })
+        return
+      }
+      
+      if (b12Value !== 0 && b12Value !== '0') {
+        uni.showModal({
+          title: '提示',
+          content: '策略运行中，参数修改需停止策略！！！',
+          showCancel: false
+        })
+        return
+      }
+      
       this.isEditing = true;
       uni.showToast({
         title: '已进入编辑模式',
@@ -615,6 +648,20 @@ $text-gray: #868c98;
   background: linear-gradient(180deg, #f0f4f8 0%, #f5f7fa 100%);
   min-height: 100vh;
   padding-bottom: env(safe-area-inset-bottom);
+
+  &.android-platform {
+    .fixed-placeholder {
+      height: calc(25px + 44px + 20px);
+    }
+  }
+
+  &.ios-platform {
+    .fixed-placeholder {
+      height: calc(44px);
+      background: #fff;
+    }
+
+  }
 }
 
 .content {

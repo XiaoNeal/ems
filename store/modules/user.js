@@ -21,6 +21,7 @@ const state = {
 		id: '',
 		token: '',
 		sessionId: '',
+		loginTime: '',
 		roles: [],
 		stationId: '',
 		stationIds: [],
@@ -68,6 +69,7 @@ const mutations = {
 		state.userName = payload.username
 		state.token = payload.token
 		state.sessionId = payload.sessionId
+		state.loginTime = payload.loginTime
 		state.avatar = payload.avatar
 		state.stationId = payload.stationId
 		state.stationIds = payload.stationIds
@@ -82,6 +84,7 @@ const mutations = {
 			userName: payload.username,
 			token: payload.token,
 			sessionId: payload.sessionId,
+			loginTime: payload.loginTime,
 			avatar: payload.avatar,
 			stationId: payload.stationId,
 			stationIds: payload.stationIds,
@@ -93,6 +96,7 @@ const mutations = {
 	},
 
 	UPDATE_USER(state, payload) {
+		console.log(payload, 'UPDATE_USER')
 		if (payload.avatar !== undefined) {
 			state.avatar = payload.avatar;
 		}
@@ -107,6 +111,12 @@ const mutations = {
 		}
 		if (payload.mobile !== undefined) {
 			state.mobile = payload.mobile;
+		}
+		if (payload.roleId !== undefined) {
+			state.roleId = payload.roleId;
+		}
+		if (payload.roleName !== undefined) {
+			state.roleName = payload.roleName;
 		}
 	}
 }
@@ -182,12 +192,13 @@ const actions = {
 
 
 
-	async getInfo({ commit }, { userId,sessionId }) {
+	async getInfo({ commit }, { userId,sessionId, loginTime }) {
 		const { data } = await getUserInfoApi(userId)
 		console.log('getUserInfoApi', data)
 		const payload = {
 			id: userId,
 			sessionId: sessionId,
+			loginTime: loginTime,
 			roleId: data.roleId,
 			roleName: data.roleName,
 			stationId: 0,

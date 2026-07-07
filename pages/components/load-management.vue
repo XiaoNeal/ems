@@ -12,7 +12,7 @@
           <text class="text">空调</text>
         </view>
         <view class="device-item">
-          <text class="number">{{ nyzData.mkjQuantity || 0 }}</text>
+          <text class="number">{{ nyzData.cdzQuantity || 1 }}</text>
           <text class="text">充电桩</text>
         </view>
         <view class="device-item">
@@ -41,14 +41,12 @@
           <qiun-data-charts type="area" :chartData="loadChartData" :opts="loadChartOptions" :ontouch="true"
             :canvas2d="canvas2d" class="main-chart" :canvas-id="chartId + '-load'" />
         </view>
-        <view v-else class="chart-empty">
-          <text class="empty-text">暂无数据</text>
-        </view>
+        <EmptyState v-else title="暂无数据" desc="当前时段暂无负荷数据" @refresh="findFlexibilityLoadPowerTotal" />
       </view>
     </view>
 
     <!-- 设备列表 -->
-    <view class="card device-list">
+    <view class="card device-list" v-if="false">
       <view class="list-header">
         <text class="list-title">负荷列表</text>
         <!-- <view class="access-setting-btn" @click="goToAccessSetting">
@@ -94,6 +92,7 @@ import {
 } from "@/service/websocket";
 import { queryDayGeneratedPower, getPowerData } from '../../api/power'
 import dyDate from '@/components/dy-Date/dy-Date.vue';
+import EmptyState from '@/components/empty-state/empty-state.vue';
 const commonArcbarOptions = {
   padding: [15, 15, 0, 15],
   title: { name: '75%', fontSize: 12, color: '#1890FF' },
@@ -108,8 +107,10 @@ const commonArcbarOptions = {
     }
   }
 }
+import { calculateYAxisMax } from '@/utils/tools';
+
 export default {
-  components: { dyDate },
+  components: { dyDate, EmptyState },
   name: 'load-management',
   data() {
     const now = new Date();
@@ -129,14 +130,14 @@ export default {
       deviceStatus: 1,
       deviceCount: {
         '充电桩': 0,
-        '多联机': 0,
+        '多联机': 1,
         '未知设备': 0,
         '模块机': 0,
         '能源站': 0
       },
       nyzData: {
         dljQuantity: "0",
-        cdzQuantity: "0",
+        cdzQuantity: "1",
         mkjQuantity: "0",
         lightQuantity: "0",
         unknownDeviceQuantity: "0",
@@ -149,38 +150,12 @@ export default {
       softValueOptions: {},
       loadRateOptions: {},
       efficiencyOptions: {},
-      loadChartOptions: {
-        color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
-        // padding: [15, 20, 0, 15],
-        // dataLabel: false,
-        // dataPointShape: false,
-        // enableScroll: false,
-        // legend: {},
-        // xAxis: { labelCount: 6, disableGrid: true },
-        // yAxis: { gridType: "dash", dashLength: 2, showTitle: true, data: [{ title: "单位:kW" }] },
-        // extra: { line: { type: "curve", width: 2, activeType: "hollow", linearType: "custom" } }
 
-
-        dataLabel: false,
-        dataPointShape: false,
-        // color: ["#6DE188"],
-        xAxis: { labelCount: 6, disableGrid: true },
-        padding: [15, 20, 0, 15],
-        yAxis: {
-          gridType: "dash",
-          showTitle: true,
-          data: [{ position: "left", title: "单位:kW", min: null, max: null }],
-          dashLength: 2,
-          tofix: 2
-        },
-        extra: { area: { type: "curve", gradient: true } }
-
-
-      },
       loadChartData: {
         categories: [],
         series: [{ name: '总功率', data: [] }]
       },
+      loadChartMax: 1,
       opts: {},
       softChartOptions: { ...commonArcbarOptions, title: { name: `--%`, fontSize: 12 }, subtitle: { name: '系统柔度', fontSize: 12 }, color: ['#1890FF', '#36CFC9'] },
       loadRateChartOptions: { ...commonArcbarOptions, title: { name: `--%`, fontSize: 12 }, subtitle: { name: '负载率', fontSize: 12, }, color: ['#FF9F5C', '#FFC53D'] },
@@ -203,6 +178,26 @@ export default {
     // this.getDeviceInfo();
     // this.getNyzRealTimeData();
     this.findFlexibilityLoadPowerTotal();
+  },
+  computed: {
+    loadChartOptions() {
+      const maxValue = calculateYAxisMax(this.loadChartData.series[0]?.data || []);
+      return {
+        color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
+        dataLabel: false,
+        dataPointShape: false,
+        xAxis: { labelCount: 6, disableGrid: true },
+        padding: [15, 20, 20, 15],
+        yAxis: {
+          gridType: "dash",
+          showTitle: true,
+          data: [{ position: "left", title: "单位:kW", min: null, max: maxValue }],
+          dashLength: 2,
+          tofix: 2
+        },
+        extra: { area: { type: "curve", gradient: true } }
+      }
+    }
   },
   methods: {
     handleDatePicker(value) {
@@ -359,6 +354,12 @@ export default {
 .main-chart {
   width: 100%;
   height: 100%;
+}
+
+.chart-loaded {
+  width: 100%;
+  height: 450rpx;
+  animation: fadeIn 0.5s ease-out;
 }
 
 .chart-loading {

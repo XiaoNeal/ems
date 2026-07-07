@@ -1,7 +1,7 @@
 <template>
-	<view class="container">
-		<u-navbar title="账户注销" :titleStyle="{ 'color': fontColor, 'width': '100%', 'font-weight': '600' }" :leftText="null" :autoBack="true"
-			:placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
+	<view class="container" :class="platformClass">
+		<DyNavbar title="账户注销" :titleStyle="{ 'color': fontColor, 'width': '100%', 'font-weight': '600' }" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
+		<view class="fixed-placeholder"></view>
 		<u-toast ref="uToast"></u-toast>
 
 		<!-- 第一步：注销须知 -->
@@ -100,9 +100,13 @@
 </template>
 
 <script>
+	import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+
 	export default {
+		components: { DyNavbar },
 		data() {
 			return {
+				platformClass: '',
 				isRead: false,
 				confirmCancellation: false,
 				phone: '',
@@ -115,6 +119,11 @@
 		},
 		onLoad() {
 			this.phone = uni.getStorageSync('phone')
+			uni.getSystemInfo({
+				success: (res) => {
+					this.platformClass = res.platform === 'ios' ? 'ios-platform' : 'android-platform'
+				}
+			})
 		},
 		methods: {
 			nextStep() {
@@ -230,6 +239,19 @@
 	.container {
 		min-height: 100vh;
 		background: linear-gradient(180deg, #f0f5ff 0%, #f5f7fb 30%);
+
+		&.android-platform {
+			.fixed-placeholder {
+				height: calc(25px + 44px + 20px);
+			}
+		}
+
+		&.ios-platform {
+			.fixed-placeholder {
+				height: calc(44px);
+				background: #fff;
+			}
+		}
 	}
 
 	/* 页面内容 */

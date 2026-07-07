@@ -1,13 +1,13 @@
 <template>
-  <view class="security-container">
+  <view class="security-container" :class="platformClass">
     <!-- <uni-nav-bar 
       title="安全设置" 
       left-icon="back"
       :border="false"
       @clickLeft="back"
     /> -->
-    <u-navbar title="安全设置" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :leftText="null" :autoBack="true"
-      :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
+    <DyNavbar title="安全设置" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
+    <view class="fixed-placeholder"></view>
 
 
     <view class="security-content">
@@ -32,8 +32,8 @@
 <style lang="scss" scoped>
 .security-container {
   background: #f8f8f8;
-  min-height: 100vh;
-  padding: 20px 15px;
+  // min-height: 100vh;
+  // padding: 20px 15px;
 }
 
 .security-content {
@@ -66,10 +66,41 @@
 /deep/ .uni-nav-bar--border {
   border-bottom-width: 0 !important;
 }
+
+.security-container {
+  .fixed-placeholder {
+    height: calc(25px + 44px);
+  }
+  
+  &.android-platform {
+    .fixed-placeholder { height: calc(25px + 44px + 20px); }
+  }
+  
+  &.ios-platform {
+    .fixed-placeholder { height: calc( 44px); 
+      background: #fff;
+    }
+  }
+}
 </style>
 
 <script>
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+
 export default {
+  components: { DyNavbar },
+  data() {
+    return {
+      platformClass: ""
+    }
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
+  },
   methods: {
     back() {
       uni.navigateBack();
@@ -113,16 +144,17 @@ export default {
 
 <style scoped lang="scss">
 .security-container {
-  padding: 20px;
+  // padding: 20px;
   background-color: #f5f5f5;
-  min-height: 100vh;
+  // min-height: 100vh;
 }
 
 .security-content {
-  margin-top: 20px;
+  // margin-top: 20px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 20px;
 }
 
 .list {

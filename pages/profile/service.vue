@@ -1,7 +1,7 @@
 <template>
-  <view class="sub-page">
-    <u-navbar title="AI客服" :titleStyle="{ 'color': fontColor, 'width': '100%', 'font-weight': '600' }" :leftText="null" :autoBack="true"
-      :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
+  <view class="sub-page" :class="platformClass">
+    <DyNavbar title="AI客服" :titleStyle="{ 'color': fontColor, 'width': '100%', 'font-weight': '600' }" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
+    <view class="fixed-placeholder"></view>
 
     <view class="ai-container">
       <!-- AI客服头部 -->
@@ -142,9 +142,13 @@
 </template>
 
 <script>
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+
 export default {
+  components: { DyNavbar },
   data() {
     return {
+      platformClass: "",
       quickQuestions: [
         { text: '如何绑定微能站？', icon: 'plus', color: '#4a8cff', answer: '在"设备管理"页面点击"添加设备"，扫描微能站设备二维码或手动输入设备编号即可完成绑定。' },
         { text: '微能站数据怎么看？', icon: 'bar-chart', color: '#fa8c16', answer: '进入微能站详情页面，即可查看实时发电数据、能耗统计、历史曲线等信息。' },
@@ -246,6 +250,13 @@ export default {
       conversationHistory: [],
       isLoading: false
     }
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
   },
   onReady() {
     this.chatPopup = this.$refs.chatPopup
@@ -984,6 +995,22 @@ export default {
 
     &:active {
       transform: scale(0.95);
+    }
+  }
+}
+
+.sub-page {
+  .fixed-placeholder {
+    height: calc(25px + 44px);
+  }
+  
+  &.android-platform {
+    .fixed-placeholder { height: calc(25px + 44px + 20px); }
+  }
+  
+  &.ios-platform {
+    .fixed-placeholder { height: calc( 44px); 
+      background: #fff;
     }
   }
 }

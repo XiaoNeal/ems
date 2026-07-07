@@ -1,12 +1,7 @@
 <template>
-  <view class="faq-container">
-    <u-navbar 
-      title="常见问题" 
-      :autoBack="true" 
-      :titleStyle="{ color: fontColor }"
-      :bgColor="headerTabBg"
-      :leftIconColor="fontColor">
-    </u-navbar>
+  <view class="faq-container" :class="platformClass">
+    <DyNavbar title="常见问题" :titleStyle="{ color: fontColor }" :leftIconColor="fontColor"></DyNavbar>
+    <view class="fixed-placeholder"></view>
 
     <view class="question-list">
       <view 
@@ -33,10 +28,14 @@
 </template>
 
 <script>
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+
 export default {
+  components: { DyNavbar },
   data() {
     return {
       activeIndex: -1,
+      platformClass: '',
       faqList: [
         {
           question: '如何重置密码？',
@@ -53,6 +52,13 @@ export default {
       ]
     }
   },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
+  },
   methods: {
     toggleAnswer(index) {
       this.activeIndex = this.activeIndex === index ? -1 : index
@@ -64,6 +70,15 @@ export default {
 <style lang="scss" scoped>
 .faq-container {
   padding: 20rpx 30rpx;
+
+  &.android-platform {
+    .fixed-placeholder { height: calc(25px + 44px + 20px); }
+  }
+  &.ios-platform {
+    .fixed-placeholder { height: calc( 44px); 
+      background: #fff;
+    }
+  }
   
   .question-list {
     background: #fff;

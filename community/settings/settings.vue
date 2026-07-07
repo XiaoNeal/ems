@@ -1,7 +1,21 @@
 <template>
-  <view class="container">
-    <u-navbar title="设置参数" :autoBack="true" :placeholder="true" :statusBar="true">
-    </u-navbar>
+  <view class="container" :class="platformClass">
+    <DyNavbar title="设置参数" :placeholder="true" />
+
+    <!-- <view class="header">
+      <view class="header-safe-area"></view>
+      <view class="header-content">
+        <view class="back-btn" @click="goBack">
+          <uni-icons type="back" size="20" color="#303133"></uni-icons>
+        </view>
+        <view class="header-center">
+          <text class="title">设置参数</text>
+        </view>
+        <view class="header-right"></view>
+      </view>
+    </view> -->
+
+    <view class="fixed-placeholder"></view>
 
     <!-- 标签页 -->
     <view class="tab-container">
@@ -15,34 +29,41 @@
       </scroll-view>
     </view>
 
-    <!-- 内容区域 -->
-    <scroll-view class="content-scroll" scroll-y="true">
-      <view class="content">
-        <!-- 网侧 PCS -->
-        <view v-if="activeTab === 0" class="tab-content">
-          <PcsSettings />
-        </view>
-
-        <!-- 储能 DC/DC -->
-        <view v-if="activeTab === 1" class="tab-content">
-          <StorageSettings />
-        </view>
-
-        <!-- 光伏 DC/DC -->
-        <view v-if="activeTab === 2" class="tab-content">
-          <PvSettings />
-        </view>
-
-        <!-- BMS -->
-        <view v-if="activeTab === 3" class="tab-content">
-          <BmsSettings />
-        </view>
-      </view>
-    </scroll-view>
+    <swiper class="content-swiper" :current="activeTab" @change="onSwiperChange" :duration="300">
+      <swiper-item>
+        <scroll-view class="module-scroll" scroll-y="true">
+          <view class="content">
+            <PcsSettings />
+          </view>
+        </scroll-view>
+      </swiper-item>
+      <swiper-item>
+        <scroll-view class="module-scroll" scroll-y="true">
+          <view class="content">
+            <StorageSettings />
+          </view>
+        </scroll-view>
+      </swiper-item>
+      <swiper-item>
+        <scroll-view class="module-scroll" scroll-y="true">
+          <view class="content">
+            <PvSettings />
+          </view>
+        </scroll-view>
+      </swiper-item>
+      <swiper-item>
+        <scroll-view class="module-scroll" scroll-y="true">
+          <view class="content">
+            <BmsSettings />
+          </view>
+        </scroll-view>
+      </swiper-item>
+    </swiper>
   </view>
 
 </template>
 <script>
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 import PcsSettings from './components/PcsSettings.vue'
 import StorageSettings from './components/StorageSettings.vue'
 import PvSettings from './components/PvSettings.vue'
@@ -51,6 +72,7 @@ import BmsSettings from './components/BmsSettings.vue'
 export default {
   name: "SettingParams",
   components: {
+    DyNavbar,
     PcsSettings,
     StorageSettings,
     PvSettings,
@@ -63,8 +85,16 @@ export default {
       isEditing: false,
       editingParam: '',
       originalParams: {},
-      params: {}
+      params: {},
+      platformClass: ''
     }
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === 'ios' ? 'ios-platform' : 'android-platform';
+      },
+    });
   },
   methods: {
     handleEditConfig() {
@@ -179,6 +209,10 @@ export default {
       this.activeTab = index
     },
 
+    onSwiperChange(e) {
+      this.activeTab = e.detail.current
+    },
+
   }
 }
 </script>
@@ -189,6 +223,68 @@ export default {
   height: 100vh;
   background-color: #f2f2f2;
   font-size: 28rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+
+.header {
+  position: fixed;
+  top: 0px;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: #fff;
+}
+
+.header-safe-area {
+  height: calc(25px + 20px);
+  background-color: #fff;
+}
+
+.header-content {
+  // height: 44px;
+  // display: flex;
+  // align-items: center;
+  // justify-content: space-between;
+  // padding: 0 15px;
+  // box-sizing: border-box;
+
+
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 44px 0 15px;
+  box-sizing: border-box;
+}
+
+.header-center {
+  flex: 1;
+  text-align: center;
+}
+
+.back-btn {
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  font-size: 36rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.header-right {
+  width: 44px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
 }
 
 .tab-container {
@@ -221,13 +317,19 @@ export default {
   font-weight: bold;
 }
 
-.content-scroll {
-  height: calc(100vh - 140rpx);
-  background-color: #EFF4FB;
+.content-swiper {
+  flex: 1;
+  touch-action: pan-y;
+}
+
+.module-scroll {
+  height: 100%;
+  touch-action: pan-y;
 }
 
 .content {
   padding: 20rpx;
+  background-color: #EFF4FB;
 }
 
 .global-actions {
@@ -811,5 +913,24 @@ export default {
 
 .tab-content {
   animation: slideUp 0.4s ease-out;
+}
+
+.container {
+  .fixed-placeholder {
+    height: calc(25px + 20px + 44px);
+  }
+
+  &.android-platform {
+    .fixed-placeholder {
+      height: calc(25px + 44px + 20px);
+    }
+  }
+
+  &.ios-platform {
+    .fixed-placeholder {
+      height: calc(44px);
+      background: #fff;
+    }
+  }
 }
 </style>

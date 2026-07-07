@@ -1,251 +1,259 @@
 <template>
-  <view class="container">
-    <u-navbar title="报警" :autoBack="true" :placeholder="true">
-    </u-navbar>
+  <view class="container" :class="platformClass">
+    <DyNavbar title="报警" :placeholder="true" />
+    <view class="fixed-placeholder"></view>
 
-    <!-- 报警等级统计 -->
-    <view class="alarm-stats-card">
-      <view class="card-title">报警等级统计</view>
-      <view class="stats-content">
+    <view class="content-wrap">
+      <!-- 报警等级统计 -->
+      <view class="alarm-stats-card">
+        <view class="card-title">报警等级统计</view>
+        <view class="stats-content">
 
-        <view class="chart-box">
-          <qiun-data-charts 
-            type="ring"
-            :opts="ringOpts"
-            :chartData="alarmLevelData"
-            canvas-id="ringChart"
-            :canvas2d="canvas2d"
-            :ontouch="true"
-            @touch="handleChartTouch"
+          <view class="chart-box">
+            <qiun-data-charts 
+              type="ring"
+              :opts="ringOpts"
+              :chartData="alarmLevelData"
+              canvas-id="ringChart"
+              :canvas2d="canvas2d"
+              :ontouch="true"
+              @touch="handleChartTouch"
+            />
+          </view>
+
+          <view class="info-group">
+            <view class="level-row">
+              <view class="level-card urgent">
+                <view class="dot"></view>
+                <text class="label">紧急</text>
+                <text class="num">{{ alarmLevelCount.urgent }}</text>
+              </view>
+              <view class="level-card important">
+                <view class="dot"></view>
+                <text class="label">重要</text>
+                <text class="num">{{ alarmLevelCount.important }}</text>
+              </view>
+            </view>
+            <view class="level-row">
+              <view class="level-card prompt">
+                <view class="dot"></view>
+                <text class="label">提示</text>
+                <text class="num">{{ alarmLevelCount.prompt }}</text>
+              </view>
+            </view>
+            <view class="status-row">
+              <text class="status-text">发生中 {{ alarmTimes.proceed }}</text>
+              <text class="status-divider">·</text>
+              <text class="status-text">已结束 {{ alarmTimes.ended }}</text>
+            </view>
+          </view>
+
+        </view>
+      </view>
+
+      <!-- 日期选择栏 -->
+      <view class="date-picker-wrap">
+        <picker mode="date" :value="selectedDate" @change="onDateChange">
+          <view class="date-picker">
+            <text>{{ selectedDate || '请选择日期' }}</text>
+            <uni-icons type="arrowdown" size="18" color="#999"></uni-icons>
+          </view>
+        </picker>
+        <view class="quick-dates">
+          <view 
+            v-for="item in quickDateOptions" 
+            :key="item.value"
+            class="quick-date-btn"
+            :class="{ active: quickDate === item.value }"
+            @click="selectQuickDate(item.value)"
+          >
+            {{ item.label }}
+          </view>
+        </view>
+      </view>
+
+      <!-- 搜索栏 -->
+      <view class="search-wrap">
+        <view class="search-input">
+          <text class="search-icon">🔍</text>
+          <input 
+            v-model="searchKeyword" 
+            @input="handleSearch"
+            placeholder="请输入告警名称"
           />
+          <text v-if="searchKeyword" class="clear-icon" @click="clearSearch">✕</text>
         </view>
-
-        <view class="info-group">
-          <view class="level-list">
-            <view class="level-item">
-              <view class="dot urgent"></view>
-              <view class="num">{{ alarmLevelCount.urgent }}</view>
-              <view class="label">紧急</view>
-            </view>
-            <view class="level-item">
-              <view class="dot important"></view>
-              <view class="num">{{ alarmLevelCount.important }}</view>
-              <view class="label">重要</view>
-            </view>
-          </view>
-
-          <view class="level-list">
-            <view class="level-item">
-              <view class="dot minor"></view>
-              <view class="num">{{ alarmLevelCount.minor }}</view>
-              <view class="label">次要</view>
-            </view>
-            <view class="level-item">
-              <view class="dot prompt"></view>
-              <view class="num">{{ alarmLevelCount.prompt }}</view>
-              <view class="label">提示</view>
-            </view>
-          </view>
-
-          <view class="status-box">
-            <view class="status-item">
-              <view class="num">{{ alarmTimes.ended }}</view>
-              <view class="label">已结束</view>
-            </view>
-            <view class="status-item proceed">
-              <view class="num">{{ alarmTimes.proceed }}</view>
-              <view class="label">发生中</view>
-            </view>
-          </view>
+        <view class="filter-btn" :class="{ active: hasActiveFilter }" @click="handleFilter">
+          <text class="filter-icon">☰</text>
         </view>
-
       </view>
+
+      <!-- 筛选弹窗 -->
+      <u-popup v-model="showFilter" mode="bottom" :border-radius="20" :closeable="true">
+        <view class="filter-popup">
+          <view class="popup-header">
+            <text class="popup-title">筛选条件</text>
+            <text class="popup-reset" @click="resetFilter">重置</text>
+          </view>
+          
+          <view class="filter-section">
+            <view class="section-title">报警等级</view>
+            <view class="level-options">
+              <view 
+                class="level-option" 
+                :class="{ active: filterLevel === -1 }"
+                @click="filterLevel = -1"
+              >全部</view>
+              <view 
+                class="level-option urgent" 
+                :class="{ active: filterLevel === 0 }"
+                @click="filterLevel = 0"
+              >紧急</view>
+              <view 
+                class="level-option important" 
+                :class="{ active: filterLevel === 1 }"
+                @click="filterLevel = 1"
+              >重要</view>
+              <view 
+                class="level-option minor" 
+                :class="{ active: filterLevel === 2 }"
+                @click="filterLevel = 2"
+              >次要</view>
+              <view 
+                class="level-option prompt" 
+                :class="{ active: filterLevel === 3 }"
+                @click="filterLevel = 3"
+              >提示</view>
+            </view>
+          </view>
+
+          <view class="filter-section">
+            <view class="section-title">时间范围</view>
+            <view class="time-range">
+              <picker mode="date" @change="onStartTimeChange" :value="filterStartTime">
+                <view class="time-picker">
+                  <text>{{ filterStartTime || '开始时间' }}</text>
+                  <uni-icons type="arrowdown" size="14" color="#999"></uni-icons>
+                </view>
+              </picker>
+              <text class="time-separator">至</text>
+              <picker mode="date" @change="onEndTimeChange" :value="filterEndTime">
+                <view class="time-picker">
+                  <text>{{ filterEndTime || '结束时间' }}</text>
+                  <uni-icons type="arrowdown" size="14" color="#999"></uni-icons>
+                </view>
+              </picker>
+            </view>
+          </view>
+
+          <view class="popup-footer">
+            <view class="popup-btn cancel" @click="showFilter = false">取消</view>
+            <view class="popup-btn confirm" @click="applyFilter">确定</view>
+          </view>
+        </view>
+      </u-popup>
+
+      <!-- 列表切换 -->
+      <view class="table-tab">
+        <view 
+          class="tab-btn" 
+          :class="{ active: tableType === 0 }"
+          @click="ontableTypeChange(0)"
+        >
+          全部（{{ alarmTimes.total }}）
+        </view>
+        <view 
+          class="tab-btn" 
+          :class="{ active: tableType === 1 }"
+          @click="ontableTypeChange(1)"
+        >
+          进行中（{{ alarmTimes.proceed }}）
+        </view>
+        <view 
+          class="tab-btn" 
+          :class="{ active: tableType === 2 }"
+          @click="ontableTypeChange(2)"
+        >
+          已结束（{{ alarmTimes.ended }}）
+        </view>
+      </view>
+
+      <!-- 列表 -->
+      <uni-scroll-view 
+        class="list-container" 
+        scroll-y
+        refresher-enabled
+        :refresher-loading="refresherLoading"
+        @refresherrefresh="onRefresh"
+      >
+        <!-- 加载中 -->
+        <view v-if="listLoading && apiDataShow.length === 0" class="loading">
+          <uni-loading-icon color="#4488FB"></uni-loading-icon>
+          <text>加载中...</text>
+        </view>
+
+        <!-- 空状态 -->
+        <view v-if="!listLoading && apiDataShow.length === 0" class="empty">
+          <uni-icons type="empty" size="60" color="#ddd"></uni-icons>
+          <text>暂无报警数据</text>
+        </view>
+
+        <view 
+          v-for="item in apiDataShow" 
+          :key="item.id"
+          class="alarm-item"
+          hover-class="hover"
+        >
+          <view class="level-icon" :class="'level-' + item.alarmLevel">
+            <uni-icons type="info" size="20" color="#fff"></uni-icons>
+          </view>
+
+          <view class="alarm-info">
+            <view class="title">
+              <text class="level-tag" :class="'level-' + item.alarmLevel">{{ item.alarmLevel === 0 ? '紧急' : item.alarmLevel === 1 ? '重要' : '提示' }}</text>
+              <text class="type-name">{{ item.typeName }}</text>
+              {{ item.alarmName }}
+            </view>
+            <view class="time-row">
+              <text class="time-item">{{ item.alarmTime }}</text>
+              <text v-if="item.recoverTime" class="time-item">恢复：{{ item.recoverTime }}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 加载更多 -->
+        <view v-if="isLoadingMore" class="load-more">
+          <uni-loading-icon size="18" color="#4488FB"></uni-loading-icon>
+          <text>加载中...</text>
+        </view>
+        <view 
+          v-else-if="apiDataShow.length < filteredTotalCount && filteredTotalCount > 0"
+          class="load-more"
+          @click="loadMore"
+        >
+          点击加载更多
+        </view>
+        <view v-if="apiDataShow.length && apiDataShow.length >= filteredTotalCount" class="no-more">
+          已显示全部
+        </view>
+
+      </uni-scroll-view>
     </view>
-
-    <!-- 搜索栏 -->
-    <view class="search-wrap">
-      <view class="search-input">
-        <text class="search-icon">🔍</text>
-        <input 
-          v-model="searchKeyword" 
-          @input="handleSearch"
-          placeholder="请输入告警名称"
-        />
-        <text v-if="searchKeyword" class="clear-icon" @click="clearSearch">✕</text>
-      </view>
-      <view class="filter-btn" :class="{ active: hasActiveFilter }" @click="handleFilter">
-        <text class="filter-icon">☰</text>
-      </view>
-    </view>
-
-    <!-- 筛选弹窗 -->
-    <u-popup v-model="showFilter" mode="bottom" :border-radius="20" :closeable="true">
-      <view class="filter-popup">
-        <view class="popup-header">
-          <text class="popup-title">筛选条件</text>
-          <text class="popup-reset" @click="resetFilter">重置</text>
-        </view>
-        
-        <view class="filter-section">
-          <view class="section-title">报警等级</view>
-          <view class="level-options">
-            <view 
-              class="level-option" 
-              :class="{ active: filterLevel === -1 }"
-              @click="filterLevel = -1"
-            >全部</view>
-            <view 
-              class="level-option urgent" 
-              :class="{ active: filterLevel === 0 }"
-              @click="filterLevel = 0"
-            >紧急</view>
-            <view 
-              class="level-option important" 
-              :class="{ active: filterLevel === 1 }"
-              @click="filterLevel = 1"
-            >重要</view>
-            <view 
-              class="level-option minor" 
-              :class="{ active: filterLevel === 2 }"
-              @click="filterLevel = 2"
-            >次要</view>
-            <view 
-              class="level-option prompt" 
-              :class="{ active: filterLevel === 3 }"
-              @click="filterLevel = 3"
-            >提示</view>
-          </view>
-        </view>
-
-        <view class="filter-section">
-          <view class="section-title">时间范围</view>
-          <view class="time-range">
-            <picker mode="date" @change="onStartTimeChange" :value="filterStartTime">
-              <view class="time-picker">
-                <text>{{ filterStartTime || '开始时间' }}</text>
-                <uni-icons type="arrowdown" size="14" color="#999"></uni-icons>
-              </view>
-            </picker>
-            <text class="time-separator">至</text>
-            <picker mode="date" @change="onEndTimeChange" :value="filterEndTime">
-              <view class="time-picker">
-                <text>{{ filterEndTime || '结束时间' }}</text>
-                <uni-icons type="arrowdown" size="14" color="#999"></uni-icons>
-              </view>
-            </picker>
-          </view>
-        </view>
-
-        <view class="popup-footer">
-          <view class="popup-btn cancel" @click="showFilter = false">取消</view>
-          <view class="popup-btn confirm" @click="applyFilter">确定</view>
-        </view>
-      </view>
-    </u-popup>
-
-    <!-- 列表切换 -->
-    <view class="table-tab">
-      <view 
-        class="tab-btn" 
-        :class="{ active: tableType === 0 }"
-        @click="ontableTypeChange(0)"
-      >
-        全部（{{ alarmTimes.total }}）
-      </view>
-      <view 
-        class="tab-btn" 
-        :class="{ active: tableType === 1 }"
-        @click="ontableTypeChange(1)"
-      >
-        进行中（{{ alarmTimes.proceed }}）
-      </view>
-      <view 
-        class="tab-btn" 
-        :class="{ active: tableType === 2 }"
-        @click="ontableTypeChange(2)"
-      >
-        已结束（{{ alarmTimes.ended }}）
-      </view>
-    </view>
-
-    <!-- 列表 -->
-    <uni-scroll-view 
-      class="list-container" 
-      scroll-y
-      refresher-enabled
-      :refresher-loading="refresherLoading"
-      @refresherrefresh="onRefresh"
-    >
-      <!-- 加载中 -->
-      <view v-if="listLoading && apiDataShow.length === 0" class="loading">
-        <uni-loading-icon color="#4488FB"></uni-loading-icon>
-        <text>加载中...</text>
-      </view>
-
-      <!-- 空状态 -->
-      <view v-if="!listLoading && apiDataShow.length === 0" class="empty">
-        <uni-icons type="empty" size="60" color="#ddd"></uni-icons>
-        <text>暂无报警数据</text>
-      </view>
-
-      <view 
-        v-for="item in apiDataShow" 
-        :key="item.id"
-        class="alarm-item"
-        hover-class="hover"
-      >
-        <view class="level-icon" :class="'level-' + item.alarmLevel">
-          <uni-icons type="info" size="20" color="#fff"></uni-icons>
-        </view>
-
-        <view class="alarm-info">
-          <view class="title">{{ item.alarmMsg }}</view>
-          <view class="row">
-            <text class="label">设备状态：</text>
-            <text class="value">{{ item.deviceStatus === 1 ? '在线' : '离线' }}</text>
-          </view>
-          <view class="row">
-            <text class="label">设备名称：</text>
-            <text class="value">{{ item.deviceName }}</text>
-          </view>
-          <view class="row">
-            <text class="label">报警位置：</text>
-            <text class="value">{{ item.area }}</text>
-          </view>
-          <view class="row">
-            <text class="label">报警时间：</text>
-            <text class="value">{{ item.startTime }}</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 加载更多 -->
-      <view v-if="isLoadingMore" class="load-more">
-        <uni-loading-icon size="18" color="#4488FB"></uni-loading-icon>
-        <text>加载中...</text>
-      </view>
-      <view 
-        v-else-if="apiDataShow.length < filteredTotalCount && filteredTotalCount > 0"
-        class="load-more"
-        @click="loadMore"
-      >
-        点击加载更多
-      </view>
-      <view v-if="apiDataShow.length && apiDataShow.length >= filteredTotalCount" class="no-more">
-        已显示全部
-      </view>
-
-    </uni-scroll-view>
   </view>
 </template>
 
 <script>
 import { debounce } from '@/utils/tools'
-import { findDayAlarmRecord } from '@/api/alarm.js'
+import { findDayAlarmRecord, getAlarmRecord } from '@/api/alarm.js'
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
 export default {
+  components: {
+    DyNavbar
+  },
   data() {
     return {
+      platformClass: "",
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
       tableType: 0,
       searchKeyword: '',
@@ -277,12 +285,26 @@ export default {
       filteredTotalCount: 0,
       listLoading: false,
       refresherLoading: false,
-      isLoadingMore: false
+      isLoadingMore: false,
+      
+      selectedDate: '',
+      quickDate: 'today',
+      quickDateOptions: [
+        { label: '今天', value: 'today' },
+        { label: '昨天', value: 'yesterday' }
+      ]
     }
   },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
+  },
   mounted() {
-
-    
+    const today = new Date()
+    this.selectedDate = this.formatDate(today)
     this.getNyzAlarmData()
   },
   methods: {
@@ -310,11 +332,13 @@ export default {
       this.listLoading = true
       try {
         console.log(this.$Config, "-------111-----------------",this.listLoading)
-        const res = await findDayAlarmRecord({
-          day: '2026-05-13',
-          areaLevelId: '883',
-          esId: '2'
+        const currentDevice = this.$store.state.currentSelectDevice || {}
+        const date = this.selectedDate || this.formatDate(new Date())
+        const res = await getAlarmRecord({
+          date: date,
+          areaLevelIds: currentDevice.areaLevelId
         })
+        console.log('告警接口返回数据:', res.data)
         const list = (res.data || []).map(it => this.formatAlarmItem(it))
         this.apiData = list
         this.totalCount = list.length
@@ -367,7 +391,7 @@ export default {
       
       if (this.searchKeyword) {
         const kw = this.searchKeyword.toLowerCase()
-        data = data.filter(it => (it.alarmMsg || '').toLowerCase().includes(kw))
+        data = data.filter(it => (it.typeName || '').toLowerCase().includes(kw))
       }
       this.filteredTotalCount = data.length
       const end = this.pageNumber * this.pageSize
@@ -375,45 +399,43 @@ export default {
     },
 
     formatAlarmItem(item) {
+      const alarmLevel = (item.alarmLevel || '').toLowerCase()
       let level = 1
-      const name = (item.deviceName || '').toLowerCase()
-      if (name.includes('紧急') || name.includes('严重')) level = 0
-      else if (name.includes('重要')) level = 1
-      else if (name.includes('次要')) level = 2
-      else if (name.includes('提示') || name.includes('轻微')) level = 3
+      if (alarmLevel.includes('紧急') || alarmLevel.includes('严重')) level = 0
+      else if (alarmLevel.includes('重要')) level = 1
+      else if (alarmLevel.includes('提示') || alarmLevel.includes('轻微')) level = 2
 
       return {
-        id: item.id || Date.now() + Math.random(),
+        id: item.deviceId || Date.now() + Math.random(),
         alarmLevel: level,
-        alarmMsg: item.deviceName || '告警信息',
-        area: item.area || '能源站',
-        deviceName: '能源站设备',
-        deviceStatus: 1,
-        startTime: item.createTime || '-',
+        typeName: item.typeName ,
+        alarmName: item.alarmName || '-',
+        deviceName: item.typeName,
+        startTime: item.alarmTime || '-',
+        alarmTime: item.alarmTime || '-',
         endTime: item.recoverTime || '-',
-        status: item.status ?? 0
+        recoverTime: item.recoverTime || '-',
+        status: item.recoverTime ? 0 : 1
       }
     },
 
     updateChart(list) {
-      const count = [0, 0, 0, 0]
+      const count = [0, 0, 0]
       list.forEach(it => {
         const l = it.alarmLevel
-        if (l >= 0 && l <= 3) count[l]++
+        if (l >= 0 && l <= 2) count[l]++
       })
       this.alarmLevelCount = {
         urgent: count[0],
         important: count[1],
-        minor: count[2],
-        prompt: count[3]
+        prompt: count[2]
       }
       this.alarmLevelData = {
         series: [{
           data: [
             { name: '紧急', value: count[0] },
             { name: '重要', value: count[1] },
-            { name: '次要', value: count[2] },
-            { name: '提示', value: count[3] }
+            { name: '提示', value: count[2] }
           ]
         }]
       }
@@ -458,6 +480,32 @@ export default {
 
     onEndTimeChange(e) {
       this.filterEndTime = e.detail.value
+    },
+
+    onDateChange(e) {
+      this.selectedDate = e.detail.value
+      this.quickDate = ''
+      this.onRefresh()
+    },
+
+    selectQuickDate(value) {
+      this.quickDate = value
+      const today = new Date()
+      if (value === 'today') {
+        this.selectedDate = this.formatDate(today)
+      } else if (value === 'yesterday') {
+        const yesterday = new Date(today)
+        yesterday.setDate(yesterday.getDate() - 1)
+        this.selectedDate = this.formatDate(yesterday)
+      }
+      this.onRefresh()
+    },
+
+    formatDate(date) {
+      const y = date.getFullYear()
+      const m = String(date.getMonth() + 1).padStart(2, '0')
+      const d = String(date.getDate()).padStart(2, '0')
+      return `${y}-${m}-${d}`
     }
   },
   computed: {
@@ -470,9 +518,26 @@ export default {
 
 <style lang="scss" scoped>
 .container {
-  padding: 20rpx;
+  // padding: 20rpx;
   background: #f6f7fb;
   min-height: 100vh;
+  
+  &.android-platform {
+    .fixed-placeholder {
+      height: calc(25px + 44px + 20px);
+    }
+  }
+  
+  &.ios-platform {
+    .fixed-placeholder {
+      height: calc( 44px);
+      background: #fff;
+    }
+  }
+}
+
+.content-wrap {
+  margin: 20rpx;
 }
 
 /* 统计卡片 */
@@ -501,55 +566,107 @@ export default {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 20rpx;
+    gap: 16rpx;
     margin-left: 20rpx;
   }
-  .level-list {
+  .level-row {
     display: flex;
-    justify-content: space-around;
+    gap: 16rpx;
   }
-  .level-item {
+  .level-card {
+    flex: 1;
     display: flex;
     align-items: center;
-    gap: 8rpx;
+    gap: 10rpx;
+    padding: 16rpx 20rpx;
+    border-radius: 16rpx;
     .dot {
       width: 16rpx;
       height: 16rpx;
       border-radius: 50%;
-      &.urgent { background: #EB3341; }
-      &.important { background: #FF7A2E; }
-      &.minor { background: #4D7BF1; }
-      &.prompt { background: #3CCF6E; }
+      flex-shrink: 0;
+    }
+    .label {
+      font-size: 26rpx;
+      color: #333;
+      flex-shrink: 0;
     }
     .num {
       font-size: 32rpx;
       font-weight: bold;
-      color: #222;
+      color: #333;
+      margin-left: auto;
     }
-    .label {
-      font-size: 24rpx;
-      color: #666;
+    &.urgent {
+      background: #FFF2F0;
+      .dot { background: #EB3341; }
+    }
+    &.important {
+      background: #FFF7E8;
+      .dot { background: #FF7A2E; }
+    }
+    &.prompt {
+      background: #F6FFED;
+      .dot { background: #3CCF6E; }
     }
   }
-  .status-box {
+  .status-row {
     display: flex;
-    justify-content: space-around;
-    margin-top: 10rpx;
-  }
-  .status-item {
-    text-align: center;
-    .num {
-      font-size: 36rpx;
-      font-weight: bold;
-      color: #222;
-    }
-    .label {
-      font-size: 24rpx;
+    align-items: center;
+    justify-content: center;
+    gap: 16rpx;
+    padding-top: 8rpx;
+    .status-text {
+      font-size: 26rpx;
       color: #666;
+    }
+    .status-divider {
+      font-size: 24rpx;
+      color: #999;
     }
     &.proceed .num {
       color: #EB3341;
     }
+  }
+}
+
+/* 日期选择栏 */
+.date-picker-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.date-picker {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  
+  text {
+    font-size: 28rpx;
+    color: #333;
+  }
+}
+
+.quick-dates {
+  display: flex;
+  gap: 16rpx;
+}
+
+.quick-date-btn {
+  padding: 12rpx 24rpx;
+  font-size: 24rpx;
+  color: #666;
+  background: #f5f7fa;
+  border-radius: 40rpx;
+  
+  &.active {
+    background: #4488FB;
+    color: #fff;
   }
 }
 
@@ -643,18 +760,17 @@ export default {
 .list-container {
   background: #fff;
   border-radius: 20rpx;
-  padding: 20rpx;
   max-height: 800rpx;
 }
 .alarm-item {
   display: flex;
-  padding: 24rpx 0;
-  border-bottom: 1rpx solid #f0f0f0;
-  &:last-child {
-    border-bottom: none;
-  }
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 12rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
   &.hover {
-    background: #f8f9fa;
+    background: #fafafa;
   }
 }
 .level-icon {
@@ -678,13 +794,34 @@ export default {
     font-weight: 500;
     color: #222;
     margin-bottom: 12rpx;
-  }
-  .row {
-    font-size: 26rpx;
-    color: #666;
-    margin-bottom: 6rpx;
-    .label {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+    .level-tag {
+      font-size: 20rpx;
+      padding: 2rpx 10rpx;
+      border-radius: 8rpx;
+      color: #fff;
+      flex-shrink: 0;
+      &.level-0 { background: #EB3341; }
+      &.level-1 { background: #FF7A2E; }
+      &.level-2 { background: #4D7BF1; }
+    }
+    .type-name {
+      font-size: 22rpx;
       color: #999;
+      flex-shrink: 0;
+    }
+  }
+  .time-row {
+    font-size: 24rpx;
+    color: #999;
+    display: flex;
+    gap: 20rpx;
+    .time-item {
+      &:first-child {
+        color: #666;
+      }
     }
   }
 }

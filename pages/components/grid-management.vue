@@ -81,13 +81,11 @@
               <view class="loading-spinner"></view>
               <text class="loading-text">加载中...</text>
             </view>
-            <view v-else-if="powerCurveSeries.length > 0" class="chart-loaded">
+            <view v-else-if="powerCurveCategories.length > 0" class="chart-loaded">
               <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
-                :canvas2d="canvas2d" class="power-chart" canvasId="CamoFLVpowerBqPYEJXtAEDIxdbLdHpZAvPitPOEWER" />
+                :canvas2d="canvas2d" class="power-chart" canvasId="CamoFLVpowerBqPYEJXtAEDIxdbLdHpZAvPitPOEWER" :key="powerCurveCategories.length" />
             </view>
-            <view v-else class="chart-empty">
-              <text class="empty-text">暂无数据</text>
-            </view>
+            <EmptyState v-else title="暂无数据" desc="当前时段暂无电网功率数据" @refresh="getPowerCurveData" />
             <!-- <view class="axis-unit x-axis-unit">时</view> -->
           </view>
         </view>
@@ -128,9 +126,7 @@
               <qiun-data-charts type="column" :chartData="energyData" :opts="energyOptions" :ontouch="true"
                 :canvas2d="canvas2d" class="energy-chart" canvasId="CamoFLVBqPYEJXtAEDIxdbLdHpZAvPitEnergy" />
             </view>
-            <view v-else class="chart-empty">
-              <text class="empty-text">暂无数据</text>
-            </view>
+            <EmptyState v-else title="暂无数据" desc="当前时段暂无供馈电量统计数据" @refresh="getElectricityStatistic" />
           </view>
         </view>
       </view>
@@ -141,10 +137,13 @@
 <script>
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 import { realtimeDataProvider } from '@/service/websocket';
+import EmptyState from '@/components/empty-state/empty-state.vue';
 import { getPowerData, queryDayElectricityStatistic, queryMonthElectricityStatistic, queryYearElectricityStatistic } from '../../api/power';
+import { calculateYAxisMax } from '@/utils/tools';
 export default {
   components: {
     dyDate,
+    EmptyState,
   },
   name: "GridManagement",
   inject: ['get171FDeviceList'],
@@ -172,41 +171,6 @@ export default {
       powerCurveCategories: [],
       powerCurveLoading: false,
       energyLoading: false,
-      powerCurveOptions: {
-        dataLabel: false,
-        dataPointShape: false,
-        padding: [15, 20, 0, 15],
-        enableScroll: false,
-        animation: false,
-        legend: {select: true,tapLegend: true,},
-        xAxis: {
-          labelCount: 6,
-          disableGrid: true,
-          // title: "时"
-        },
-        yAxis: {
-          gridType: 'dash',
-          dashLength: 2,
-          showTitle: true,
-          // tofix: 0,
-          data: [{ title: "单位:kW" }],
-          zeroLine: true,
-          scale: true,
-          splitNumber: 5,
-          axisLabel: {
-            format: val => val.toFixed(2)
-          }
-          // title: "kW"
-        },
-        extra: {
-          area: {
-            type: 'straight',
-            opacity: 0.2,
-            addLine: true,
-            width: 2
-          }
-        }
-      },
       // 供馈电量统计数据
       energyData: {
         categories: [],
@@ -287,6 +251,70 @@ export default {
     totalFeedEnergy() {
       return this.getFieldValue('B180');
     },
+    powerCurveOptions() {
+      const maxValue = calculateYAxisMax(this.powerCurveSeries, this.powerCurveReverseSeries);
+      console.log(maxValue, 'maxValue')
+      return {
+        dataLabel: false,
+        dataPointShape: false,
+        padding: [15, 20, 0, 15],
+        enableScroll: false,
+        animation: false,
+        legend: { select: true, tapLegend: true },
+        xAxis: {
+          labelCount: 6,
+          disableGrid: true,
+        },
+        yAxis: {
+          gridType: 'dash',
+          dashLength: 2,
+          showTitle: true,
+          data: [{ title: "单位:kW", max: maxValue }],
+          zeroLine: true,
+          scale: true,
+          splitNumber: 5,
+          axisLabel: {
+            format: val => val.toFixed(2)
+          }
+        },
+        extra: {
+          area: {
+            type: 'straight',
+            opacity: 0.2,
+            addLine: true,
+            width: 2
+          }
+        }
+      }
+
+
+    },
+    energyOptions() {
+      const allData = this.energyData.series.flatMap(s => s.data || []);
+      const maxValue = calculateYAxisMax(allData);
+      return {
+        dataLabel: false,
+        dataPointShape: false,
+        color: ['#52C41A', '#FAAD14'],
+        padding: [15, 20, 0, 15],
+        enableScroll: false,
+        animation: false,
+        legend: { select: true },
+        xAxis: { labelCount: 6, disableGrid: true },
+        yAxis: {
+          gridType: "dash",
+          showTitle: true,
+          data: [{ position: "left", title: "单位:kWh", max: maxValue }],
+          dashLength: 2
+        },
+        extra: {
+          column: {
+            type: "group",
+            categoryGap: 2
+          }
+        }
+      }
+    }
   },
   methods: {
     updateDevice171F() {
@@ -345,7 +373,7 @@ export default {
           this.powerCurveSeries = series;
           this.powerCurveReverseSeries = reverseSeries;
 
-          // console.log('电网功率曲线数据:', this.powerCurveCategories, this.powerCurveSeries, this.powerCurveReverseSeries);
+          console.log('电网功率曲线数据:', this.powerCurveCategories, this.powerCurveSeries, this.powerCurveReverseSeries);
         } else {
           this.powerCurveCategories = [];
           this.powerCurveSeries = [];
@@ -528,7 +556,6 @@ export default {
     handleDatePicker(date) {
       console.log('选择的日期:', date);
       this.selectedDate = date;
-      this.getPowerCurveData();
       this.getElectricityStatistic();
     },
     onPowerDateChange(date) {

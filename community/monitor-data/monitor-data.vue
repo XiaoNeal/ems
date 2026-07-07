@@ -1,9 +1,7 @@
 <template>
-  <view class="container">
-    <view class="navbar-placeholder"></view>
-    <u-navbar title="监控数据" :autoBack="true" :fixed="true">
-    </u-navbar>
-
+  <view class="container" :class="platformClass">
+    <DyNavbar title="监控数据" :fixed="true" :placeholder="true" />
+    <view class="fixed-placeholder"></view>
     <view class="tab-container">
       <scroll-view scroll-x="true" class="tab-scroll">
         <view class="tab-list">
@@ -559,7 +557,7 @@
                       (device171C.energyData.B24.value / 1000).toFixed(2) : "--" }}</text>
                   </view>
 
-<!-- 
+                  <!-- 
                   <view class="grid-item"><text class="item-label">备用2电流(A)</text><text class="item-value">{{ device171C
                     &&
                     device171C.energyData && device171C.energyData.B150 ? device171C.energyData.B150.value : "--"
@@ -990,14 +988,17 @@
 
 <script>
 import { realtimeDataProvider } from '@/service/websocket';
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
 export default {
+  components: { DyNavbar },
   data() {
     return {
       activeTab: 0,
       tabs: ['PCS', '储能DC', '光伏', 'BMS'],
       deviceList: [],
-      dataRefreshTimer: null
+      dataRefreshTimer: null,
+      platformClass: ''
     };
   },
   watch: {
@@ -1319,6 +1320,13 @@ export default {
       this.deviceList = realtimeDataProvider.getDeviceList();
     }
   },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === 'ios' ? 'ios-platform' : 'android-platform';
+      },
+    });
+  },
   mounted() {
     this.initDeviceList();
     this.dataRefreshTimer = setInterval(() => {
@@ -1340,7 +1348,28 @@ export default {
   display: flex;
   flex-direction: column;
   background-color: #f5f5f5;
+
+  .fixed-placeholder {
+    height: calc(25px + 20px + 44px);
+  }
+
+  &.android-platform {
+    .fixed-placeholder {
+      height: calc(25px + 20px + 44px);
+      background: #fff;
+    }
+  }
+
+  &.ios-platform {
+    .fixed-placeholder {
+      height: calc(44px);
+      background: #fff;
+    }
+  }
+
 }
+
+
 
 .navbar-placeholder {
   height: 44px;
@@ -1351,7 +1380,7 @@ export default {
   flex-shrink: 0;
   background-color: #fff;
   border-bottom: 1px solid #e5e5e5;
-  margin-top: 44px;
+  // margin-top: 44px;
 }
 
 .tab-scroll {

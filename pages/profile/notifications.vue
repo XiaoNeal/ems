@@ -1,9 +1,9 @@
 <template>
-  <view class="sub-page">
+  <view class="sub-page" :class="platformClass">
     <!-- 优化导航栏样式 -->
     <!-- <uni-nav-bar title="消息通知" left-icon="back" :border="false" @clickLeft="back" /> -->
-    <u-navbar title="消息通知" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :leftText="null" :autoBack="true"
-    :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
+    <DyNavbar title="消息通知" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
+    <view class="fixed-placeholder"></view>
 
     <view class="content">
       <!-- 添加卡片容器 -->
@@ -152,21 +152,47 @@
   color: #999;
   margin-top: 4px;
 }
+
+.sub-page {
+  .fixed-placeholder {
+    height: calc(25px + 44px);
+  }
+  
+  &.android-platform {
+    .fixed-placeholder { height: calc(25px + 44px + 20px); }
+  }
+  
+  &.ios-platform {
+    .fixed-placeholder { height: calc( 44px); 
+      background: #fff;
+    }
+  }
+}
 </style>
 
 <script>
 import { mapState } from 'vuex'
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
 export default {
+  components: { DyNavbar },
   data() {
     return {
-      doNotDisturb: false
+      doNotDisturb: false,
+      platformClass: ''
     }
   },
   computed: {
     ...mapState({
       headerTabBg: state => state.headerTabBg,
       fontColor: state => state.fontColor
+    })
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === 'ios' ? 'ios-platform' : 'android-platform'
+      }
     })
   },
   onShow() {

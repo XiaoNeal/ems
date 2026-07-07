@@ -253,6 +253,13 @@
 						"navigationStyle": "custom",
 						"navigationBarTitleText": "关于我们"
 					}
+				},
+				{
+					"path": "user-management",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "用户管理"
+					}
 				}
 			]
 		}

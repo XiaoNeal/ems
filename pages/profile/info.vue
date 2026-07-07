@@ -1,7 +1,7 @@
 <template>
-  <view class="sub-page">
-    <u-navbar title="个人信息" :titleStyle="{ 'color': fontColor, 'width': '100%', 'font-weight': '600' }" :leftText="null" :autoBack="true"
-      :placeholder="true" :bgColor="headerTabBg" :leftIconColor="fontColor"></u-navbar>
+  <view class="sub-page" :class="platformClass">
+    <DyNavbar title="个人信息" :titleStyle="{ 'color': fontColor, 'width': '100%', 'font-weight': '600' }" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
+    <view class="fixed-placeholder"></view>
 
 
 
@@ -59,8 +59,10 @@ import {
 } from "@/api/user.js"
 import md5 from "@/utils/md5.min.js"
 import { mapState } from 'vuex';
+import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
 export default {
+  components: { DyNavbar },
   data() {
     return {
       setUserName: '',
@@ -68,7 +70,8 @@ export default {
       setUserPassword: '',
       isOK: true,
       oldPassword: '',
-      isAdmin: null
+      isAdmin: null,
+      platformClass: ''
     }
   },
   computed: {
@@ -82,6 +85,11 @@ export default {
   },
   onLoad: function (option) {
     this.isAdmin = option.admin
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
   },
   methods: {
     goto(e) {
@@ -209,6 +217,15 @@ export default {
 .sub-page {
   min-height: 100vh;
   background: #f5f6f8;
+
+  &.android-platform {
+    .fixed-placeholder { height: calc(25px + 44px + 20px); }
+  }
+  &.ios-platform {
+    .fixed-placeholder { height: calc( 44px); 
+      background: #fff;
+    }
+  }
 }
 
 /* 功能区域 */

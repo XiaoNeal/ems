@@ -312,7 +312,7 @@
 		position: absolute;
 		left: 40upx;
 		z-index: 9999;
-		padding-top: var(--status-bar-height);
+		padding-top: 25px;
 		top: 40upx;
 		font-size: 40upx;
 		color: $font-color-dark;

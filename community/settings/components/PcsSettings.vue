@@ -180,6 +180,7 @@
 
 <script>
 import { sendCommandFrame } from '@/api/control.js'
+import { realtimeDataProvider } from '@/service/websocket'
 
 export default {
   name: 'PcsSettings',
@@ -510,7 +511,7 @@ export default {
     },
 
     showCombinedValue(key) {
-      console.log('showCombinedValue called with key:', key)
+      // console.log('showCombinedValue called with key:', key)
       // console.log('combinedParams:', this.combinedParams)
       if (this.combinedParams && this.combinedParams[key]) {
         const powerValue = this.combinedParams[key].powerValue
@@ -1056,6 +1057,28 @@ export default {
     },
 
     handleEditConfig() {
+      const deviceList = realtimeDataProvider.getDeviceList()
+      const device171F = deviceList.find(item => item && item.deviceType === '171F')
+      const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
+      
+      if (b12Value === undefined || b12Value === null) {
+        uni.showModal({
+          title: '提示',
+          content: '当前设备离线，暂不支持修改',
+          showCancel: false
+        })
+        return
+      }
+      
+      if (b12Value !== 0 && b12Value !== '0') {
+        uni.showModal({
+          title: '提示',
+          content: '策略运行中，参数修改需停止策略！！！',
+          showCancel: false
+        })
+        return
+      }
+      
       this.isEditing = true
       this.showToast('已进入编辑模式', 'success')
     },

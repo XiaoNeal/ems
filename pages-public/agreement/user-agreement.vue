@@ -1,7 +1,7 @@
 <template>
-	<view class="container" :style="'background-color:' + bGColor">
-		<u-navbar title="用户协议" leftIconColor="#333" :titleStyle="{ 'color': '#333', 'width': '100%' }" :leftText="null" :autoBack="true"
-			:placeholder="true" :bgColor="'#fff'"></u-navbar>
+	<view class="container" :class="platformClass" :style="'background-color:' + bGColor">
+		<DyNavbar title="用户协议" :titleStyle="{ 'color': '#333', 'width': '100%' }" :placeholder="true" leftIconColor="#333"></DyNavbar>
+		<view class="fixed-placeholder"></view>
 		<scroll-view scroll-y class="content">
 			<h1>微能站软件许可及用户服务协议</h1>
 			<p>欢迎您使用微能站能源互联网移动平台（以下简称微能站）！本协议仅适用于国创能源互联网创新中心（广东）有限公司的微能站提供的产品或服务，包括您访问微能站使用平台提供的服务。</p>
@@ -107,11 +107,21 @@
 
 <script>
 	import { mapState } from 'vuex'
+	import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+
 	export default {
+		components: { DyNavbar },
 		data() {
 			return {
-				
+				platformClass: ""
 			}
+		},
+		onLoad() {
+			uni.getSystemInfo({
+				success: (res) => {
+					this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+				},
+			});
 		},
 		computed: {
 			...mapState(['bGColor', 'fontColor', 'headerTabBg'])
@@ -126,6 +136,19 @@
 	.container {
 		min-height: 100vh;
 		background: #f8f9fa;
+
+		&.android-platform {
+			.fixed-placeholder {
+				height: calc(25px + 44px + 20px);
+			}
+		}
+
+		&.ios-platform {
+			.fixed-placeholder {
+				height: calc(44px);
+				background: #fff;
+			}
+		}
 	}
 	
 	.content {
