@@ -30,11 +30,9 @@ try {
 // 需要永久存储，且下次APP启动需要取出的，在state中的变量名
 
 let saveStateKeys = [
-	'vuex_userInfo', 'token', 'currentTemplate',
-	'userName', 'hasLogin', 'memberId', 'deviceCategoryId', 'areaInfoId',
-	'currentSystemInfo', 'currentStorageArea', 'headerTabBg', 'bGColor', 'fontColor', 'urlPrefix',
-	'dragLists', 'gatewayDetailLists', 'newVersion', 'notUpdated',
-	'areaInfoName', 'noEncryption',
+	'token',
+	'userName', 'hasLogin', 'areaInfoId',
+	'currentSystemInfo', 'headerTabBg', 'bGColor', 'fontColor',
 	'currentSelectDevice', 'userInfo' // 新增缓存字段
 ];
 
@@ -77,32 +75,17 @@ const store = new Vuex.Store({
 		headerTabBg: lifeData.headerTabBg ? lifeData.headerTabBg : '#fff',
 		bGColor: lifeData.bGColor ? lifeData.bGColor : '#fff',
 		fontColor: lifeData.fontColor ? lifeData.fontColor : '#000',
-		// vuex_userInfo: lifeData.vuex_userInfo ? lifeData.vuex_userInfo : {},
 		token: lifeData.token ? lifeData.token : '',
-		// vuex_wxCode: '',
-
-		// deviceCategoryId: lifeData.deviceCategoryId ? lifeData.deviceCategoryId : '',
 		areaInfoId: lifeData.areaInfoId ? lifeData.areaInfoId : '',
-
 		currentSystemInfo: lifeData.currentSystemInfo ? lifeData.currentSystemInfo : {},
-		// currentStorageArea: lifeData.currentStorageArea ? lifeData.currentStorageArea : {},
-		// urlPrefix: lifeData.urlPrefix ? lifeData.urlPrefix : '',
-		// dragLists: lifeData.dragLists ? lifeData.dragLists : [],
-		// gatewayDetailLists: lifeData.gatewayDetailLists ? lifeData.gatewayDetailLists : [],
-		// notUpdated: lifeData.notUpdated ? lifeData.notUpdated : false,
-		// newVersion: lifeData.newVersion ? lifeData.newVersion : 'v1.6.0',
-		// areaInfoName: lifeData.areaInfoName ? lifeData.areaInfoName : '',
-		// noEncryption: lifeData.noEncryption ? lifeData.noEncryption : false,
 		hasLogin: lifeData.hasLogin ? lifeData.hasLogin : false,
 		userName: lifeData.userName ? lifeData.userName : '',
-
 		storageRealData: [],
 		currentSelectDevice: lifeData.currentSelectDevice ? lifeData.currentSelectDevice : undefined,
 		homeSelectedEsId: lifeData.homeSelectedEsId ? lifeData.homeSelectedEsId : undefined,
-		// centerList: lifeData.centerList ? lifeData.centerList : [],
-
 		barCodes: new Set(),
-		deviceMap: new Map()
+		deviceMap: new Map(),
+		currentEsRoleId: lifeData.currentEsRoleId ? lifeData.currentEsRoleId : 0
 	},
 	mutations: {
 		$uStore(state, payload) {
@@ -131,17 +114,16 @@ const store = new Vuex.Store({
 			state.currentSelectDevice = data || {}
 			saveLifeData('currentSelectDevice', data)
 		},
+		SET_CURRENT_ES_ROLE_ID(state, roleId) {
+			state.currentEsRoleId = roleId
+			saveLifeData('currentEsRoleId', roleId)
+		},
 		/**
 		 * 修改存储实时数据
 		 */
 		changeStorageRealData(state, data) {
 			state.storageRealData = data
 		},
-		// UPDATE_CENTERLIST(state, value) {
-		// 	state.centerList = value
-		// 	console.log('------------------122', value)
-		// 	saveLifeData('centerList', value)
-		// },
 		SET_LOGIN(state, userInfo) {
 			state.userInfo = userInfo
 			state.hasLogin = true
@@ -169,24 +151,10 @@ const store = new Vuex.Store({
 		CLEAR_DEVICE_STATE(state) {
 			state.barCodes.clear();
 			state.deviceMap.clear();
+			state.storageRealData = [];
 		},
 	},
 	actions: {
-		// 自定义 action
-		// getCenterList(ctx) {
-		// 	const userInfo = {
-		// 		_id: "60054086019dcc42e41c91f7",
-		// 		username: "homeAdmin",
-		// 		name: "NEIIC 国创联能",
-		// 		__v: 0,
-		// 		role: {
-		// 			_id: "60068a98fa3cf1513b206a74",
-		// 			name: "admin",
-		// 			description: "管理员"
-		// 		},
-		// 		level: "admin"
-		// 	}
-		// }
 	}
 })
 

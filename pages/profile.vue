@@ -54,13 +54,13 @@
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
-      <view class="list-item" @click="navigateToU('/pages/profile/notifications')">
+      <!-- <view class="list-item" @click="navigateToU('/pages/profile/notifications')">
         <view class="item-content">
           <uni-icons type="notification" size="20" color="#007AFF"></uni-icons>
           <text class="item-title">消息通知</text>
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
-      </view>
+      </view> -->
 
 
 
@@ -72,7 +72,7 @@
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
-      <view v-if="user.roleId === 1" class="list-item" @click="navigateToU('/pages/profile/user-management')">
+      <view v-if="[1, 2].includes($store.state.currentEsRoleId) || user.roleId === 1" class="list-item" @click="navigateToU('/pages/profile/user-management')">
         <view class="item-content">
           <uni-icons type="contact" size="20" color="#007AFF"></uni-icons>
           <text class="item-title">用户管理</text>
@@ -82,20 +82,20 @@
 
 
 
-      <view class="list-item" @click="navigateToU('/pages/profile/settings')">
+      <!-- <view class="list-item" @click="navigateToU('/pages/profile/settings')">
         <view class="item-content">
           <uni-icons type="gear" size="20" color="#007AFF"></uni-icons>
           <text class="item-title">系统设置</text>
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
-      </view>
-      <view class="list-item" @click="navigateToU('/pages/profile/service')" style="margin:20rpx 0 ">
+      </view> -->
+      <!-- <view class="list-item" @click="navigateToU('/pages/profile/service')" style="margin:20rpx 0 ">
         <view class="item-content">
           <uni-icons type="headphones" size="20" color="#007AFF"></uni-icons>
           <text class="item-title">智能客服</text>
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
-      </view>
+      </view> -->
       <view class="list-item" @click="navigateToU('/pages/profile/about')">
         <view class="item-content">
           <uni-icons type="info" size="20" color="#007AFF"></uni-icons>
@@ -176,10 +176,9 @@ export default {
       res = JSON.parse(decrypt(res[1].data));
       console.log(res, "res121212")
       if (res.code === 200) {
-
-        // 替换原有赋值方式
+        const energyStations = res.data.energyStations || []
+        
         this.$store.commit('user/UPDATE_USER', {
-          // systemName: res.data.baseName,
           avatar: res.data.imageFile && res.data.imageFile.trim() ? 'https://iems.neiic.com/' + res.data.imageFile : undefined,
           mobile: res.data.mobile_phone,
           userName: res.data.user_name,
@@ -188,6 +187,14 @@ export default {
           roleId: res.data.roleId,
           roleName: res.data.roleName
         });
+
+        const userInfo = {
+          ...this.userInfo,
+          roleId: res.data.roleId,
+          esIds: energyStations,
+          esUsers: res.data.es_users || []
+        }
+        this.$store.commit('SET_LOGIN', userInfo)
       } else {
         throw new Error(res.data.msg || '请求失败')
       }

@@ -28,7 +28,7 @@
       </view>
 
       <!-- 运行配置 -->
-      <view class="section">
+      <view v-if="isAdmin" class="section">
         <text class="section-title">运行配置</text>
         <view class="section-content">
           <view class="item-row">
@@ -43,7 +43,7 @@
       </view>
 
       <!-- 内部数据 -->
-      <view class="section">
+      <view v-if="isAdmin" class="section">
         <text class="section-title">内部数据</text>
         <view class="section-content">
           <view class="item-row">
@@ -98,6 +98,8 @@
 </template>
 
 <script>
+import { decrypt } from "@/utils/decryptData.js";
+
 export default {
   name: "System",
   data() {
@@ -110,6 +112,51 @@ export default {
         systemName: '光储直柔能源站EMS'
       }
     };
+  },
+  async created() {
+    try {
+      const userId = this.$store.state.userInfo?.userId || this.$store.state.user?.id || '';
+      if (!userId) {
+        console.warn('用户ID为空，跳过获取用户信息');
+        return;
+      }
+
+      let res = await uni.request({
+        url: 'https://iems.neiic.com/SsoServer/es/FindUserInfoByCodeId',
+        method: 'GET',
+        data: { CodeId: userId },
+        header: { 'Content-Type': 'application/json' }
+      })
+      res = JSON.parse(decrypt(res[1].data));
+      
+      if (res.code === 200) {
+        const energyStations = res.data.energyStations || []
+        const userInfo = {
+          ...this.$store.state.userInfo,
+          roleId: res.data.roleId,
+          esIds: energyStations,
+          esUsers: res.data.es_users || []
+        }
+        this.$store.commit('SET_LOGIN', userInfo)
+        
+        const currentDevice = this.$store.state.currentSelectDevice || {}
+        const deviceId = currentDevice.id || currentDevice.esId
+        if (deviceId) {
+          const esUsers = userInfo.esUsers || []
+          const esUser = esUsers.find(item => item.esId === deviceId)
+          const roleId = esUser?.esRoleId || 0
+          this.$store.commit('SET_CURRENT_ES_ROLE_ID', roleId)
+        }
+      }
+    } catch (e) {
+      console.error('获取用户信息失败:', e)
+    }
+  },
+  computed: {
+    isAdmin() {
+      const currentRoleId = this.$store.state.currentEsRoleId;
+      return [1, 2, 4, 5].includes(currentRoleId);
+    }
   },
   methods: {
     // 刷新数据方法

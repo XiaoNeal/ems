@@ -207,11 +207,11 @@
           <view class="mode-header">
             <text class="section-title">状态参数</text>
             <view class="edit-config-btn" :class="{ disabled: !configurable }" @click="handleEditConfig">
-              <text class="edit-icon">✎</text>
-              <text>{{ isEditing ? '取消编辑' : '修改配置' }}</text>
-            </view>
+            <text class="edit-icon">✎</text>
+            <text>{{ isEditing ? '取消编辑' : '修改配置' }}</text>
           </view>
         </view>
+      </view>
 
         <!-- 状态参数分组 -->
         <view class="status-group" v-for="(group, index) in statusGroups" :key="index">
@@ -459,6 +459,14 @@ export default {
       this.activeMode = mode
     },
     handleEditConfig() {
+      const globalRoleId = this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
+      if (![1, 2].includes(globalRoleId)) {
+        const currentRoleId = this.$store.state.currentEsRoleId
+        if (![1, 2].includes(currentRoleId)) {
+          uni.showToast({ title: '无权限操作', icon: 'none' });
+          return;
+        }
+      }
       const deviceList = realtimeDataProvider.getDeviceList()
       const device171F = deviceList.find(item => item && item.deviceType === '171F')
       const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value

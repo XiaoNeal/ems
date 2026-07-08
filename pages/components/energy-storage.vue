@@ -228,10 +228,11 @@ export default {
         yAxis: {
           gridType: "dash",
           showTitle: true,
-          data: [{ position: "left", title: "单位:kW", min: null, max: maxValue }],
+          data: [{ position: "left", title: "单位:kW", max: maxValue }],
           dashLength: 2
         },
-        extra: { line: { type: "straight", width: 2, activeType: "hollow" } },
+        // extra: { line: { type: "group", width: 2, activeType: "hollow" } },
+        extra: { area: { type: "curve", gradient: true } },
         animation: false,
       }
     },
@@ -522,6 +523,9 @@ export default {
             { name: "放电功率", data: dischargeData }
           ]
         };
+        console.log('充电功率:', chargeData)
+        console.log('放电功率:', dischargeData)
+        console.log('时间:', this.storageChartData)
         this.powerCurveLoading = false;
       }).catch(() => {
         this.storageChartData = { categories: [], series: [{ name: "充电功率", data: [] }, { name: "放电功率", data: [] }] };

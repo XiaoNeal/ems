@@ -9,43 +9,41 @@
         <view class="card-title">报警等级统计</view>
         <view class="stats-content">
 
-          <view class="chart-box">
-            <qiun-data-charts 
-              type="ring"
-              :opts="ringOpts"
-              :chartData="alarmLevelData"
-              canvas-id="ringChart"
-              :canvas2d="canvas2d"
-              :ontouch="true"
-              @touch="handleChartTouch"
-            />
+          <view class="stats-top-row">
+            <view class="chart-box">
+              <qiun-data-charts type="ring" :opts="ringOpts" :chartData="alarmLevelData" canvas-id="ringChart"
+                :canvas2d="canvas2d" :ontouch="true" @touch="handleChartTouch" />
+            </view>
+
+            <view class="info-group">
+              <view class="level-row">
+                <view class="level-card urgent">
+                  <view class="dot"></view>
+                  <text class="label">紧急</text>
+                  <text class="num">{{ alarmLevelCount.urgent }}</text>
+                </view>
+                <view class="level-card important">
+                  <view class="dot"></view>
+                  <text class="label">重要</text>
+                  <text class="num">{{ alarmLevelCount.important }}</text>
+                </view>
+              </view>
+              <view class="level-row">
+                <view class="level-card prompt">
+                  <view class="dot"></view>
+                  <text class="label">提示</text>
+                  <text class="num">{{ alarmLevelCount.prompt }}</text>
+                </view>
+              </view>
+            </view>
           </view>
 
-          <view class="info-group">
-            <view class="level-row">
-              <view class="level-card urgent">
-                <view class="dot"></view>
-                <text class="label">紧急</text>
-                <text class="num">{{ alarmLevelCount.urgent }}</text>
-              </view>
-              <view class="level-card important">
-                <view class="dot"></view>
-                <text class="label">重要</text>
-                <text class="num">{{ alarmLevelCount.important }}</text>
-              </view>
-            </view>
-            <view class="level-row">
-              <view class="level-card prompt">
-                <view class="dot"></view>
-                <text class="label">提示</text>
-                <text class="num">{{ alarmLevelCount.prompt }}</text>
-              </view>
-            </view>
-            <view class="status-row">
-              <text class="status-text">发生中 {{ alarmTimes.proceed }}</text>
-              <text class="status-divider">·</text>
-              <text class="status-text">已结束 {{ alarmTimes.ended }}</text>
-            </view>
+          <view class="stats-divider"></view>
+
+          <view class="status-row">
+            <text class="status-text">发生中 {{ alarmTimes.proceed }}</text>
+            <text class="status-divider">·</text>
+            <text class="status-text">已结束 {{ alarmTimes.ended }}</text>
           </view>
 
         </view>
@@ -60,13 +58,8 @@
           </view>
         </picker>
         <view class="quick-dates">
-          <view 
-            v-for="item in quickDateOptions" 
-            :key="item.value"
-            class="quick-date-btn"
-            :class="{ active: quickDate === item.value }"
-            @click="selectQuickDate(item.value)"
-          >
+          <view v-for="item in quickDateOptions" :key="item.value" class="quick-date-btn"
+            :class="{ active: quickDate === item.value }" @click="selectQuickDate(item.value)">
             {{ item.label }}
           </view>
         </view>
@@ -76,11 +69,7 @@
       <view class="search-wrap">
         <view class="search-input">
           <text class="search-icon">🔍</text>
-          <input 
-            v-model="searchKeyword" 
-            @input="handleSearch"
-            placeholder="请输入告警名称"
-          />
+          <input v-model="searchKeyword" @input="handleSearch" placeholder="请输入告警名称" />
           <text v-if="searchKeyword" class="clear-icon" @click="clearSearch">✕</text>
         </view>
         <view class="filter-btn" :class="{ active: hasActiveFilter }" @click="handleFilter">
@@ -95,35 +84,18 @@
             <text class="popup-title">筛选条件</text>
             <text class="popup-reset" @click="resetFilter">重置</text>
           </view>
-          
+
           <view class="filter-section">
             <view class="section-title">报警等级</view>
             <view class="level-options">
-              <view 
-                class="level-option" 
-                :class="{ active: filterLevel === -1 }"
-                @click="filterLevel = -1"
-              >全部</view>
-              <view 
-                class="level-option urgent" 
-                :class="{ active: filterLevel === 0 }"
-                @click="filterLevel = 0"
-              >紧急</view>
-              <view 
-                class="level-option important" 
-                :class="{ active: filterLevel === 1 }"
-                @click="filterLevel = 1"
-              >重要</view>
-              <view 
-                class="level-option minor" 
-                :class="{ active: filterLevel === 2 }"
-                @click="filterLevel = 2"
-              >次要</view>
-              <view 
-                class="level-option prompt" 
-                :class="{ active: filterLevel === 3 }"
-                @click="filterLevel = 3"
-              >提示</view>
+              <view class="level-option" :class="{ active: filterLevel === -1 }" @click="filterLevel = -1">全部</view>
+              <view class="level-option urgent" :class="{ active: filterLevel === 0 }" @click="filterLevel = 0">紧急
+              </view>
+              <view class="level-option important" :class="{ active: filterLevel === 1 }" @click="filterLevel = 1">重要
+              </view>
+              <view class="level-option minor" :class="{ active: filterLevel === 2 }" @click="filterLevel = 2">次要</view>
+              <view class="level-option prompt" :class="{ active: filterLevel === 3 }" @click="filterLevel = 3">提示
+              </view>
             </view>
           </view>
 
@@ -155,37 +127,20 @@
 
       <!-- 列表切换 -->
       <view class="table-tab">
-        <view 
-          class="tab-btn" 
-          :class="{ active: tableType === 0 }"
-          @click="ontableTypeChange(0)"
-        >
+        <view class="tab-btn" :class="{ active: tableType === 0 }" @click="ontableTypeChange(0)">
           全部（{{ alarmTimes.total }}）
         </view>
-        <view 
-          class="tab-btn" 
-          :class="{ active: tableType === 1 }"
-          @click="ontableTypeChange(1)"
-        >
+        <view class="tab-btn" :class="{ active: tableType === 1 }" @click="ontableTypeChange(1)">
           进行中（{{ alarmTimes.proceed }}）
         </view>
-        <view 
-          class="tab-btn" 
-          :class="{ active: tableType === 2 }"
-          @click="ontableTypeChange(2)"
-        >
+        <view class="tab-btn" :class="{ active: tableType === 2 }" @click="ontableTypeChange(2)">
           已结束（{{ alarmTimes.ended }}）
         </view>
       </view>
 
       <!-- 列表 -->
-      <uni-scroll-view 
-        class="list-container" 
-        scroll-y
-        refresher-enabled
-        :refresher-loading="refresherLoading"
-        @refresherrefresh="onRefresh"
-      >
+      <uni-scroll-view class="list-container" scroll-y refresher-enabled :refresher-loading="refresherLoading"
+        @refresherrefresh="onRefresh">
         <!-- 加载中 -->
         <view v-if="listLoading && apiDataShow.length === 0" class="loading">
           <uni-loading-icon color="#4488FB"></uni-loading-icon>
@@ -198,19 +153,15 @@
           <text>暂无报警数据</text>
         </view>
 
-        <view 
-          v-for="item in apiDataShow" 
-          :key="item.id"
-          class="alarm-item"
-          hover-class="hover"
-        >
+        <view v-for="item in apiDataShow" :key="item.id" class="alarm-item" hover-class="hover">
           <view class="level-icon" :class="'level-' + item.alarmLevel">
             <uni-icons type="info" size="20" color="#fff"></uni-icons>
           </view>
 
           <view class="alarm-info">
             <view class="title">
-              <text class="level-tag" :class="'level-' + item.alarmLevel">{{ item.alarmLevel === 0 ? '紧急' : item.alarmLevel === 1 ? '重要' : '提示' }}</text>
+              <text class="level-tag" :class="'level-' + item.alarmLevel">{{ item.alarmLevel === 0 ? '紧急' :
+                item.alarmLevel === 1 ? '重要' : '提示' }}</text>
               <text class="type-name">{{ item.typeName }}</text>
               {{ item.alarmName }}
             </view>
@@ -226,11 +177,8 @@
           <uni-loading-icon size="18" color="#4488FB"></uni-loading-icon>
           <text>加载中...</text>
         </view>
-        <view 
-          v-else-if="apiDataShow.length < filteredTotalCount && filteredTotalCount > 0"
-          class="load-more"
-          @click="loadMore"
-        >
+        <view v-else-if="apiDataShow.length < filteredTotalCount && filteredTotalCount > 0" class="load-more"
+          @click="loadMore">
           点击加载更多
         </view>
         <view v-if="apiDataShow.length && apiDataShow.length >= filteredTotalCount" class="no-more">
@@ -286,7 +234,7 @@ export default {
       listLoading: false,
       refresherLoading: false,
       isLoadingMore: false,
-      
+
       selectedDate: '',
       quickDate: 'today',
       quickDateOptions: [
@@ -331,15 +279,25 @@ export default {
       if (this.listLoading) return
       this.listLoading = true
       try {
-        console.log(this.$Config, "-------111-----------------",this.listLoading)
+        console.log(this.$Config, "-------111-----------------", this.listLoading)
         const currentDevice = this.$store.state.currentSelectDevice || {}
         const date = this.selectedDate || this.formatDate(new Date())
         const res = await getAlarmRecord({
           date: date,
           areaLevelIds: currentDevice.areaLevelId
         })
-        console.log('告警接口返回数据:', res.data)
-        const list = (res.data || []).map(it => this.formatAlarmItem(it))
+
+        // 告警列表
+        let alarmList = res.data || []
+        // 按告警时间倒序，最新时间放最前面
+        alarmList = alarmList.sort((a, b) => {
+          // 方案A：时间戳字段
+          // return b.alarmTime - a.alarmTime
+          // 方案B：日期字符串（'2026-07-08 12:30:00'）
+          return new Date(b.alarmTime) - new Date(a.alarmTime)
+        })
+        console.log('告警接口返回数据:', alarmList)
+        const list = (alarmList || []).map(it => this.formatAlarmItem(it))
         this.apiData = list
         this.totalCount = list.length
         this.alarmTimes.total = list.length
@@ -368,11 +326,11 @@ export default {
         if (this.tableType === 2) return item.status === 0
         return true
       })
-      
+
       if (this.filterLevel !== -1) {
         data = data.filter(it => it.alarmLevel === this.filterLevel)
       }
-      
+
       if (this.filterStartTime) {
         data = data.filter(it => {
           const itemDate = new Date(it.startTime).getTime()
@@ -380,7 +338,7 @@ export default {
           return itemDate >= startDate
         })
       }
-      
+
       if (this.filterEndTime) {
         data = data.filter(it => {
           const itemDate = new Date(it.startTime).getTime()
@@ -388,7 +346,7 @@ export default {
           return itemDate <= endDate
         })
       }
-      
+
       if (this.searchKeyword) {
         const kw = this.searchKeyword.toLowerCase()
         data = data.filter(it => (it.typeName || '').toLowerCase().includes(kw))
@@ -408,7 +366,7 @@ export default {
       return {
         id: item.deviceId || Date.now() + Math.random(),
         alarmLevel: level,
-        typeName: item.typeName ,
+        typeName: item.typeName,
         alarmName: item.alarmName || '-',
         deviceName: item.typeName,
         startTime: item.alarmTime || '-',
@@ -521,16 +479,16 @@ export default {
   // padding: 20rpx;
   background: #f6f7fb;
   min-height: 100vh;
-  
+
   &.android-platform {
     .fixed-placeholder {
       height: calc(25px + 44px + 20px);
     }
   }
-  
+
   &.ios-platform {
     .fixed-placeholder {
-      height: calc( 44px);
+      height: calc(44px);
       background: #fff;
     }
   }
@@ -546,6 +504,7 @@ export default {
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 24rpx;
+
   .card-title {
     font-size: 32rpx;
     font-weight: 500;
@@ -553,15 +512,24 @@ export default {
     margin-bottom: 30rpx;
     color: #222;
   }
+
   .stats-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20rpx;
+  }
+
+  .stats-top-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
+
   .chart-box {
     width: 200rpx;
     height: 200rpx;
   }
+
   .info-group {
     flex: 1;
     display: flex;
@@ -569,10 +537,12 @@ export default {
     gap: 16rpx;
     margin-left: 20rpx;
   }
+
   .level-row {
     display: flex;
     gap: 16rpx;
   }
+
   .level-card {
     flex: 1;
     display: flex;
@@ -580,50 +550,75 @@ export default {
     gap: 10rpx;
     padding: 16rpx 20rpx;
     border-radius: 16rpx;
+
     .dot {
       width: 16rpx;
       height: 16rpx;
       border-radius: 50%;
       flex-shrink: 0;
     }
+
     .label {
       font-size: 26rpx;
       color: #333;
       flex-shrink: 0;
     }
+
     .num {
       font-size: 32rpx;
       font-weight: bold;
       color: #333;
       margin-left: auto;
     }
+
     &.urgent {
       background: #FFF2F0;
-      .dot { background: #EB3341; }
+
+      .dot {
+        background: #EB3341;
+      }
     }
+
     &.important {
       background: #FFF7E8;
-      .dot { background: #FF7A2E; }
+
+      .dot {
+        background: #FF7A2E;
+      }
     }
+
     &.prompt {
       background: #F6FFED;
-      .dot { background: #3CCF6E; }
+
+      .dot {
+        background: #3CCF6E;
+      }
     }
   }
+
+  .stats-divider {
+    height: 1rpx;
+    background: rgba(0, 0, 0, 0.06);
+    margin: 0 -20rpx;
+  }
+
   .status-row {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 16rpx;
     padding-top: 8rpx;
+
     .status-text {
       font-size: 26rpx;
       color: #666;
     }
+
     .status-divider {
       font-size: 24rpx;
       color: #999;
     }
+
     &.proceed .num {
       color: #EB3341;
     }
@@ -645,7 +640,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 12rpx;
-  
+
   text {
     font-size: 28rpx;
     color: #333;
@@ -663,7 +658,7 @@ export default {
   color: #666;
   background: #f5f7fa;
   border-radius: 40rpx;
-  
+
   &.active {
     background: #4488FB;
     color: #fff;
@@ -680,7 +675,7 @@ export default {
   background: #fff;
   border-radius: 16rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
-  
+
   .search-input {
     flex: 1;
     display: flex;
@@ -689,12 +684,12 @@ export default {
     border-radius: 40rpx;
     padding: 24rpx 30rpx;
     min-height: 80rpx;
-    
+
     .search-icon {
       font-size: 28rpx;
       color: #999;
     }
-    
+
     input {
       margin-left: 16rpx;
       font-size: 28rpx;
@@ -702,7 +697,7 @@ export default {
       background: transparent;
       min-height: 40rpx;
     }
-    
+
     .clear-icon {
       font-size: 24rpx;
       color: #999;
@@ -710,7 +705,7 @@ export default {
       margin-left: 8rpx;
     }
   }
-  
+
   .filter-btn {
     width: 80rpx;
     height: 80rpx;
@@ -720,14 +715,15 @@ export default {
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    
+
     .filter-icon {
       font-size: 28rpx;
       color: #999;
     }
-    
+
     &.active {
       background: #e8f0fe;
+
       .filter-icon {
         color: #4488FB;
       }
@@ -742,12 +738,14 @@ export default {
   border-radius: 16rpx;
   overflow: hidden;
   margin-bottom: 20rpx;
+
   .tab-btn {
     flex: 1;
     text-align: center;
     padding: 20rpx 0;
     font-size: 26rpx;
     color: #666;
+
     &.active {
       background: #4488FB;
       color: #fff;
@@ -762,6 +760,7 @@ export default {
   border-radius: 20rpx;
   max-height: 800rpx;
 }
+
 .alarm-item {
   display: flex;
   padding: 24rpx;
@@ -769,10 +768,12 @@ export default {
   border-radius: 12rpx;
   margin-bottom: 16rpx;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+
   &.hover {
     background: #fafafa;
   }
 }
+
 .level-icon {
   width: 48rpx;
   height: 48rpx;
@@ -782,13 +783,27 @@ export default {
   justify-content: center;
   margin-right: 20rpx;
   flex-shrink: 0;
-  &.level-0 { background: #EB3341; }
-  &.level-1 { background: #FF7A2E; }
-  &.level-2 { background: #4D7BF1; }
-  &.level-3 { background: #3CCF6E; }
+
+  &.level-0 {
+    background: #EB3341;
+  }
+
+  &.level-1 {
+    background: #FF7A2E;
+  }
+
+  &.level-2 {
+    background: #4D7BF1;
+  }
+
+  &.level-3 {
+    background: #3CCF6E;
+  }
 }
+
 .alarm-info {
   flex: 1;
+
   .title {
     font-size: 30rpx;
     font-weight: 500;
@@ -797,27 +812,42 @@ export default {
     display: flex;
     align-items: center;
     gap: 12rpx;
+
     .level-tag {
       font-size: 20rpx;
       padding: 2rpx 10rpx;
       border-radius: 8rpx;
       color: #fff;
       flex-shrink: 0;
-      &.level-0 { background: #EB3341; }
-      &.level-1 { background: #FF7A2E; }
-      &.level-2 { background: #4D7BF1; }
+
+      &.level-0 {
+        background: #EB3341;
+      }
+
+      &.level-1 {
+        background: #FF7A2E;
+      }
+
+      &.level-2 {
+        background: #4D7BF1;
+      }
     }
+
     .type-name {
-      font-size: 22rpx;
-      color: #999;
+      // font-size: 22rpx;
+      // color: #999;
       flex-shrink: 0;
+      color: #4488FB;
+      font-weight: bold;
     }
   }
+
   .time-row {
     font-size: 24rpx;
     color: #999;
     display: flex;
     gap: 20rpx;
+
     .time-item {
       &:first-child {
         color: #666;
@@ -826,7 +856,10 @@ export default {
   }
 }
 
-.loading, .empty, .load-more, .no-more {
+.loading,
+.empty,
+.load-more,
+.no-more {
   text-align: center;
   padding: 30rpx 0;
   color: #999;
@@ -879,16 +912,27 @@ export default {
   background: #f5f5f5;
   font-size: 28rpx;
   color: #666;
-  
+
   &.active {
     background: #4488FB;
     color: #fff;
   }
-  
-  &.urgent.active { background: #EB3341; }
-  &.important.active { background: #FF7A2E; }
-  &.minor.active { background: #4D7BF1; }
-  &.prompt.active { background: #3CCF6E; }
+
+  &.urgent.active {
+    background: #EB3341;
+  }
+
+  &.important.active {
+    background: #FF7A2E;
+  }
+
+  &.minor.active {
+    background: #4D7BF1;
+  }
+
+  &.prompt.active {
+    background: #3CCF6E;
+  }
 }
 
 .time-range {
@@ -905,7 +949,7 @@ export default {
   padding: 20rpx;
   background: #f5f5f5;
   border-radius: 12rpx;
-  
+
   text {
     font-size: 28rpx;
     color: #666;
@@ -929,12 +973,12 @@ export default {
   text-align: center;
   border-radius: 12rpx;
   font-size: 30rpx;
-  
+
   &.cancel {
     background: #f5f5f5;
     color: #666;
   }
-  
+
   &.confirm {
     background: #4488FB;
     color: #fff;

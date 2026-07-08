@@ -83,7 +83,8 @@
             </view>
             <view v-else-if="powerCurveCategories.length > 0" class="chart-loaded">
               <qiun-data-charts type="area" :chartData="powerCurveData" :opts="powerCurveOptions" :ontouch="true"
-                :canvas2d="canvas2d" class="power-chart" canvasId="CamoFLVpowerBqPYEJXtAEDIxdbLdHpZAvPitPOEWER" :key="powerCurveCategories.length" />
+                :canvas2d="canvas2d" class="power-chart" canvasId="CamoFLVpowerBqPYEJXtAEDIxdbLdHpZAvPitPOEWER"
+                :key="powerCurveCategories.length" />
             </view>
             <EmptyState v-else title="暂无数据" desc="当前时段暂无电网功率数据" @refresh="getPowerCurveData" />
             <!-- <view class="axis-unit x-axis-unit">时</view> -->
@@ -196,7 +197,7 @@ export default {
         padding: [15, 20, 0, 15],
         enableScroll: false,
         animation: false,
-        legend: {select: true},
+        legend: { select: true },
         xAxis: { labelCount: 6, disableGrid: true },
         yAxis: {
           gridType: "dash",
@@ -277,14 +278,15 @@ export default {
             format: val => val.toFixed(2)
           }
         },
-        extra: {
-          area: {
-            type: 'straight',
-            opacity: 0.2,
-            addLine: true,
-            width: 2
-          }
-        }
+        extra: { area: { type: "curve", gradient: true } },
+        // extra: {
+        //   area: {
+        //     type: 'straight',
+        //     opacity: 0.2,
+        //     addLine: true,
+        //     width: 2
+        //   }
+        // }
       }
 
 

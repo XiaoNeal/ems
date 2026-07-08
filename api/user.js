@@ -303,3 +303,15 @@ export const changeEsUserByTelAndEsId = (tel, esId) => {
 		}
 	})
 }
+
+export const changeEsUserRoleByUserIdAndEsId = (userId, esId, roleId) => {
+	return request({
+		url: `/api/Homecommunity/ChangeEsUserRoleByUserIdAndEsId`,
+		method: 'GET',
+		params: {
+			userId: userId,
+			esId: esId,
+			roleId: roleId
+		}
+	})
+}

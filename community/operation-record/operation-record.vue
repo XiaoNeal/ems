@@ -37,8 +37,8 @@
       <view v-else>
         <view class="operation-item" v-for="operation in operationList" :key="operation._key">
           <view class="operation-header">
-            <text class="header-title">操作名称：{{ getOperationName(operation) }}</text>
-            <text class="header-device">操作设备：{{ getDeviceTypeName(operation) }}</text>
+            <text class="header-title">{{ getOperationName(operation) }}</text>
+            <text class="header-device">{{ getDeviceTypeName(operation) }}</text>
           </view>
           <view class="operation-body">
             <view v-for="param in operation.parsedParams" :key="param._key">
@@ -46,7 +46,7 @@
                 <text class="cmd-label">参数值：</text>
                 <text class="cmd-value">{{ getParamValue(cmd.deviceCategory, cmd.registerAddress, cmd.registerValue) }}</text>
               </view>
-              <view class="cmd-row">
+              <view v-if="isAdmin" class="cmd-row">
                 <text class="cmd-label">设备类型：</text>
                 <text class="cmd-value">{{ (param.commands && param.commands[0] && param.commands[0].deviceCategory) || '--' }}</text>
               </view>
@@ -61,7 +61,7 @@
             </view>
           </view>
           <view class="operation-footer">
-            <text class="footer-username">操作者：{{ operation.username || '--' }}</text>
+            <text class="footer-username">{{ operation.username || '--' }}</text>
             <text class="footer-time">{{ formatTime(operation.createTime) }}</text>
           </view>
         </view>
@@ -117,7 +117,10 @@ export default {
       return this.$store.state.userInfo?.userId || this.$store.state.user?.id || 0
     },
     isAdmin() {
-      return this.$store.state.userInfo?.roleId === 1 || this.$store.state.user?.roleId === 1
+      // const currentRoleId = this.$store.state.currentEsRoleId || this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
+      // return [1, 4].includes(currentRoleId)
+        const currentRoleId = this.$store.state.currentEsRoleId 
+      return [4].includes(currentRoleId)
     }
   },
   mounted() {
@@ -447,9 +450,9 @@ export default {
 }
 
 .header-device {
-  font-size: 26rpx;
+  font-size: 30rpx;
   color: #4488FB;
-  font-weight: 500;
+  font-weight: bold;
 }
 
 
@@ -493,9 +496,9 @@ export default {
 }
 
 .cmd-value {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: #333;
-  font-weight: 500;
+  font-weight: bold;
 }
 
 .empty-state {

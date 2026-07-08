@@ -438,7 +438,7 @@ export default {
   mounted() {
 
     const currentDevice = this.$store.state.currentSelectDevice || {}
-    const deviceControl = currentDevice.list.find(item => item.controlType == 1);
+    const deviceControl = (currentDevice.list || []).find(item => item.controlType == 1);
     this.deviceConfig.idCode = deviceControl?.homeBarCode || '';
     // this.deviceConfig.typeCode = deviceControl || '3401';
     // this.deviceConfig.address = deviceControl?.address || '01';
@@ -476,6 +476,10 @@ export default {
       this.deviceList = realtimeDataProvider.getDeviceList()
       console.log('deviceList架构图', this.deviceList)
       this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
+      const b12Value = this.device171F && this.device171F.controlData && this.device171F.controlData.B12 && this.device171F.controlData.B12.value;
+      if (b12Value !== undefined && b12Value !== null) {
+        this.systemRunning = (b12Value === 1 || b12Value === '1');
+      }
     },
     formatValue(value, decimals = 2) {
       const num = parseFloat(value);
@@ -857,6 +861,15 @@ export default {
     },
 
     handleStartStop() {
+      console.log(this.$store,"----------------------")
+      // const globalRoleId = this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
+      // if (![1, 2].includes(globalRoleId)) {
+      //   const currentRoleId = this.$store.state.currentEsRoleId
+      //   if (![1, 2].includes(currentRoleId)) {
+      //     uni.showToast({ title: '无权限操作', icon: 'none' });
+      //     return;
+      //   }
+      // }
       const status = this.getSystemStatus();
       if (status === '运行中') {
         this.showStopModal = true;
@@ -871,13 +884,7 @@ export default {
       this.showWarningModal = false;
     },
     getSystemStatus() {
-      const b12Value = this.device171F && this.device171F.controlData && this.device171F.controlData.B12 && this.device171F.controlData.B12.value;
-      if (b12Value === 1 || b12Value === '1') {
-        return '运行中';
-      } else if (b12Value === 0 || b12Value === '0') {
-        return '启动';
-      }
-      return '启动';
+      return this.systemRunning ? '运行中' : '启动';
     },
     handleRefresh() {
       this.handleDatePicker(this.selectedDate);

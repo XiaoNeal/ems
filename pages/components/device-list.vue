@@ -1,20 +1,26 @@
 <template>
   <view class="page-wrap">
-    <!-- 空设备状态 -->
-    <view v-if="esIds.length === 0" class="empty-card">
-      <view class="empty-icon-box">
-        <uni-icons type="folder-empty" size="96" color="#b4c8eb" />
-      </view>
-      <text class="empty-title">暂无储能设备</text>
-      <text class="empty-desc">扫码或输入设备编号，快速绑定储能设备</text>
-      <button class="empty-add-btn" @click="showAddOptions">
-        <uni-icons type="plus" size="26" color="#fff" />
-        <text>添加设备</text>
-      </button>
+    <view v-if="loading" class="loading-card">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">加载中...</text>
     </view>
 
-    <!-- 设备列表容器 -->
-    <view v-else class="list-card">
+    <view v-else>
+      <!-- 空设备状态 -->
+      <view v-if="esIds.length === 0" class="empty-card">
+        <view class="empty-icon-box">
+          <uni-icons type="folder-empty" size="96" color="#b4c8eb" />
+        </view>
+        <text class="empty-title">暂无储能设备</text>
+        <text class="empty-desc">扫码或输入设备编号，快速绑定储能设备</text>
+        <button class="empty-add-btn" @click="showAddOptions">
+          <uni-icons type="plus" size="26" color="#fff" />
+          <text>添加设备</text>
+        </button>
+      </view>
+
+      <!-- 设备列表容器 -->
+      <view v-else class="list-card">
       <!-- 列表头部 -->
       <view class="list-header">
         <text class="header-title">我的储能设备</text>
@@ -27,44 +33,40 @@
       </view>
 
       <scroll-view scroll-y class="device-scroll">
-        <view
-          v-for="(esId, index) in esIds"
-          :key="index"
-          class="device-item"
-        >
-          <!-- 设备信息行（带右侧箭头） -->
-          <view class="info-row" @click.stop="selectDevice(esId)">
-            <view class="device-avatar">
-              <image
-                v-if="esId.imageUrl || esId.imgUrl"
-                :src="esId.imageUrl || esId.imgUrl"
-                mode="aspectFill"
-                class="avatar-img"
-              />
-              <image
-                v-else
-                src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=smart%20energy%20storage%20device%20icon%20modern%20minimal%20style&image_size=square"
-                mode="aspectFill"
-                class="avatar-img"
-              />
-            </view>
-            <view class="info-text">
-              <view class="name-line">
-                <text class="device-name">{{ getDeviceName(esId) }}</text>
-                <text v-if="isAdmin(esId)" class="admin-label">管理员</text>
+        <view v-for="(esId, index) in esIds" :key="index" class="device-item">
+          <view class="device-card" @click.stop="selectDevice(esId)">
+            <view class="device-left">
+              <view class="device-avatar-wrap">
+                <image v-if="esId.imageUrl || esId.imgUrl" :src="esId.imageUrl || esId.imgUrl" mode="aspectFill"
+                  class="avatar-img" />
+                <image v-else
+                  src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=smart%20energy%20storage%20device%20icon%20modern%20minimal%20style&image_size=square"
+                  mode="aspectFill" class="avatar-img" />
+                <view class="status-dot online"></view>
               </view>
-              <text class="device-id">设备ID：{{ esId.esId || esId.id }}</text>
+              <view class="info-text">
+                <view class="name-line">
+                  <text class="device-name">{{ getDeviceName(esId) }}</text>
+                  <text v-if="isAdmin(esId)" class="admin-label">管理员</text>
+                </view>
+                <view class="desc-line">
+                  <text class="device-id">ID：{{ esId.esId || esId.id }}</text>
+                  <text class="device-area" v-if="esId.description">{{ esId.description }}</text>
+                </view>
+              </view>
             </view>
-            <uni-icons type="arrowright" size="22" color="#d0d3d9" class="arrow-icon" />
-          </view>
-          <!-- 单独一行删除按钮，仅垃圾桶图标 -->
-          <view class="delete-row">
-            <view class="delete-circle-btn" @click.stop="deleteDevice(esId)">
-              <uni-icons type="trash" size="19" color="#9499a4" />
+            <view class="device-right">
+              <view class="action-group">
+                <view class="action-btn" @click.stop="showDeviceMenu(esId)">
+                  <uni-icons type="more-filled" size="24" color="#9499a4" />
+                </view>
+              </view>
+              <uni-icons type="arrowright" size="22" color="#d0d3d9" />
             </view>
           </view>
         </view>
       </scroll-view>
+      </view>
     </view>
 
     <!-- 分享弹窗 -->
@@ -115,6 +117,7 @@ export default {
   data() {
     return {
       esIds: [],
+      loading: true,
       showShareModal: false,
       shareModalType: 'code',
       currentShareCode: '',
@@ -127,17 +130,34 @@ export default {
   },
   methods: {
     initEsIds() {
-      if (this.userInfo && this.userInfo.esIds) {
-        this.esIds = Array.isArray(this.userInfo.esIds) ? this.userInfo.esIds : []
-      } else {
-        this.esIds = []
-      }
+      this.refreshDeviceList()
     },
     getDeviceName(esId) {
-      return `设备 ${esId.name}`
+      return esId.name || esId.nickName || `设备 ${esId.id || esId.esId}`
     },
     isAdmin(esId) {
-      return typeof esId === 'object'
+      const deviceId = esId.id || esId.esId
+      const esUsers = this.userInfo && this.userInfo.esUsers || []
+      const esUser = esUsers.find(item => item.esId === deviceId)
+      return esUser && [1, 2].includes(esUser.esRoleId)
+    },
+    getDeviceStatus(esId) {
+      return 'online'
+    },
+    showDeviceMenu(esId) {
+      const isAdmin = this.isAdmin(esId)
+      const menuItems = isAdmin 
+        ? ['删除设备'] 
+        : ['取消']
+      uni.showActionSheet({
+        itemList: menuItems,
+        itemColor: '#4080f0',
+        success: (res) => {
+          if (res.tapIndex === 0 && isAdmin) {
+            this.deleteDevice(esId)
+          }
+        }
+      })
     },
     selectDevice(esId) {
       const device = typeof esId === 'object' ? esId : { id: esId }
@@ -177,12 +197,13 @@ export default {
     },
     showAddOptions() {
       uni.showActionSheet({
-        itemList: ['扫码添加设备', '手动输入编号', '分享我的设备'],
+        // itemList: ['扫码添加设备', '手动输入编号', '分享我的设备'],
+        itemList: ['扫码添加设备', '手动输入编号'],
         itemColor: '#2d3036',
         success: res => {
           if (res.tapIndex === 0) this.scanDevice()
           else if (res.tapIndex === 1) this.showInputModal()
-          else if (res.tapIndex === 2) this.showShareOptions()
+          // else if (res.tapIndex === 2) this.showShareOptions()
         }
       })
     },
@@ -271,11 +292,19 @@ export default {
     async refreshDeviceList() {
       try {
         const res = await findUserInfoByCodeId(this.userInfo.userId)
-        if (res?.data?.energyStations && Array.isArray(res.data.energyStations)) {
-          this.esIds = res.data.energyStations
+        console.log('获取用户设备列表:', res)
+        if (res.code === 200 && res.data) {
+          this.esIds = res.data.energyStations || []
+          const userInfo = { ...this.userInfo }
+          userInfo.esIds = this.esIds
+          userInfo.esUsers = res.data.es_users || []
+          userInfo.roleId = res.data.roleId
+          this.$store.commit('SET_LOGIN', userInfo)
         }
       } catch (err) {
         console.error('刷新列表失败', err)
+      } finally {
+        this.loading = false
       }
     },
     showShareOptions() {
@@ -359,6 +388,39 @@ $bg-card: #ffffff;
   background: $bg-page;
 }
 
+// 加载状态卡片
+.loading-card {
+  margin-top: 200rpx;
+  padding: 100rpx 40rpx;
+  background: $bg-card;
+  border-radius: 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 3rpx 20rpx rgba(64, 128, 240, 0.06);
+
+  .loading-spinner {
+    width: 80rpx;
+    height: 80rpx;
+    border: 6rpx solid rgba(64, 128, 240, 0.1);
+    border-top-color: $main-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 32rpx;
+  }
+
+  .loading-text {
+    font-size: 28rpx;
+    color: $text-gray;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 // 空状态卡片
 .empty-card {
   margin-top: 160rpx;
@@ -369,6 +431,7 @@ $bg-card: #ffffff;
   flex-direction: column;
   align-items: center;
   box-shadow: 0 3rpx 20rpx rgba(64, 128, 240, 0.06);
+
   .empty-icon-box {
     width: 160rpx;
     height: 160rpx;
@@ -379,12 +442,14 @@ $bg-card: #ffffff;
     justify-content: center;
     margin-bottom: 36rpx;
   }
+
   .empty-title {
     font-size: 36rpx;
     color: $text-dark;
     font-weight: 500;
     margin-bottom: 12rpx;
   }
+
   .empty-desc {
     font-size: 26rpx;
     color: $text-gray;
@@ -392,6 +457,7 @@ $bg-card: #ffffff;
     line-height: 1.6;
     margin-bottom: 64rpx;
   }
+
   .empty-add-btn {
     width: 340rpx;
     height: 90rpx;
@@ -405,6 +471,7 @@ $bg-card: #ffffff;
     font-size: 30rpx;
     color: #fff;
     transition: all 0.2s;
+
     &:active {
       background: #336fd8;
       transform: scale(0.97);
@@ -427,19 +494,23 @@ $bg-card: #ffffff;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1rpx solid $line-color;
+
   .header-title {
     font-size: 38rpx;
     color: $text-dark;
     font-weight: 500;
   }
+
   .header-right-group {
     display: flex;
     align-items: center;
     gap: 28rpx;
+
     .device-total {
       font-size: 26rpx;
       color: $text-gray;
     }
+
     .header-add-btn {
       width: 64rpx;
       height: 64rpx;
@@ -448,6 +519,7 @@ $bg-card: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
+
       &:active {
         background: #e0ecff;
       }
@@ -461,79 +533,165 @@ $bg-card: #ffffff;
 
 // 单设备条目
 .device-item {
-  padding: 32rpx;
-  border-bottom: 1rpx solid $line-color;
+  padding: 0 32rpx;
+  margin-bottom: 24rpx;
+
   &:last-child {
-    border-bottom: none;
+    margin-bottom: 0;
   }
-  .info-row {
+}
+
+.device-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx;
+  background: $bg-card;
+  border-radius: 20rpx;
+  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.2s;
+
+  &:active {
+    transform: scale(0.99);
+    box-shadow: 0 1rpx 8rpx rgba(0, 0, 0, 0.06);
+  }
+}
+
+.device-left {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  flex: 1;
+  overflow: hidden;
+}
+
+.device-avatar-wrap {
+  position: relative;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 16rpx;
+  background: #f5f7fb;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+  }
+
+  .status-dot {
+    position: absolute;
+    bottom: 4rpx;
+    right: 4rpx;
+    width: 20rpx;
+    height: 20rpx;
+    border-radius: 50%;
+    border: 3rpx solid #fff;
+
+    &.online {
+      background: #07c160;
+    }
+
+    &.offline {
+      background: #9499a4;
+    }
+
+    &.alarm {
+      background: #ee5b5b;
+      animation: pulse 1.5s infinite;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+.info-text {
+  flex: 1;
+  overflow: hidden;
+
+  .name-line {
     display: flex;
     align-items: center;
-    gap: 26rpx;
-    margin-bottom: 26rpx;
-  }
-  .device-avatar {
-    width: 100rpx;
-    height: 100rpx;
-    border-radius: 18rpx;
-    background: #f0f6ff;
-    overflow: hidden;
-    flex-shrink: 0;
-    .avatar-img {
-      width: 100%;
-      height: 100%;
+    gap: 14rpx;
+    margin-bottom: 8rpx;
+
+    .device-name {
+      font-size: 32rpx;
+      color: $text-dark;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .admin-label {
+      font-size: 22rpx;
+      padding: 4rpx 12rpx;
+      background: linear-gradient(135deg, #fff7ed, #ffedd5);
+      color: #ea580c;
+      border-radius: 8rpx;
+      font-weight: 500;
     }
   }
-  .info-text {
-    flex: 1;
-    overflow: hidden;
-    .name-line {
-      display: flex;
-      align-items: center;
-      gap: 16rpx;
-      margin-bottom: 10rpx;
-      .device-name {
-        font-size: 34rpx;
-        color: $text-dark;
-        font-weight: 500;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .admin-label {
-        font-size: 22rpx;
-        padding: 4rpx 14rpx;
-        background: #fff2e0;
-        color: #e68a20;
-        border-radius: 10rpx;
-      }
-    }
+
+  .desc-line {
+    display: flex;
+    align-items: center;
+    gap: 20rpx;
+    flex-wrap: wrap;
+
     .device-id {
-      font-size: 26rpx;
+      font-size: 24rpx;
       color: $text-gray;
     }
-  }
-  .arrow-icon {
-    flex-shrink: 0;
-  }
-  // 删除按钮行
-  .delete-row {
-    display: flex;
-    justify-content: flex-end;
-    .delete-circle-btn {
-      width: 68rpx;
-      height: 68rpx;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: transparent;
-      transition: background 0.2s;
-      &:active {
-        background: #f0f1f5;
-      }
+
+    .device-area {
+      font-size: 24rpx;
+      color: $text-gray;
+      padding: 2rpx 12rpx;
+      background: #f0f1f5;
+      border-radius: 6rpx;
     }
   }
+}
+
+.device-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex-shrink: 0;
+}
+
+.action-group {
+  display: flex;
+  align-items: center;
+}
+
+.action-btn {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+
+  &:active {
+    background: #f0f1f5;
+  }
+}
+
+.arrow-icon {
+  flex-shrink: 0;
 }
 
 // 分享弹窗
@@ -549,23 +707,27 @@ $bg-card: #ffffff;
   justify-content: center;
   z-index: 9999;
 }
+
 .share-modal {
   width: 660rpx;
   background: $bg-card;
   border-radius: 30rpx;
   overflow: hidden;
 }
+
 .modal-head {
   padding: 40rpx 36rpx;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1rpx solid $line-color;
+
   .modal-title {
     font-size: 36rpx;
     color: $text-dark;
     font-weight: 500;
   }
+
   .modal-close {
     width: 60rpx;
     height: 60rpx;
@@ -574,41 +736,50 @@ $bg-card: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
+
     &:active {
       background: #e9ebf2;
     }
   }
 }
+
 .modal-body {
   padding: 40rpx 36rpx;
+
   .form-row {
     display: flex;
     margin-bottom: 36rpx;
+
     .form-label {
       width: 160rpx;
       font-size: 28rpx;
       color: $text-gray;
     }
+
     .form-value {
       flex: 1;
       font-size: 28rpx;
       color: $text-dark;
     }
   }
+
   .copy-block {
     margin-bottom: 48rpx;
+
     .copy-label {
       font-size: 28rpx;
       color: $text-gray;
       display: block;
       margin-bottom: 20rpx;
     }
+
     .code-wrap {
       background: #f0f6ff;
       border: 1rpx solid #d4e4ff;
       padding: 32rpx 28rpx;
       border-radius: 16rpx;
       margin-bottom: 12rpx;
+
       .code-text {
         font-size: 32rpx;
         color: $main-color;
@@ -617,11 +788,13 @@ $bg-card: #ffffff;
         user-select: text;
       }
     }
+
     .copy-tip {
       font-size: 24rpx;
       color: #b0b6c2;
     }
   }
+
   .copy-main-btn {
     width: 100%;
     height: 92rpx;
@@ -634,6 +807,7 @@ $bg-card: #ffffff;
     gap: 12rpx;
     font-size: 32rpx;
     color: #fff;
+
     &:active {
       background: #336fd8;
       transform: scale(0.97);

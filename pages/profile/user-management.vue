@@ -61,15 +61,15 @@
             </view>
           </view>
           <view class="card-right">
-            <view v-if="user.roleId !== 1" class="action-group">
-              <view class="action-btn" @click.stop="openSetAdminModal(user)">
-                <text class="action-text">分配权限</text>
+            <view v-if="user.roleId === 2" class="action-group">
+              <view class="action-btn transfer-btn" @click.stop="openTransferModal()">
+                <text class="action-text">转移管理员</text>
                 <uni-icons type="arrowright" size="22" color="#ccc" />
               </view>
             </view>
             <view v-else class="action-group">
-              <view class="action-btn transfer-btn" @click.stop="openTransferModal()">
-                <text class="action-text">转移管理员</text>
+              <view class="action-btn" @click.stop="openSetAdminModal(user)">
+                <text class="action-text">分配权限</text>
                 <uni-icons type="arrowright" size="22" color="#ccc" />
               </view>
             </view>
@@ -232,7 +232,7 @@
 </template>
 
 <script>
-import { getUserInfoByEsId, bindEsUserByTelAndEsId, changeEsUserByTelAndEsId } from '@/api/user.js'
+import { getUserInfoByEsId, bindEsUserByTelAndEsId, changeEsUserByTelAndEsId, changeEsUserRoleByUserIdAndEsId } from '@/api/user.js'
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
 export default {
@@ -252,10 +252,9 @@ export default {
       transferTargetId: null,
       selectedRole: null,
       roles: [
-        { id: 1, name: '管理员' },
-        { id: 2, name: '技术人员' },
-        { id: 3, name: '测试人员' },
-        { id: 4, name: '普通用户' }
+        { id: 3, name: '普通用户' },
+        { id: 4, name: '测试人员' },
+        { id: 5, name: '运维人员' }
       ]
     }
   },
@@ -346,9 +345,14 @@ export default {
     async confirmSetAdmin() {
       if (!this.selectedUser) return
       
-      const tel = this.selectedUser.mobile_phone
-      if (!tel) {
-        uni.showToast({ title: '该用户无手机号，无法修改权限', icon: 'none' })
+      const userId = this.selectedUser.id
+      if (!userId) {
+        uni.showToast({ title: '该用户无用户ID，无法修改权限', icon: 'none' })
+        return
+      }
+
+      if (!this.selectedRole) {
+        uni.showToast({ title: '请选择角色', icon: 'none' })
         return
       }
 
@@ -356,7 +360,7 @@ export default {
       try {
         const currentDevice = this.$store.state.currentSelectDevice || {}
         const esId = this.esId || currentDevice.id || currentDevice.esId || 3
-        const response = await changeEsUserByTelAndEsId(tel, esId)
+        const response = await changeEsUserRoleByUserIdAndEsId(userId, esId, this.selectedRole)
         console.log('confirmSetAdmin response:', response)
         
         if (response && response.status === 200) {
@@ -422,15 +426,22 @@ export default {
       return `${month}-${day}`
     },
     getRoleName(roleId) {
-      const role = this.roles.find(r => r.id === roleId)
-      return role ? role.name : '普通用户'
+      const roleMap = {
+        1: '超管',
+        2: '管理员',
+        3: '普通用户',
+        4: '测试人员',
+        5: '运维人员'
+      }
+      return roleMap[roleId] || '普通用户'
     },
     getRoleClass(roleId) {
       const roleMap = {
-        1: 'role-admin',
-        2: 'role-technician',
-        3: 'role-tester',
-        4: 'role-user'
+        1: 'role-super-admin',
+        2: 'role-admin',
+        3: 'role-user',
+        4: 'role-tester',
+        5: 'role-operator'
       }
       return roleMap[roleId] || 'role-user'
     }
@@ -624,9 +635,14 @@ $border-line: #eee;
   border-radius: 12rpx;
 }
 
-.role-admin {
+.role-super-admin {
   color: #fff;
   background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+}
+
+.role-admin {
+  color: #fff;
+  background: linear-gradient(135deg, #4A90D9, #6BB3FF);
 }
 
 .role-user {
@@ -634,14 +650,14 @@ $border-line: #eee;
   background: $bg-gray;
 }
 
-.role-technician {
-  color: #fff;
-  background: linear-gradient(135deg, #4A90D9, #6BB3FF);
-}
-
 .role-tester {
   color: #333;
   background: linear-gradient(135deg, #FFD93D, #FFE66D);
+}
+
+.role-operator {
+  color: #fff;
+  background: linear-gradient(135deg, #67C23A, #85CE61);
 }
 
 .user-meta {
@@ -710,7 +726,8 @@ $border-line: #eee;
 
 .modal-content {
   width: 100%;
-  max-height: 85vh;
+  max-height: 90vh;
+  height: auto;
   background: $bg-card;
   border-radius: 32rpx 32rpx 0 0;
   overflow: hidden;
@@ -921,6 +938,8 @@ $border-line: #eee;
 }
 .transfer-user-list {
   max-height: 420rpx;
+  overflow-y: auto;
+  overflow-x: hidden;
   margin-bottom: 32rpx;
 }
 .transfer-user-item {
@@ -931,6 +950,7 @@ $border-line: #eee;
   border-radius: 16rpx;
   margin-bottom: 16rpx;
   border: 2rpx solid transparent;
+  box-sizing: border-box;
 }
 .transfer-user-item.selected {
   background: #e8f0fe;
@@ -953,6 +973,7 @@ $border-line: #eee;
 }
 .transfer-user-info {
   flex: 1;
+  min-width: 0;
 }
 .transfer-user-name {
   font-size: 30rpx;
@@ -960,10 +981,16 @@ $border-line: #eee;
   font-weight: 500;
   display: block;
   margin-bottom: 6rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .transfer-user-phone {
   font-size: 26rpx;
   color: $text-light;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .transfer-check {
   width: 52rpx;

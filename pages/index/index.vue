@@ -9,9 +9,9 @@
           <text class="title">{{ currentTitle }}</text>
         </view>
         <!-- 返回按钮 - 从设备列表进入时显示 -->
-        <view v-if="showBackBtn" class="back-btn" @click="goBackToList">
+        <!-- <view v-if="showBackBtn" class="back-btn" @click="goBackToList">
           <uni-icons type="back" size="28" color="#333"></uni-icons>
-        </view>
+        </view> -->
       </view>
     </view>
 
@@ -163,7 +163,10 @@ export default {
         this.fromProfile = false
         // 清除fromProfile存储，防止onShow覆盖状态
         uni.removeStorageSync('fromProfile')
+        // 清空之前设备的数据
+        // realtimeDataProvider.clearDeviceState()
         this.$store.commit('changeCurrentSelectDevice', device)
+        this.updateCurrentEsRole(deviceId)
       } catch (e) {
         console.error('解析device参数失败:', e)
       }
@@ -174,15 +177,22 @@ export default {
       this.selectedDeviceId = options.esId
       this.fromProfile = false
       uni.removeStorageSync('fromProfile')
+      // 清空之前设备的数据
+      // realtimeDataProvider.clearDeviceState()
       this.$store.commit('changeCurrentSelectDevice', device)
+      this.updateCurrentEsRole(options.esId)
 
 
     } else {
       // 恢复上次选择的设备
       const savedDevice = uni.getStorageSync('currentSelectDevice')
       if (savedDevice) {
-        this.selectedDeviceId = savedDevice.id || savedDevice.esId
+        const deviceId = savedDevice.id || savedDevice.esId
+        this.selectedDeviceId = deviceId
+        // 清空之前设备的数据
+        // realtimeDataProvider.clearDeviceState()
         this.$store.commit('changeCurrentSelectDevice', savedDevice)
+        this.updateCurrentEsRole(deviceId)
       }
     }
     this.checkFromProfile()
@@ -202,7 +212,10 @@ export default {
           })
           if (foundDevice) {
             this.selectedDeviceId = savedDeviceId
-            this.$store.commit('changeCurrentSelectDevice', savedDevice)
+            // 清空之前设备的数据
+            // realtimeDataProvider.clearDeviceState()
+            this.$store.commit('changeCurrentSelectDevice', foundDevice)
+            this.updateCurrentEsRole(savedDeviceId)
             console.log('onShow恢复之前选择的设备:', savedDeviceId)
           }
         }
@@ -257,6 +270,7 @@ export default {
 
         const userInfo = { ...this.userInfo }
         userInfo.esIds = energyStations
+        userInfo.esUsers = res.data.es_users || []
         userInfo.roleId = res.data.roleId
         this.$store.commit('SET_LOGIN', userInfo)
 
@@ -279,7 +293,10 @@ export default {
               device.list = deviceInfo.data.list
               console.log('获取设备信息:', device)
                 this.register171FDevice()
+              // 清空之前设备的数据
+              // realtimeDataProvider.clearDeviceState()
               this.$store.commit('changeCurrentSelectDevice', device)
+              this.updateCurrentEsRole(deviceId)
               uni.setStorageSync('currentSelectDevice', device)
             }
           } catch (err) {
@@ -298,7 +315,10 @@ export default {
             if (foundDevice) {
               this.selectedDeviceId = savedDeviceId
               console.log('恢复之前选择的设备:', savedDeviceId)
-              this.$store.commit('changeCurrentSelectDevice', savedDevice )
+              // 清空之前设备的数据
+              // realtimeDataProvider.clearDeviceState()
+              this.$store.commit('changeCurrentSelectDevice', foundDevice)
+              this.updateCurrentEsRole(savedDeviceId)
               const areaId = foundDevice.areaId
               try {
                 const deviceInfo = await getDeviceByAreaId(areaId)
@@ -349,9 +369,16 @@ export default {
       this.selectedDeviceId = deviceId
       this.fromProfile = false
       console.log('选择设备:', device)
+      
+      // 清空之前设备的数据
+      realtimeDataProvider.clearDeviceState()
+      
       this.$store.commit('changeCurrentSelectDevice', device)
       // 保存设备选择到本地存储，防止刷新丢失
       uni.setStorageSync('currentSelectDevice', device)
+      
+      // 更新当前微能站角色
+      this.updateCurrentEsRole(deviceId)
 
       // 先调用接口获取设备信息
       try {
@@ -388,6 +415,14 @@ export default {
           this.isNavigating = false
         }
       })
+    },
+
+    updateCurrentEsRole(esId) {
+      const esUsers = this.$store.state.userInfo?.esUsers || []
+      const esUser = esUsers.find(item => item.esId === esId)
+      const roleId = esUser?.esRoleId || 0
+      this.$store.commit('SET_CURRENT_ES_ROLE_ID', roleId)
+      console.log('当前微能站角色:', roleId)
     },
 
     register171FDevice() {

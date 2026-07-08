@@ -163,7 +163,7 @@ export default {
   },
   mounted() {
     // 注册171F设备（只注册一次）
-    // this.register171FDevice();
+    this.register171FDevice();
     // 监听屏幕旋转事件
     uni.onWindowResize(this.onOrientationChange);
   },
@@ -188,7 +188,7 @@ $card-hover-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.12);
 
 .container {
   width: 100%;
-  min-height: 100vh;
+  // min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: #EFF4FB;

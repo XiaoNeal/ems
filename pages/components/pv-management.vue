@@ -244,6 +244,7 @@ export default {
           gridType: "dash",
           showTitle: true,
           data: [{ position: "left", title: "单位:kWh", tofix: 0, max: maxValue }],
+          dashLength: 2
         },
         extra: {
 
