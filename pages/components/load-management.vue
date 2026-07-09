@@ -8,7 +8,7 @@
       </view>
       <view class="device-grid">
         <view class="device-item">
-          <text class="number">{{ nyzData.dljQuantity || 0 }}</text>
+          <text class="number">{{ nyzData.dljQuantity || 1 }}</text>
           <text class="text">空调</text>
         </view>
         <view class="device-item">
@@ -136,7 +136,7 @@ export default {
         '能源站': 0
       },
       nyzData: {
-        dljQuantity: "0",
+        dljQuantity: "1",
         cdzQuantity: "1",
         mkjQuantity: "0",
         lightQuantity: "0",

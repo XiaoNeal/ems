@@ -459,13 +459,10 @@ export default {
       this.activeMode = mode
     },
     handleEditConfig() {
-      const globalRoleId = this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
-      if (![1, 2].includes(globalRoleId)) {
-        const currentRoleId = this.$store.state.currentEsRoleId
-        if (![1, 2].includes(currentRoleId)) {
-          uni.showToast({ title: '无权限操作', icon: 'none' });
-          return;
-        }
+      const currentRoleId = this.$store.state.currentEsRoleId || this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
+      if (![1, 2, 4, 5].includes(currentRoleId)) {
+        uni.showToast({ title: '无权限操作', icon: 'none' });
+        return;
       }
       const deviceList = realtimeDataProvider.getDeviceList()
       const device171F = deviceList.find(item => item && item.deviceType === '171F')

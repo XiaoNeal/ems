@@ -127,14 +127,14 @@
 
       <!-- 列表切换 -->
       <view class="table-tab">
-        <view class="tab-btn" :class="{ active: tableType === 0 }" @click="ontableTypeChange(0)">
-          全部（{{ alarmTimes.total }}）
-        </view>
         <view class="tab-btn" :class="{ active: tableType === 1 }" @click="ontableTypeChange(1)">
           进行中（{{ alarmTimes.proceed }}）
         </view>
         <view class="tab-btn" :class="{ active: tableType === 2 }" @click="ontableTypeChange(2)">
           已结束（{{ alarmTimes.ended }}）
+        </view>
+         <view class="tab-btn" :class="{ active: tableType === 0 }" @click="ontableTypeChange(0)">
+          全部（{{ alarmTimes.total }}）
         </view>
       </view>
 
@@ -158,7 +158,7 @@
             <uni-icons type="info" size="20" color="#fff"></uni-icons>
           </view>
 
-          <view class="alarm-info">
+          <view class="alarm-info" :class="'level-' + item.alarmLevel">
             <view class="title">
               <text class="level-tag" :class="'level-' + item.alarmLevel">{{ item.alarmLevel === 0 ? '紧急' :
                 item.alarmLevel === 1 ? '重要' : '提示' }}</text>
@@ -203,7 +203,7 @@ export default {
     return {
       platformClass: "",
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
-      tableType: 0,
+      tableType: 1,
       searchKeyword: '',
       showFilter: false,
       filterLevel: -1,
@@ -215,7 +215,7 @@ export default {
 
       ringOpts: {
         rotate: false,
-        color: ['#EB3341', '#FF7A2E', '#4D7BF1', '#3CCF6E'],
+        color: ['#EB3341', '#FF7A2E', '#4D7BF1'],
         padding: [0, 0, 0, 0],
         dataLabel: false,
         legend: { show: false },
@@ -588,10 +588,10 @@ export default {
     }
 
     &.prompt {
-      background: #F6FFED;
+      background: #EEF4FF;
 
       .dot {
-        background: #3CCF6E;
+        background: #4D7BF1;
       }
     }
   }
@@ -795,10 +795,6 @@ export default {
   &.level-2 {
     background: #4D7BF1;
   }
-
-  &.level-3 {
-    background: #3CCF6E;
-  }
 }
 
 .alarm-info {
@@ -834,11 +830,26 @@ export default {
     }
 
     .type-name {
-      // font-size: 22rpx;
-      // color: #999;
       flex-shrink: 0;
-      color: #4488FB;
       font-weight: bold;
+    }
+  }
+
+  &.level-0 {
+    .type-name {
+      color: #EB3341;
+    }
+  }
+
+  &.level-1 {
+    .type-name {
+      color: #FF7A2E;
+    }
+  }
+
+  &.level-2 {
+    .type-name {
+      color: #4D7BF1;
     }
   }
 
@@ -931,7 +942,7 @@ export default {
   }
 
   &.prompt.active {
-    background: #3CCF6E;
+    background: #4D7BF1;
   }
 }
 

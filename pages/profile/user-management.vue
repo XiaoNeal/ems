@@ -38,7 +38,7 @@
       <!-- 用户列表卡片 -->
       <view v-else class="card-wrap">
         <view
-          v-for="(user, index) in userList"
+          v-for="(user, index) in displayUserList"
           :key="user._key"
           :wx:key="'_key'"
           class="list-item user-item tap-feedback"
@@ -76,7 +76,7 @@
           </view>
         </view>
         <!-- 分割线循环渲染 -->
-        <view v-for="i in userList.length - 1" :key="i" :wx:key="i" class="divider" />
+        <view v-for="i in displayUserList.length - 1" :key="i" :wx:key="i" class="divider" />
       </view>
 
       <!-- 底部安全区留白 避开底部手势条 -->
@@ -161,7 +161,7 @@
             </view>
             <view class="role-list">
               <view
-                v-for="role in roles"
+                v-for="role in filteredRoles"
                 :key="role.id"
                 :wx:key="'id'"
                 class="role-item tap-feedback"
@@ -272,7 +272,26 @@ export default {
   },
   computed: {
     normalUsers() {
-      return this.userList.filter(user => user.roleId !== 1)
+      let list = this.userList.filter(user => user.roleId !== 1)
+      if (!this.isSuperAdmin) {
+        list = list.filter(user => user.roleId !== 4)
+      }
+      return list
+    },
+    isSuperAdmin() {
+      return this.$store.state.userInfo?.roleId === 1
+    },
+    filteredRoles() {
+      if (this.isSuperAdmin) {
+        return this.roles
+      }
+      return this.roles.filter(role => role.id !== 4)
+    },
+    displayUserList() {
+      if (this.isSuperAdmin) {
+        return this.userList
+      }
+      return this.userList.filter(user => user.roleId !== 4)
     }
   },
   methods: {
@@ -353,6 +372,11 @@ export default {
 
       if (!this.selectedRole) {
         uni.showToast({ title: '请选择角色', icon: 'none' })
+        return
+      }
+
+      if (this.selectedRole === 4 && !this.isSuperAdmin) {
+        uni.showToast({ title: '只有超级管理员可以设置测试人员权限', icon: 'none' })
         return
       }
 

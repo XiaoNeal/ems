@@ -1,71 +1,88 @@
 <template>
   <view class="page-wrap">
+    <!-- 全局下拉刷新预留区域 -->
+    <view class="page-top-gap"></view>
+
     <view v-if="loading" class="loading-card">
       <view class="loading-spinner"></view>
-      <text class="loading-text">加载中...</text>
+      <text class="loading-text">正在加载你的储能设备...</text>
     </view>
 
     <view v-else>
       <!-- 空设备状态 -->
       <view v-if="esIds.length === 0" class="empty-card">
         <view class="empty-icon-box">
-          <uni-icons type="folder-empty" size="96" color="#b4c8eb" />
+          <uni-icons type="folder-empty" size="96" color="#8cb0e8" />
         </view>
-        <text class="empty-title">暂无储能设备</text>
-        <text class="empty-desc">扫码或输入设备编号，快速绑定储能设备</text>
+        <text class="empty-title">暂无绑定储能设备</text>
+        <text class="empty-desc">扫码设备二维码 / 输入设备编号即可快速绑定，查看储能实时数据</text>
         <button class="empty-add-btn" @click="showAddOptions">
           <uni-icons type="plus" size="26" color="#fff" />
-          <text>添加设备</text>
+          <text>立即添加设备</text>
         </button>
+        <view class="empty-tip-text">一台设备可多人绑定，管理员拥有全部操作权限</view>
       </view>
 
       <!-- 设备列表容器 -->
       <view v-else class="list-card">
-      <!-- 列表头部 -->
-      <view class="list-header">
-        <text class="header-title">我的储能设备</text>
-        <view class="header-right-group">
-          <text class="device-total">{{ esIds.length }}台设备</text>
-          <view class="header-add-btn" @click="showAddOptions">
-            <uni-icons type="plus" size="20" color="#4080f0" />
+        <!-- 列表头部 -->
+        <view class="list-header">
+          <view class="header-left">
+            <text class="header-title">我的微能站设备</text>
+            <text class="header-subtitle">实时监控微能站运行状态</text>
+          </view>
+          <view class="header-right-group">
+            <text class="device-total">{{ esIds.length }}台设备</text>
+            <view class="header-add-btn" @click="showAddOptions">
+              <uni-icons type="plus" size="20" color="#4080f0" />
+            </view>
           </view>
         </view>
-      </view>
 
-      <scroll-view scroll-y class="device-scroll">
-        <view v-for="(esId, index) in esIds" :key="index" class="device-item">
-          <view class="device-card" @click.stop="selectDevice(esId)">
-            <view class="device-left">
-              <view class="device-avatar-wrap">
-                <image v-if="esId.imageUrl || esId.imgUrl" :src="esId.imageUrl || esId.imgUrl" mode="aspectFill"
-                  class="avatar-img" />
-                <image v-else
-                  src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=smart%20energy%20storage%20device%20icon%20modern%20minimal%20style&image_size=square"
-                  mode="aspectFill" class="avatar-img" />
-                <view class="status-dot online"></view>
-              </view>
-              <view class="info-text">
-                <view class="name-line">
-                  <text class="device-name">{{ getDeviceName(esId) }}</text>
-                  <text v-if="isAdmin(esId)" class="admin-label">管理员</text>
+        <scroll-view scroll-y class="device-scroll" scrollbar-hidden>
+          <view v-for="(esId, index) in esIds" :key="index" class="device-item">
+            <view class="device-card" @click.stop="selectDevice(esId)">
+              <view class="device-left">
+                <view class="device-avatar-wrap">
+                  <image
+                    v-if="esId.imageUrl || esId.imgUrl"
+                    :src="esId.imageUrl || esId.imgUrl"
+                    mode="aspectFill"
+                    class="avatar-img"
+                  />
+                  <image
+                    v-else
+                    src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=smart%20energy%20storage%20device%20icon%20modern%20minimal%20style&image_size=square"
+                    mode="aspectFill"
+                    class="avatar-img"
+                  />
+                  <!-- 设备在线状态点 -->
+                  <view class="status-dot online"></view>
                 </view>
-                <view class="desc-line">
-                  <text class="device-id">ID：{{ esId.esId || esId.id }}</text>
-                  <text class="device-area" v-if="esId.description">{{ esId.description }}</text>
+                <view class="info-text">
+                  <view class="name-line">
+                    <text class="device-name">{{ getDeviceName(esId) }}</text>
+                    <text v-if="isAdmin(esId)" class="admin-label">管理员</text>
+                  </view>
+                  <view class="desc-line">
+                    <text class="device-id">设备ID：{{ esId.esId || esId.id }}</text>
+                    <text v-if="esId.description" class="device-area">{{ esId.description }}</text>
+                  </view>
                 </view>
               </view>
-            </view>
-            <view class="device-right">
-              <view class="action-group">
-                <view class="action-btn" @click.stop="showDeviceMenu(esId)">
-                  <uni-icons type="more-filled" size="24" color="#9499a4" />
+              <view class="device-right">
+                <view class="action-group">
+                  <view class="action-btn" @click.stop="showDeviceMenu(esId)">
+                    <uni-icons type="more-filled" size="24" color="#9499a4" />
+                  </view>
                 </view>
+                <uni-icons type="arrowright" size="22" color="#c2c7d2" />
               </view>
-              <uni-icons type="arrowright" size="22" color="#d0d3d9" />
             </view>
           </view>
-        </view>
-      </scroll-view>
+          <!-- 底部留白，避免scroll被底部tab遮挡 -->
+          <view class="scroll-bottom-safe"></view>
+        </scroll-view>
       </view>
     </view>
 
@@ -74,7 +91,7 @@
       <view class="share-modal" @click.stop>
         <view class="modal-head">
           <text class="modal-title">
-            {{ shareModalType === 'code' ? '设备分享码' : '分享链接' }}
+            {{ shareModalType === 'code' ? '设备8位分享码' : '设备分享链接' }}
           </text>
           <view class="modal-close" @click="closeShareModal">
             <uni-icons type="close" size="22" color="#a0a6b2" />
@@ -82,24 +99,25 @@
         </view>
         <view class="modal-body">
           <view class="form-row">
-            <text class="form-label">设备名称</text>
+            <text class="form-label">目标设备</text>
             <text class="form-value">{{ currentShareDeviceName }}</text>
           </view>
           <view class="copy-block">
             <text class="copy-label">
-              {{ shareModalType === 'code' ? '8位分享码' : '分享链接' }}
+              {{ shareModalType === 'code' ? '8位分享码（有效期7天）' : '通用分享链接' }}
             </text>
             <view class="code-wrap">
               <text selectable class="code-text">
                 {{ shareModalType === 'code' ? currentShareCode : currentShareLink }}
               </text>
             </view>
-            <text class="copy-tip">长按文本一键复制</text>
+            <text class="copy-tip">长按文本可快速复制，发给好友即可绑定设备</text>
           </view>
           <button class="copy-main-btn" @tap="handleCopyClick">
             <uni-icons type="copy" size="20" color="#fff" />
-            <text>复制内容</text>
+            <text>一键复制分享内容</text>
           </button>
+          <text class="share-safe-tip">温馨提示：仅管理员可生成分享内容，非管理员无权限分享</text>
         </view>
       </view>
     </view>
@@ -146,9 +164,7 @@ export default {
     },
     showDeviceMenu(esId) {
       const isAdmin = this.isAdmin(esId)
-      const menuItems = isAdmin 
-        ? ['删除设备'] 
-        : ['取消']
+      const menuItems = isAdmin ? ['删除该设备'] : ['取消']
       uni.showActionSheet({
         itemList: menuItems,
         itemColor: '#4080f0',
@@ -165,14 +181,14 @@ export default {
     },
     deleteDevice(esId) {
       uni.showModal({
-        title: '确认删除设备',
-        content: `确定移除设备「${this.getDeviceName(esId)}」，删除后无法查看设备数据`,
-        confirmText: '确认删除',
-        cancelText: '取消',
+        title: '确认移除设备',
+        content: `确定解除绑定设备「${this.getDeviceName(esId)}」？解绑后无法查看该设备所有历史与实时数据，管理员权限同步收回`,
+        confirmText: '确认解绑',
+        cancelText: '再想想',
         confirmColor: '#ee5b5b',
         success: async (res) => {
           if (res.confirm) {
-            uni.showLoading({ title: '处理中...' })
+            uni.showLoading({ title: '解绑处理中...' })
             try {
               const userId = this.userInfo.userId
               const areaId = esId.areaId || esId.id || 0
@@ -180,14 +196,14 @@ export default {
               const delParams = [{ baseUserInfoId: userId, areaId: areaId, levelId: levelId }]
               const res = await deleteEsUser(delParams)
               if (res.status === 200) {
-                uni.showToast({ title: '删除成功', icon: 'success' })
+                uni.showToast({ title: '设备解绑成功', icon: 'success' })
                 await this.refreshDeviceList()
                 this.$emit('deviceDeleted', esId)
               } else {
-                uni.showToast({ title: res.msg || '删除失败', icon: 'none' })
+                uni.showToast({ title: res.msg || '解绑失败，请重试', icon: 'none' })
               }
             } catch (err) {
-              uni.showToast({ title: '网络异常', icon: 'none' })
+              uni.showToast({ title: '网络异常，请检查网络', icon: 'none' })
             } finally {
               uni.hideLoading()
             }
@@ -197,13 +213,11 @@ export default {
     },
     showAddOptions() {
       uni.showActionSheet({
-        // itemList: ['扫码添加设备', '手动输入编号', '分享我的设备'],
-        itemList: ['扫码添加设备', '手动输入编号'],
+        itemList: ['扫码添加设备', '手动输入编号绑定'],
         itemColor: '#2d3036',
         success: res => {
           if (res.tapIndex === 0) this.scanDevice()
           else if (res.tapIndex === 1) this.showInputModal()
-          // else if (res.tapIndex === 2) this.showShareOptions()
         }
       })
     },
@@ -213,10 +227,10 @@ export default {
         success: () => this.doScan(),
         fail: () => {
           uni.showModal({
-            title: '相机权限',
-            content: '需要相机权限扫描设备二维码',
+            title: '需要相机权限',
+            content: '扫描设备二维码必须开启相机权限，前往系统设置授权',
             confirmText: '去设置',
-            cancelText: '稍后',
+            cancelText: '稍后再说',
             success: res => res.confirm && uni.openSetting()
           })
         }
@@ -228,7 +242,7 @@ export default {
         scanType: ['qrCode'],
         success: res => {
           let qrId = res.result.trim()
-          if (!qrId) return uni.showToast({ title: '识别失败', icon: 'none' })
+          if (!qrId) return uni.showToast({ title: '二维码识别失败', icon: 'none' })
           let clean = qrId.replace(/[`"'\\s]/g, '')
           const pos = clean.toLowerCase().indexOf('energyqrid=')
           if (pos > -1) {
@@ -238,14 +252,14 @@ export default {
           }
           this.validateAndAddDevice(qrId)
         },
-        fail: () => uni.showToast({ title: '扫码失败', icon: 'none' })
+        fail: () => uni.showToast({ title: '扫码失败，请重新对准二维码', icon: 'none' })
       })
     },
     showInputModal() {
       uni.showModal({
-        title: '绑定设备',
+        title: '手动绑定储能设备',
         editable: true,
-        placeholderText: '输入设备编号/绑定链接',
+        placeholderText: '输入设备8位编号 / 完整绑定链接',
         confirmText: '确认绑定',
         cancelText: '取消',
         success: res => {
@@ -265,23 +279,23 @@ export default {
     },
     validateAndAddDevice(qrId) {
       uni.showModal({
-        title: '确认绑定',
-        content: '确定绑定该储能设备？',
+        title: '确认绑定设备',
+        content: '系统将根据编号绑定对应储能设备，绑定成功后可查看全部运行数据',
         success: async res => {
           if (res.confirm) {
-            uni.showLoading({ title: '绑定中...' })
+            uni.showLoading({ title: '设备绑定中...' })
             try {
               const uid = this.userInfo.userId
               const res = await bindEsUserByQrId(qrId, uid)
               if (res.status === 200) {
                 await this.refreshDeviceList()
-                uni.showToast({ title: '绑定成功', icon: 'success' })
+                uni.showToast({ title: '设备绑定成功', icon: 'success' })
                 this.$emit('deviceAdded', qrId)
               } else {
-                uni.showToast({ title: res.msg || '绑定失败', icon: 'none' })
+                uni.showToast({ title: res.msg || '绑定失败，编号不存在', icon: 'none' })
               }
             } catch {
-              uni.showToast({ title: '网络异常', icon: 'none' })
+              uni.showToast({ title: '网络异常，请稍后重试', icon: 'none' })
             } finally {
               uni.hideLoading()
             }
@@ -308,9 +322,9 @@ export default {
       }
     },
     showShareOptions() {
-      if (!this.esIds.length) return uni.showToast({ title: '请先添加设备', icon: 'none' })
+      if (!this.esIds.length) return uni.showToast({ title: '请先绑定储能设备', icon: 'none' })
       const adminList = this.esIds.filter(item => this.isAdmin(item))
-      if (!adminList.length) return uni.showToast({ title: '您不是设备管理员', icon: 'none' })
+      if (!adminList.length) return uni.showToast({ title: '仅设备管理员可生成分享码', icon: 'none' })
       if (adminList.length === 1) {
         this.shareDevice(adminList[0])
       } else {
@@ -346,18 +360,18 @@ export default {
       const text = this.shareModalType === 'code' ? this.currentShareCode : this.currentShareLink
       uni.setClipboardData({
         data: text,
-        success: () => uni.showToast({ title: '复制成功', icon: 'success' }),
-        fail: () => uni.showToast({ title: '复制失败，请长按', icon: 'none' })
+        success: () => uni.showToast({ title: '复制成功，可直接分享', icon: 'success' }),
+        fail: () => uni.showToast({ title: '复制失败，长按文本复制', icon: 'none' })
       })
     },
     generateQRCode(esId, name) {
       const code = this.generateRandomCode()
       uni.showModal({
-        title: '分享二维码',
-        content: `设备：${name}\n分享码：${code}\n他人扫码即可绑定`,
-        confirmText: '保存图片',
-        cancelText: '关闭',
-        success: res => res.confirm && uni.showToast({ title: '已保存相册', icon: 'success' })
+        title: '设备分享二维码',
+        content: `设备：${name}\n8位分享码：${code}\n他人扫码即可一键绑定设备`,
+        confirmText: '保存二维码到相册',
+        cancelText: '关闭弹窗',
+        success: res => res.confirm && uni.showToast({ title: '二维码已保存相册', icon: 'success' })
       })
     },
     closeShareModal() {
@@ -375,291 +389,282 @@ export default {
 
 <style scoped lang="scss">
 $main-color: #4080f0;
-$text-dark: #2d3036;
+$main-light: #f0f6ff;
+$text-dark: #1a1d24;
+$text-normal: #444852;
 $text-gray: #868c98;
-$line-color: #f0f1f5;
-$bg-page: #f5f7fb;
+$text-light-gray: #b0b6c2;
+$line-color: #eff2f8;
+$bg-page: #f7f9fe;
 $bg-card: #ffffff;
+$success-green: #07c160;
+$warn-orange: #ea580c;
+$danger-red: #ee5b5b;
+$radius-sm: 12rpx;
+$radius-md: 16rpx;
+$radius-lg: 24rpx;
+$radius-xl: 32rpx;
 
 .page-wrap {
-  padding: 32rpx;
+  padding: 0 32rpx;
   min-height: 100vh;
   box-sizing: border-box;
   background: $bg-page;
 }
+.page-top-gap {
+  height: 20rpx;
+}
+.scroll-bottom-safe {
+  height: 160rpx;
+}
 
 // 加载状态卡片
 .loading-card {
-  margin-top: 200rpx;
+  margin-top: 220rpx;
   padding: 100rpx 40rpx;
   background: $bg-card;
-  border-radius: 24rpx;
+  border-radius: $radius-xl;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 3rpx 20rpx rgba(64, 128, 240, 0.06);
+  box-shadow: 0 2rpx 14rpx rgba(64, 128, 240, 0.05);
 
   .loading-spinner {
-    width: 80rpx;
-    height: 80rpx;
-    border: 6rpx solid rgba(64, 128, 240, 0.1);
+    width: 84rpx;
+    height: 84rpx;
+    border: 6rpx solid rgba(64, 128, 240, 0.08);
     border-top-color: $main-color;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin-bottom: 32rpx;
+    margin-bottom: 36rpx;
   }
-
   .loading-text {
     font-size: 28rpx;
     color: $text-gray;
   }
 }
-
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 // 空状态卡片
 .empty-card {
-  margin-top: 160rpx;
-  padding: 100rpx 40rpx;
+  margin-top: 180rpx;
+  padding: 110rpx 40rpx;
   background: $bg-card;
-  border-radius: 24rpx;
+  border-radius: $radius-xl;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 3rpx 20rpx rgba(64, 128, 240, 0.06);
+  box-shadow: 0 2rpx 14rpx rgba(64, 128, 240, 0.05);
 
   .empty-icon-box {
-    width: 160rpx;
-    height: 160rpx;
-    background: #f0f6ff;
+    width: 180rpx;
+    height: 180rpx;
+    background: $main-light;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 36rpx;
+    margin-bottom: 40rpx;
   }
-
   .empty-title {
-    font-size: 36rpx;
+    font-size: 40rpx;
     color: $text-dark;
     font-weight: 500;
-    margin-bottom: 12rpx;
+    margin-bottom: 16rpx;
   }
-
   .empty-desc {
-    font-size: 26rpx;
+    font-size: 28rpx;
     color: $text-gray;
     text-align: center;
-    line-height: 1.6;
-    margin-bottom: 64rpx;
+    line-height: 1.7;
+    padding: 0 20rpx;
+    margin-bottom: 60rpx;
   }
-
   .empty-add-btn {
-    width: 340rpx;
-    height: 90rpx;
-    background: $main-color;
-    border-radius: 45rpx;
+    width: 360rpx;
+    height: 96rpx;
+    background: linear-gradient(135deg, #4080f0, #5996ff);
+    border-radius: 48rpx;
     border: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12rpx;
-    font-size: 30rpx;
+    gap: 14rpx;
+    font-size: 32rpx;
     color: #fff;
-    transition: all 0.2s;
+    box-shadow: 0 6rpx 16rpx rgba(64, 128, 240, 0.22);
+    transition: all 0.2s ease;
 
     &:active {
-      background: #336fd8;
-      transform: scale(0.97);
+      transform: scale(0.96);
+      box-shadow: 0 2rpx 8rpx rgba(64, 128, 240, 0.15);
     }
+  }
+  .empty-tip-text {
+    margin-top: 32rpx;
+    font-size: 24rpx;
+    color: $text-light-gray;
   }
 }
 
 // 列表外层卡片
 .list-card {
   background: $bg-card;
-  border-radius: 24rpx;
+  border-radius: $radius-xl;
   overflow: hidden;
-  box-shadow: 0 3rpx 20rpx rgba(64, 128, 240, 0.06);
+  box-shadow: 0 2rpx 14rpx rgba(64, 128, 240, 0.05);
 }
 
 // 列表头部
 .list-header {
-  padding: 36rpx 32rpx;
+  padding: 40rpx 36rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1rpx solid $line-color;
 
-  .header-title {
-    font-size: 38rpx;
-    color: $text-dark;
-    font-weight: 500;
+  .header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 8rpx;
+    .header-title {
+      font-size: 40rpx;
+      color: $text-dark;
+      font-weight: 600;
+    }
+    .header-subtitle {
+      font-size: 24rpx;
+      color: $text-gray;
+    }
   }
 
   .header-right-group {
     display: flex;
     align-items: center;
-    gap: 28rpx;
-
+    gap: 30rpx;
     .device-total {
-      font-size: 26rpx;
+      font-size: 28rpx;
       color: $text-gray;
     }
-
     .header-add-btn {
-      width: 64rpx;
-      height: 64rpx;
+      width: 68rpx;
+      height: 68rpx;
       border-radius: 50%;
-      background: #f0f6ff;
+      background: $main-light;
       display: flex;
       align-items: center;
       justify-content: center;
-
-      &:active {
-        background: #e0ecff;
-      }
+      transition: background 0.2s;
+      &:active { background: #d4e4ff; }
     }
   }
 }
 
 .device-scroll {
-  max-height: calc(100vh - 300rpx);
+  max-height: calc(100vh - 340rpx);
 }
 
 // 单设备条目
 .device-item {
-  padding: 0 32rpx;
-  margin-bottom: 24rpx;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
+  padding: 32rpx;
+  padding-bottom: 0;
+  margin-bottom: 28rpx;
+  &:last-child { margin-bottom: 0; }
 }
-
 .device-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx;
+  padding: 32rpx;
   background: $bg-card;
-  border-radius: 20rpx;
-  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
-  transition: all 0.2s;
+  border-radius: $radius-lg;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03);
+  border: 1rpx solid #f3f5fa;
+  transition: all 0.2s ease;
 
   &:active {
     transform: scale(0.99);
-    box-shadow: 0 1rpx 8rpx rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1rpx 6rpx rgba(0, 0, 0, 0.05);
   }
 }
 
 .device-left {
   display: flex;
   align-items: center;
-  gap: 24rpx;
+  gap: 28rpx;
   flex: 1;
   overflow: hidden;
 }
-
 .device-avatar-wrap {
   position: relative;
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 16rpx;
-  background: #f5f7fb;
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: $radius-md;
+  background: #f3f5fa;
   overflow: hidden;
   flex-shrink: 0;
 
-  .avatar-img {
-    width: 100%;
-    height: 100%;
-  }
-
+  .avatar-img { width: 100%; height: 100%; }
   .status-dot {
     position: absolute;
-    bottom: 4rpx;
-    right: 4rpx;
-    width: 20rpx;
-    height: 20rpx;
+    bottom: 6rpx;
+    right: 6rpx;
+    width: 22rpx;
+    height: 22rpx;
     border-radius: 50%;
-    border: 3rpx solid #fff;
-
-    &.online {
-      background: #07c160;
-    }
-
-    &.offline {
-      background: #9499a4;
-    }
-
+    border: 4rpx solid #fff;
+    &.online { background: $success-green; }
+    &.offline { background: $text-gray; }
     &.alarm {
-      background: #ee5b5b;
+      background: $danger-red;
       animation: pulse 1.5s infinite;
     }
   }
 }
-
 @keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 0.7;
-  }
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
 }
 
 .info-text {
   flex: 1;
   overflow: hidden;
-
   .name-line {
     display: flex;
     align-items: center;
-    gap: 14rpx;
-    margin-bottom: 8rpx;
-
+    gap: 16rpx;
+    margin-bottom: 10rpx;
     .device-name {
-      font-size: 32rpx;
+      font-size: 34rpx;
       color: $text-dark;
       font-weight: 500;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-
     .admin-label {
       font-size: 22rpx;
-      padding: 4rpx 12rpx;
+      padding: 5rpx 14rpx;
       background: linear-gradient(135deg, #fff7ed, #ffedd5);
-      color: #ea580c;
-      border-radius: 8rpx;
+      color: $warn-orange;
+      border-radius: $radius-sm;
       font-weight: 500;
     }
   }
-
   .desc-line {
     display: flex;
     align-items: center;
-    gap: 20rpx;
+    gap: 22rpx;
     flex-wrap: wrap;
-
-    .device-id {
-      font-size: 24rpx;
-      color: $text-gray;
-    }
-
+    .device-id { font-size: 26rpx; color: $text-gray; }
     .device-area {
       font-size: 24rpx;
-      color: $text-gray;
-      padding: 2rpx 12rpx;
-      background: #f0f1f5;
-      border-radius: 6rpx;
+      color: $text-normal;
+      padding: 4rpx 14rpx;
+      background: #f3f5fa;
+      border-radius: $radius-sm;
     }
   }
 }
@@ -667,31 +672,19 @@ $bg-card: #ffffff;
 .device-right {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 20rpx;
   flex-shrink: 0;
 }
-
-.action-group {
-  display: flex;
-  align-items: center;
-}
-
+.action-group { display: flex; align-items: center; }
 .action-btn {
-  width: 60rpx;
-  height: 60rpx;
+  width: 66rpx;
+  height: 66rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   transition: background 0.2s;
-
-  &:active {
-    background: #f0f1f5;
-  }
-}
-
-.arrow-icon {
-  flex-shrink: 0;
+  &:active { background: #eff2f8; }
 }
 
 // 分享弹窗
@@ -701,117 +694,109 @@ $bg-card: #ffffff;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.42);
+  background: rgba(0, 0, 0, 0.48);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
 }
-
 .share-modal {
-  width: 660rpx;
+  width: 680rpx;
   background: $bg-card;
-  border-radius: 30rpx;
+  border-radius: $radius-xl;
   overflow: hidden;
 }
-
 .modal-head {
-  padding: 40rpx 36rpx;
+  padding: 44rpx 40rpx;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1rpx solid $line-color;
-
   .modal-title {
-    font-size: 36rpx;
+    font-size: 38rpx;
     color: $text-dark;
-    font-weight: 500;
+    font-weight: 600;
   }
-
   .modal-close {
-    width: 60rpx;
-    height: 60rpx;
+    width: 66rpx;
+    height: 66rpx;
     border-radius: 50%;
-    background: #f5f7fb;
+    background: #f3f5fa;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    &:active {
-      background: #e9ebf2;
-    }
+    &:active { background: #e9ebf2; }
   }
 }
-
 .modal-body {
-  padding: 40rpx 36rpx;
-
+  padding: 44rpx 40rpx;
   .form-row {
     display: flex;
-    margin-bottom: 36rpx;
-
+    margin-bottom: 40rpx;
     .form-label {
-      width: 160rpx;
-      font-size: 28rpx;
+      width: 170rpx;
+      font-size: 30rpx;
       color: $text-gray;
     }
-
     .form-value {
       flex: 1;
-      font-size: 28rpx;
+      font-size: 30rpx;
       color: $text-dark;
     }
   }
-
   .copy-block {
-    margin-bottom: 48rpx;
-
+    margin-bottom: 52rpx;
     .copy-label {
-      font-size: 28rpx;
-      color: $text-gray;
+      font-size: 30rpx;
+      color: $text-normal;
       display: block;
-      margin-bottom: 20rpx;
+      margin-bottom: 22rpx;
     }
-
     .code-wrap {
-      background: #f0f6ff;
+      background: $main-light;
       border: 1rpx solid #d4e4ff;
-      padding: 32rpx 28rpx;
-      border-radius: 16rpx;
-      margin-bottom: 12rpx;
-
+      padding: 36rpx 30rpx;
+      border-radius: $radius-lg;
+      margin-bottom: 16rpx;
       .code-text {
-        font-size: 32rpx;
+        font-size: 34rpx;
         color: $main-color;
         font-family: monospace;
         word-break: break-all;
-        user-select: text;
+        letter-spacing: 2rpx;
       }
     }
-
     .copy-tip {
       font-size: 24rpx;
-      color: #b0b6c2;
+      color: $text-light-gray;
+      line-height: 1.6;
     }
   }
-
   .copy-main-btn {
     width: 100%;
-    height: 92rpx;
-    background: $main-color;
-    border-radius: 46rpx;
+    height: 96rpx;
+    background: linear-gradient(135deg, #4080f0, #5996ff);
+    border-radius: 48rpx;
     border: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12rpx;
-    font-size: 32rpx;
+    gap: 14rpx;
+    font-size: 34rpx;
     color: #fff;
-
+    box-shadow: 0 6rpx 16rpx rgba(64, 128, 240, 0.2);
+    transition: all 0.2s;
     &:active {
-      background: #336fd8;
       transform: scale(0.97);
+      box-shadow: 0 2rpx 8rpx rgba(64, 128, 240, 0.12);
     }
+  }
+  .share-safe-tip {
+    display: block;
+    margin-top: 28rpx;
+    font-size: 24rpx;
+    color: $text-light-gray;
+    text-align: center;
   }
 }
 </style>

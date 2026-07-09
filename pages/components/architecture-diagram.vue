@@ -21,9 +21,9 @@
       </view>
 
 
-      <view
+      <!-- <view
         style=" position:absolute;top:41%;left:36%;background: #fff;width:50px;height:100px;z-index: 1000;opacity: 0.5;">
-      </view>
+      </view> -->
       <view
         style=" position:absolute;top:41%;left:66%;background: #fff;width:50px;height:100px;z-index: 1000;opacity: 0.5;">
       </view>

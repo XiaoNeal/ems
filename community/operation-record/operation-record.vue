@@ -270,6 +270,11 @@ export default {
       const field = registerAddress
       const paramInfo = getParamInfo(deviceCategory, field)
       
+      // 如果有transform函数，使用转换函数处理
+      if (paramInfo && paramInfo.transform) {
+        return paramInfo.transform(registerValue)
+      }
+      
       // 如果有valueMap，优先使用映射值
       if (paramInfo && paramInfo.valueMap) {
         const mappedValue = paramInfo.valueMap[registerValue]
@@ -280,7 +285,8 @@ export default {
       
       // 如果有ratio，进行倍率转换
       if (paramInfo && paramInfo.ratio !== undefined && paramInfo.ratio !== 1) {
-        const numValue = parseFloat(registerValue) * paramInfo.ratio
+        const rawValue = paramInfo.hex16 ? parseInt(registerValue, 16) : parseFloat(registerValue)
+        const numValue = rawValue * paramInfo.ratio
         // 根据ratio确定小数位数
         if (paramInfo.ratio === 0.1) {
           return numValue.toFixed(1) + (paramInfo.unit ? ' ' + paramInfo.unit : '')

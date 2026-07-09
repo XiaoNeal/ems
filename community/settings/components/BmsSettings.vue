@@ -12,7 +12,7 @@
           </view>
         </view>
       </view>
-      
+
       <!-- 开关型参数 -->
       <view class="switch-section">
         <view v-for="param in bmsSwitchParams" :key="param.key" class="param-row">
@@ -22,18 +22,12 @@
           </view>
           <view class="switch-btns-wrapper">
             <view class="switch-btns">
-              <view 
-                v-for="option in param.options" 
-                :key="option.value" 
-                class="switch-btn"
-                :class="[
-                  getParamValue(param.key) === option.value ? 'btn-active' : '', 
-                  !isEditing ? 'btn-disabled' : '',
-                  clickedButton === param.key + '-' + option.value ? 'btn-clicked' : '',
-                  isDangerousOption(option) ? 'btn-danger' : ''
-                ]"
-                @click="handleSwitchClick(param, option)"
-              >
+              <view v-for="option in param.options" :key="option.value" class="switch-btn" :class="[
+                getParamValue(param.key) === option.value ? 'btn-active' : '',
+                !isEditing ? 'btn-disabled' : '',
+                clickedButton === param.key + '-' + option.value ? 'btn-clicked' : '',
+                isDangerousOption(option) ? 'btn-danger' : ''
+              ]" @click="handleSwitchClick(param, option)">
                 {{ option.label }}
               </view>
             </view>
@@ -44,38 +38,92 @@
       <!-- 数值型参数 -->
       <view class="divider"></view>
       <view class="param-list">
-        <view v-for="param in bmsParams" :key="param.key" class="param-row" :class="{ 'editing-row': editingParam === param.key }">
-          <view class="param-info">
-            <text class="param-name">{{ param.label }}</text>
-            <text v-if="param.min !== undefined && param.max !== undefined" class="param-range">
-              范围: {{ param.min }}~{{ param.max }}{{ param.unit }}
-            </text>
-          </view>
-          <view class="param-right-wrapper">
-            <view class="param-right">
-              <view class="param-value-box" :class="{ editing: editingParam === param.key }">
-                <text v-if="editingParam !== param.key" class="val-text">{{ formatParamValue(param) }}</text>
-                <input v-else class="val-input" type="digit" v-model="tempValue" :min="param.min"
-                  :max="param.max" placeholder="请输入" focus @blur="handleInputBlur(param)" @confirm="handleInputConfirm(param)" />
-              </view>
-              <text class="unit-text">{{ param.unit || '' }}</text>
-            </view>
-            <view class="btn-group">
-              <view v-if="editingParam !== param.key" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }" @click="handleParamEdit(param)">
-                <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
-                <text>编辑</text>
-              </view>
-              <template v-else-if="editingParam === param.key">
-                <view class="btn btn-sure" :class="{ 'btn-loading': isSubmitting }" @click="submitParam(param)">
-                  <text v-if="!isSubmitting">下发</text>
-                  <view v-else class="loading-spinner"></view>
+        <view v-for="param in bmsParams" :key="param.key" class="param-row"
+          :class="{ 'editing-row': editingParam === param.key }">
+          <template v-if="param.type === 'combined'">
+            <view class="combined-full">
+              <view class="combined-header">
+                <text class="param-name">{{ param.label }}</text>
+                <view class="combined-btn-group">
+                  <view v-if="editingParam !== param.key" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }"
+                    @click="handleParamEdit(param)">
+                    <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
+                    <text>编辑</text>
+                  </view>
+                  <template v-else-if="editingParam === param.key">
+                    <view class="btn btn-sure" :class="{ 'btn-loading': isSubmitting }" @click="submitParam(param)">
+                      <text v-if="!isSubmitting">下发</text>
+                      <view v-else class="loading-spinner"></view>
+                    </view>
+                    <view class="btn btn-cancel" @click="handleParamCancel()">
+                      <uni-icons type="closeempty" size="14" color="#999"></uni-icons>
+                    </view>
+                  </template>
                 </view>
-                <view class="btn btn-cancel" @click="handleParamCancel()">
-                  <uni-icons type="closeempty" size="14" color="#999"></uni-icons>
+              </view>
+              <view class="combined-body">
+                <view v-if="param.modeOptions && !param.voltageMin" class="mode-row">
+                  <text class="mode-label">选择类型：</text>
+                  <view class="mode-switch">
+                    <view v-for="option in param.modeOptions" :key="option.value" class="switch-btn" :class="{
+                      'btn-active': (combinedParams && combinedParams[param.key] && combinedParams[param.key].selectedMode === option.value) || (tempSelectedMode === option.value),
+                      'btn-disabled': editingParam !== param.key
+                    }" @click="handleCombinedModeClick(param, option)">
+                      {{ option.label }}
+                    </view>
+                  </view>
                 </view>
-              </template>
+                <view class="power-input-row">
+                  <text class="power-label">{{ param.powerLabel }}</text>
+                  <view class="param-value-box" :class="{ editing: editingParam === param.key }">
+                    <text v-if="editingParam !== param.key" class="val-text" style="color: #333 !important;">
+                      {{ showCombinedValue(param.key) }}
+                    </text>
+                    <input v-else class="val-input" type="digit"
+                      :value="(combinedParams && combinedParams[param.key] && combinedParams[param.key].powerValue !== undefined) ? combinedParams[param.key].powerValue : ''"
+                      @input="handleCombinedInput(param, $event)" :min="param.min" :max="param.max" placeholder="请输入"
+                      focus />
+                  </view>
+                  <text class="unit-text">{{ param.unit || '' }}</text>
+                  <text class="range-text">{{ param.min }}~{{ param.max }}</text>
+                </view>
+              </view>
             </view>
-          </view>
+          </template>
+          <template v-else>
+            <view class="param-info">
+              <text class="param-name">{{ param.label }}</text>
+              <text v-if="param.min !== undefined && param.max !== undefined" class="param-range">
+                范围: {{ param.min }}~{{ param.max }}{{ param.unit }}
+              </text>
+            </view>
+            <view class="param-right-wrapper">
+              <view class="param-right">
+                <view class="param-value-box" :class="{ editing: editingParam === param.key }">
+                  <text v-if="editingParam !== param.key" class="val-text">{{ formatParamValue(param) }}</text>
+                  <input v-else class="val-input" type="digit" v-model="tempValue" :min="param.min" :max="param.max"
+                    placeholder="请输入" focus @blur="handleInputBlur(param)" @confirm="handleInputConfirm(param)" />
+                </view>
+                <text class="unit-text">{{ param.unit || '' }}</text>
+              </view>
+              <view class="btn-group">
+                <view v-if="editingParam !== param.key" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }"
+                  @click="handleParamEdit(param)">
+                  <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
+                  <text>编辑</text>
+                </view>
+                <template v-else-if="editingParam === param.key">
+                  <view class="btn btn-sure" :class="{ 'btn-loading': isSubmitting }" @click="submitParam(param)">
+                    <text v-if="!isSubmitting">下发</text>
+                    <view v-else class="loading-spinner"></view>
+                  </view>
+                  <view class="btn btn-cancel" @click="handleParamCancel()">
+                    <uni-icons type="closeempty" size="14" color="#999"></uni-icons>
+                  </view>
+                </template>
+              </view>
+            </view>
+          </template>
         </view>
       </view>
     </view>
@@ -108,7 +156,8 @@
 
     <!-- 操作结果提示 -->
     <view v-if="operationLog.visible" class="operation-toast" :class="operationLog.type">
-      <uni-icons :type="operationLog.type === 'success' ? 'checkmarkempty' : 'closeempty'" size="20" :color="operationLog.type === 'success' ? '#52c41a' : '#ff4d4f'"></uni-icons>
+      <uni-icons :type="operationLog.type === 'success' ? 'checkmarkempty' : 'closeempty'" size="20"
+        :color="operationLog.type === 'success' ? '#52c41a' : '#ff4d4f'"></uni-icons>
       <text class="toast-text">{{ operationLog.message }}</text>
     </view>
   </view>
@@ -144,6 +193,8 @@ export default {
       isSubmitting: false,
       clickedButton: '',
       lastSendTimes: {},
+      combinedParams: {},
+      tempSelectedMode: '',
       params: {
         bms: {}
       },
@@ -163,143 +214,165 @@ export default {
         timer: null
       },
       bmsParams: [
-        { key: 'bms.B0', field: 'B0', label: '组端过压 1 级报警阈值', unit: 'V', min: 0, max: 1000 },
-        { key: 'bms.B2', field: 'B2', label: '组端过压 2 级报警阈值', unit: 'V', min: 0, max: 1000 },
-        { key: 'bms.B4', field: 'B4', label: '组端过压 3 级报警阈值', unit: 'V', min: 0, max: 1000 },
-        { key: 'bms.B6', field: 'B6', label: '组端过压报警回差值', unit: 'V', min: 0, max: 25 },
-        { key: 'bms.B8', field: 'B8', label: '组端欠压 1 级报警阈值', unit: 'V', min: 0, max: 1000 },
-        { key: 'bms.B10', field: 'B10', label: '组端欠压 2 级报警阈值', unit: 'V', min: 0, max: 1000 },
-        { key: 'bms.B12', field: 'B12', label: '组端欠压 3 级报警阈值', unit: 'V', min: 0, max: 1000 },
-        { key: 'bms.B14', field: 'B14', label: '组端欠压报警回差值', unit: 'V', min: 0, max: 25 },
-        { key: 'bms.B16', field: 'B16', label: '组端放电过流 1 级报警阈值', unit: 'A', min: 0, max: 1000 },
-        { key: 'bms.B18', field: 'B18', label: '组端放电过流 2 级报警阈值', unit: 'A', min: 0, max: 1000 },
-        { key: 'bms.B20', field: 'B20', label: '组端放电过流 3 级报警阈值', unit: 'A', min: 0, max: 1000 },
-        { key: 'bms.B22', field: 'B22', label: '组端放电过流报警回差值', unit: 'A', min: 0, max: 25 },
-        { key: 'bms.B24', field: 'B24', label: '组端充电过流 1 级报警阈值', unit: 'A', min: 0, max: 1000 },
-        { key: 'bms.B26', field: 'B26', label: '组端充电过流 2 级报警阈值', unit: 'A', min: 0, max: 1000 },
-        { key: 'bms.B28', field: 'B28', label: '组端充电过流 3 级报警阈值', unit: 'A', min: 0, max: 1000 },
-        { key: 'bms.B30', field: 'B30', label: '组端充电过流报警回差值', unit: 'A', min: 0, max: 25 },
-        { key: 'bms.B32', field: 'B32', label: '组端绝缘 1 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
-        { key: 'bms.B34', field: 'B34', label: '组端绝缘 2 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
-        { key: 'bms.B36', field: 'B36', label: '组端绝缘 3 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
-        { key: 'bms.B38', field: 'B38', label: '组端绝缘报警回差值', unit: 'kΩ', min: 0, max: 255 },
-        { key: 'bms.B40', field: 'B40', label: '单体充电过温 1 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B42', field: 'B42', label: '单体充电过温 2 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B44', field: 'B44', label: '单体充电过温 3 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B46', field: 'B46', label: '电池充电过温报警回差值', unit: '℃', min: 0, max: 100 },
-        { key: 'bms.B48', field: 'B48', label: '单体充电欠温 1 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B50', field: 'B50', label: '单体充电欠温 2 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B52', field: 'B52', label: '单体充电欠温 3 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B54', field: 'B54', label: '单体充电欠温报警回差值', unit: '℃', min: 0, max: 100 },
-        { key: 'bms.B56', field: 'B56', label: '单体电压过压 1 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
-        { key: 'bms.B58', field: 'B58', label: '单体电压过压 2 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
-        { key: 'bms.B60', field: 'B60', label: '单体电压过压 3 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
-        { key: 'bms.B62', field: 'B62', label: '单体电压过压报警回差值', unit: 'mV', min: 0, max: 0.25 },
-        { key: 'bms.B64', field: 'B64', label: '单体电压欠压 1 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
-        { key: 'bms.B66', field: 'B66', label: '单体电压欠压 2 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
-        { key: 'bms.B68', field: 'B68', label: '单体电压欠压 3 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
-        { key: 'bms.B70', field: 'B70', label: '单体电压欠压报警回差值', unit: 'mV', min: 0, max: 0.25 },
-        { key: 'bms.B72', field: 'B72', label: '单体电压差压 1 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
-        { key: 'bms.B74', field: 'B74', label: '单体电压差压 2 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
-        { key: 'bms.B76', field: 'B76', label: '单体电压差压 3 级报警阈值', unit: 'mV', min: 0, max: 4.5 },
-        { key: 'bms.B78', field: 'B78', label: '单体电压差压报警回差值', unit: 'mV', min: 0, max: 0.25 },
-        { key: 'bms.B80', field: 'B80', label: '单体温度温差 1 级报警阈值', unit: '℃', min: 0, max: 100 },
-        { key: 'bms.B82', field: 'B82', label: '单体温度温差 2 级报警阈值', unit: '℃', min: 0, max: 100 },
-        { key: 'bms.B84', field: 'B84', label: '单体温度温差 3 级报警阈值', unit: '℃', min: 0, max: 100 },
-        { key: 'bms.B86', field: 'B86', label: '单体温度温差报警回差值', unit: '℃', min: 0, max: 10 },
-        { key: 'bms.B88', field: 'B88', label: 'SOC 过低 1 级报警阈值', unit: '%', min: 0, max: 100 },
-        { key: 'bms.B90', field: 'B90', label: 'SOC 过低 2 级报警阈值', unit: '%', min: 0, max: 100 },
-        { key: 'bms.B92', field: 'B92', label: 'SOC 过低 3 级报警阈值', unit: '%', min: 0, max: 100 },
-        { key: 'bms.B94', field: 'B94', label: 'SOC 过低报警回差值', unit: '%', min: 0, max: 100 },
-        { key: 'bms.B96', field: 'B96', label: '动力插箱温度过高 1 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B98', field: 'B98', label: '动力插箱温度过高 2 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B100', field: 'B100', label: '动力插箱温度过高 3 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B102', field: 'B102', label: '动力插箱温度过高报警回差值', unit: '℃', min: 0, max: 25 },
-        { key: 'bms.B104', field: 'B104', label: '电池模组过压 1 级报警阈值', unit: 'V', min: 0, max: 1000 },
-        { key: 'bms.B106', field: 'B106', label: '电池模组过压 2 级报警阈值', unit: 'V', min: 0, max: 1000 },
-        { key: 'bms.B108', field: 'B108', label: '电池模组过压 3 级报警阈值', unit: 'V', min: 0, max: 1000 },
-        { key: 'bms.B110', field: 'B110', label: '电池模组过压报警回差值', unit: 'V', min: 0, max: 25 },
-        { key: 'bms.B112', field: 'B112', label: '电池模组欠压 1 级报警阈值', unit: 'V', min: 0, max: 1000 },
-        { key: 'bms.B114', field: 'B114', label: '电池模组欠压 2 级报警阈值', unit: 'V', min: 0, max: 1000 },
-        { key: 'bms.B116', field: 'B116', label: '电池模组欠压 3 级报警阈值', unit: 'V', min: 0, max: 1000 },
-        { key: 'bms.B118', field: 'B118', label: '电池模组欠压报警回差值', unit: 'V', min: 0, max: 25 },
-        { key: 'bms.B120', field: 'B120', label: '单体放电过温 1 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B122', field: 'B122', label: '单体放电过温 2 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B124', field: 'B124', label: '单体放电过温 3 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B126', field: 'B126', label: '单体放电过温报警回差值', unit: '℃', min: 0, max: 100 },
-        { key: 'bms.B128', field: 'B128', label: '单体放电欠温 1 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B130', field: 'B130', label: '单体放电欠温 2 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B132', field: 'B132', label: '单体放电欠温 3 级报警阈值', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B134', field: 'B134', label: '电池放电欠温报警回差值', unit: '℃', min: 0, max: 100 },
-        { key: 'bms.B136', field: 'B136', label: 'SOC 过高 1 级报警阈值', unit: '%', min: 0, max: 100 },
-        { key: 'bms.B138', field: 'B138', label: 'SOC 过高 2 级报警阈值', unit: '%', min: 0, max: 100 },
-        { key: 'bms.B140', field: 'B140', label: 'SOC 过高 3 级报警阈值', unit: '%', min: 0, max: 100 },
-        { key: 'bms.B142', field: 'B142', label: 'SOC 过高报警回差值', unit: '%', min: 0, max: 100 },
-        { key: 'bms.B144', field: 'B144', label: '温升快 1 级报警阈值', unit: '℃/min', min: 0, max: 100 },
-        { key: 'bms.B146', field: 'B146', label: '温升快 2 级报警阈值', unit: '℃/min', min: 0, max: 100 },
-        { key: 'bms.B148', field: 'B148', label: '温升快 3 级报警阈值', unit: '℃/min', min: 0, max: 100 },
-        { key: 'bms.B150', field: 'B150', label: '温升快报警回差值', unit: '℃/min', min: 0, max: 100 },
-        { key: 'bms.B174', field: 'B174', label: '风扇启动温度', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B176', field: 'B176', label: '风扇关闭温度', unit: '℃', min: -40, max: 120 },
-        { key: 'bms.B178', field: 'B178', label: 'SOC/SOH 设置电池序号', unit: '', min: 0, max: 480 },
-        { key: 'bms.B180', field: 'B180', label: 'SOC/SOH 设置', unit: '' },
-        { key: 'bms.B184', field: 'B184', label: '可调风扇控制-占空比', unit: '%', min: 0, max: 100 },
-        { key: 'bms.B194', field: 'B194', label: '累计充电电量', unit: 'kWh', min: 0, max: 100000 },
-        { key: 'bms.B198', field: 'B198', label: '累计放电电量', unit: 'kWh', min: 0, max: 100000 },
-        { key: 'bms.B204', field: 'B204', label: '电池容量', unit: 'Ah' },
-        { key: 'bms.B206', field: 'B206', label: '电传感器量程 1', unit: '' },
-        { key: 'bms.B208', field: 'B208', label: '电传感器量程 2', unit: '' },
-        { key: 'bms.B210', field: 'B210', label: '电传感器量程 3', unit: '' },
-        { key: 'bms.B212', field: 'B212', label: '簇内电池节数', unit: '' },
-        { key: 'bms.B214', field: 'B214', label: '簇内温度个数', unit: '' },
-        { key: 'bms.B218', field: 'B216', label: '簇内从控模块个数', unit: '' },
-        { key: 'bms.B220', field: 'B218', label: '从控 1~48 的电压个数', unit: '' },
-        { key: 'bms.B222', field: 'B220', label: '从控 1~48 的温度个数', unit: '' },
-        { key: 'bms.B222', field: 'B222', label: '从控站址自动分配', unit: '' }
+        { key: 'bms.1', field: '1', address: '1', label: '组端过压 1 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.2', field: '2', address: '2', label: '组端过压 2 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.3', field: '3', address: '3', label: '组端过压 3 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.4', field: '4', address: '4', label: '组端过压报警回差值', unit: 'V', min: 0, max: 25, scale: 10 },
+        { key: 'bms.5', field: '5', address: '5', label: '组端欠压 1 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.6', field: '6', address: '6', label: '组端欠压 2 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.7', field: '7', address: '7', label: '组端欠压 3 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.8', field: '8', address: '8', label: '组端欠压报警回差值', unit: 'V', min: 0, max: 25, scale: 10 },
+        { key: 'bms.9', field: '9', address: '9', label: '组端放电过流 1 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.10', field: '10', address: '10', label: '组端放电过流 2 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.11', field: '11', address: '11', label: '组端放电过流 3 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.12', field: '12', address: '12', label: '组端放电过流报警回差值', unit: 'A', min: 0, max: 25, scale: 10 },
+        { key: 'bms.13', field: '13', address: '13', label: '组端充电过流 1 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.14', field: '14', address: '14', label: '组端充电过流 2 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.15', field: '15', address: '15', label: '组端充电过流 3 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.16', field: '16', address: '16', label: '组端充电过流报警回差值', unit: 'A', min: 0, max: 25, scale: 10 },
+        { key: 'bms.17', field: '17', address: '17', label: '组端绝缘 1 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
+        { key: 'bms.18', field: '18', address: '18', label: '组端绝缘 2 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
+        { key: 'bms.19', field: '19', address: '19', label: '组端绝缘 3 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
+        { key: 'bms.20', field: '20', address: '20', label: '组端绝缘报警回差值', unit: 'kΩ', min: 0, max: 255 },
+        { key: 'bms.21', field: '21', address: '21', label: '单体充电过温 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.22', field: '22', address: '22', label: '单体充电过温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.23', field: '23', address: '23', label: '单体充电过温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.24', field: '24', address: '24', label: '电池充电过温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.25', field: '25', address: '25', label: '单体充电欠温 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.26', field: '26', address: '26', label: '单体充电欠温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.27', field: '27', address: '27', label: '单体充电欠温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.28', field: '28', address: '28', label: '单体充电欠温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.29', field: '29', address: '29', label: '单体电压过压 1 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.30', field: '30', address: '30', label: '单体电压过压 2 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.31', field: '31', address: '31', label: '单体电压过压 3 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.32', field: '32', address: '32', label: '单体电压过压报警回差值', unit: 'mV', min: 0, max: 0.25, scale: 1000 },
+        { key: 'bms.33', field: '33', address: '33', label: '单体电压欠压 1 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.34', field: '34', address: '34', label: '单体电压欠压 2 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.35', field: '35', address: '35', label: '单体电压欠压 3 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.36', field: '36', address: '36', label: '单体电压欠压报警回差值', unit: 'mV', min: 0, max: 0.25, scale: 1000 },
+        { key: 'bms.37', field: '37', address: '37', label: '单体电压差压 1 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.38', field: '38', address: '38', label: '单体电压差压 2 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.39', field: '39', address: '39', label: '单体电压差压 3 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.40', field: '40', address: '40', label: '单体电压差压报警回差值', unit: 'mV', min: 0, max: 0.25, scale: 1000 },
+        { key: 'bms.41', field: '41', address: '41', label: '单体温度温差 1 级报警阈值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.42', field: '42', address: '42', label: '单体温度温差 2 级报警阈值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.43', field: '43', address: '43', label: '单体温度温差 3 级报警阈值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.44', field: '44', address: '44', label: '单体温度温差报警回差值', unit: '℃', min: 0, max: 10, scale: 10 },
+        { key: 'bms.45', field: '45', address: '45', label: 'SOC 过低 1 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.46', field: '46', address: '46', label: 'SOC 过低 2 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.47', field: '47', address: '47', label: 'SOC 过低 3 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.48', field: '48', address: '48', label: 'SOC 过低报警回差值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.49', field: '49', address: '49', label: '动力插箱温度过高 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.50', field: '50', address: '50', label: '动力插箱温度过高 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.51', field: '51', address: '51', label: '动力插箱温度过高 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.52', field: '52', address: '52', label: '动力插箱温度过高报警回差值', unit: '℃', min: 0, max: 25, scale: 10 },
+        { key: 'bms.53', field: '53', address: '53', label: '电池模组过压 1 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.54', field: '54', address: '54', label: '电池模组过压 2 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.55', field: '55', address: '55', label: '电池模组过压 3 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.56', field: '56', address: '56', label: '电池模组过压报警回差值', unit: 'V', min: 0, max: 25, scale: 10 },
+        { key: 'bms.57', field: '57', address: '57', label: '电池模组欠压 1 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.58', field: '58', address: '58', label: '电池模组欠压 2 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.59', field: '59', address: '59', label: '电池模组欠压 3 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.60', field: '60', address: '60', label: '电池模组欠压报警回差值', unit: 'V', min: 0, max: 25, scale: 10 },
+        { key: 'bms.61', field: '61', address: '61', label: '单体放电过温 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.62', field: '62', address: '62', label: '单体放电过温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.63', field: '63', address: '63', label: '单体放电过温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.64', field: '64', address: '64', label: '单体放电过温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.65', field: '65', address: '65', label: '单体放电欠温 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.66', field: '66', address: '66', label: '单体放电欠温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.67', field: '67', address: '67', label: '单体放电欠温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.68', field: '68', address: '68', label: '电池放电欠温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.69', field: '69', address: '69', label: 'SOC 过高 1 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.70', field: '70', address: '70', label: 'SOC 过高 2 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.71', field: '71', address: '71', label: 'SOC 过高 3 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.72', field: '72', address: '72', label: 'SOC 过高报警回差值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.73', field: '73', address: '73', label: '温升快 1 级报警阈值', unit: '℃/min', min: 0, max: 100, scale: 10 },
+        { key: 'bms.74', field: '74', address: '74', label: '温升快 2 级报警阈值', unit: '℃/min', min: 0, max: 100, scale: 10 },
+        { key: 'bms.75', field: '75', address: '75', label: '温升快 3 级报警阈值', unit: '℃/min', min: 0, max: 100, scale: 10 },
+        { key: 'bms.76', field: '76', address: '76', label: '温升快报警回差值', unit: '℃/min', min: 0, max: 100, scale: 10 },
+        { key: 'bms.102', field: '102', address: '102', label: '风扇启动温度', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.103', field: '103', address: '103', label: '风扇关闭温度', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.104', field: '104', address: '104', label: 'SOC/SOH 设置电池序号', unit: '', min: 0, max: 480 },
+        {
+          key: 'bms.105', field: '105', address: '105', label: 'SOC/SOH 设置', type: 'combined',
+          modeOptions: [
+            { label: 'SOC', value: '1' },
+            { label: 'SOH', value: '2' }
+          ],
+          powerLabel: 'SOC/SOH 值',
+          unit: '%',
+          min: 0,
+          max: 100
+        },
+        { key: 'bms.107', field: '107', address: '107', label: '可调风扇控制-占空比', unit: '%', min: 0, max: 100, fanControl: true },
+        { key: 'bms.112', field: '112', address: '112', label: '累计充电电量(高16位)', unit: 'kWh',  scale: 10, hex16: true  },
+        { key: 'bms.113', field: '113', address: '113', label: '累计充电电量(低16位)', unit: 'kWh',  scale: 10, hex16: true },
+        { key: 'bms.114', field: '114', address: '114', label: '累计放电电量(高16位)', unit: 'kWh', scale: 10, hex16: true  },
+        { key: 'bms.115', field: '115', address: '115', label: '累计放电电量(低16位)', unit: 'kWh',  scale: 10, hex16: true  },
+        { key: 'bms.117', field: '117', address: '117', label: '电池容量', unit: 'Ah' },
+        { key: 'bms.118', field: '118', address: '118', label: '电传感器量程 1', unit: '' },
+        { key: 'bms.119', field: '119', address: '119', label: '电传感器量程 2', unit: '' },
+        { key: 'bms.120', field: '120', address: '120', label: '电传感器量程 3', unit: '' },
+        { key: 'bms.121', field: '121', address: '121', label: '簇内电池节数', unit: '' },
+        { key: 'bms.122', field: '122', address: '122', label: '簇内电压个数', unit: '' },
+        { key: 'bms.123', field: '123', address: '123', label: '簇内从控模块个数', unit: '' },
+        { key: 'bms.124', field: '124', address: '124', label: '从控 1~48 的电压个数', unit: '' },
+        { key: 'bms.172', field: '172', address: '172', label: '从控 1~48 的温度个数', unit: '' },
+        { key: 'bms.220', field: '220', address: '220', label: '从控站址自动分配', unit: '' }
       ],
       bmsSwitchParams: [
-        // { key: 'bms.B168', label: '控制指令模式', options: [
+        // { key: 'bms.99', address: '99', label: '控制指令模式', options: [
         //   { label: '单簇系统', value: '1' },
         //   { label: '并簇系统', value: '2' },
         //   { label: '强控模式', value: '3' }
         // ]},
-        // { key: 'bms.B170', label: '上下电控制指令', options: [
+        // { key: 'bms.100', address: '100', label: '上下电控制指令', options: [
         //   { label: '上电', value: '0x55', dangerous: true },
         //   { label: '下电', value: '0xAA', dangerous: true }
         // ]},
-        { key: 'bms.B172', label: 'DO 控制', options: [
-          { label: '闭合', value: '1' },
-          { label: '断开', value: '0' }
-        ]},
-        { key: 'bms.B182', label: '绝缘采集控制', options: [
-          { label: '开启', value: '1' },
-          { label: '关闭', value: '0' },
-          { label: '无效值', value: '2' }
-        ]},
-        { key: 'bms.B186', label: '复归指令', options: [
-          { label: '默认状态', value: '0' },
-          { label: '复归准备', value: '1' }
-        ]},
-        { key: 'bms.B188', label: '跳机指令', options: [
-          { label: '默认状态', value: '0' },
-          { label: '跳机', value: '1', dangerous: true }
-        ]},
-        // { key: 'bms.B190', label: '显控检测故障', options: [
+        {
+          key: 'bms.101', address: '101', label: 'DO 控制', options: [
+            { label: '闭合', value: '1' },
+            { label: '断开', value: '0' }
+          ]
+        },
+        {
+          key: 'bms.106', address: '106', label: '绝缘采集控制', options: [
+            { label: '开启', value: '1' },
+            { label: '关闭', value: '0' },
+            { label: '无效值', value: '2' }
+          ]
+        },
+        {
+          key: 'bms.108', address: '108', label: '复归指令', options: [
+            { label: '默认状态', value: '0' },
+            { label: '复归准备', value: '1' }
+          ]
+        },
+        {
+          key: 'bms.109', address: '109', label: '跳机指令', options: [
+            { label: '默认状态', value: '0' },
+            { label: '跳机', value: '1', dangerous: true }
+          ]
+        },
+        // { key: 'bms.110', address: '110', label: '显控检测故障', options: [
         //   { label: '无故障', value: '0' },
         //   { label: '故障', value: '1' }
         // ]},
-        { key: 'bms.B192', label: '主控均衡控制', options: [
-          { label: '关闭均衡', value: '0' },
-          { label: '开启均衡', value: '1' },
-          { label: '主控自主', value: '2' }
-        ]},
-        // { key: 'bms.B202', label: '电池类型', options: [
+        {
+          key: 'bms.111', address: '111', label: '主控均衡控制', options: [
+            { label: '关闭均衡', value: '0' },
+            { label: '开启均衡', value: '1' },
+            { label: '主控自主', value: '2' }
+          ]
+        },
+        // { key: 'bms.B116', address: '116', label: '电池类型', options: [
         //   { label: '磷酸铁锂电池', value: '1' },
         //   { label: '钛酸锂电池', value: '2' },
         //   { label: '锰酸锂电池', value: '3' },
         //   { label: '三元电池', value: '4' }
         // ]},
-        // { key: 'bms.B224', label: '风扇控制功能', options: [
+        // { key: 'bms.221', label: '风扇控制功能', options: [
         //   { label: '风扇开启', value: '0x1' },
         //   { label: '风扇关闭', value: '0x2' },
         //   { label: '退出控制', value: '0x3' }
@@ -451,6 +524,56 @@ export default {
     },
 
     async submitParam(param) {
+      if (param.type === 'combined') {
+        const combinedData = this.combinedParams[param.key]
+        if (!combinedData || !combinedData.selectedMode) {
+          this.showToast('请选择类型', 'warning')
+          return
+        }
+
+        const powerValue = combinedData.powerValue
+        if (!powerValue && powerValue !== '0') {
+          this.showToast(`请输入${param.powerLabel}`, 'warning')
+          return
+        }
+
+        const numValue = parseFloat(powerValue)
+        if (isNaN(numValue)) {
+          this.showToast(`请输入有效的${param.powerLabel}`, 'warning')
+          return
+        }
+
+        if (param.min !== undefined && numValue < param.min) {
+          this.showToast(`${param.powerLabel}不能小于${param.min}`, 'warning')
+          return
+        }
+        if (param.max !== undefined && numValue > param.max) {
+          this.showToast(`${param.powerLabel}不能大于${param.max}`, 'warning')
+          return
+        }
+
+        const now = Date.now()
+        const paramLastSendTime = this.lastSendTimes[param.key] || 0
+        if (now - paramLastSendTime < 5000) {
+          this.showToast('请间隔5秒后再下发', 'warning')
+          return
+        }
+
+        const modeLabel = param.modeOptions.find(opt => opt.value === combinedData.selectedMode)?.label || ''
+        const newValue = `${modeLabel} ${powerValue}${param.unit}`
+
+        this.openConfirmPopup({
+          title: '参数下发确认',
+          content: `确定要下发"${param.label}"参数吗？`,
+          oldValue: this.params.bms[param.field] || '--',
+          newValue: newValue,
+          isDangerous: false,
+          param: param,
+          action: () => this.executeSubmitParam(param, powerValue)
+        })
+        return
+      }
+
       const value = this.tempValue
       if (!value && value !== '0') {
         this.showToast('请输入参数值', 'warning')
@@ -490,62 +613,82 @@ export default {
       })
     },
 
+    handleCombinedModeClick(param, option) {
+      if (this.editingParam !== param.key) {
+        this.showToast('请先点击编辑按钮', 'warning')
+        return
+      }
+      this.tempSelectedMode = option.value
+      if (!this.combinedParams) {
+        this.combinedParams = {}
+      }
+      if (!this.combinedParams[param.key]) {
+        this.$set(this.combinedParams, param.key, { selectedMode: '', powerValue: '' })
+      }
+      this.$set(this.combinedParams[param.key], 'selectedMode', option.value)
+    },
+
+    handleCombinedInput(param, event) {
+      if (!this.combinedParams) {
+        this.combinedParams = {}
+      }
+      const value = event.detail.value
+      if (!this.combinedParams[param.key]) {
+        this.$set(this.combinedParams, param.key, {
+          selectedMode: '1',
+          powerValue: value
+        })
+      } else {
+        const existing = this.combinedParams[param.key]
+        this.$set(existing, 'powerValue', value)
+        if (existing.selectedMode === undefined) {
+          this.$set(existing, 'selectedMode', '1')
+        }
+      }
+    },
+
+    showCombinedValue(paramKey) {
+      if (this.combinedParams && this.combinedParams[paramKey]) {
+        const { selectedMode, powerValue } = this.combinedParams[paramKey]
+        if (selectedMode !== undefined) {
+          const modeLabel = selectedMode === '1' ? 'SOC' : selectedMode === '2' ? 'SOH' : ''
+          return modeLabel ? `${modeLabel}: ${powerValue || '--'}%` : '--'
+        }
+        return powerValue !== undefined ? `${powerValue || '--'}` : '--'
+      }
+      return '--'
+    },
+
     async executeSubmitParam(param, value) {
       this.isSubmitting = true
       this.lastSendTimes[param.key] = Date.now()
 
       try {
         let registerValue = value
-        
-        if (param.key === 'bms.B0' || param.key === 'bms.B2' || param.key === 'bms.B4' || param.key === 'bms.B6' || param.key === 'bms.B8' || param.key === 'bms.B10' || param.key === 'bms.B12' || param.key === 'bms.B14' || param.key === 'bms.B16' || param.key === 'bms.B18' || param.key === 'bms.B20' || param.key === 'bms.B22' || param.key === 'bms.B24' || param.key === 'bms.B26' || param.key === 'bms.B28' || param.key === 'bms.B30' || param.key === 'bms.B46' || param.key === 'bms.B54' || param.key === 'bms.B80' || param.key === 'bms.B82' || param.key === 'bms.B84' || param.key === 'bms.B86' || param.key === 'bms.B88' || param.key === 'bms.B90' || param.key === 'bms.B92' || param.key === 'bms.B94' || param.key === 'bms.B102' || param.key === 'bms.B104' || param.key === 'bms.B106' || param.key === 'bms.B108' || param.key === 'bms.B110' || param.key === 'bms.B112' || param.key === 'bms.B114' || param.key === 'bms.B116' || param.key === 'bms.B118' || param.key === 'bms.B126' || param.key === 'bms.B134' || param.key === 'bms.B136' || param.key === 'bms.B138' || param.key === 'bms.B140' || param.key === 'bms.B142' || param.key === 'bms.B144' || param.key === 'bms.B146' || param.key === 'bms.B148' || param.key === 'bms.B150' || param.key === 'bms.B194' || param.key === 'bms.B198') {
-          registerValue = parseFloat(value) * 10
-        } else if (param.key === 'bms.B40' || param.key === 'bms.B42' || param.key === 'bms.B44' || param.key === 'bms.B48' || param.key === 'bms.B50' || param.key === 'bms.B52' || param.key === 'bms.B96' || param.key === 'bms.B98' || param.key === 'bms.B100' || param.key === 'bms.B120' || param.key === 'bms.B122' || param.key === 'bms.B124' || param.key === 'bms.B128' || param.key === 'bms.B130' || param.key === 'bms.B132' || param.key === 'bms.B174' || param.key === 'bms.B176') {
+
+        if (param.type === 'combined') {
+          const combinedData = this.combinedParams[param.key]
+          if (!combinedData || !combinedData.selectedMode || !combinedData.powerValue) {
+            this.showToast('请选择类型并输入数值', 'warning')
+            this.isSubmitting = false
+            return
+          }
+          const highByte = parseInt(combinedData.selectedMode)
+          const lowByte = parseInt(combinedData.powerValue)
+          const combinedValue = (highByte << 8) | lowByte
+          registerValue = combinedValue.toString(16).toUpperCase().padStart(4, '0')
+        } else if (param.hex16) {
+          const rawValue = parseFloat(value)
+          const scaledValue = param.scale ? rawValue * param.scale : rawValue
+          registerValue = Math.round(scaledValue).toString(16).toUpperCase().padStart(4, '0')
+        } else if (param.temperature) {
           registerValue = (parseFloat(value) - 40) * 10
-        } else if (param.key === 'bms.B56' || param.key === 'bms.B58' || param.key === 'bms.B60' || param.key === 'bms.B62' || param.key === 'bms.B64' || param.key === 'bms.B66' || param.key === 'bms.B68' || param.key === 'bms.B70' || param.key === 'bms.B72' || param.key === 'bms.B74' || param.key === 'bms.B76' || param.key === 'bms.B78') {
-          registerValue = parseFloat(value) * 1000
-        } else if (param.key === 'bms.B184') {
+        } else if (param.fanControl) {
           const val = parseFloat(value)
           registerValue = val >= 0 && val <= 100 ? val * 10 : 255
+        } else if (param.scale) {
+          registerValue = parseFloat(value) * param.scale
         }
-
-        const registerMap = {
-          'bms.B0': '0', 'bms.B2': '2', 'bms.B4': '4',
-          'bms.B6': '6', 'bms.B8': '8', 'bms.B10': '10',
-          'bms.B12': '12', 'bms.B14': '14', 'bms.B16': '16',
-          'bms.B18': '18', 'bms.B20': '20', 'bms.B22': '22',
-          'bms.B24': '24', 'bms.B26': '26', 'bms.B28': '28',
-          'bms.B30': '30', 'bms.B32': '32', 'bms.B34': '34',
-          'bms.B36': '36', 'bms.B38': '38', 'bms.B40': '40',
-          'bms.B42': '42', 'bms.B44': '44', 'bms.B46': '46',
-          'bms.B48': '48', 'bms.B50': '50', 'bms.B52': '52',
-          'bms.B54': '54', 'bms.B56': '56', 'bms.B58': '58',
-          'bms.B60': '60', 'bms.B62': '62', 'bms.B64': '64',
-          'bms.B66': '66', 'bms.B68': '68', 'bms.B70': '70',
-          'bms.B72': '72', 'bms.B74': '74', 'bms.B76': '76',
-          'bms.B78': '78', 'bms.B80': '80', 'bms.B82': '82',
-          'bms.B84': '84', 'bms.B86': '86', 'bms.B88': '88',
-          'bms.B90': '90', 'bms.B92': '92', 'bms.B94': '94',
-          'bms.B96': '96', 'bms.B98': '98', 'bms.B100': '100',
-          'bms.B102': '102', 'bms.B104': '104', 'bms.B106': '106',
-          'bms.B108': '108', 'bms.B110': '110', 'bms.B112': '112',
-          'bms.B114': '114', 'bms.B116': '116', 'bms.B118': '118',
-          'bms.B120': '120', 'bms.B122': '122', 'bms.B124': '124',
-          'bms.B126': '126', 'bms.B128': '128', 'bms.B130': '130',
-          'bms.B132': '132', 'bms.B134': '134', 'bms.B136': '136',
-          'bms.B138': '138', 'bms.B140': '140', 'bms.B142': '142',
-          'bms.B144': '144', 'bms.B146': '146', 'bms.B148': '148',
-          'bms.B150': '150', 'bms.B168': '168', 'bms.B170': '170',
-          'bms.B172': '172', 'bms.B174': '174', 'bms.B176': '176',
-          'bms.B178': '178', 'bms.B180': '180', 'bms.B182': '182',
-          'bms.B184': '184', 'bms.B186': '186', 'bms.B188': '188',
-          'bms.B190': '190', 'bms.B192': '192', 'bms.B194': '194',
-          'bms.B198': '198', 'bms.B202': '202', 'bms.B204': '204',
-          'bms.B206': '206', 'bms.B208': '208', 'bms.B210': '210',
-          'bms.B212': '212', 'bms.B214': '214', 'bms.B216': '216',
-          'bms.B218': '218', 'bms.B220': '220', 'bms.B222': '222',
-          'bms.B224': '224'
-        }
-        const registerAddress = registerMap[param.key] || '00000000'
 
         const commandData = {
           apiSufix: 'multiControl',
@@ -557,7 +700,7 @@ export default {
             deviceCategory: '171C',
             addr: this.deviceAddress,
             deviceId: '1',
-            registerAddress: registerAddress,
+            registerAddress: param.address,
             registerValue: registerValue.toString(),
             valueType: '01',
             registerType: '03',
@@ -570,7 +713,14 @@ export default {
         await sendCommandFrame(commandData)
         this.params.bms[param.field] = value
         this.editingParam = ''
-        this.showToast(`${param.label}: ${value}${param.unit || ''}下发成功`, 'success')
+        if (param.type === 'combined') {
+          const combinedData = this.combinedParams[param.key]
+          const modeLabel = combinedData && combinedData.selectedMode === '1' ? 'SOC' : 'SOH'
+          const powerValue = combinedData && combinedData.powerValue ? combinedData.powerValue : ''
+          this.showToast(`${param.label}: ${modeLabel} ${powerValue}%下发成功`, 'success')
+        } else {
+          this.showToast(`${param.label}: ${value}${param.unit || ''}下发成功`, 'success')
+        }
       } catch (error) {
         this.showToast(`${param.label}下发失败`, 'error')
         console.error('命令帧发送失败:', error)
@@ -580,16 +730,8 @@ export default {
     },
 
     async submitSwitchParam(param, value) {
-      const registerMap = {
-        'bms.B168': '168', 'bms.B170': '170', 'bms.B172': '172',
-        'bms.B182': '182', 'bms.B186': '186', 'bms.B188': '188',
-        'bms.B190': '190', 'bms.B192': '192', 'bms.B202': '202',
-        'bms.B224': '224'
-      }
-      const registerAddress = registerMap[param.key] || '00000000'
-
       let hexValue = value
-      if (param.key === 'bms.B170') {
+      if (param.key === 'bms.100') {
         hexValue = parseInt(value, 16).toString()
       }
 
@@ -603,7 +745,7 @@ export default {
           deviceCategory: '171C',
           addr: this.deviceAddress,
           deviceId: '1',
-          registerAddress: registerAddress,
+          registerAddress: param.address,
           registerValue: hexValue,
           valueType: '01',
           registerType: '03',
@@ -625,19 +767,16 @@ export default {
     },
 
     handleEditConfig() {
-      const globalRoleId = this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
-      if (![1, 2].includes(globalRoleId)) {
-        const currentRoleId = this.$store.state.currentEsRoleId
-        if (![1, 2].includes(currentRoleId)) {
-          uni.showToast({ title: '无权限操作', icon: 'none' });
-          return;
-        }
+      const currentRoleId = this.$store.state.currentEsRoleId || this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
+      if (![1, 2, 4, 5].includes(currentRoleId)) {
+        uni.showToast({ title: '无权限操作', icon: 'none' });
+        return;
       }
       const deviceList = realtimeDataProvider.getDeviceList()
       const device171F = deviceList.find(item => item && item.deviceType === '171F')
       const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
-      
-      if (b12Value === undefined || b12Value === null) {
+      console.log('b12Value:', b12Value)
+      if (b12Value === undefined || b12Value === null || b12Value === '--') {
         uni.showModal({
           title: '提示',
           content: '当前设备离线，暂不支持修改',
@@ -645,7 +784,7 @@ export default {
         })
         return
       }
-      
+
       if (b12Value !== 0 && b12Value !== '0') {
         uni.showModal({
           title: '提示',
@@ -654,7 +793,7 @@ export default {
         })
         return
       }
-      
+
       this.isEditing = true
       this.showToast('已进入编辑模式', 'success')
     },
@@ -714,7 +853,7 @@ export default {
   color: #333;
   position: relative;
   padding-left: 20rpx;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -738,23 +877,23 @@ export default {
   border-radius: 8rpx;
   font-size: 26rpx;
   transition: all 0.2s ease;
-  
+
   &.primary {
     background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
     color: #ffffff;
     box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
-    
+
     &:active {
       transform: scale(0.95);
       box-shadow: 0 2rpx 6rpx rgba(102, 153, 255, 0.2);
     }
   }
-  
+
   &.close {
     background: #f5f5f5;
     color: #666;
     border: 1rpx solid #e0e0e0;
-    
+
     &:active {
       background: #e8e8e8;
     }
@@ -777,11 +916,11 @@ export default {
   padding: 28rpx 0;
   border-bottom: 1rpx solid #f5f5f5;
   transition: all 0.2s ease;
-  
+
   &:last-child {
     border-bottom: none;
   }
-  
+
   &.editing-row {
     background: #f8fbff;
     margin: 0 -20rpx;
@@ -901,7 +1040,7 @@ export default {
   color: #6699ff;
   background: #ffffff;
   border: 2rpx solid #6699ff;
-  
+
   &:active {
     background: #f0f5ff;
   }
@@ -912,11 +1051,11 @@ export default {
   background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
   box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
   min-width: 100rpx;
-  
+
   &:active {
     transform: scale(0.95);
   }
-  
+
   &.btn-loading {
     opacity: 0.8;
     pointer-events: none;
@@ -928,7 +1067,7 @@ export default {
   background: #f5f5f5;
   border: 2rpx solid #e0e0e0;
   min-width: 60rpx;
-  
+
   &:active {
     background: #e8e8e8;
   }
@@ -938,6 +1077,195 @@ export default {
   height: 16rpx;
   background: #f8f9fa;
   margin: 0;
+}
+
+.combined-full {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  width: 100%;
+  padding: 24rpx;
+  background: #f8f9fa;
+  border-radius: 16rpx;
+  border: 2rpx solid #e8e8e8;
+}
+
+.combined-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10rpx;
+}
+
+.combined-header .param-name {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.combined-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #e8e8e8;
+}
+
+.power-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.power-input-row .power-label {
+  font-size: 26rpx;
+  color: #666;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: 120rpx;
+  min-width: fit-content;
+}
+
+.power-input-row .param-value-box {
+  width: 180rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  background: #ffffff;
+  border-radius: 8rpx;
+  text-align: center;
+  border: 2rpx solid #e8e8e8;
+  transition: all 0.2s ease;
+
+  &.editing {
+    background: #ffffff;
+    border-color: #6699ff;
+    box-shadow: 0 0 0 4rpx rgba(102, 153, 255, 0.1);
+  }
+}
+
+.power-input-row .unit-text {
+  font-size: 26rpx;
+  color: #666;
+  min-width: 60rpx;
+}
+
+.power-input-row .combined-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.power-input-row .combined-btn-group .btn {
+  padding: 16rpx 28rpx;
+  font-size: 26rpx;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  transition: all 0.2s ease;
+  min-width: 100rpx;
+}
+
+.power-input-row .combined-btn-group .btn-edit {
+  color: #6699ff;
+  background: #ffffff;
+  border: 2rpx solid #6699ff;
+
+  &:active {
+    background: #f0f5ff;
+  }
+}
+
+.power-input-row .combined-btn-group .btn-sure {
+  color: #ffffff;
+  background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
+  box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &.btn-loading {
+    opacity: 0.8;
+    pointer-events: none;
+  }
+}
+
+.power-input-row .combined-btn-group .btn-cancel {
+  color: #999;
+  background: #f5f5f5;
+  border: 2rpx solid #e0e0e0;
+
+  &:active {
+    background: #e8e8e8;
+  }
+}
+
+.range-text {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.mode-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.mode-label {
+  font-size: 26rpx;
+  color: #666;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mode-switch {
+  display: flex;
+  gap: 16rpx;
+}
+
+.mode-switch .switch-btn {
+  padding: 14rpx 24rpx;
+  font-size: 24rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  color: #666;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  text-align: center;
+  min-width: 100rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:active {
+    transform: scale(0.95);
+    background: #f8f8f8;
+  }
+}
+
+.mode-switch .btn-active {
+  border-color: #6699ff;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
+  box-shadow: 0 4rpx 16rpx rgba(102, 153, 255, 0.35);
+
+  &:active {
+    background: linear-gradient(135deg, #5588ee 0%, #3377ea 100%);
+    box-shadow: 0 2rpx 8rpx rgba(102, 153, 255, 0.25);
+  }
+}
+
+.mode-switch .btn-disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .switch-section {
@@ -995,7 +1323,7 @@ export default {
 .btn-danger {
   border-color: #ff6b6b;
   color: #ff6b6b;
-  
+
   &.btn-active {
     background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
     border-color: #ff6b6b;
@@ -1087,24 +1415,24 @@ export default {
   font-size: 28rpx;
   text-align: center;
   transition: all 0.2s ease;
-  
+
   &.btn-cancel {
     background: #f5f5f5;
     color: #666;
-    
+
     &:active {
       background: #e8e8e8;
     }
   }
-  
+
   &.btn-confirm {
     background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
     color: #ffffff;
-    
+
     &:active {
       transform: scale(0.98);
     }
-    
+
     &.btn-danger {
       background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
     }
@@ -1126,15 +1454,15 @@ export default {
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
   z-index: 9999;
   animation: slideDown 0.3s ease;
-  
+
   &.success {
     border-left: 4rpx solid #52c41a;
   }
-  
+
   &.error {
     border-left: 4rpx solid #ff4d4f;
   }
-  
+
   &.warning {
     border-left: 4rpx solid #faad14;
   }
@@ -1150,6 +1478,7 @@ export default {
     opacity: 0;
     transform: translateX(-50%) translateY(-20rpx);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -1164,7 +1493,7 @@ export default {
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  
+
   &.small {
     width: 24rpx;
     height: 24rpx;

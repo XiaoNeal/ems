@@ -1057,19 +1057,16 @@ export default {
     },
 
     handleEditConfig() {
-      const globalRoleId = this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
-      if (![1, 2].includes(globalRoleId)) {
-        const currentRoleId = this.$store.state.currentEsRoleId
-        if (![1, 2].includes(currentRoleId)) {
-          uni.showToast({ title: '无权限操作', icon: 'none' });
-          return;
-        }
+      const currentRoleId = this.$store.state.currentEsRoleId || this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
+      if (![1, 2, 4, 5].includes(currentRoleId)) {
+        uni.showToast({ title: '无权限操作', icon: 'none' });
+        return;
       }
       const deviceList = realtimeDataProvider.getDeviceList()
       const device171F = deviceList.find(item => item && item.deviceType === '171F')
       const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
       
-      if (b12Value === undefined || b12Value === null) {
+      if (b12Value === undefined || b12Value === null || b12Value === '--') {
         uni.showModal({
           title: '提示',
           content: '当前设备离线，暂不支持修改',
