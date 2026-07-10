@@ -244,7 +244,8 @@ export default {
         dataLabel: false,
         padding: [15, 20, 0, 15],
         animation: false,
-        xAxis: { labelCount: 6, disableGrid: true },
+         enableScroll: false,
+        xAxis: { labelCount: 6, disableGrid: true,boundaryGap: "justify", },
         yAxis: {
           gridType: "dash",
           showTitle: true,

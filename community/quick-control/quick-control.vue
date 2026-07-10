@@ -416,7 +416,7 @@ export default {
 
     // 编辑配置相关方法
     handleEditConfig() {
-      const currentRoleId = this.$store.state.currentEsRoleId || this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
+      const currentRoleId = this.$store.state.currentEsRoleId
       if (![1, 2, 4, 5].includes(currentRoleId)) {
         uni.showToast({ title: '无权限操作', icon: 'none' });
         return;

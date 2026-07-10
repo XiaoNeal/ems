@@ -449,7 +449,6 @@ export default {
 
     handleDatePicker(value) {
       this.selectedDate = value;
-      this.getDayGeneratedPower();
       this.getElectricityStatistic();
       console.log("选中日期：", value, " 类型：", this.activeDateTab);
     },

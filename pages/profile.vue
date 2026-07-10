@@ -72,7 +72,7 @@
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
-      <view v-if="[1, 2].includes($store.state.currentEsRoleId) || user.roleId === 1" class="list-item" @click="navigateToU('/pages/profile/user-management')">
+      <view v-if="[1, 2].includes($store.state.currentEsRoleId)" class="list-item" @click="navigateToU('/pages/profile/user-management')">
         <view class="item-content">
           <uni-icons type="contact" size="20" color="#007AFF"></uni-icons>
           <text class="item-title">用户管理</text>
@@ -221,7 +221,6 @@ export default {
 
 
     navigateToDeviceList() {
-      this.$store.commit('changeCurrentSelectDevice', {})
       uni.setStorageSync('fromProfile', 'true')
       uni.navigateTo({
         url: '/pages/index/index'

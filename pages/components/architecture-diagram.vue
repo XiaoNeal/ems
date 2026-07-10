@@ -777,6 +777,16 @@ export default {
       return new Promise(async (resolve) => {
 
         try {
+          const b12Value = this.device171F && this.device171F.controlData && this.device171F.controlData.B12 && this.device171F.controlData.B12.value;
+          if (b12Value === undefined || b12Value === null || b12Value === '--') {
+            uni.showModal({
+              title: '提示',
+              content: '当前设备离线，暂不支持下发指令',
+              showCancel: false
+            });
+            resolve(false);
+            return;
+          }
           uni.showLoading({ title: '下发中...' });
           const commands = typeof commandBuilder === 'function' ? commandBuilder(action) : commandBuilder;
 
@@ -790,14 +800,16 @@ export default {
           });
 
           uni.hideLoading();
-          // 更新选中状态
-          if (stateKey) {
-            this[stateKey] = action;
-          }
           uni.showToast({
             title: `${title}成功`,
             icon: 'success'
           });
+          
+          if (stateKey) {
+            setTimeout(() => {
+              this.updateDevice171F();
+            }, 10000);
+          }
           resolve(true);
         } catch (error) {
           uni.hideLoading();
@@ -861,15 +873,15 @@ export default {
     },
 
     handleStartStop() {
-      console.log(this.$store,"----------------------")
-      // const globalRoleId = this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
-      // if (![1, 2].includes(globalRoleId)) {
-      //   const currentRoleId = this.$store.state.currentEsRoleId
-      //   if (![1, 2].includes(currentRoleId)) {
-      //     uni.showToast({ title: '无权限操作', icon: 'none' });
-      //     return;
-      //   }
-      // }
+      const b12Value = this.device171F && this.device171F.controlData && this.device171F.controlData.B12 && this.device171F.controlData.B12.value;
+      if (b12Value === undefined || b12Value === null || b12Value === '--') {
+        uni.showModal({
+          title: '提示',
+          content: '当前设备离线，暂不支持下发指令',
+          showCancel: false
+        });
+        return;
+      }
       const status = this.getSystemStatus();
       if (status === '运行中') {
         this.showStopModal = true;

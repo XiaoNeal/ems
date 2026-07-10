@@ -5,8 +5,9 @@ import request from '@/utils/request'
 import store from '@/store'
 import md5 from "@/utils/md5.min.js";
 export const userLogin = (userName, password) => {
-	const systemInfo = uni.getSystemInfoSync();
-	let deviceId = `${systemInfo.brand}-${systemInfo.model}-${systemInfo.screenWidth}x${systemInfo.screenHeight}`;
+	const windowInfo = uni.getWindowInfo()
+	const deviceInfo = uni.getDeviceInfoSync ? uni.getDeviceInfoSync() : { brand: 'unknown', model: 'unknown' }
+	let deviceId = `${deviceInfo.brand}-${deviceInfo.model}-${windowInfo.screenWidth}x${windowInfo.screenHeight}`;
 	let deviceHash = md5(deviceId);
 	const requestData = {
 		username: userName,
@@ -116,8 +117,9 @@ export function getUserInfo() {
 }
 
 export function loginByPhone(phone, verificationCode) {
-	const systemInfo = uni.getSystemInfoSync();
-	let deviceId = `${systemInfo.brand}-${systemInfo.model}-${systemInfo.screenWidth}x${systemInfo.screenHeight}`;
+	const windowInfo = uni.getWindowInfo()
+	const deviceInfo = uni.getDeviceInfoSync ? uni.getDeviceInfoSync() : { brand: 'unknown', model: 'unknown' }
+	let deviceId = `${deviceInfo.brand}-${deviceInfo.model}-${windowInfo.screenWidth}x${windowInfo.screenHeight}`;
 	let deviceHash = md5(deviceId);
 	const requestData = {
 		tel: phone,

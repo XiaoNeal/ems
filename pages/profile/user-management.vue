@@ -259,11 +259,8 @@ export default {
     }
   },
   onLoad() {
-    uni.getSystemInfo({
-      success: (res) => {
-        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
-      },
-    });
+    const windowInfo = uni.getWindowInfo()
+    this.platformClass = windowInfo.platform === "ios" ? "ios-platform" : "android-platform"
   },
   mounted() {
     const currentDevice = this.$store.state.currentSelectDevice || {}
@@ -279,7 +276,7 @@ export default {
       return list
     },
     isSuperAdmin() {
-      return this.$store.state.userInfo?.roleId === 1
+      return this.$store.state.currentEsRoleId === 1
     },
     filteredRoles() {
       if (this.isSuperAdmin) {

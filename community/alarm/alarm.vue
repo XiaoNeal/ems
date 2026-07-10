@@ -93,8 +93,7 @@
               </view>
               <view class="level-option important" :class="{ active: filterLevel === 1 }" @click="filterLevel = 1">重要
               </view>
-              <view class="level-option minor" :class="{ active: filterLevel === 2 }" @click="filterLevel = 2">次要</view>
-              <view class="level-option prompt" :class="{ active: filterLevel === 3 }" @click="filterLevel = 3">提示
+              <view class="level-option prompt" :class="{ active: filterLevel === 2 }" @click="filterLevel = 2">提示
               </view>
             </view>
           </view>
@@ -244,11 +243,8 @@ export default {
     }
   },
   onLoad() {
-    uni.getSystemInfo({
-      success: (res) => {
-        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
-      },
-    });
+    const windowInfo = uni.getWindowInfo()
+    this.platformClass = windowInfo.platform === "ios" ? "ios-platform" : "android-platform"
   },
   mounted() {
     const today = new Date()
@@ -293,8 +289,9 @@ export default {
         alarmList = alarmList.sort((a, b) => {
           // 方案A：时间戳字段
           // return b.alarmTime - a.alarmTime
-          // 方案B：日期字符串（'2026-07-08 12:30:00'）
-          return new Date(b.alarmTime) - new Date(a.alarmTime)
+          // 方案B：日期字符串（'2026-07-08 12:30:00'），兼容iOS
+          const parseDate = (str) => new Date((str || '').replace(/-/g, '/'))
+          return parseDate(b.alarmTime) - parseDate(a.alarmTime)
         })
         console.log('告警接口返回数据:', alarmList)
         const list = (alarmList || []).map(it => this.formatAlarmItem(it))
@@ -333,23 +330,26 @@ export default {
 
       if (this.filterStartTime) {
         data = data.filter(it => {
-          const itemDate = new Date(it.startTime).getTime()
-          const startDate = new Date(this.filterStartTime).getTime()
+          const itemDate = new Date((it.startTime || '').replace(/-/g, '/')).getTime()
+          const startDate = new Date((this.filterStartTime || '').replace(/-/g, '/')).getTime()
           return itemDate >= startDate
         })
       }
 
       if (this.filterEndTime) {
         data = data.filter(it => {
-          const itemDate = new Date(it.startTime).getTime()
-          const endDate = new Date(this.filterEndTime + ' 23:59:59').getTime()
+          const itemDate = new Date((it.startTime || '').replace(/-/g, '/')).getTime()
+          const endDate = new Date((this.filterEndTime + ' 23:59:59').replace(/-/g, '/')).getTime()
           return itemDate <= endDate
         })
       }
 
       if (this.searchKeyword) {
         const kw = this.searchKeyword.toLowerCase()
-        data = data.filter(it => (it.typeName || '').toLowerCase().includes(kw))
+        data = data.filter(it => 
+          (it.typeName || '').toLowerCase().includes(kw) || 
+          (it.alarmName || '').toLowerCase().includes(kw)
+        )
       }
       this.filteredTotalCount = data.length
       const end = this.pageNumber * this.pageSize
@@ -364,7 +364,7 @@ export default {
       else if (alarmLevel.includes('提示') || alarmLevel.includes('轻微')) level = 2
 
       return {
-        id: item.deviceId || Date.now() + Math.random(),
+        id: `${item.deviceId || ''}_${item.alarmTime || ''}_${item.alarmName || ''}` || `${Date.now()}_${Math.random()}`,
         alarmLevel: level,
         typeName: item.typeName,
         alarmName: item.alarmName || '-',
@@ -935,10 +935,6 @@ export default {
 
   &.important.active {
     background: #FF7A2E;
-  }
-
-  &.minor.active {
-    background: #4D7BF1;
   }
 
   &.prompt.active {

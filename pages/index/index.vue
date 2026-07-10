@@ -233,6 +233,7 @@ export default {
         this.selectedDeviceId = null
         this.fromProfile = true
         uni.removeStorageSync('fromProfile')
+        this.$store.commit('changeCurrentSelectDevice', {})
         if (!this.isDeviceListLoaded) {
           this.fetchDeviceList()
         }
