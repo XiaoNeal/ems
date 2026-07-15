@@ -90,7 +90,7 @@
 import {
   getSocketinstance
 } from "@/service/websocket";
-import { queryDayGeneratedPower, getPowerData } from '../../api/power'
+import {  getPowerData } from '../../api/power'
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 import EmptyState from '@/components/empty-state/empty-state.vue';
 const commonArcbarOptions = {

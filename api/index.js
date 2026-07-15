@@ -16,66 +16,37 @@ export const systemOverview = (data) => {
     })
 }
 
-/**
- * 查询能源站日发电功率曲线
- * @param {string} esId - 能源站 ID
- * @param {string} date - 日期
- * @returns {Promise} 日发电功率数据
- */
-export const queryDayGeneratedPower = (esId,date) => {
-    return request.get(`/api/energyStation/queryDayGeneratedPower?esId=${esId}&date=${date}`)
-}
 
-/**
- * 查询能源站月发电功率曲线
- * @param {string} esId - 能源站 ID
- * @param {string} date - 日期
- * @returns {Promise} 月发电功率数据
- */
-export const queryMonthGeneratedPower = (esId,date) => {
-    return request.get(`/api/energyStation/queryMonthGeneratedPower?esId=${esId}&date=${date}`)
-}
+// /**
+//  * 查询能源站日电量统计
+//  * @param {string} esId - 能源站 ID
+//  * @param {string} date - 日期
+//  * @returns {Promise} 日电量统计数据
+//  */
+// export const queryDayElectricityStatistic = (esId,date) => {
+//     return request.get(`/api/energyStation/queryDayElectricityStatistic?esId=${esId}&date=${date}`)
+// }
 
-/**
- * 查询能源站年发电功率曲线
- * @param {string} esId - 能源站 ID
- * @param {string} date - 日期
- * @returns {Promise} 年发电功率数据
- */
-export const queryYearGeneratedPower = (esId,date) => {
-    return request.get(`/api/energyStation/queryYearGeneratedPower?esId=${esId}&date=${date}`)
-}
+// /**
+//  * 查询能源站月电量统计
+//  * @param {string} esId - 能源站 ID
+//  * @param {string} startDate - 开始日期
+//  * @param {string} endDate - 结束日期
+//  * @returns {Promise} 月电量统计数据
+//  */
+// export const queryMonthElectricityStatistic = (esId,startDate,endDate) => {
+//     return request.get(`/api/energyStation/queryMonthElectricityStatistic?esId=${esId}&startDate=${startDate}&endDate=${endDate}`)
+// }
 
-/**
- * 查询能源站日电量统计
- * @param {string} esId - 能源站 ID
- * @param {string} date - 日期
- * @returns {Promise} 日电量统计数据
- */
-export const queryDayElectricityStatistic = (esId,date) => {
-    return request.get(`/api/energyStation/queryDayElectricityStatistic?esId=${esId}&date=${date}`)
-}
-
-/**
- * 查询能源站月电量统计
- * @param {string} esId - 能源站 ID
- * @param {string} startDate - 开始日期
- * @param {string} endDate - 结束日期
- * @returns {Promise} 月电量统计数据
- */
-export const queryMonthElectricityStatistic = (esId,startDate,endDate) => {
-    return request.get(`/api/energyStation/queryMonthElectricityStatistic?esId=${esId}&startDate=${startDate}&endDate=${endDate}`)
-}
-
-/**
- * 查询能源站年电量统计
- * @param {string} esId - 能源站 ID
- * @param {string} year - 年份
- * @returns {Promise} 年电量统计数据
- */
-export const queryYearElectricityStatistic = (esId,year) => {
-    return request.get(`/api/energyStation/queryYearElectricityStatistic?esId=${esId}&year=${year}`)
-}
+// /**
+//  * 查询能源站年电量统计
+//  * @param {string} esId - 能源站 ID
+//  * @param {string} year - 年份
+//  * @returns {Promise} 年电量统计数据
+//  */
+// export const queryYearElectricityStatistic = (esId,year) => {
+//     return request.get(`/api/energyStation/queryYearElectricityStatistic?esId=${esId}&year=${year}`)
+// }
 
 /**
  * 查询光伏发电和电网供电数据

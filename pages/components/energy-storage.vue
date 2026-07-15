@@ -125,16 +125,10 @@
 </template>
 
 <script>
-// import { getSocketinstance } from "@/service/websocket";
 import { realtimeDataProvider } from '@/service/websocket';
-// import upgrade from "@/api/upgrade_new";
-// import nyz_new from "@/api/nyz_new";
 import dyDate from "@/components/dy-Date/dy-Date.vue";
 import EmptyState from '@/components/empty-state/empty-state.vue';
-// import nyz from "@/api/nyz";
-// import energy_new from "@/api/energy_new";
-// import { mapGetters } from "vuex";
-import { queryHighestChargeAndPower, getPowerData, queryDayElectricityStatistic, queryMonthElectricityStatistic, queryYearElectricityStatistic } from "../../api/power";
+import {  getPowerData, queryDayElectricityStatistic, queryMonthElectricityStatistic, queryYearElectricityStatistic } from "../../api/power";
 import { calculateYAxisMax } from '@/utils/tools';
 
 export default {

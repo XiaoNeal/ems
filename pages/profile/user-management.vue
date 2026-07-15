@@ -3,7 +3,7 @@
     <!-- 导航栏适配顶部安全区 -->
     <DyNavbar title="用户管理" :placeholder="true" safe-area-top />
     <view class="fixed-placeholder"></view>
-    
+
     <!-- 主滚动容器 适配底部安全区 -->
     <scroll-view class="content" scroll-y>
       <!-- 功能操作卡片 -->
@@ -37,12 +37,8 @@
 
       <!-- 用户列表卡片 -->
       <view v-else class="card-wrap">
-        <view
-          v-for="(user, index) in displayUserList"
-          :key="user._key"
-          :wx:key="'_key'"
-          class="list-item user-item tap-feedback"
-        >
+        <view v-for="(user, index) in displayUserList" :key="user._key" :wx:key="'_key'"
+          class="list-item user-item tap-feedback">
           <view class="card-left">
             <view class="user-avatar">
               <text class="avatar-text">{{ (user.user_name && user.user_name.charAt(0)) || '用' }}</text>
@@ -102,28 +98,16 @@
               </view>
               <view class="input-wrap">
                 <uni-icons type="phone" size="24" color="#bbb" />
-                <input
-                  class="form-input"
-                  v-model="addTel"
-                  placeholder="请输入对方手机号"
-                  type="number"
-                  maxlength="11"
-                />
+                <input class="form-input" v-model="addTel" placeholder="请输入对方手机号" type="number" maxlength="11" />
               </view>
             </view>
             <view class="form-item">
               <view class="form-label-wrap">
-                <text class="form-label">微电站ID</text>
-                <text class="required-mark">*</text>
+                <text class="form-label">当前微能站</text>
               </view>
               <view class="input-wrap">
                 <uni-icons type="location" size="24" color="#bbb" />
-                <input
-                  class="form-input"
-                  v-model="esId"
-                  placeholder="当前电站ID自动填充"
-                  type="number"
-                />
+                <text class="form-text">{{ esName }}</text>
               </view>
             </view>
           </view>
@@ -148,7 +132,8 @@
           <view class="modal-body">
             <view class="permission-info">
               <view class="permission-avatar">
-                <text class="permission-avatar-text">{{ (selectedUser.user_name && selectedUser.user_name.charAt(0)) || '用' }}</text>
+                <text class="permission-avatar-text">{{ (selectedUser.user_name && selectedUser.user_name.charAt(0)) ||
+                  '用' }}</text>
               </view>
               <view class="permission-detail">
                 <text class="permission-name">{{ selectedUser.user_name || selectedUser.screenName || '--' }}</text>
@@ -160,14 +145,8 @@
               <text class="tip-text">请为该用户选择操作角色权限</text>
             </view>
             <view class="role-list">
-              <view
-                v-for="role in filteredRoles"
-                :key="role.id"
-                :wx:key="'id'"
-                class="role-item tap-feedback"
-                :class="{ active: selectedRole === role.id }"
-                @click="selectedRole = role.id"
-              >
+              <view v-for="role in filteredRoles" :key="role.id" :wx:key="'id'" class="role-item tap-feedback"
+                :class="{ active: selectedRole === role.id }" @click="selectedRole = role.id">
                 <text class="role-name">{{ role.name }}</text>
                 <view v-if="selectedRole === role.id" class="role-check">
                   <uni-icons type="check" size="24" color="#fff" />
@@ -196,14 +175,9 @@
           <view class="modal-body">
             <text class="transfer-hint">请选择接收管理员权限的用户</text>
             <view class="transfer-user-list">
-              <view
-                v-for="user in normalUsers"
-                :key="user._key"
-                :wx:key="'_key'"
-                class="transfer-user-item tap-feedback"
-                :class="{ selected: transferTargetId === user.id }"
-                @click="transferTargetId = user.id"
-              >
+              <view v-for="user in normalUsers" :key="user._key" :wx:key="'_key'"
+                class="transfer-user-item tap-feedback" :class="{ selected: transferTargetId === user.id }"
+                @click="transferTargetId = user.id">
                 <view class="transfer-avatar">
                   <text class="transfer-avatar-text">{{ (user.user_name && user.user_name.charAt(0)) || '用' }}</text>
                 </view>
@@ -243,6 +217,7 @@ export default {
       platformClass: "",
       addTel: '',
       esId: '',
+      esName: '',
       userList: [],
       loading: true,
       showAddModal: false,
@@ -265,6 +240,7 @@ export default {
   mounted() {
     const currentDevice = this.$store.state.currentSelectDevice || {}
     this.esId = currentDevice.id || currentDevice.esId || ''
+    this.esName = currentDevice.deviceName || currentDevice.name || '未知微能站'
     this.getUserList()
   },
   computed: {
@@ -276,7 +252,8 @@ export default {
       return list
     },
     isSuperAdmin() {
-      return this.$store.state.currentEsRoleId === 1
+
+      return this.$store.state.userInfo?.roleId === 1
     },
     filteredRoles() {
       if (this.isSuperAdmin) {
@@ -299,7 +276,7 @@ export default {
         const esId = this.esId || currentDevice.id || currentDevice.esId || 3
         const res = await getUserInfoByEsId(esId)
         console.log('getUserList res:', res)
-        
+
         if (res && res.status === 200) {
           this.userList = (res.data || []).map((user, index) => ({
             ...user,
@@ -333,7 +310,7 @@ export default {
       try {
         const res = await bindEsUserByTelAndEsId(this.addTel, this.esId)
         console.log('bindUser res:', res)
-        
+
         if (res && res.status === 200) {
           uni.showToast({ title: '添加成功', icon: 'success' })
           this.addTel = ''
@@ -360,7 +337,7 @@ export default {
     },
     async confirmSetAdmin() {
       if (!this.selectedUser) return
-      
+
       const userId = this.selectedUser.id
       if (!userId) {
         uni.showToast({ title: '该用户无用户ID，无法修改权限', icon: 'none' })
@@ -383,7 +360,7 @@ export default {
         const esId = this.esId || currentDevice.id || currentDevice.esId || 3
         const response = await changeEsUserRoleByUserIdAndEsId(userId, esId, this.selectedRole)
         console.log('confirmSetAdmin response:', response)
-        
+
         if (response && response.status === 200) {
           uni.showToast({ title: '权限设置成功', icon: 'success' })
           this.showSetAdminModal = false
@@ -403,7 +380,7 @@ export default {
         uni.showToast({ title: '请选择接收权限的用户', icon: 'none' })
         return
       }
-      
+
       const targetUser = this.userList.find(user => user.id === this.transferTargetId)
       if (!targetUser) {
         uni.showToast({ title: '用户数据异常', icon: 'none' })
@@ -422,7 +399,7 @@ export default {
         const esId = this.esId || currentDevice.id || currentDevice.esId || 3
         const response = await changeEsUserByTelAndEsId(tel, esId)
         console.log('confirmTransfer response:', response)
-        
+
         if (response && response.status === 200) {
           uni.showToast({ title: '管理员转移完成', icon: 'success' })
           this.showTransferModal = false
@@ -488,11 +465,11 @@ $border-line: #eee;
 
   &.android-platform {
     .fixed-placeholder {
-       height: calc(25px + 44px + 20px);
+      height: calc(25px + 44px + 20px);
       background: #fff;
     }
   }
-  
+
   &.ios-platform {
     .fixed-placeholder {
       height: calc(44px);
@@ -549,12 +526,19 @@ $border-line: #eee;
 .refresh-icon {
   transition: transform 0.5s ease;
 }
+
 .refresh-icon.rotating {
   animation: spin 1s linear infinite;
 }
+
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 // 空/加载状态
@@ -564,6 +548,7 @@ $border-line: #eee;
   align-items: center;
   padding: 120rpx 40rpx;
 }
+
 .loading-spinner {
   width: 80rpx;
   height: 80rpx;
@@ -573,10 +558,12 @@ $border-line: #eee;
   animation: spin 0.8s linear infinite;
   margin-bottom: 32rpx;
 }
+
 .loading-text {
   font-size: 28rpx;
   color: $text-light;
 }
+
 .empty-wrap {
   .empty-icon-box {
     width: 180rpx;
@@ -588,12 +575,14 @@ $border-line: #eee;
     justify-content: center;
     margin-bottom: 36rpx;
   }
+
   .empty-title {
     font-size: 36rpx;
     font-weight: 600;
     color: $text-dark;
     margin-bottom: 16rpx;
   }
+
   .empty-desc {
     font-size: 26rpx;
     color: $text-light;
@@ -688,7 +677,8 @@ $border-line: #eee;
   margin-top: 8rpx;
 }
 
-.user-phone, .user-time {
+.user-phone,
+.user-time {
   font-size: 24rpx;
   color: $text-light;
 }
@@ -711,6 +701,7 @@ $border-line: #eee;
   padding: 6rpx 16rpx;
   border-radius: 20rpx;
   background: rgba(74, 144, 217, 0.08);
+
   &:active {
     background: rgba(74, 144, 217, 0.15);
   }
@@ -723,6 +714,7 @@ $border-line: #eee;
 
 .transfer-btn {
   background: rgba(255, 152, 0, 0.08);
+
   &:active {
     background: rgba(255, 152, 0, 0.15);
   }
@@ -827,18 +819,22 @@ $border-line: #eee;
   gap: 16rpx;
   margin-bottom: 32rpx;
 }
+
 .form-label-wrap {
   display: flex;
   align-items: center;
 }
+
 .form-label {
   font-size: 30rpx;
   color: $text-normal;
 }
+
 .required-mark {
   color: $danger;
   margin-left: 6rpx;
 }
+
 .input-wrap {
   display: flex;
   align-items: center;
@@ -848,11 +844,18 @@ $border-line: #eee;
   height: 100rpx;
   gap: 20rpx;
 }
+
 .form-input {
   flex: 1;
   font-size: 30rpx;
   color: $text-dark;
   background: transparent;
+}
+
+.form-text {
+  flex: 1;
+  font-size: 30rpx;
+  color: $text-dark;
 }
 
 // 权限弹窗样式
@@ -862,6 +865,7 @@ $border-line: #eee;
   gap: 24rpx;
   margin-bottom: 36rpx;
 }
+
 .permission-avatar {
   width: 96rpx;
   height: 96rpx;
@@ -871,25 +875,30 @@ $border-line: #eee;
   align-items: center;
   justify-content: center;
 }
+
 .permission-avatar-text {
   font-size: 38rpx;
   color: #fff;
   font-weight: 600;
 }
+
 .permission-detail {
   display: flex;
   flex-direction: column;
   gap: 10rpx;
 }
+
 .permission-name {
   font-size: 34rpx;
   font-weight: 600;
   color: $text-dark;
 }
+
 .permission-phone {
   font-size: 26rpx;
   color: $text-light;
 }
+
 .permission-tip {
   display: flex;
   align-items: flex-start;
@@ -899,23 +908,28 @@ $border-line: #eee;
   border-radius: 16rpx;
   margin-bottom: 32rpx;
 }
+
 .danger-tip {
   background: #fff2f2;
 }
+
 .tip-text {
   flex: 1;
   font-size: 26rpx;
   line-height: 1.7;
   color: $warning;
 }
+
 .danger-tip .tip-text {
   color: $danger;
 }
+
 .role-list {
   display: flex;
   flex-wrap: wrap;
   gap: 20rpx;
 }
+
 .role-item {
   flex: 0 0 calc(50% - 20rpx);
   display: flex;
@@ -926,18 +940,22 @@ $border-line: #eee;
   border-radius: 16rpx;
   border: 2rpx solid transparent;
 }
+
 .role-item.active {
   background: rgba(74, 144, 217, 0.12);
   border-color: $primary;
 }
+
 .role-name {
   font-size: 30rpx;
   color: $text-dark;
 }
+
 .role-item.active .role-name {
   color: $primary;
   font-weight: 500;
 }
+
 .role-check {
   width: 44rpx;
   height: 44rpx;
@@ -952,17 +970,20 @@ $border-line: #eee;
 .transfer-modal {
   max-width: 700rpx;
 }
+
 .transfer-hint {
   font-size: 30rpx;
   color: $text-normal;
   margin-bottom: 24rpx;
 }
+
 .transfer-user-list {
   max-height: 420rpx;
   overflow-y: auto;
   overflow-x: hidden;
   margin-bottom: 32rpx;
 }
+
 .transfer-user-item {
   display: flex;
   align-items: center;
@@ -973,10 +994,12 @@ $border-line: #eee;
   border: 2rpx solid transparent;
   box-sizing: border-box;
 }
+
 .transfer-user-item.selected {
   background: #e8f0fe;
   border-color: $primary;
 }
+
 .transfer-avatar {
   width: 72rpx;
   height: 72rpx;
@@ -987,15 +1010,18 @@ $border-line: #eee;
   justify-content: center;
   margin-right: 20rpx;
 }
+
 .transfer-avatar-text {
   font-size: 30rpx;
   color: #fff;
   font-weight: 600;
 }
+
 .transfer-user-info {
   flex: 1;
   min-width: 0;
 }
+
 .transfer-user-name {
   font-size: 30rpx;
   color: $text-dark;
@@ -1006,6 +1032,7 @@ $border-line: #eee;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .transfer-user-phone {
   font-size: 26rpx;
   color: $text-light;
@@ -1013,6 +1040,7 @@ $border-line: #eee;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .transfer-check {
   width: 52rpx;
   height: 52rpx;

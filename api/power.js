@@ -21,15 +21,6 @@ export const getPowerData = (params) => {
 	})
 }
 
-// 查询充放电最大最小功率
-export const queryHighestChargeAndPower = (data) => {
-	return request({
-		url: URL("/homeCommunity/queryHighestChargeAndPower"),
-		method: 'post',
-		data
-	})
-}
-
 // 查询日发电功率数据
 export const queryDayGeneratedPower = (params) => {
 	return request({

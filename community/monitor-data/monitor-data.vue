@@ -534,12 +534,12 @@
                   <view class="grid-item">
                     <text class="item-label">电池簇总SOC(%)</text>
                     <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B16 ?
-                      device171C.energyData.B16.value : "--" }}</text>
+                      this.formatValue(device171C.energyData.B16.value, 2) : "--" }}</text>
                   </view>
                   <view class="grid-item">
                     <text class="item-label">电池簇总SOH(%)</text>
                     <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B18 ?
-                      device171C.energyData.B18.value : "--" }}</text>
+                      this.formatValue(device171C.energyData.B18.value, 2) : "--" }}</text>
                   </view>
                   <view class="grid-item">
                     <text class="item-label">电池簇总SOE(kWh)</text>
@@ -734,11 +734,11 @@
                   <view class="grid-item"><text class="item-label">单体平均电压(V)</text><text class="item-value">{{
                     device171C &&
                       device171C.energyData && device171C.energyData.B50 ?
-                      this.formatValue(device171C.energyData.B50.value, 1) : "--" }}</text></view>
+                      this.formatValue(device171C.energyData.B50.value, 3) : "--" }}</text></view>
                   <view class="grid-item"><text class="item-label">最高单体电压(V)</text><text class="item-value">{{
                     device171C &&
                       device171C.energyData && device171C.energyData.B52 ?
-                      this.formatValue(device171C.energyData.B52.value, 1) : "--" }}</text></view>
+                      this.formatValue(device171C.energyData.B52.value, 3) : "--" }}</text></view>
                   <view class="grid-item"><text class="item-label">最高单体电压模块号</text><text class="item-value">{{
                     device171C &&
                       device171C.energyData && device171C.energyData.B54 ? device171C.energyData.B54.value : "--"
@@ -751,7 +751,7 @@
                   <view class="grid-item"><text class="item-label">最低单体电压(V)</text><text class="item-value">{{
                     device171C &&
                       device171C.energyData && device171C.energyData.B58 ?
-                      this.formatValue(device171C.energyData.B58.value, 1) : "--" }}</text></view>
+                      this.formatValue(device171C.energyData.B58.value, 3) : "--" }}</text></view>
                   <view class="grid-item"><text class="item-label">最低单体电压模块号</text><text class="item-value">{{
                     device171C &&
                       device171C.energyData && device171C.energyData.B60 ? device171C.energyData.B60.value : "--"
@@ -763,11 +763,11 @@
                   }}</text></view>
                   <view class="grid-item"><text class="item-label">单体平均SOC(%)</text><text class="item-value">{{
                     device171C
-                      && device171C.energyData && device171C.energyData.B64 ? device171C.energyData.B64.value : "--"
+                      && device171C.energyData && device171C.energyData.B64 ? this.formatValue(device171C.energyData.B64.value, 2) : "--"
                   }}</text></view>
                   <view class="grid-item"><text class="item-label">最高单体SOC(%)</text><text class="item-value">{{
                     device171C
-                      && device171C.energyData && device171C.energyData.B66 ? device171C.energyData.B66.value : "--"
+                      && device171C.energyData && device171C.energyData.B66 ? this.formatValue(device171C.energyData.B66.value, 2) : "--"
                   }}</text></view>
                   <view class="grid-item"><text class="item-label">最高SOC模块号</text><text class="item-value">{{ device171C
                     &&
@@ -781,7 +781,7 @@
                   </view>
                   <view class="grid-item"><text class="item-label">最低单体SOC(%)</text><text class="item-value">{{
                     device171C
-                      && device171C.energyData && device171C.energyData.B72 ? device171C.energyData.B72.value : "--"
+                      && device171C.energyData && device171C.energyData.B72 ? this.formatValue(device171C.energyData.B72.value, 2) : "--"
                   }}</text></view>
                   <view class="grid-item"><text class="item-label">最低SOC模块号</text><text class="item-value">{{ device171C
                     &&
@@ -795,11 +795,11 @@
                   </view>
                   <view class="grid-item"><text class="item-label">单体平均SOH(%)</text><text class="item-value">{{
                     device171C
-                      && device171C.energyData && device171C.energyData.B78 ? device171C.energyData.B78.value : "--"
+                      && device171C.energyData && device171C.energyData.B78 ? this.formatValue(device171C.energyData.B78.value, 2) : "--"
                   }}</text></view>
                   <view class="grid-item"><text class="item-label">最高单体SOH(%)</text><text class="item-value">{{
                     device171C
-                      && device171C.energyData && device171C.energyData.B80 ? device171C.energyData.B80.value : "--"
+                      && device171C.energyData && device171C.energyData.B80 ? this.formatValue(device171C.energyData.B80.value, 2) : "--"
                   }}</text></view>
                   <view class="grid-item"><text class="item-label">最高SOH模块号</text><text class="item-value">{{ device171C
                     &&
@@ -813,7 +813,7 @@
                   </view>
                   <view class="grid-item"><text class="item-label">最低单体SOH(%)</text><text class="item-value">{{
                     device171C
-                      && device171C.energyData && device171C.energyData.B86 ? device171C.energyData.B86.value : "--"
+                      && device171C.energyData && device171C.energyData.B86 ? this.formatValue(device171C.energyData.B86.value, 2) : "--"
                   }}</text></view>
                   <view class="grid-item"><text class="item-label">最低SOH模块号</text><text class="item-value">{{ device171C
                     &&

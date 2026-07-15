@@ -117,10 +117,10 @@ export default {
       return this.$store.state.userInfo?.userId || this.$store.state.user?.id || 0
     },
     isAdmin() {
-      // const currentRoleId = this.$store.state.currentEsRoleId || this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
-      // return [1, 4].includes(currentRoleId)
-        const currentRoleId = this.$store.state.currentEsRoleId 
-      return [4].includes(currentRoleId)
+      const currentRoleId = this.$store.state.currentEsRoleId || this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
+      return [1, 4].includes(currentRoleId)
+        // const currentRoleId = this.$store.state.currentEsRoleId 
+      // return [4].includes(currentRoleId)
     }
   },
   mounted() {

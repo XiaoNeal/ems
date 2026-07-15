@@ -54,11 +54,11 @@
           <view class="btn-group triple">
             <view class="control-btn" :class="{ active: selectedPcsMode === 'charge', 'btn-disabled': !isEditing }"
               @click="handlePcsModeClick('charge')">
-              并网充电
+              并网整流
             </view>
             <view class="control-btn" :class="{ active: selectedPcsMode === 'discharge', 'btn-disabled': !isEditing }"
               @click="handlePcsModeClick('discharge')">
-              并网放电
+              并网逆变
             </view>
             <view class="control-btn" :class="{ active: selectedPcsMode === 'off-grid', 'btn-disabled': !isEditing }"
               @click="handlePcsModeClick('off-grid')">
