@@ -281,7 +281,7 @@
 
 <script>
 
-import { getPowerData, queryMonthElectricityStatistic, queryYearElectricityStatistic } from '../../api/power';
+import { getPowerData, queryMonthElectricityStatistic, queryYearElectricityStatistic } from '@/api/power';
 import dyDate from '@/components/dy-Date/dy-Date.vue';
 import { realtimeDataProvider } from '@/service/websocket';
 import EmptyState from '@/components/empty-state/empty-state.vue';

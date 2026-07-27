@@ -12,6 +12,10 @@ export const getOperationLogByUserId = (params) => {
     return request.get('/api/GetOperationLogByUserId', params)
 }
 
+export const GetEsOperationLogByUserId = (params) => {
+    return request.get('/api/GetEsOperationLogByUserId', params)
+}
+
 export const getAlarmRecord = (params) => {
     return request.get('/api/energyStation/alarm/getAlarmRecord', params)
 }

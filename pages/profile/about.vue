@@ -35,7 +35,7 @@
 		<!-- #endif -->
 		<!-- #ifdef MP-WEIXIN -->
 		<view class="version-info" :style="{'color':fontColor}">
-			<text>当前版本：{{versionName}}</text>
+			<text>当前版本：{{appVersion}}</text>
 		</view>
 		<view class="agreement" :style="{'color':fontColor}">
 			<view style="text-align: center;" @click="goToAgreement('privacy-policy')">《微能站隐私协议政策》</view>
@@ -59,6 +59,7 @@
 
 <script>
 	import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+	// import manifest from '@/manifest.json'
 
 	export default {
 		components: { DyNavbar },
@@ -67,7 +68,6 @@
 				appVersion: '',
 				isNew: '无新版本',
 				isLoading: false,
-				versionName: 'V1.0.0',
 				platformClass: ''
 			}
 		},
@@ -78,7 +78,13 @@
 				return year
 			}
 		},
-		onLoad() {
+		onLoad(options) {
+			// if (options?.version) {
+			// 	this.appVersion = options.version;
+			// } else {
+			// 	this.appVersion = 'V' + (manifest.versionName || '1.0.0');
+			// }
+			this.appVersion = 'V' + ('1.0.8');
 			uni.getSystemInfo({
 				success: (res) => {
 					this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
@@ -87,20 +93,13 @@
 		},
 		mounted() {
 			// #ifdef APP-PLUS
-			let appBaseInfo = uni.getAppBaseInfo();
-			let version = appBaseInfo.appWgtVersion;
-			this.appVersion = version.replace(/\./g, '.');
+			if (!this.appVersion) {
+				let version = uni.getSystemInfoSync().appWgtVersion;
+				this.appVersion = version.replace(/\./g, '.');
+			}
 			// #endif
 			// #ifdef APP
 			this.getUpgrade()
-			// #endif
-			// #ifdef MP-WEIXIN
-			try {
-				let accountInfo = uni.getAccountInfoSync();
-				this.versionName = accountInfo.miniProgram.version || 'V1.0.0';
-			} catch (e) {
-				this.versionName = 'V1.0.0';
-			}
 			// #endif
 		},
 		methods: {

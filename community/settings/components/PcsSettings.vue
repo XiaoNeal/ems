@@ -1423,7 +1423,7 @@ export default {
   gap: 16rpx;
   width: 100%;
   padding: 24rpx;
-  background: #f8f9fa;
+  // background: #f8f9fa;
   border-radius: 16rpx;
   border: 2rpx solid #e8e8e8;
 }

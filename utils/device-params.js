@@ -310,10 +310,44 @@ export const deviceParams = {
       }
     },
     '107': { label: '可调风扇控制-占空比', unit: '%', ratio: 0.1 },
-    '112': { label: '累计充电电量(高16位)', unit: 'kWh', ratio: 0.1, hex16: true },
-    '113': { label: '累计充电电量(低16位)', unit: 'kWh', ratio: 0.1, hex16: true },
-    '114': { label: '累计放电电量(高16位)', unit: 'kWh', ratio: 0.1, hex16: true },
-    '115': { label: '累计放电电量(低16位)', unit: 'kWh', ratio: 0.1, hex16: true },
+    '112': { 
+      label: '累计充电电量', 
+      unit: 'kWh', 
+      type: 'combined',
+      highAddress: '112', 
+      lowAddress: '113',
+      ratio: 0.1, 
+      hex16: true,
+      min: 0,
+      max: 4294967295
+    },
+    '113': { 
+      label: '累计充电电量', 
+      unit: 'kWh', 
+      type: 'combined',
+      highAddressRef: '112',
+      ratio: 0.1, 
+      hex16: true 
+    },
+    '114': { 
+      label: '累计放电电量', 
+      unit: 'kWh', 
+      type: 'combined',
+      highAddress: '114', 
+      lowAddress: '115',
+      ratio: 0.1, 
+      hex16: true,
+      min: 0,
+      max: 4294967295
+    },
+    '115': { 
+      label: '累计放电电量', 
+      unit: 'kWh', 
+      type: 'combined',
+      highAddressRef: '114',
+      ratio: 0.1, 
+      hex16: true 
+    },
     '117': { label: '电池容量', unit: 'Ah', ratio: 1 },
     '118': { label: '电传感器量程 1', unit: '' },
     '119': { label: '电传感器量程 2', unit: '' },

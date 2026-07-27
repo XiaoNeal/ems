@@ -62,11 +62,17 @@
                 <text class="action-text">转移管理员</text>
                 <uni-icons type="arrowright" size="22" color="#ccc" />
               </view>
+              <view class="action-btn delete-btn" @click.stop="handleDeleteUser(user)">
+                <text class="action-text">删除</text>
+              </view>
             </view>
             <view v-else class="action-group">
               <view class="action-btn" @click.stop="openSetAdminModal(user)">
                 <text class="action-text">分配权限</text>
                 <uni-icons type="arrowright" size="22" color="#ccc" />
+              </view>
+              <view class="action-btn delete-btn" @click.stop="handleDeleteUser(user)">
+                <text class="action-text">删除</text>
               </view>
             </view>
           </view>
@@ -206,7 +212,7 @@
 </template>
 
 <script>
-import { getUserInfoByEsId, bindEsUserByTelAndEsId, changeEsUserByTelAndEsId, changeEsUserRoleByUserIdAndEsId } from '@/api/user.js'
+import { getUserInfoByEsId, bindEsUserByTelAndEsId, changeEsUserByTelAndEsId, changeEsUserRoleByUserIdAndEsId, deleteEsUser } from '@/api/user.js'
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
 export default {
@@ -442,6 +448,43 @@ export default {
         5: 'role-operator'
       }
       return roleMap[roleId] || 'role-user'
+    },
+    handleDeleteUser(user) {
+      uni.showModal({
+        title: '删除确认',
+        content: `确定要删除用户「${user.user_name || user.screenName || '未知'}」吗？`,
+        confirmColor: '#f56c6c',
+        success: async (res) => {
+          if (res.confirm) {
+            uni.showLoading({ title: '删除中...' })
+            try {
+              const currentDevice = this.$store.state.currentSelectDevice || {}
+              const esId = this.esId || currentDevice.id || currentDevice.esId 
+              const areaLevelId = currentDevice.user.area_level_id 
+              console.log('esId:', esId,currentDevice)
+              const deleteData = [{
+                baseUserInfoId: user.id,
+                levelId: areaLevelId,
+                esId: esId
+              }]
+              const response = await deleteEsUser(deleteData)
+              console.log('deleteEsUser response:', response)
+              
+              if (response && response.status === 200) {
+                uni.showToast({ title: '删除成功', icon: 'success' })
+                this.getUserList()
+              } else {
+                uni.showToast({ title: response && response.msg || '删除失败', icon: 'none' })
+              }
+            } catch (e) {
+              console.error(e)
+              uni.showToast({ title: '操作失败', icon: 'none' })
+            } finally {
+              uni.hideLoading()
+            }
+          }
+        }
+      })
     }
   }
 }
@@ -722,6 +765,19 @@ $border-line: #eee;
 
 .transfer-btn .action-text {
   color: $warning;
+}
+
+.delete-btn {
+  background: rgba(245, 108, 108, 0.08);
+  margin-left: 16rpx;
+
+  &:active {
+    background: rgba(245, 108, 108, 0.15);
+  }
+}
+
+.delete-btn .action-text {
+  color: $danger;
 }
 
 .modal-overlay {

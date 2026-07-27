@@ -314,12 +314,6 @@ export default {
       }
       return "--";
     },
-    formatHistoryChargePowerTime() {
-      return "--";
-    },
-    formatHistoryDischargePowerTime() {
-      return "--";
-    },
     handleDateTypeChange(tab) {
       this.activeChartTab = tab;
       const map = { '日': 0, '月': 1, '年': 2 };
@@ -577,8 +571,8 @@ export default {
   height: 100%;
   display: flex;
   align-items: center;
-  padding: 0 12rpx;
-  color: #fff;
+  //padding: 0 12rpx;
+  // color: #fff;
   font-size: 24rpx;
   font-weight: bold;
 }

@@ -53,8 +53,11 @@
       <view class="date-picker-wrap">
         <picker mode="date" :value="selectedDate" @change="onDateChange">
           <view class="date-picker">
+            <view class="date-icon-wrap">
+              <uni-icons type="calendar" size="24" color="#4488FB"></uni-icons>
+            </view>
             <text>{{ selectedDate || '请选择日期' }}</text>
-            <uni-icons type="arrowdown" size="18" color="#999"></uni-icons>
+            <uni-icons type="arrowdown" size="20" color="#999"></uni-icons>
           </view>
         </picker>
         <view class="quick-dates">
@@ -132,7 +135,7 @@
         <view class="tab-btn" :class="{ active: tableType === 2 }" @click="ontableTypeChange(2)">
           已结束（{{ alarmTimes.ended }}）
         </view>
-         <view class="tab-btn" :class="{ active: tableType === 0 }" @click="ontableTypeChange(0)">
+        <view class="tab-btn" :class="{ active: tableType === 0 }" @click="ontableTypeChange(0)">
           全部（{{ alarmTimes.total }}）
         </view>
       </view>
@@ -149,7 +152,9 @@
         <!-- 空状态 -->
         <view v-if="!listLoading && apiDataShow.length === 0" class="empty">
           <uni-icons type="empty" size="60" color="#ddd"></uni-icons>
-          <text>暂无报警数据</text>
+          <text v-if="tableType === 1">暂无进行中报警数据</text>
+          <text v-else-if="tableType === 2">暂无已结束报警数据</text>
+          <text v-else>暂无报警数据</text>
         </view>
 
         <view v-for="item in apiDataShow" :key="item.id" class="alarm-item" hover-class="hover">
@@ -243,8 +248,14 @@ export default {
     }
   },
   onLoad() {
-    const windowInfo = uni.getWindowInfo()
-    this.platformClass = windowInfo.platform === "ios" ? "ios-platform" : "android-platform"
+    // const windowInfo = uni.getWindowInfo()
+    // this.platformClass = windowInfo.platform === "ios" ? "ios-platform" : "android-platform"
+
+    uni.getSystemInfo({
+      success: (res) => {
+        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
+      },
+    });
   },
   mounted() {
     const today = new Date()
@@ -346,8 +357,8 @@ export default {
 
       if (this.searchKeyword) {
         const kw = this.searchKeyword.toLowerCase()
-        data = data.filter(it => 
-          (it.typeName || '').toLowerCase().includes(kw) || 
+        data = data.filter(it =>
+          (it.typeName || '').toLowerCase().includes(kw) ||
           (it.alarmName || '').toLowerCase().includes(kw)
         )
       }
@@ -630,20 +641,40 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 20rpx 24rpx;
-  margin-bottom: 20rpx;
+  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+  border-radius: 20rpx;
+  padding: 28rpx 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(68, 136, 251, 0.08);
+  border: 1rpx solid rgba(68, 136, 251, 0.1);
 }
 
 .date-picker {
   display: flex;
   align-items: center;
-  gap: 12rpx;
+  gap: 16rpx;
+  padding: 16rpx 24rpx;
+  background: rgba(68, 136, 251, 0.1);
+  border-radius: 40rpx;
+
+  .date-icon-wrap {
+    width: 48rpx;
+    height: 48rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(68, 136, 251, 0.1);
+    border-radius: 50%;
+  }
 
   text {
     font-size: 28rpx;
     color: #333;
+    font-weight: 500;
+  }
+
+  uni-icons[type="arrowdown"] {
+    transition: transform 0.3s ease;
   }
 }
 
@@ -653,15 +684,23 @@ export default {
 }
 
 .quick-date-btn {
-  padding: 12rpx 24rpx;
-  font-size: 24rpx;
+  padding: 14rpx 28rpx;
+  font-size: 26rpx;
   color: #666;
-  background: #f5f7fa;
+  background: #f0f2f5;
   border-radius: 40rpx;
+  transition: all 0.3s ease;
+  border: 1rpx solid transparent;
+
+  &:active {
+    transform: scale(0.96);
+  }
 
   &.active {
-    background: #4488FB;
+    background: linear-gradient(135deg, #4488FB 0%, #66AFFF 100%);
     color: #fff;
+    border-color: #4488FB;
+    box-shadow: 0 4rpx 16rpx rgba(68, 136, 251, 0.3);
   }
 }
 

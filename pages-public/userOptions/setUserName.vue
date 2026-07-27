@@ -7,19 +7,47 @@
 		<u-toast ref="uToast"></u-toast>
 		<!-- 改用户名 -->
 		<view class="modify" v-if="type == 1">
-			<view class="section-title">更改用户名</view>
-			<view class="section-desc">请输入新用户名，此名称用于登录</view>
-			<input class="input-text" type="text" v-model="setUserName" placeholder="请输入用户名">
+			<view class="section-header">
+				<view class="section-icon-wrap">
+					<uni-icons type="person" size="32" color="#4a8cff"></uni-icons>
+				</view>
+				<view class="section-info">
+					<view class="section-title">更改用户名</view>
+					<view class="section-desc">请输入新用户名，此名称用于登录</view>
+				</view>
+			</view>
+			<view class="form-item">
+				<view class="input-wrap">
+					<uni-icons class="input-icon" type="person" size="28" color="#999"></uni-icons>
+					<input class="input-text" type="text" v-model="setUserName" placeholder="请输入用户名">
+				</view>
+			</view>
 			<button class="primary-btn" @click="modifyUserName">确定</button>
 		</view>
 
 		<!-- 更改手机号 -->
 		<view class="modify" v-if="type == 2">
-			<view class="section-title">更改手机号</view>
-			<input class="input-text" type="text" placeholder="请输入新手机号" v-model="setUserPhone">
-			<view class="verification-code">
-				<input class="code-input" type="text" placeholder="请输入验证码" v-model="verificationCodePhone">
-				<view class="code-btn" @click="getCode">{{ verificationCodeText }}</view>
+			<view class="section-header">
+				<view class="section-icon-wrap">
+					<uni-icons type="phone" size="32" color="#4a8cff"></uni-icons>
+				</view>
+				<view class="section-info">
+					<view class="section-title">更改手机号</view>
+					<view class="section-desc">请输入新手机号并验证</view>
+				</view>
+			</view>
+			<view class="form-item">
+				<view class="input-wrap">
+					<uni-icons class="input-icon" type="phone" size="28" color="#999"></uni-icons>
+					<input class="input-text" type="text" placeholder="请输入新手机号" v-model="setUserPhone">
+				</view>
+			</view>
+			<view class="form-item">
+				<view class="input-wrap code-input-wrap">
+					<uni-icons class="input-icon" type="locked" size="28" color="#999"></uni-icons>
+					<input class="code-input" type="text" placeholder="请输入验证码" v-model="verificationCodePhone">
+					<view class="code-btn" @click="getCode">{{ verificationCodeText }}</view>
+				</view>
 			</view>
 			<button class="primary-btn" @click="modifyPhone">确定</button>
 		</view>
@@ -94,7 +122,7 @@
 </template>
 
 <script>
-import { updateUserInfo, sendSmsCode, UpdatePasswordBySms } from "@/api/user.js"
+import { updateUserInfo, sendSmsCode, UpdatePasswordBySms, updateUserInfoById } from "@/api/user.js"
 import { mapState } from 'vuex';
 import md5 from "@/utils/md5.min.js"
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
@@ -354,11 +382,18 @@ export default {
 				})
 				return
 			}
-			let formData = JSON.stringify({
-				userId: that.memberId,
-				newUserName: that.setUserName
-			})
-			updateUserInfo(formData).then(res => {
+			const currentUser = this.$store.state.userInfo || this.$store.state.user || {}
+			let formData = {
+				id: that.id,
+				user_name: that.setUserName,
+				email: currentUser.email || '',
+				baseName: currentUser.baseName || currentUser.user_name || '',
+				mobile_phone: currentUser.mobile_phone || that.mobile || '',
+				roleId: currentUser.roleId || currentUser.role_id || 3,
+				screenName: currentUser.screenName || currentUser.user_name || '',
+				accountBalance: currentUser.accountBalance || 0.0
+			}
+			updateUserInfoById(formData).then(res => {
 				if (res.status == 200) {
 					uni.showModal({
 						title: '温馨提示',
@@ -535,29 +570,57 @@ export default {
 
 // 卡片容器
 .modify {
-	background: #fff;
-	border-radius: 24rpx;
-	padding: 48rpx;
-	box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
+	background: linear-gradient(180deg, #ffffff 0%, #fefefe 100%);
+	border-radius: 28rpx;
+	padding: 0;
+	box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06), 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
 	margin-bottom: 32rpx;
+	overflow: hidden;
+	border: 1rpx solid rgba(74, 140, 255, 0.08);
 }
 
-// 区块标题
-.section-title {
-	font-size: 32rpx;
-	font-weight: 600;
-	color: #1a1a1a;
-	margin-bottom: 16rpx;
-	text-align: center;
+// 区块头部
+.section-header {
+	display: flex;
+	align-items: center;
+	gap: 24rpx;
+	padding: 40rpx 40rpx 32rpx;
+	background: linear-gradient(135deg, #f8fbff 0%, #f0f5ff 100%);
+	border-bottom: 1rpx solid rgba(74, 140, 255, 0.1);
+
+	.section-icon-wrap {
+		width: 80rpx;
+		height: 80rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: linear-gradient(135deg, #4a8cff 0%, #6b9dff 100%);
+		border-radius: 20rpx;
+		box-shadow: 0 8rpx 20rpx rgba(74, 140, 255, 0.3);
+	}
+
+	.section-info {
+		flex: 1;
+	}
+
+	.section-title {
+		font-size: 32rpx;
+		font-weight: 600;
+		color: #1a1a1a;
+		margin-bottom: 8rpx;
+	}
+
+	.section-desc {
+		font-size: 24rpx;
+		color: #666;
+		line-height: 1.5;
+	}
 }
 
-// 区块描述
-.section-desc {
-	font-size: 26rpx;
-	color: #666;
-	margin-bottom: 32rpx;
-	text-align: center;
-	line-height: 1.6;
+// 表单项目
+.form-item {
+	padding: 0 40rpx;
+	margin-top: 32rpx;
 }
 
 // 提示文字
@@ -574,24 +637,39 @@ export default {
 	box-shadow: 0 2rpx 8rpx rgba(250, 173, 20, 0.12);
 }
 
-// 输入框基础样式
-.input-text {
-	width: 100%;
-	height: 88rpx;
-	padding: 0 28rpx;
+// 输入框包裹容器
+.input-wrap {
+	display: flex;
+	align-items: center;
+	background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
 	border: 2rpx solid #e0e0e0;
 	border-radius: 16rpx;
-	font-size: 28rpx;
-	background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-	box-sizing: border-box;
 	box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04);
 
-	&:focus {
+	.input-icon {
+		margin-left: 28rpx;
+		margin-right: 16rpx;
+		flex-shrink: 0;
+	}
+
+	&:focus-within {
 		border-color: #4a8cff;
 		background: #ffffff;
 		box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04), 0 0 0 4rpx rgba(74, 140, 255, 0.1);
 	}
+}
+
+// 输入框基础样式
+.input-text {
+	flex: 1;
+	height: 88rpx;
+	padding-right: 28rpx;
+	border: none;
+	border-radius: 16rpx;
+	font-size: 28rpx;
+	background: transparent;
+	box-sizing: border-box;
 }
 
 // 验证码输入区域
@@ -631,6 +709,41 @@ export default {
 		color: #4a8cff;
 		font-size: 24rpx;
 		font-weight: 500;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.1);
+
+		&:active {
+			transform: scale(0.97);
+			background: linear-gradient(135deg, #e6edff 0%, #d3deff 100%);
+			box-shadow: 0 2rpx 6rpx rgba(74, 140, 255, 0.1);
+		}
+	}
+}
+
+// 带验证码按钮的输入框
+.code-input-wrap {
+	.code-input {
+		flex: 1;
+		height: 88rpx;
+		padding-right: 28rpx;
+		border: none;
+		font-size: 28rpx;
+		background: transparent;
+	}
+
+	.code-btn {
+		flex-shrink: 0;
+		width: 180rpx;
+		height: 64rpx;
+		line-height: 64rpx;
+		text-align: center;
+		border-radius: 12rpx;
+		background: linear-gradient(135deg, #f0f5ff 0%, #e6edff 100%);
+		border: 2rpx solid #a3c0f5;
+		color: #4a8cff;
+		font-size: 24rpx;
+		font-weight: 500;
+		margin-right: 12rpx;
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 		box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.1);
 
@@ -831,7 +944,7 @@ export default {
 
 // 主按钮样式
 .primary-btn {
-	width: 100%;
+	width: calc(100% - 80rpx);
 	height: 88rpx;
 	line-height: 88rpx;
 	background: linear-gradient(135deg, #4a8cff 0%, #6b9dff 50%, #4a8cff 100%);
@@ -840,7 +953,7 @@ export default {
 	border-radius: 44rpx;
 	font-size: 28rpx;
 	font-weight: 500;
-	margin-top: 36rpx;
+	margin: 40rpx auto;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	box-shadow: 0 8rpx 20rpx rgba(74, 140, 255, 0.3), 0 2rpx 8rpx rgba(74, 140, 255, 0.15);
 	border: 2rpx solid rgba(255, 255, 255, 0.3);

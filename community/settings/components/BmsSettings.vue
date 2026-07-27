@@ -42,42 +42,60 @@
           :class="{ 'editing-row': editingParam === param.key }">
           <template v-if="param.type === 'combined'">
             <view class="combined-full">
-              <view class="combined-header">
-                <text class="param-name">{{ param.label }}</text>
-                <view class="combined-btn-group">
-                  <view v-if="editingParam !== param.key" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }"
-                    @click="handleParamEdit(param)">
-                    <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
-                    <text>编辑</text>
-                  </view>
-                  <template v-else-if="editingParam === param.key">
-                    <view class="btn btn-sure" :class="{ 'btn-loading': isSubmitting }" @click="submitParam(param)">
-                      <text v-if="!isSubmitting">下发</text>
-                      <view v-else class="loading-spinner"></view>
+              <template v-if="param.modeOptions">
+                <view class="combined-header">
+                  <text class="param-name">{{ param.label }}</text>
+                  <view class="combined-btn-group">
+                    <view v-if="editingParam !== param.key" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }"
+                      @click="handleParamEdit(param)">
+                      <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
+                      <text>编辑</text>
                     </view>
-                    <view class="btn btn-cancel" @click="handleParamCancel()">
-                      <uni-icons type="closeempty" size="14" color="#999"></uni-icons>
-                    </view>
-                  </template>
-                </view>
-              </view>
-              <view class="combined-body">
-                <view v-if="param.modeOptions && !param.voltageMin" class="mode-row">
-                  <text class="mode-label">选择类型：</text>
-                  <view class="mode-switch">
-                    <view v-for="option in param.modeOptions" :key="option.value" class="switch-btn" :class="{
-                      'btn-active': (combinedParams && combinedParams[param.key] && combinedParams[param.key].selectedMode === option.value) || (tempSelectedMode === option.value),
-                      'btn-disabled': editingParam !== param.key
-                    }" @click="handleCombinedModeClick(param, option)">
-                      {{ option.label }}
-                    </view>
+                    <template v-else-if="editingParam === param.key">
+                      <view class="btn btn-sure" :class="{ 'btn-loading': isSubmitting }" @click="submitParam(param)">
+                        <text v-if="!isSubmitting">下发</text>
+                        <view v-else class="loading-spinner"></view>
+                      </view>
+                      <view class="btn btn-cancel" @click="handleParamCancel()">
+                        <uni-icons type="closeempty" size="14" color="#999"></uni-icons>
+                      </view>
+                    </template>
                   </view>
                 </view>
-                <view class="power-input-row">
+                <view class="combined-body">
+                  <view v-if="!param.highAddress" class="mode-row">
+                    <text class="mode-label">选择类型：</text>
+                    <view class="mode-switch">
+                      <view v-for="option in param.modeOptions" :key="option.value" class="switch-btn" :class="{
+                        'btn-active': (combinedParams && combinedParams[param.key] && combinedParams[param.key].selectedMode === option.value) || (tempSelectedMode === option.value),
+                        'btn-disabled': editingParam !== param.key
+                      }" @click="handleCombinedModeClick(param, option)">
+                        {{ option.label }}
+                      </view>
+                    </view>
+                  </view>
+                  <view class="power-input-row">
+                    <text class="power-label">{{ param.powerLabel }}</text>
+                    <view class="param-value-box" :class="{ editing: editingParam === param.key }">
+                      <text v-if="editingParam !== param.key" class="val-text" style="color: #333 !important;">
+                        {{ showCombinedValue(param) }}
+                      </text>
+                      <input v-else class="val-input" type="digit"
+                        :value="(combinedParams && combinedParams[param.key] && combinedParams[param.key].powerValue !== undefined) ? combinedParams[param.key].powerValue : ''"
+                        @input="handleCombinedInput(param, $event)" :min="param.min" :max="param.max" placeholder="请输入"
+                        focus />
+                    </view>
+                    <text class="unit-text">{{ param.unit || '' }}</text>
+                    <text class="range-text" v-if="param.min !== undefined && param.max !== undefined">{{ param.min }}~{{ param.max }}</text>
+                  </view>
+                </view>
+              </template>
+              <template v-else>
+                <view class="power-input-row single-row">
                   <text class="power-label">{{ param.powerLabel }}</text>
                   <view class="param-value-box" :class="{ editing: editingParam === param.key }">
                     <text v-if="editingParam !== param.key" class="val-text" style="color: #333 !important;">
-                      {{ showCombinedValue(param.key) }}
+                      {{ showCombinedValue(param) }}
                     </text>
                     <input v-else class="val-input" type="digit"
                       :value="(combinedParams && combinedParams[param.key] && combinedParams[param.key].powerValue !== undefined) ? combinedParams[param.key].powerValue : ''"
@@ -85,9 +103,24 @@
                       focus />
                   </view>
                   <text class="unit-text">{{ param.unit || '' }}</text>
-                  <text class="range-text">{{ param.min }}~{{ param.max }}</text>
+                  <view class="combined-btn-group inline">
+                    <view v-if="editingParam !== param.key" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }"
+                      @click="handleParamEdit(param)">
+                      <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
+                      <text>编辑</text>
+                    </view>
+                    <template v-else-if="editingParam === param.key">
+                      <view class="btn btn-sure" :class="{ 'btn-loading': isSubmitting }" @click="submitParam(param)">
+                        <text v-if="!isSubmitting">下发</text>
+                        <view v-else class="loading-spinner"></view>
+                      </view>
+                      <view class="btn btn-cancel" @click="handleParamCancel()">
+                        <uni-icons type="closeempty" size="14" color="#999"></uni-icons>
+                      </view>
+                    </template>
+                  </view>
                 </view>
-              </view>
+              </template>
             </view>
           </template>
           <template v-else>
@@ -242,18 +275,18 @@ export default {
         { key: 'bms.26', field: '26', address: '26', label: '单体充电欠温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
         { key: 'bms.27', field: '27', address: '27', label: '单体充电欠温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
         { key: 'bms.28', field: '28', address: '28', label: '单体充电欠温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
-        { key: 'bms.29', field: '29', address: '29', label: '单体电压过压 1 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.30', field: '30', address: '30', label: '单体电压过压 2 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.31', field: '31', address: '31', label: '单体电压过压 3 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.32', field: '32', address: '32', label: '单体电压过压报警回差值', unit: 'mV', min: 0, max: 0.25, scale: 1000 },
-        { key: 'bms.33', field: '33', address: '33', label: '单体电压欠压 1 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.34', field: '34', address: '34', label: '单体电压欠压 2 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.35', field: '35', address: '35', label: '单体电压欠压 3 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.36', field: '36', address: '36', label: '单体电压欠压报警回差值', unit: 'mV', min: 0, max: 0.25, scale: 1000 },
-        { key: 'bms.37', field: '37', address: '37', label: '单体电压差压 1 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.38', field: '38', address: '38', label: '单体电压差压 2 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.39', field: '39', address: '39', label: '单体电压差压 3 级报警阈值', unit: 'mV', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.40', field: '40', address: '40', label: '单体电压差压报警回差值', unit: 'mV', min: 0, max: 0.25, scale: 1000 },
+        { key: 'bms.29', field: '29', address: '29', label: '单体电压过压 1 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.30', field: '30', address: '30', label: '单体电压过压 2 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.31', field: '31', address: '31', label: '单体电压过压 3 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.32', field: '32', address: '32', label: '单体电压过压报警回差值', unit: 'V', min: 0, max: 0.25, scale: 1000 },
+        { key: 'bms.33', field: '33', address: '33', label: '单体电压欠压 1 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.34', field: '34', address: '34', label: '单体电压欠压 2 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.35', field: '35', address: '35', label: '单体电压欠压 3 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.36', field: '36', address: '36', label: '单体电压欠压报警回差值', unit: 'V', min: 0, max: 0.25, scale: 1000 },
+        { key: 'bms.37', field: '37', address: '37', label: '单体电压差压 1 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.38', field: '38', address: '38', label: '单体电压差压 2 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.39', field: '39', address: '39', label: '单体电压差压 3 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.40', field: '40', address: '40', label: '单体电压差压报警回差值', unit: 'V', min: 0, max: 0.25, scale: 1000 },
         { key: 'bms.41', field: '41', address: '41', label: '单体温度温差 1 级报警阈值', unit: '℃', min: 0, max: 100, scale: 10 },
         { key: 'bms.42', field: '42', address: '42', label: '单体温度温差 2 级报警阈值', unit: '℃', min: 0, max: 100, scale: 10 },
         { key: 'bms.43', field: '43', address: '43', label: '单体温度温差 3 级报警阈值', unit: '℃', min: 0, max: 100, scale: 10 },
@@ -305,10 +338,22 @@ export default {
           max: 100
         },
         { key: 'bms.107', field: '107', address: '107', label: '可调风扇控制-占空比', unit: '%', min: 0, max: 100, fanControl: true },
-        { key: 'bms.112', field: '112', address: '112', label: '累计充电电量(高16位)', unit: 'kWh',  scale: 10, hex16: true  },
-        { key: 'bms.113', field: '113', address: '113', label: '累计充电电量(低16位)', unit: 'kWh',  scale: 10, hex16: true },
-        { key: 'bms.114', field: '114', address: '114', label: '累计放电电量(高16位)', unit: 'kWh', scale: 10, hex16: true  },
-        { key: 'bms.115', field: '115', address: '115', label: '累计放电电量(低16位)', unit: 'kWh',  scale: 10, hex16: true  },
+        { 
+          key: 'bms.112', field: '112', address: '112', label: '累计充电电量', type: 'combined',
+          highAddress: '112', lowAddress: '113',
+          powerLabel: '累计充电电量',
+          unit: 'kWh',
+          scale: 10,
+          hex16: true,
+        },
+        { 
+          key: 'bms.114', field: '114', address: '114', label: '累计放电电量', type: 'combined',
+          highAddress: '114', lowAddress: '115',
+          powerLabel: '累计放电电量',
+          unit: 'kWh',
+          scale: 10,
+          hex16: true,
+        },
         { key: 'bms.117', field: '117', address: '117', label: '电池容量', unit: 'Ah' },
         { key: 'bms.118', field: '118', address: '118', label: '电传感器量程 1', unit: '' },
         { key: 'bms.119', field: '119', address: '119', label: '电传感器量程 2', unit: '' },
@@ -519,14 +564,26 @@ export default {
         this.showToast(`不能大于${param.max}`, 'warning')
       }
 
-      value = Math.round(value)
-      this.tempValue = value.toString()
+      let decimals = 0
+      if (param.decimals !== undefined) {
+        decimals = param.decimals
+      } else if (param.scale !== undefined) {
+        decimals = param.scale.toString().length - 1
+      }
+
+      value = parseFloat(value.toFixed(decimals))
+      this.tempValue = decimals > 0 ? value.toString() : value.toString()
     },
 
     async submitParam(param) {
       if (param.type === 'combined') {
         const combinedData = this.combinedParams[param.key]
-        if (!combinedData || !combinedData.selectedMode) {
+        if (!combinedData) {
+          this.showToast('数据异常', 'warning')
+          return
+        }
+
+        if (param.modeOptions && !combinedData.selectedMode) {
           this.showToast('请选择类型', 'warning')
           return
         }
@@ -559,8 +616,11 @@ export default {
           return
         }
 
-        const modeLabel = param.modeOptions.find(opt => opt.value === combinedData.selectedMode)?.label || ''
-        const newValue = `${modeLabel} ${powerValue}${param.unit}`
+        let modeLabel = ''
+        if (param.modeOptions && combinedData.selectedMode) {
+          modeLabel = param.modeOptions.find(opt => opt.value === combinedData.selectedMode)?.label || ''
+        }
+        const newValue = modeLabel ? `${modeLabel} ${powerValue}${param.unit}` : `${powerValue}${param.unit}`
 
         this.openConfirmPopup({
           title: '参数下发确认',
@@ -634,23 +694,27 @@ export default {
       }
       const value = event.detail.value
       if (!this.combinedParams[param.key]) {
-        this.$set(this.combinedParams, param.key, {
-          selectedMode: '1',
+        const data = {
           powerValue: value
-        })
+        }
+        if (param.modeOptions) {
+          data.selectedMode = '1'
+        }
+        this.$set(this.combinedParams, param.key, data)
       } else {
         const existing = this.combinedParams[param.key]
         this.$set(existing, 'powerValue', value)
-        if (existing.selectedMode === undefined) {
+        if (param.modeOptions && existing.selectedMode === undefined) {
           this.$set(existing, 'selectedMode', '1')
         }
       }
     },
 
-    showCombinedValue(paramKey) {
+    showCombinedValue(param) {
+      const paramKey = param.key
       if (this.combinedParams && this.combinedParams[paramKey]) {
         const { selectedMode, powerValue } = this.combinedParams[paramKey]
-        if (selectedMode !== undefined) {
+        if (param.modeOptions && selectedMode !== undefined) {
           const modeLabel = selectedMode === '1' ? 'SOC' : selectedMode === '2' ? 'SOH' : ''
           return modeLabel ? `${modeLabel}: ${powerValue || '--'}%` : '--'
         }
@@ -664,6 +728,73 @@ export default {
       this.lastSendTimes[param.key] = Date.now()
 
       try {
+        if (param.type === 'combined' && param.highAddress && param.lowAddress) {
+          const combinedData = this.combinedParams[param.key]
+          if (!combinedData || !combinedData.powerValue) {
+            this.showToast('请输入数值', 'warning')
+            this.isSubmitting = false
+            return
+          }
+          const rawValue = parseFloat(combinedData.powerValue)
+          const scaledValue = param.scale ? rawValue * param.scale : rawValue
+          const intValue = Math.round(scaledValue)
+          
+          const highPart = (intValue >> 16) & 0xFFFF
+          const lowPart = intValue & 0xFFFF
+          
+          const highValue = highPart.toString(16).toUpperCase().padStart(4, '0')
+          const lowValue = lowPart.toString(16).toUpperCase().padStart(4, '0')
+          
+          const commandData1 = {
+            apiSufix: 'multiControl',
+            idCode: this.idCode,
+            typeCode: '3401',
+            address: this.deviceAddress,
+            userId: this.userId,
+            commands: [{
+              deviceCategory: '171C',
+              addr: this.deviceAddress,
+              deviceId: '1',
+              registerAddress: param.highAddress,
+              registerValue: highValue,
+              valueType: '01',
+              registerType: '03',
+              extra1: '00',
+              extra2: '00',
+              extra3: '00'
+            }]
+          }
+          
+          const commandData2 = {
+            apiSufix: 'multiControl',
+            idCode: this.idCode,
+            typeCode: '3401',
+            address: this.deviceAddress,
+            userId: this.userId,
+            commands: [{
+              deviceCategory: '171C',
+              addr: this.deviceAddress,
+              deviceId: '1',
+              registerAddress: param.lowAddress,
+              registerValue: lowValue,
+              valueType: '01',
+              registerType: '03',
+              extra1: '00',
+              extra2: '00',
+              extra3: '00'
+            }]
+          }
+          
+          await sendCommandFrame(commandData1)
+          await sendCommandFrame(commandData2)
+          
+          this.params.bms[param.field] = combinedData.powerValue
+          this.editingParam = ''
+          this.showToast(`${param.label}: ${combinedData.powerValue}${param.unit || ''}下发成功`, 'success')
+          this.isSubmitting = false
+          return
+        }
+
         let registerValue = value
 
         if (param.type === 'combined') {
@@ -1085,7 +1216,7 @@ export default {
   gap: 16rpx;
   width: 100%;
   padding: 24rpx;
-  background: #f8f9fa;
+  //background: #f8f9fa;
   border-radius: 16rpx;
   border: 2rpx solid #e8e8e8;
 }
@@ -1440,6 +1571,16 @@ export default {
 }
 
 // 操作提示样式
+.power-input-row.single-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.combined-btn-group.inline {
+  flex-shrink: 0;
+}
+
 .operation-toast {
   position: fixed;
   top: 200rpx;

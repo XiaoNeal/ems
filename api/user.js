@@ -166,6 +166,17 @@ export function updateUserInfo(formData) {
 	})
 }
 
+export const updateUserInfoById = (data) => {
+	return request({
+		url: `/SsoServer/app/es/UpdateUserInfoById`,
+		method: 'POST',
+		data: data,
+		header: {
+			'Content-Type': 'application/json'
+		}
+	})
+}
+
 
 export const downloadAPK = (version, osName) => {
 	return request({

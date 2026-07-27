@@ -41,22 +41,22 @@
             <text class="header-device">{{ getDeviceTypeName(operation) }}</text>
           </view>
           <view class="operation-body">
-            <view v-for="param in operation.parsedParams" :key="param._key">
-              <view v-for="cmd in (param.commands || [])" :key="cmd._key" class="cmd-row">
+            <view v-for="(groupedItem, groupKey) in getGroupedByLabel(operation.parsedParams)" :key="groupKey">
+              <view class="cmd-row">
                 <text class="cmd-label">参数值：</text>
-                <text class="cmd-value">{{ getParamValue(cmd.deviceCategory, cmd.registerAddress, cmd.registerValue) }}</text>
+                <text class="cmd-value">{{ getCombinedValueForGroup(operation.parsedParams, groupedItem) }}</text>
               </view>
               <view v-if="isAdmin" class="cmd-row">
                 <text class="cmd-label">设备类型：</text>
-                <text class="cmd-value">{{ (param.commands && param.commands[0] && param.commands[0].deviceCategory) || '--' }}</text>
+                <text class="cmd-value">{{ groupedItem.deviceCategory || '--' }}</text>
               </view>
               <view v-if="isAdmin" class="cmd-row">
                 <text class="cmd-label">idcode：</text>
-                <text class="cmd-value">{{ param.idCode || '--' }}</text>
+                <text class="cmd-value">{{ groupedItem.idCode || '--' }}</text>
               </view>
               <view v-if="isAdmin" class="cmd-row">
                 <text class="cmd-label">寄存器地址：</text>
-                <text class="cmd-value">{{ (param.commands && param.commands[0] && param.commands[0].registerAddress) || '--' }}</text>
+                <text class="cmd-value">{{ groupedItem.registerAddresses || '--' }}</text>
               </view>
             </view>
           </view>
@@ -85,7 +85,7 @@
 </template>
 
 <script>
-import { queryQuickControlLog, getOperationLogByUserId } from '@/api/alarm.js'
+import { queryQuickControlLog, GetEsOperationLogByUserId } from '@/api/alarm.js'
 import { getParamInfo } from '@/utils/device-params.js'
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
@@ -117,7 +117,13 @@ export default {
       return this.$store.state.userInfo?.userId || this.$store.state.user?.id || 0
     },
     isAdmin() {
+
+      if(this.$store.state.userInfo?.roleId==1) return true
+      if(this.$store.state.currentEsRoleId==4) return true
+
+      return false
       const currentRoleId = this.$store.state.currentEsRoleId || this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
+      console.log(currentRoleId,this.$store.state.userInfo, 'currentRoleId')
       return [1, 4].includes(currentRoleId)
         // const currentRoleId = this.$store.state.currentEsRoleId 
       // return [4].includes(currentRoleId)
@@ -136,14 +142,17 @@ export default {
       try {
 
         console.log(this.userInfo, this.$store.state, 'this.userId')
+        const currentDevice = this.$store.state.currentSelectDevice || {}
+        const esId = currentDevice.id || currentDevice.esId
         const params = {
           pageNum: this.pageNum,
-          pageSize: this.pageSize
+          pageSize: this.pageSize,
+          esId: esId
         }
         if (!this.isAdmin) {
           params.userId = this.userId
         }
-        const res = await getOperationLogByUserId(params)
+        const res = await GetEsOperationLogByUserId(params)
 
         console.log(res, "-----------------operationLog-------")
 
@@ -180,11 +189,13 @@ export default {
         }).sort((a, b) => {
           return new Date(b.createTime) - new Date(a.createTime)
         })
+        
+        const mergedList = this.mergeCombinedOperations(parsedList)
 
         if (isLoadMore) {
-          this.operationList = [...this.operationList, ...parsedList]
+          this.operationList = [...this.operationList, ...mergedList]
         } else {
-          this.operationList = parsedList
+          this.operationList = mergedList
         }
 
         console.log(res, "-----------------operationLog-------")
@@ -330,6 +341,171 @@ export default {
       }
       
       return registerValue
+    },
+    getParamValueWithCombined(parsedParams, deviceCategory, registerAddress, registerValue) {
+      const paramInfo = getParamInfo(deviceCategory, registerAddress)
+      
+      if (paramInfo && paramInfo.type === 'combined') {
+        if (paramInfo.highAddressRef) {
+          const highValue = this.findCommandValue(parsedParams, deviceCategory, paramInfo.highAddressRef)
+          if (highValue) {
+            const highPart = paramInfo.hex16 ? parseInt(highValue, 16) : parseInt(highValue)
+            const lowPart = paramInfo.hex16 ? parseInt(registerValue, 16) : parseInt(registerValue)
+            const fullValue = (highPart << 16) | lowPart
+            const ratio = paramInfo.ratio || 1
+            return (fullValue * ratio).toFixed(1) + ' ' + paramInfo.unit
+          }
+        } else if (paramInfo.lowAddress) {
+          const lowValue = this.findCommandValue(parsedParams, deviceCategory, paramInfo.lowAddress)
+          if (lowValue) {
+            const highPart = paramInfo.hex16 ? parseInt(registerValue, 16) : parseInt(registerValue)
+            const lowPart = paramInfo.hex16 ? parseInt(lowValue, 16) : parseInt(lowValue)
+            const fullValue = (highPart << 16) | lowPart
+            const ratio = paramInfo.ratio || 1
+            return (fullValue * ratio).toFixed(1) + ' ' + paramInfo.unit
+          }
+        }
+      }
+      
+      return this.getParamValue(deviceCategory, registerAddress, registerValue)
+    },
+    findCommandValue(parsedParams, deviceCategory, address) {
+      for (const param of parsedParams) {
+        for (const cmd of (param.commands || [])) {
+          if (cmd.deviceCategory === deviceCategory && cmd.registerAddress === address) {
+            return cmd.registerValue
+          }
+        }
+      }
+      return null
+    },
+    isTimeWithinWindow(time1, time2, windowSeconds = 5) {
+      const t1 = new Date(time1).getTime()
+      const t2 = new Date(time2).getTime()
+      return Math.abs(t1 - t2) <= windowSeconds * 1000
+    },
+    mergeCombinedOperations(operations) {
+      const merged = []
+      const processedIds = new Set()
+      
+      for (let i = 0; i < operations.length; i++) {
+        const op = operations[i]
+        if (processedIds.has(op._key)) continue
+        
+        const hasCombined = op.parsedParams.some(param => {
+          return (param.commands || []).some(cmd => {
+            const info = getParamInfo(cmd.deviceCategory, cmd.registerAddress)
+            return info && info.type === 'combined'
+          })
+        })
+        
+        if (hasCombined) {
+          const candidates = []
+          for (let j = i; j < operations.length; j++) {
+            const other = operations[j]
+            if (processedIds.has(other._key)) continue
+            
+            const hasSameCombined = other.parsedParams.some(param => {
+              return (param.commands || []).some(cmd => {
+                const info = getParamInfo(cmd.deviceCategory, cmd.registerAddress)
+                return info && info.type === 'combined'
+              })
+            })
+            
+            if (hasSameCombined && 
+                op.username === other.username && 
+                this.isTimeWithinWindow(op.createTime, other.createTime)) {
+              candidates.push(other)
+              processedIds.add(other._key)
+            }
+          }
+          
+          if (candidates.length > 1) {
+            const mergedOp = { ...candidates[0] }
+            mergedOp.parsedParams = candidates.reduce((acc, c) => {
+              return [...acc, ...c.parsedParams]
+            }, [])
+            mergedOp.parsedParams = mergedOp.parsedParams.map((p, idx) => ({
+              ...p,
+              _key: idx
+            }))
+            merged.push(mergedOp)
+          } else {
+            merged.push(op)
+            processedIds.add(op._key)
+          }
+        } else {
+          merged.push(op)
+          processedIds.add(op._key)
+        }
+      }
+      
+      return merged
+    },
+    getGroupedByLabel(parsedParams) {
+      const grouped = {}
+      
+      for (const param of parsedParams) {
+        for (const cmd of (param.commands || [])) {
+          const paramInfo = getParamInfo(cmd.deviceCategory, cmd.registerAddress)
+          const label = paramInfo ? paramInfo.label : cmd.registerAddress
+          
+          if (!grouped[label]) {
+            grouped[label] = {
+              commands: [],
+              deviceCategory: cmd.deviceCategory,
+              idCode: param.idCode,
+              registerAddresses: []
+            }
+          }
+          
+          grouped[label].commands.push(cmd)
+          if (!grouped[label].registerAddresses.includes(cmd.registerAddress)) {
+            grouped[label].registerAddresses.push(cmd.registerAddress)
+          }
+        }
+      }
+      
+      for (const label in grouped) {
+        const item = grouped[label]
+        const firstCmd = item.commands[0]
+        const paramInfo = getParamInfo(firstCmd.deviceCategory, firstCmd.registerAddress)
+        
+        if (paramInfo && paramInfo.type === 'combined' && paramInfo.lowAddress && item.commands.length >= 2) {
+          const highCmd = item.commands.find(c => c.registerAddress === paramInfo.highAddress)
+          const lowCmd = item.commands.find(c => c.registerAddress === paramInfo.lowAddress)
+          if (highCmd && lowCmd) {
+            item.high = highCmd
+            item.low = lowCmd
+          } else {
+            item.high = firstCmd
+            item.low = null
+          }
+        } else {
+          item.high = firstCmd
+          item.low = null
+        }
+        
+        item.registerAddresses = item.registerAddresses.join(', ')
+      }
+      
+      return grouped
+    },
+    getCombinedValueForGroup(parsedParams, groupedItem) {
+      const { high, low } = groupedItem
+      if (!high) return '--'
+      
+      const paramInfo = getParamInfo(high.deviceCategory, high.registerAddress)
+      
+      if (paramInfo && paramInfo.type === 'combined' && paramInfo.lowAddress && low) {
+        const highPart = paramInfo.hex16 ? parseInt(high.registerValue, 16) : parseInt(high.registerValue)
+        const lowPart = paramInfo.hex16 ? parseInt(low.registerValue, 16) : parseInt(low.registerValue)
+        const fullValue = (highPart << 16) | lowPart
+        const ratio = paramInfo.ratio || 1
+        return (fullValue * ratio).toFixed(1) + ' ' + paramInfo.unit
+      }
+      
+      return this.getParamValue(high.deviceCategory, high.registerAddress, high.registerValue)
     },
     refresh() {
       uni.showLoading({ title: '刷新中...' });
