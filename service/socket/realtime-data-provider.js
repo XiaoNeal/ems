@@ -10,6 +10,8 @@ export class RealtimeDataProviderService {
 	deviceList = [];
 	barCode = new Set()
 	realTimeWebSocketProtocolHandler = new RealTimeWebSokcetProtocolHandler()
+	registeredBarCodes = new Set()
+	onDataUpdate = null
 
 	constructor() {
 		this.createScoket()
@@ -43,6 +45,7 @@ export class RealtimeDataProviderService {
 		console.log('clearDeviceState-------------------------------------')
 		this.deviceList = [];
 		this.barCode = new Set()
+		this.registeredBarCodes = new Set()
 		store.commit('CLEAR_DEVICE_STATE');
 	}
 	initDeviceList(deviceList) {
@@ -51,11 +54,14 @@ export class RealtimeDataProviderService {
 			let barCode = deviceList[i].barCode || deviceList[i].barcode
 			if (!barCode) continue
 			let address = deviceList[i].address
-			let deviceType = deviceList[i].typeCode || deviceList[i].deviceType
+			// 使用原始 deviceType 用于 WebSocket 匹配
+			let deviceType = deviceList[i].deviceType || deviceList[i].typeCode
+			// 保存原始类型用于匹配
+			let originalDeviceType = deviceList[i].rawDeviceType || deviceType
 
 			// 使用barCode、address和deviceType组合作为唯一键
 			let deviceKey = `${barCode}_${address}_${deviceType}`
-			console.log(deviceKey, 'deviceKey')
+			// console.log(deviceKey, 'deviceKey')
 
 			// 从store中获取deviceMap
 			const currentDeviceMap = store.state.deviceMap;
@@ -67,6 +73,8 @@ export class RealtimeDataProviderService {
 					address: address,
 					barCode: barCode,
 					deviceType: deviceType,
+					typeCode: deviceList[i].typeCode || deviceType,
+					rawDeviceType: originalDeviceType,
 					// parentId:deviceList[i].parentId,
 				}
 				// 记录当前deviceList的长度
@@ -78,11 +86,17 @@ export class RealtimeDataProviderService {
 				// 获取initDevice添加的模型对象
 				let addedModel = this.deviceList[beforeLength];
 
+				// 保存typeCode和rawDeviceType到模型对象中，用于后续筛选和匹配
+				if (addedModel) {
+					addedModel.typeCode = device.typeCode;
+					addedModel.rawDeviceType = originalDeviceType;
+				}
+
 				// 存储到store的deviceMap中
 				store.commit('ADD_DEVICE_TO_MAP', { key: deviceKey, device: addedModel });
 				// 存储到store的barCodes中
 				store.commit('ADD_BAR_CODE', barCode);
-				console.log(addedModel, 'addedModel')
+				// console.log(addedModel, 'addedModel')
 			}
 		}
 		// 从store中获取barCodes
@@ -109,25 +123,29 @@ export class RealtimeDataProviderService {
 
 	bindDevicesRealtimeData(barCode) {
 		if (!socket) this.createScoket(uni.getStorageSync('currentTemplate'), uni.getStorageSync('urlPrefix'))
-		// let barCode = "A7 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
 		socket.emit('register', barCode);
-		// socket.emit('register', gateway.code);
+		
+		if (this.registeredBarCodes.has(barCode)) {
+			return;
+		}
+		this.registeredBarCodes.add(barCode);
+		
 		socket.on("IEMS_" + barCode, (jsonData) => {
 			try {
 				if (typeof jsonData == 'string') {
-					let index = jsonData.lastIndexOf("}"); /**socket上报的数据末尾多了一个空格，去掉后才能解析 */
+					let index = jsonData.lastIndexOf("}");
 					if (index >= 0) {
 						jsonData = jsonData.substring(0, index + 1);
 					}
 					if (jsonData.includes('\"dataType\"' + ':' + '\"1\"') || jsonData.includes('gateway'))
 						return
 					jsonData = JSON.parse(jsonData);
-					// let key = barCode + jsonData.deviceType+jsonData.address+jsonData
 					this.realTimeWebSocketProtocolHandler.parseJsonData(jsonData, barCode, this.deviceList);
+					if (typeof this.onDataUpdate === 'function') {
+						this.onDataUpdate();
+					}
 				}
-
 			} catch (error) {
-				// delay(10000);
 			}
 		});
 	}

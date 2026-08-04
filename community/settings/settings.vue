@@ -19,42 +19,40 @@
 
     <!-- 标签页 -->
     <view class="tab-container">
-      <scroll-view scroll-x="true" class="tab-scroll">
-        <view class="tab-list">
-          <view v-for="(item, index) in tabs" :key="index" class="tab-item" :class="{ active: activeTab === index }"
+      <view class="tab-list">
+        <view v-for="(item, index) in tabs" :key="index" class="tab-item" :class="{ active: activeTab === index }"
             @click="switchTab(index)">
             <text>{{ item }}</text>
-          </view>
         </view>
-      </scroll-view>
+      </view>
     </view>
 
-    <swiper class="content-swiper" :current="activeTab" @change="onSwiperChange" :duration="300">
+    <swiper class="content-swiper" :current="activeTab" @change="onSwiperChange" :duration="400">
       <swiper-item>
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
-            <PcsSettings />
+            <PcsSettings v-if="activeTab === 0" />
           </view>
         </scroll-view>
       </swiper-item>
       <swiper-item>
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
-            <StorageSettings />
+            <StorageSettings v-if="activeTab === 1" />
           </view>
         </scroll-view>
       </swiper-item>
       <swiper-item>
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
-            <PvSettings />
+            <PvSettings v-if="activeTab === 2" />
           </view>
         </scroll-view>
       </swiper-item>
       <swiper-item>
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
-            <BmsSettings />
+            <BmsSettings v-if="activeTab === 3" />
           </view>
         </scroll-view>
       </swiper-item>
@@ -82,10 +80,6 @@ export default {
     return {
       activeTab: 0,
       tabs: ['PCS', '储能DC', '光伏', 'BMS'],
-      isEditing: false,
-      editingParam: '',
-      originalParams: {},
-      params: {},
       platformClass: ''
     }
   },
@@ -96,121 +90,21 @@ export default {
       },
     });
   },
+  mounted() {
+  },
+  beforeDestroy() {
+  },
   methods: {
-    handleEditConfig() {
-      if (this.isEditing) {
-        // 退出编辑模式，保存修改
-        this.saveConfig()
-      } else {
-        // 进入编辑模式，保存原始数据
-        this.enterEditMode()
-      }
-    },
-
-    checkEditMode() {
-      if (!this.isEditing) {
-        uni.showToast({ title: '请先点击修改配置', icon: 'none' })
-        return false
-      }
-      return true
-    },
-
-    enterEditMode() {
-      // 保存当前参数的副本，用于取消时恢复
-      this.originalParams = JSON.parse(JSON.stringify({
-        controlMode: this.controlMode,
-        gridMode: this.gridMode,
-        runMode: this.runMode,
-        storageRunMode: this.storageRunMode,
-        storageRunMode2: this.storageRunMode2,
-        coolingPower: this.coolingPower,
-        coolingMode: this.coolingMode,
-        params: this.params
-      }))
-      this.isEditing = true
-      uni.showToast({ title: '已进入编辑模式', icon: 'none' })
-    },
-
-    saveConfig() {
-      uni.showModal({
-        title: '确认保存',
-        content: '确定要保存当前配置吗？',
-        confirmColor: '#4488FB',
-        success: async (res) => {
-          if (res.confirm) {
-            uni.showLoading({ title: '保存中...' })
-            try {
-              // 收集所有配置参数
-              const configData = {
-                activeTab: this.activeTab,
-                controlMode: this.controlMode,
-                gridMode: this.gridMode,
-                runMode: this.runMode,
-                storageRunMode: this.storageRunMode,
-                storageRunMode2: this.storageRunMode2,
-                coolingPower: this.coolingPower,
-                coolingMode: this.coolingMode,
-                params: this.params
-              }
-
-              // 模拟API调用
-              await new Promise(resolve => setTimeout(resolve, 1500))
-
-              uni.hideLoading()
-              this.isEditing = false
-              uni.showToast({ title: '保存成功', icon: 'success' })
-            } catch (error) {
-              uni.hideLoading()
-              uni.showToast({ title: '保存失败', icon: 'none' })
-            }
-          }
-        }
-      })
-    },
-
-    saveEdit() {
-      if (!this.isEditing) return
-      this.saveConfig()
-    },
-
-    closeEdit() {
-      this.isEditing = false
-      // 恢复原始参数
-      Object.assign(this, this.originalParams)
-    },
-
-    cancelEdit() {
-      if (!this.isEditing) return
-
-      uni.showModal({
-        title: '确认取消',
-        content: '确定要放弃修改吗？',
-        confirmColor: '#4488FB',
-        success: (res) => {
-          if (res.confirm) {
-            // 恢复原始参数
-            Object.assign(this, this.originalParams)
-            this.isEditing = false
-            uni.showToast({ title: '已取消修改', icon: 'none' })
-          }
-        }
-      })
-    },
-    startEdit(paramKey) {
-      if (!this.isEditing) {
-        this.enterEditMode()
-      }
-      this.editingParam = paramKey
-    },
-    cancelParamEdit() {
-      this.editingParam = ''
-    },
     switchTab(index) {
-      this.activeTab = index
+      if (this.activeTab === index) return
+      this.activeTab = index;
     },
 
     onSwiperChange(e) {
-      this.activeTab = e.detail.current
+      const current = e.detail.current
+      if (current !== undefined && current !== null && current !== this.activeTab) {
+        this.activeTab = current;
+      }
     },
 
   }
@@ -319,12 +213,13 @@ export default {
 
 .content-swiper {
   flex: 1;
-  touch-action: pan-y;
+  width: 100%;
+  min-height: 0;
 }
 
 .module-scroll {
   height: 100%;
-  touch-action: pan-y;
+  width: 100%;
 }
 
 .content {
@@ -928,7 +823,7 @@ export default {
 
   &.ios-platform {
     .fixed-placeholder {
-      height: calc(44px);
+      height: calc(59px + 44px);
       background: #fff;
     }
   }

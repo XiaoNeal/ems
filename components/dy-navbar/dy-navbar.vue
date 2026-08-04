@@ -1,5 +1,5 @@
 <template>
-  <view>
+  <view class="navbar-wrapper">
     <!-- <view v-if="placeholder" class="navbar-placeholder" :style="{ backgroundColor: bgColor }"></view> -->
     <view class="header" :class="[platformClass, { 'navbar-fixed': fixed }]" :style="{ backgroundColor: bgColor }">
        <view class="header-safe-area"></view>
@@ -81,9 +81,15 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.navbar-wrapper {
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
 .header {
   z-index: 100;
   background-color: #fff;
+  pointer-events: auto;
   // height: calc(25px + 44px);
 }
 

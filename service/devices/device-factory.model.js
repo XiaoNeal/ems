@@ -33,11 +33,18 @@ import { Model171B } from './171B-model.js'
 import { Model171C } from './171C-model.js'
 import { Model171D } from './171D-model.js'
 import { Model171F } from './171F-model.js'
+import { Model1714 } from './1714-model.js'
+import { Model1712 } from './1712-model.js'
+import { Model1713 } from './1713-model.js'
 
 export class DeviceFactory {
 	static create(jsonData, gateway) {
+		// return
 		let dev;
+		
 		switch (jsonData.deviceType) {
+
+			
 			// case '1707_V3_2': {
 			// 	dev = new Model1707v3_2();
 			// 	break;
@@ -197,7 +204,24 @@ export class DeviceFactory {
 				break;
 			}
 			case '171F':{
+				console.log(jsonData,"----------171F-------------")
 				dev = new Model171F()
+				break;
+			}
+			case '1714':{
+				dev = new Model1714()
+				break;
+			}
+			case '0305':{
+				dev = new Model1714()
+				break;
+			}
+			case '1712':{
+				dev = new Model1712()
+				break;
+			}
+			case '1713':{
+				dev = new Model1713()
 				break;
 			}
 			
@@ -214,7 +238,7 @@ export class DeviceFactory {
 			dev.deviceId = jsonData.deviceId
 			dev.name = jsonData.name
 		}
-
+console.log(jsonData)
 		return dev;
 	}
 }

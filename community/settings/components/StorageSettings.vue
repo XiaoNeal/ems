@@ -56,7 +56,8 @@
               <text class="unit-text">{{ param.unit || '' }}</text>
             </view>
             <view class="btn-group">
-              <view v-if="editingParam !== param.key" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }" @click="handleParamEdit(param)">
+              <view v-if="editingParam !== param.key" class="btn btn-edit" :class="{ 'btn-disabled': !isEditing }"
+                @click="handleParamEdit(param)">
                 <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
                 <text>编辑</text>
               </view>
@@ -114,24 +115,13 @@
 import { sendCommandFrame } from '@/api/control.js'
 import { realtimeDataProvider } from '@/service/websocket'
 
+
 export default {
   name: 'StorageSettings',
-  props: {},
-  computed: {
-    userId() {
-      return this.$store.state.userInfo?.userId || 0
-    }
-  },
-  mounted() {
-    const currentDevice = this.$store.state.currentSelectDevice || {}
-    const deviceControl = currentDevice.list.find(item => item.controlType == 1);
-    if (deviceControl) {
-      this.idCode = deviceControl.homeBarCode || deviceControl.barCode || '';
-      // this.deviceAddress = deviceControl.address || '02';
-    }
-  },
+
   data() {
     return {
+      deviceList: [],
       idCode: '',
       deviceAddress: '02',
       isEditing: false,
@@ -172,7 +162,7 @@ export default {
         { key: 'storage.B40', field: 'B40', address: '60050', label: '电池欠压告警点', unit: 'V', min: 35, max: 355, scale: 10, default: 450 },
         { key: 'storage.B42', field: 'B42', address: '60051', label: '电池欠压关机点', unit: 'V', min: 35, max: 355, scale: 10, default: 350 },
         { key: 'storage.B48', field: 'B48', address: '60054', label: '充电母线电压上限', unit: 'V', min: 350, max: 850, scale: 10, default: 630 },
-        { key: 'storage.B49', field: 'B49', address: '60055', label: '放电母线电压下限', unit: 'V', min: 350, max: 850, scale: 10, default: 570 }
+        { key: 'storage.B50', field: 'B50', address: '60055', label: '放电母线电压下限', unit: 'V', min: 350, max: 850, scale: 10, default: 570 }
       ],
       storageSwitchParams: [
         // {
@@ -280,7 +270,71 @@ export default {
       ]
     }
   },
+  computed: {
+    userId() {
+      return this.$store.state.userInfo?.userId
+    },
+    device171D() {
+      // console.log(this.deviceList, '171D')
+      return this.deviceList.find(item => item && item.deviceType === '171D')
+    },
+    device171F() {
+      return this.deviceList.find(item => item && item.deviceType === '171F')
+    }
+  },
+  watch: {
+    // device171D: {
+    //   handler(newDevice) {
+    //     if (newDevice) {
+    //       this.params.storage = { ...(newDevice.controlData || {}) }
+    //     }
+    //   },
+    //   immediate: true
+    // }
+  },
+  mounted() {
+    const currentDevice = this.$store.state.currentSelectDevice || {}
+    const deviceControl = currentDevice.list.find(item => item.controlType == 1);
+    if (deviceControl) {
+      this.idCode = deviceControl.homeBarCode || deviceControl.barCode || '';
+    }
+    this.initDevice()
+    this.deviceList = [...realtimeDataProvider.getDeviceList()]
+    realtimeDataProvider.onDataUpdate = () => {
+      this.deviceList = [...realtimeDataProvider.getDeviceList()]
+    }
+  },
+  beforeDestroy() {
+    realtimeDataProvider.onDataUpdate = null
+  },
   methods: {
+    initDevice() {
+      const currentDevice = this.$store.state.currentSelectDevice || {}
+      const deviceTypes = ['171D', '171F']
+      const deviceList = deviceTypes.map(deviceType => {
+        const foundDevice = currentDevice.list?.find(item =>
+          item.typeCode === deviceType || item.deviceType === deviceType || item.description?.includes(deviceType)
+        )
+        const defaultAddress = deviceType === '171D' ? '1E' : '01'
+        return foundDevice ? {
+          deviceType,
+          typeCode: deviceType,
+          address: foundDevice.address || defaultAddress,
+          barCode: foundDevice.barCode || foundDevice.homeBarCode || '',
+          deviceId: foundDevice.deviceId || `${deviceType}001`,
+          name: foundDevice.name || `设备${deviceType}`
+        } : {
+          deviceType,
+          typeCode: deviceType,
+          address: defaultAddress,
+          barCode: '',
+          deviceId: `${deviceType}001`,
+          name: `设备${deviceType}`
+        }
+      })
+      realtimeDataProvider.initDeviceList(deviceList)
+    },
+
     checkEditMode() {
       if (!this.isEditing) {
         this.showToast('请先点击修改配置', 'warning')
@@ -388,8 +442,15 @@ export default {
     },
 
     formatParamValue(param) {
+      const device = this.device171D
+      if (device && device.controlData && device.controlData[param.field]) {
+        const value = device.controlData[param.field].value
+        if (value !== undefined && value !== null && value !== '' && value !== '--') {
+          return value
+        }
+      }
       const value = this.params.storage[param.field]
-      if (value === undefined || value === null || value === '') {
+      if (value === undefined || value === null || value === '' || value === '--') {
         return '--'
       }
       return value
@@ -546,7 +607,42 @@ export default {
 
     getParamValue(paramKey) {
       const [module, key] = paramKey.split('.')
-      return this.params[module][key]
+      const device = this.device171D
+
+      if (device) {
+        if (device.energyData && device.energyData['B2']) {
+          const systemStatus = device.energyData['B2'].value
+          if (systemStatus !== undefined && systemStatus !== null && systemStatus !== '--') {
+            if (key === 'B12') {
+              return systemStatus === '待机' ? '0x00AA' : '0x0055'
+            }
+            if (key === 'B10') {
+              const statusMap = { '待机': '0', '并网运行': '1', '离网运行': '2', 'MPPT运行': '1', '开环运行': '1', '调试模式': '1' }
+              return statusMap[systemStatus] || '0'
+            }
+          }
+        }
+
+        if (device.energyData && device.energyData['B6']) {
+          const chargeStatus = device.energyData['B6'].value
+          if (chargeStatus !== undefined && chargeStatus !== null && chargeStatus !== '--') {
+            if (key === 'B24') {
+              const chargeMap = { '待机': '0', '恒流': '1', '恒功率': '1', '恒压': '1', '浮充': '1', '充满': '2' }
+              return chargeMap[chargeStatus] || '0'
+            }
+          }
+        }
+
+        if (device.controlData && device.controlData[key]) {
+          const controlValue = device.controlData[key].value
+          if (controlValue !== undefined && controlValue !== null && controlValue !== '--') {
+            return String(controlValue)
+          }
+        }
+      }
+
+      const localValue = this.params[module] && this.params[module][key]
+      return localValue !== undefined && localValue !== null ? String(localValue) : '--'
     },
 
     handleEditConfig() {
@@ -555,10 +651,9 @@ export default {
         uni.showToast({ title: '无权限操作', icon: 'none' });
         return;
       }
-      const deviceList = realtimeDataProvider.getDeviceList()
-      const device171F = deviceList.find(item => item && item.deviceType === '171F')
+      const device171F = this.device171F
       const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
-      
+
       if (b12Value === undefined || b12Value === null || b12Value === '--') {
         uni.showModal({
           title: '提示',
@@ -567,7 +662,7 @@ export default {
         })
         return
       }
-      
+
       if (b12Value !== 0 && b12Value !== '0') {
         uni.showModal({
           title: '提示',
@@ -576,14 +671,16 @@ export default {
         })
         return
       }
-      
+
       this.isEditing = true
+      this.$emit('interaction-change', true)
       this.showToast('已进入编辑模式', 'success')
     },
 
     closeEdit() {
       this.isEditing = false
       this.editingParam = ''
+      this.$emit('interaction-change', false)
       this.showToast('已退出编辑模式', 'success')
     },
 
@@ -596,7 +693,7 @@ export default {
         return;
       }
       this.editingParam = param.key
-      this.tempValue = this.params.storage[param.field] || ''
+      this.tempValue = this.formatParamValue(param) || ''
     },
 
     handleParamCancel() {

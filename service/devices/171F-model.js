@@ -7,7 +7,7 @@ export class Model171F extends DeviceBase {
         // 初始化三个数据分类
         this.energyData = new EnergyData();
         this.stateData = new StateData();
-        this.controlData = new ControlData();
+        this.controlData = new ControlData171F_V2();
     }
 
 
@@ -34,6 +34,9 @@ export class Model171F extends DeviceBase {
 
     getControlData(jsonData) {
         // console.log(jsonData, "jsonData----111111");
+
+
+
         const data = jsonData.data || jsonData;
         for (const key in data) {
             if (this.controlData.hasOwnProperty(key) && this.controlData[key]) {
@@ -180,7 +183,7 @@ class StateData {
 }
 
 // 控制数据类（根据实际数据格式定义）
-class ControlData {
+class ControlData171F {
     constructor() {
         // PCS控制开关
         this.B0 = { name: 'PCS一键开机', value: "--" };
@@ -190,6 +193,143 @@ class ControlData {
         this.B8 = { name: '充放电总功率（仅当储能DC一键开机置为2时才有效）', value: "--" };
         this.B10 = { name: '预留', value: "--" };
         this.B11 = { name: '预留', value: "--" };
+        this.B12 = { name: '启动按钮', value: "--" };
+        this.B14 = { name: '运行策略', value: "--" };
+        this.B16 = { name: '电池优先策略的目标SOC值', value: "--" };
+        this.B18 = { name: '售卖优先策略是否卖储能电（1出售储能电，0不出售储能电）', value: "--" };
+        this.B20 = { name: '限制消费策略中PCS设定功率值', value: "--" };
+        this.B22 = { name: '启动防逆流', value: "--" };
+        this.B24 = { name: '防逆流服务端交流总表功率', value: "--" };
+        // this.B32 = { name: '预留', value: "--" };
+        this.B28 = { name: '防逆流服务端控制能源站数量', value: "--" };
+        this.B30 = { name: '预留', value: "--" };
+        this.B32 = { name: '防逆流电网侧目标功率', value: "--" };
+        // this.B34 = { name: '预留', value: "--" };
+        this.B34 = { name: '防逆流电网侧目标功率上下边界波动幅度', value: "--" };
+        // this.B44 = { name: '预留', value: "--" };
+        // 星期字段（削峰填谷策略）
+        this.B38 = { name: '星期1', value: "--" };
+        this.B40 = { name: '星期2', value: "--" };
+        this.B42 = { name: '星期3', value: "--" };
+        this.B44 = { name: '星期4', value: "--" };
+        this.B46 = { name: '星期5', value: "--" };
+        this.B48 = { name: '星期6', value: "--" };
+        this.B50 = { name: '星期天', value: "--" };
+
+
+        // 削峰填谷策略1
+        this.B52 = { name: '削峰填谷策略1', value: "--" };
+        this.B54 = { name: '削峰填谷策略1启用标志位', value: "--" };
+        this.B56 = { name: '时（削峰填谷策略1开始时间）', value: "--" };
+        this.B58 = { name: '分（削峰填谷策略1开始时间）', value: "--" };
+        this.B60 = { name: '时（削峰填谷策略1停止时间）', value: "--" };
+        this.B62 = { name: '分（削峰填谷策略1停止时间）', value: "--" };
+        // 削峰填谷策略2
+        this.B64 = { name: '削峰填谷策略2', value: "--" };
+        this.B66 = { name: '削峰填谷策略2启用标志位', value: "--" };
+        this.B68 = { name: '时（削峰填谷策略2开始时间）', value: "--" };
+        this.B70 = { name: '分（削峰填谷策略2开始时间）', value: "--" };
+        this.B72 = { name: '时（削峰填谷策略2停止时间）', value: "--" };
+        this.B74 = { name: '分（削峰填谷策略2停止时间）', value: "--" };
+        // 削峰填谷策略3
+        this.B76 = { name: '削峰填谷策略3', value: "--" };
+        this.B78 = { name: '削峰填谷策略3启用标志位', value: "--" };
+        this.B80 = { name: '时（削峰填谷策略3开始时间）', value: "--" };
+        this.B82 = { name: '分（削峰填谷策略3开始时间）', value: "--" };
+        this.B84 = { name: '时（削峰填谷策略3停止时间）', value: "--" };
+        this.B86 = { name: '分（削峰填谷策略3停止时间）', value: "--" };
+        // 削峰填谷策略4
+        this.B88 = { name: '削峰填谷策略4', value: "--" };
+        this.B90 = { name: '削峰填谷策略4启用标志位', value: "--" };
+        this.B92 = { name: '时（削峰填谷策略4开始时间）', value: "--" };
+        this.B94 = { name: '分（削峰填谷策略4开始时间）', value: "--" };
+        this.B96 = { name: '时（削峰填谷策略4停止时间）', value: "--" };
+        this.B98 = { name: '分（削峰填谷策略4停止时间）', value: "--" };
+     
+        // 削峰填谷策略5
+        this.B100 = { name: '削峰填谷策略5', value: "--" };
+        this.B102 = { name: '削峰填谷策略5启用标志位', value: "--" };
+        this.B104 = { name: '时（削峰填谷策略5开始时间）', value: "--" };
+        this.B106 = { name: '分（削峰填谷策略5开始时间）', value: "--" };
+        this.B108 = { name: '时（削峰填谷策略5停止时间）', value: "--" };
+        this.B110 = { name: '分（削峰填谷策略5停止时间）', value: "--" };
+        // 削峰填谷策略6
+        this.B112 = { name: '削峰填谷策略6', value: "--" };
+        this.B114 = { name: '削峰填谷策略6启用标志位', value: "--" };
+        this.B116 = { name: '时（削峰填谷策略6开始时间）', value: "--" };
+        this.B118 = { name: '分（削峰填谷策略6开始时间）', value: "--" };
+        this.B120 = { name: '时（削峰填谷策略6停止时间）', value: "--" };
+        this.B122 = { name: '分（削峰填谷策略6停止时间）', value: "--" };
+        // this.B126 = { name: '预留', value: "--" };
+        // 峰谷策略星期字段
+        this.B126 = { name: '星期1', value: "--" };
+        this.B128 = { name: '星期2', value: "--" };
+        this.B130 = { name: '星期3', value: "--" };
+        this.B132 = { name: '星期4', value: "--" };
+        this.B134 = { name: '星期5', value: "--" };
+        this.B136 = { name: '星期6', value: "--" };
+        this.B138 = { name: '星期天', value: "--" };
+        // 峰谷策略1
+        this.B140 = { name: '峰谷策略1', value: "--" };
+        this.B142 = { name: '峰谷策略1设置功率', value: "--" };
+        // this.B144 = { name: '预留', value: "--" };
+        this.B144 = { name: '峰谷策略1启用标志位', value: "--" };
+        this.B146 = { name: '时（峰谷策略1开始时间）', value: "--" };
+        this.B148 = { name: '分（峰谷策略1开始时间）', value: "--" };
+        this.B150 = { name: '时（峰谷策略1停止时间）', value: "--" };
+        this.B152 = { name: '分（峰谷策略1停止时间）', value: "--" };
+        // 峰谷策略2
+        this.B154 = { name: '峰谷策略2', value: "--" };
+        this.B156 = { name: '峰谷策略2设置功率', value: "--" };
+        this.B158 = { name: '峰谷策略2启用标志位', value: "--" };
+        this.B160 = { name: '时（峰谷策略2开始时间）', value: "--" };
+        this.B162 = { name: '分（峰谷策略2开始时间）', value: "--" };
+        this.B164 = { name: '时（峰谷策略2停止时间）', value: "--" };
+        this.B166 = { name: '分（峰谷策略2停止时间）', value: "--" };
+        // 峰谷策略3
+        this.B168 = { name: '峰谷策略3', value: "--" };
+        this.B170 = { name: '峰谷策略3设置功率', value: "--" };
+        this.B172 = { name: '峰谷策略3启用标志位', value: "--" };
+        this.B174 = { name: '时（峰谷策略3开始时间）', value: "--" };
+        this.B176 = { name: '分（峰谷策略3开始时间）', value: "--" };
+        this.B178 = { name: '时（峰谷策略3停止时间）', value: "--" };
+        this.B180 = { name: '分（峰谷策略3停止时间）', value: "--" };
+        // 峰谷策略4
+        this.B182 = { name: '峰谷策略4', value: "--" };
+        this.B184 = { name: '峰谷策略4设置功率', value: "--" };
+        this.B186 = { name: '峰谷策略4启用标志位', value: "--" };
+        this.B188 = { name: '时（峰谷策略4开始时间）', value: "--" };
+        this.B190 = { name: '分（峰谷策略4开始时间）', value: "--" };
+        this.B192 = { name: '时（峰谷策略4停止时间）', value: "--" };
+        this.B194 = { name: '分（峰谷策略4停止时间）', value: "--" };
+        // 峰谷策略5
+        this.B196 = { name: '峰谷策略5', value: "--" };
+        this.B198 = { name: '峰谷策略5设置功率', value: "--" };
+        this.B200 = { name: '峰谷策略5启用标志位', value: "--" };
+        this.B202 = { name: '时（峰谷策略5开始时间）', value: "--" };
+        this.B204 = { name: '分（峰谷策略5开始时间）', value: "--" };
+        this.B206 = { name: '时（峰谷策略5停止时间）', value: "--" };
+        this.B208 = { name: '分（峰谷策略5停止时间）', value: "--" };
+        // 峰谷策略6
+        this.B210 = { name: '峰谷策略6', value: "--" };
+        this.B212 = { name: '峰谷策略6设置功率', value: "--" };
+        this.B214 = { name: '峰谷策略6启用标志位', value: "--" };
+        this.B216 = { name: '时（峰谷策略6开始时间）', value: "--" };
+        this.B218 = { name: '分（峰谷策略6开始时间）', value: "--" };
+        this.B220 = { name: '时（峰谷策略6停止时间）', value: "--" };
+        this.B222 = { name: '分（峰谷策略6停止时间）', value: "--" };
+    }
+}
+
+class ControlData171F_V2 {
+    constructor() {
+        // PCS控制开关
+        this.B0 = { name: '储能DC一键控制', value: "--" };
+        this.B2 = { name: 'PCS模式选择', value: "--" };
+        this.B4 = { name: '充电功率设置', value: "--" };
+        this.B6 = { name: '放电功率设置', value: "--" };
+        this.B8 = { name: '预留', value: "--" };
+        this.B10 = { name: 'PCS开关机', value: "--" };
         this.B12 = { name: '启动按钮', value: "--" };
         this.B14 = { name: '运行策略', value: "--" };
         this.B16 = { name: '电池优先策略的目标SOC值', value: "--" };

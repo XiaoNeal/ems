@@ -17,22 +17,22 @@
 
             <view class="info-group">
               <view class="level-row">
-                <view class="level-card urgent">
+                <view class="level-card fault">
                   <view class="dot"></view>
-                  <text class="label">紧急</text>
-                  <text class="num">{{ alarmLevelCount.urgent }}</text>
+                  <text class="label">故障</text>
+                  <text class="num">{{ alarmLevelCount.fault }}</text>
                 </view>
-                <view class="level-card important">
+                <view class="level-card protect">
                   <view class="dot"></view>
-                  <text class="label">重要</text>
-                  <text class="num">{{ alarmLevelCount.important }}</text>
+                  <text class="label">保护</text>
+                  <text class="num">{{ alarmLevelCount.protect }}</text>
                 </view>
               </view>
               <view class="level-row">
-                <view class="level-card prompt">
+                <view class="level-card alarm">
                   <view class="dot"></view>
-                  <text class="label">提示</text>
-                  <text class="num">{{ alarmLevelCount.prompt }}</text>
+                  <text class="label">告警</text>
+                  <text class="num">{{ alarmLevelCount.alarm }}</text>
                 </view>
               </view>
             </view>
@@ -92,11 +92,11 @@
             <view class="section-title">报警等级</view>
             <view class="level-options">
               <view class="level-option" :class="{ active: filterLevel === -1 }" @click="filterLevel = -1">全部</view>
-              <view class="level-option urgent" :class="{ active: filterLevel === 0 }" @click="filterLevel = 0">紧急
+              <view class="level-option fault" :class="{ active: filterLevel === 0 }" @click="filterLevel = 0">故障
               </view>
-              <view class="level-option important" :class="{ active: filterLevel === 1 }" @click="filterLevel = 1">重要
+              <view class="level-option protect" :class="{ active: filterLevel === 1 }" @click="filterLevel = 1">保护
               </view>
-              <view class="level-option prompt" :class="{ active: filterLevel === 2 }" @click="filterLevel = 2">提示
+              <view class="level-option alarm" :class="{ active: filterLevel === 2 }" @click="filterLevel = 2">告警
               </view>
             </view>
           </view>
@@ -164,8 +164,8 @@
 
           <view class="alarm-info" :class="'level-' + item.alarmLevel">
             <view class="title">
-              <text class="level-tag" :class="'level-' + item.alarmLevel">{{ item.alarmLevel === 0 ? '紧急' :
-                item.alarmLevel === 1 ? '重要' : '提示' }}</text>
+              <text class="level-tag" :class="'level-' + item.alarmLevel">{{ item.alarmLevel === 0 ? '故障' :
+                item.alarmLevel === 1 ? '保护' : '告警' }}</text>
               <text class="type-name">{{ item.typeName }}</text>
               {{ item.alarmName }}
             </view>
@@ -215,7 +215,7 @@ export default {
       filterEndTime: '',
 
       alarmTimes: { total: 0, ended: 0, proceed: 0 },
-      alarmLevelCount: { urgent: 0, important: 0, minor: 0, prompt: 0 },
+      alarmLevelCount: { alarm: 0, protect: 0, fault: 0 },
 
       ringOpts: {
         rotate: false,
@@ -314,6 +314,7 @@ export default {
         this.ringOpts.title.name = this.totalCount
         this.updateChart(list)
         this.pageNumber = 1
+        console.log(this.apiData)
         await this.filterListData()
       } catch (e) {
         uni.showToast({ title: '加载失败', icon: 'none' })
@@ -368,12 +369,13 @@ export default {
     },
 
     formatAlarmItem(item) {
-      const alarmLevel = (item.alarmLevel || '').toLowerCase()
-      let level = 1
-      if (alarmLevel.includes('紧急') || alarmLevel.includes('严重')) level = 0
-      else if (alarmLevel.includes('重要')) level = 1
-      else if (alarmLevel.includes('提示') || alarmLevel.includes('轻微')) level = 2
+      const rawLevel = (item.alarmLevel || '').toString()
 
+      let level = 1
+      if (rawLevel.includes('故障') || rawLevel === '6') level = 0
+      else if (rawLevel.includes('保护') || rawLevel === '5') level = 1
+      else if (rawLevel.includes('告警') || rawLevel === '4') level = 2
+      console.log(rawLevel, item, level)
       return {
         id: `${item.deviceId || ''}_${item.alarmTime || ''}_${item.alarmName || ''}` || `${Date.now()}_${Math.random()}`,
         alarmLevel: level,
@@ -395,16 +397,16 @@ export default {
         if (l >= 0 && l <= 2) count[l]++
       })
       this.alarmLevelCount = {
-        urgent: count[0],
-        important: count[1],
-        prompt: count[2]
+        fault: count[0],
+        protect: count[1],
+        alarm: count[2]
       }
       this.alarmLevelData = {
         series: [{
           data: [
-            { name: '紧急', value: count[0] },
-            { name: '重要', value: count[1] },
-            { name: '提示', value: count[2] }
+            { name: '故障', value: count[0] },
+            { name: '保护', value: count[1] },
+            { name: '告警', value: count[2] }
           ]
         }]
       }
@@ -582,7 +584,7 @@ export default {
       margin-left: auto;
     }
 
-    &.urgent {
+    &.fault {
       background: #FFF2F0;
 
       .dot {
@@ -590,7 +592,7 @@ export default {
       }
     }
 
-    &.important {
+    &.protect {
       background: #FFF7E8;
 
       .dot {
@@ -598,7 +600,7 @@ export default {
       }
     }
 
-    &.prompt {
+    &.alarm {
       background: #EEF4FF;
 
       .dot {
@@ -968,15 +970,15 @@ export default {
     color: #fff;
   }
 
-  &.urgent.active {
+  &.fault.active {
     background: #EB3341;
   }
 
-  &.important.active {
+  &.protect.active {
     background: #FF7A2E;
   }
 
-  &.prompt.active {
+  &.alarm.active {
     background: #4D7BF1;
   }
 }

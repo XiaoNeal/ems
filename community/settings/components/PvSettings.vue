@@ -120,6 +120,12 @@ export default {
   computed: {
     userId() {
       return this.$store.state.userInfo?.userId || 0
+    },
+    device171E() {
+      return this.deviceList.find(item => item && item.deviceType === '171E')
+    },
+    device171F() {
+      return this.deviceList.find(item => item && item.deviceType === '171F')
     }
   },
   mounted() {
@@ -127,11 +133,19 @@ export default {
     const deviceControl = currentDevice.list.find(item => item.controlType == 1);
     if (deviceControl) {
       this.idCode = deviceControl.homeBarCode || deviceControl.barCode || '';
-      // this.deviceAddress = deviceControl.address || '03';
     }
+    this.initDevice()
+    this.deviceList = [...realtimeDataProvider.getDeviceList()]
+    realtimeDataProvider.onDataUpdate = () => {
+      this.deviceList = [...realtimeDataProvider.getDeviceList()]
+    }
+  },
+  beforeDestroy() {
+    realtimeDataProvider.onDataUpdate = null
   },
   data() {
     return {
+      deviceList: [],
       idCode: '',
       deviceAddress: '03',
       isEditing: false,
@@ -209,6 +223,32 @@ export default {
     }
   },
   methods: {
+    initDevice() {
+      const currentDevice = this.$store.state.currentSelectDevice || {}
+      const deviceTypes = ['171E', '171F']
+      const deviceList = deviceTypes.map(deviceType => {
+        const foundDevice = currentDevice.list?.find(item =>
+          item.typeCode === deviceType || item.deviceType === deviceType || item.description?.includes(deviceType)
+        )
+        return foundDevice ? {
+          deviceType,
+          typeCode: deviceType,
+          address: foundDevice.address || (deviceType === '171E' ? '06' : '01'),
+          barCode: foundDevice.barCode || foundDevice.homeBarCode || '',
+          deviceId: foundDevice.deviceId || `${deviceType}001`,
+          name: foundDevice.name || `设备${deviceType}`
+        } : {
+          deviceType,
+          typeCode: deviceType,
+          address: deviceType === '171E' ? '06' : '01',
+          barCode: '',
+          deviceId: `${deviceType}001`,
+          name: `设备${deviceType}`
+        }
+      })
+      realtimeDataProvider.initDeviceList(deviceList)
+    },
+
     checkEditMode() {
       if (!this.isEditing) {
         this.showToast('请先点击修改配置', 'warning')
@@ -516,8 +556,7 @@ export default {
         uni.showToast({ title: '无权限操作', icon: 'none' });
         return;
       }
-      const deviceList = realtimeDataProvider.getDeviceList()
-      const device171F = deviceList.find(item => item && item.deviceType === '171F')
+      const device171F = this.device171F
       const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
       
       if (b12Value === undefined || b12Value === null || b12Value === '--') {

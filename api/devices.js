@@ -75,4 +75,10 @@ export const queryEnergyStationDCData = (esId,date) => {
     return request.get(`/api/energyStation/dc/data?esId=${esId}&date=${date}`)
 }
 
+// 柔性设备列表
+export const getFlexDeviceInfo = (areaLevelIds) => {
+    const data = Array.isArray(areaLevelIds) ? areaLevelIds : [areaLevelIds];
+    return request.post('/api/homeCommunity/flex/deviceInfo', data)
+}
+
 

@@ -18,11 +18,11 @@
       <view class="control-card">
         <view class="card-title">储能DC一键控制</view>
         <view class="btn-group">
-          <view class="control-btn" :class="{ active: selectedStorageDcAction === 'start', 'btn-disabled': !isEditing }"
+          <view class="control-btn" :class="{ active: storageDcStatus === 'start', 'btn-disabled': !isEditing }"
             @click="selectStorageDcAction('start')">
             一键开机
           </view>
-          <view class="control-btn" :class="{ active: selectedStorageDcAction === 'stop', 'btn-disabled': !isEditing }"
+          <view class="control-btn" :class="{ active: storageDcStatus === 'stop', 'btn-disabled': !isEditing }"
             @click="selectStorageDcAction('stop')">
             关机
           </view>
@@ -33,11 +33,11 @@
       <view class="control-card">
         <view class="card-title">光伏DC控制</view>
         <view class="btn-group">
-          <view class="control-btn" :class="{ active: selectedPvDcAction === 'start', 'btn-disabled': !isEditing }"
+          <view class="control-btn" :class="{ active: pvDcStatus === 'start', 'btn-disabled': !isEditing }"
             @click="pvDcAction('start')">
             一键开机
           </view>
-          <view class="control-btn" :class="{ active: selectedPvDcAction === 'stop', 'btn-disabled': !isEditing }"
+          <view class="control-btn" :class="{ active: pvDcStatus === 'stop', 'btn-disabled': !isEditing }"
             @click="pvDcAction('stop')">
             关机
           </view>
@@ -52,15 +52,15 @@
         <view class="control-section">
           <view class="section-title">PCS模式选择</view>
           <view class="btn-group triple">
-            <view class="control-btn" :class="{ active: selectedPcsMode === 'charge', 'btn-disabled': !isEditing }"
+            <view class="control-btn" :class="{ active: pcsModeStatus === 'charge', 'btn-disabled': !isEditing }"
               @click="handlePcsModeClick('charge')">
               并网整流
             </view>
-            <view class="control-btn" :class="{ active: selectedPcsMode === 'discharge', 'btn-disabled': !isEditing }"
+            <view class="control-btn" :class="{ active: pcsModeStatus === 'discharge', 'btn-disabled': !isEditing }"
               @click="handlePcsModeClick('discharge')">
               并网逆变
             </view>
-            <view class="control-btn" :class="{ active: selectedPcsMode === 'off-grid', 'btn-disabled': !isEditing }"
+            <view class="control-btn" :class="{ active: pcsModeStatus === 'off-grid', 'btn-disabled': !isEditing }"
               @click="handlePcsModeClick('off-grid')">
               离网
             </view>
@@ -147,11 +147,11 @@
         <view class="control-section">
           <view class="section-title">PCS开关机</view>
           <view class="btn-group">
-            <view class="control-btn" :class="{ active: selectedPcsAction === 'start', 'btn-disabled': !isEditing }"
+            <view class="control-btn" :class="{ active: pcsActionStatus === 'start', 'btn-disabled': !isEditing }"
               @click="pcsAction('start')">
               开机
             </view>
-            <view class="control-btn" :class="{ active: selectedPcsAction === 'stop', 'btn-disabled': !isEditing }"
+            <view class="control-btn" :class="{ active: pcsActionStatus === 'stop', 'btn-disabled': !isEditing }"
               @click="pcsAction('stop')">
               关机
             </view>
@@ -179,18 +179,21 @@ export default {
   data() {
     return {
       platformClass: "",
-      chargePower: '',
-      dischargePower: '',
       deviceConfig: {
         idCode: '',
         typeCode: '3401',
         address: '01'
       },
-      selectedPcsAction: '',
       selectedPvDcAction: '',
       selectedStorageDcAction: '',
       selectedPcsMode: '',
+      selectedPcsAction: '',
       lastSendTimes: {},
+      // 实时数据无效时的本地缓存值
+      _localChargePower: '',
+      _localDischargePower: '',
+      // 数据版本号，强制触发响应式更新
+      _dataVersion: 0,
       // 编辑模式
       isEditing: false,
       // 编辑状态
@@ -207,6 +210,65 @@ export default {
   computed: {
     userId() {
       return this.$store.state.userInfo?.userId || 0
+    },
+    // 订阅设备列表变化：_dataVersion 作为响应式触发源
+    deviceList() {
+      const _ = this._dataVersion
+      return realtimeDataProvider.getDeviceList()
+    },
+    device171F() {
+      const list = this.deviceList
+      return list.find(item => item && item.deviceType === '171F')
+    },
+    controlData() {
+      return (this.device171F && this.device171F.controlData) || {}
+    },
+    // 储能DC一键控制状态
+    storageDcStatus() {
+      const v = this.controlData.B0?.value
+      if (v === 1 || v === '1') return 'start'
+      if (v === 2 || v === '2') return 'stop'
+      return this.selectedStorageDcAction || ''
+    },
+    // 光伏DC控制状态
+    pvDcStatus() {
+      const v = this.controlData.B2?.value
+      if (v === 1 || v === '1') return 'start'
+      if (v === 2 || v === '2') return 'stop'
+      return this.selectedPvDcAction || ''
+    },
+    // PCS模式选择状态
+    pcsModeStatus() {
+      const v = this.controlData.B4?.value
+      if (v === 1 || v === '1') return 'charge'
+      if (v === 2 || v === '2') return 'discharge'
+      if (v === 3 || v === '3') return 'off-grid'
+      return this.selectedPcsMode || ''
+    },
+    // 充电功率：原始数据 *10（单位 0.1kW），显示为 kW
+    chargePower() {
+      const v = this.controlData.B6?.value
+      if (v !== undefined && v !== null && v !== '--' && v !== '') {
+        const num = parseFloat(v)
+        if (!isNaN(num)) return (num / 10).toFixed(1)
+      }
+      return this._localChargePower || '--'
+    },
+    // 放电功率
+    dischargePower() {
+      const v = this.controlData.B8?.value
+      if (v !== undefined && v !== null && v !== '--' && v !== '') {
+        const num = parseFloat(v)
+        if (!isNaN(num)) return (num / 10).toFixed(1)
+      }
+      return this._localDischargePower || '--'
+    },
+    // PCS开关机状态
+    pcsActionStatus() {
+      const v = this.controlData.B10?.value
+      if (v === 1 || v === '1') return 'start'
+      if (v === 2 || v === '2') return 'stop'
+      return this.selectedPcsAction || ''
     }
   },
   onLoad() {
@@ -215,17 +277,48 @@ export default {
         this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
       },
     });
-  },
-  mounted() {
-    const currentDevice = this.$store.state.currentSelectDevice || {}
-    const deviceControl = currentDevice.list.find(item => item.controlType == 1);
-    if (deviceControl) {
-      this.deviceConfig.idCode = deviceControl.homeBarCode || deviceControl.barCode || '';
-      this.deviceConfig.typeCode = deviceControl.typeCode || '3401';
-      // this.deviceConfig.address = deviceControl.address || '01';
-    }
+
+    // 先设置回调（在initDevice之前就绑定好，确保实时数据到达时能立刻更新）
+    realtimeDataProvider.onDataUpdate = () => {
+      this._dataVersion++;
+    };
+
+    // 注册 171F 设备
+    this.init171FDevice();
+
+    // 立即触发一次数据刷新
+    this._dataVersion++;
   },
   methods: {
+    init171FDevice() {
+      const currentDevice = this.$store.state.currentSelectDevice || {};
+      const foundDevice = currentDevice.list && currentDevice.list.find(item =>
+        item.typeCode === '171F' || item.deviceType === '171F' || (item.description && item.description.includes('171F'))
+      );
+
+      let address = this.deviceConfig.address;
+      let barCode = this.deviceConfig.idCode;
+
+      if (foundDevice) {
+        address = foundDevice.address || address;
+        barCode = foundDevice.barCode || foundDevice.homeBarCode || barCode;
+        this.deviceConfig.idCode = barCode;
+      }
+
+      const deviceConfig = {
+        deviceType: '171F',
+        typeCode: '171F',
+        address: address,
+        barCode: barCode,
+        deviceId: '171F001',
+        name: 'DCDC设备171F'
+      };
+
+      realtimeDataProvider.initDeviceList([deviceConfig]);
+    },
+    beforeDestroy() {
+      realtimeDataProvider.onDataUpdate = null;
+    },
     async executeCommand(options) {
       const { title, content, apiSufix, commandBuilder, action, stateKey, successMsg, failMsg } = options;
 
@@ -267,12 +360,6 @@ export default {
               uni.hideLoading();
               if (stateKey) {
                 this[stateKey] = action;
-                // 5秒后清除状态，颜色恢复
-                setTimeout(() => {
-                  if (this[stateKey] === action) {
-                    this[stateKey] = '';
-                  }
-                }, 5000);
               }
               uni.showToast({
                 title: successMsg || `${title}成功`,
@@ -321,7 +408,7 @@ export default {
         title: 'PCS开关机',
         content: `确定要执行PCS${actionText}操作吗？`,
         apiSufix: 'pcsControl',
-        commandBuilder: () => this.buildCommand('108', action === 'start' ? '1' : '2'),
+        commandBuilder: () => this.buildCommand('16', action === 'start' ? '1' : '2'),
         action,
         stateKey: 'selectedPcsAction',
         successMsg: `PCS${actionText}成功`,
@@ -342,7 +429,7 @@ export default {
         title: '光伏DC控制',
         content: `确定要执行光伏DC${actionText}操作吗？`,
         apiSufix: 'pvDcControl',
-        commandBuilder: () => this.buildCommand('110', action === 'start' ? '1' : '2'),
+        commandBuilder: () => this.buildCommand('14', action === 'start' ? '1' : '2'),
         action,
         stateKey: 'selectedPvDcAction',
         successMsg: `光伏DC${actionText}成功`,
@@ -363,7 +450,7 @@ export default {
         title: '储能DC一键控制',
         content: `确定要执行储能DC${actionText}操作吗？`,
         apiSufix: 'storageDcControl',
-        commandBuilder: () => this.buildCommand('100', action === 'start' ? '1' : '2'),
+        commandBuilder: () => this.buildCommand('12', action === 'start' ? '1' : '2'),
         action,
         stateKey: 'selectedStorageDcAction',
         successMsg: `储能DC${actionText}成功`,
@@ -398,7 +485,7 @@ export default {
           typeCode: this.deviceConfig.typeCode,
           address: this.deviceConfig.address,
           userId: this.userId,
-          commands: this.buildCommand('102', modeMap[mode] || '0')
+          commands: this.buildCommand('14', modeMap[mode] || '0')
         });
         this.selectedPcsMode = mode;
         uni.showToast({
@@ -527,9 +614,9 @@ export default {
           typeCode: this.deviceConfig.typeCode,
           address: this.deviceConfig.address,
           userId: this.userId,
-          commands: this.buildCommand('104', this.tempChargePower * 10)
+          commands: this.buildCommand('16', this.tempChargePower * 10)
         });
-        this.chargePower = this.tempChargePower;
+        this._localChargePower = this.tempChargePower;
         this.editingChargePower = false;
         uni.showToast({
           title: '充电功率下发成功',
@@ -613,9 +700,9 @@ export default {
           typeCode: this.deviceConfig.typeCode,
           address: this.deviceConfig.address,
           userId: this.userId,
-          commands: this.buildCommand('106', this.tempDischargePower * 10)
+          commands: this.buildCommand('18', this.tempDischargePower * 10)
         });
-        this.dischargePower = this.tempDischargePower;
+        this._localDischargePower = this.tempDischargePower;
         this.editingDischargePower = false;
         uni.showToast({
           title: '放电功率下发成功',

@@ -23,7 +23,7 @@
           <view class="switch-btns-wrapper">
             <view class="switch-btns">
               <view v-for="option in param.options" :key="option.value" class="switch-btn" :class="[
-                getParamValue(param.key) === option.value ? 'btn-active' : '',
+                bmsValues[param.key] === option.value ? 'btn-active' : '',
                 !isEditing ? 'btn-disabled' : '',
                 clickedButton === param.key + '-' + option.value ? 'btn-clicked' : '',
                 isDangerousOption(option) ? 'btn-danger' : ''
@@ -78,7 +78,7 @@
                     <text class="power-label">{{ param.powerLabel }}</text>
                     <view class="param-value-box" :class="{ editing: editingParam === param.key }">
                       <text v-if="editingParam !== param.key" class="val-text" style="color: #333 !important;">
-                        {{ showCombinedValue(param) }}
+                        {{ bmsValues[param.key] }}
                       </text>
                       <input v-else class="val-input" type="digit"
                         :value="(combinedParams && combinedParams[param.key] && combinedParams[param.key].powerValue !== undefined) ? combinedParams[param.key].powerValue : ''"
@@ -86,7 +86,9 @@
                         focus />
                     </view>
                     <text class="unit-text">{{ param.unit || '' }}</text>
-                    <text class="range-text" v-if="param.min !== undefined && param.max !== undefined">{{ param.min }}~{{ param.max }}</text>
+                    <text class="range-text" v-if="param.min !== undefined && param.max !== undefined">{{ param.min
+                      }}~{{ param.max
+                      }}</text>
                   </view>
                 </view>
               </template>
@@ -95,7 +97,7 @@
                   <text class="power-label">{{ param.powerLabel }}</text>
                   <view class="param-value-box" :class="{ editing: editingParam === param.key }">
                     <text v-if="editingParam !== param.key" class="val-text" style="color: #333 !important;">
-                      {{ showCombinedValue(param) }}
+                      {{ bmsValues[param.key] }}
                     </text>
                     <input v-else class="val-input" type="digit"
                       :value="(combinedParams && combinedParams[param.key] && combinedParams[param.key].powerValue !== undefined) ? combinedParams[param.key].powerValue : ''"
@@ -133,7 +135,7 @@
             <view class="param-right-wrapper">
               <view class="param-right">
                 <view class="param-value-box" :class="{ editing: editingParam === param.key }">
-                  <text v-if="editingParam !== param.key" class="val-text">{{ formatParamValue(param) }}</text>
+                  <text v-if="editingParam !== param.key" class="val-text">{{ bmsValues[param.key] }}</text>
                   <input v-else class="val-input" type="digit" v-model="tempValue" :min="param.min" :max="param.max"
                     placeholder="请输入" focus @blur="handleInputBlur(param)" @confirm="handleInputConfirm(param)" />
                 </view>
@@ -202,22 +204,10 @@ import { realtimeDataProvider } from '@/service/websocket'
 
 export default {
   name: 'BmsSettings',
-  props: {},
-  computed: {
-    userId() {
-      return this.$store.state.userInfo?.userId || 0
-    }
-  },
-  mounted() {
-    const currentDevice = this.$store.state.currentSelectDevice || {}
-    const deviceControl = currentDevice.list.find(item => item.controlType == 1);
-    if (deviceControl) {
-      this.idCode = deviceControl.homeBarCode || deviceControl.barCode || '';
-      // this.deviceAddress = deviceControl.address || '04';
-    }
-  },
+
   data() {
     return {
+      deviceList: [],
       idCode: '',
       deviceAddress: '04',
       isEditing: false,
@@ -247,87 +237,87 @@ export default {
         timer: null
       },
       bmsParams: [
-        { key: 'bms.1', field: '1', address: '1', label: '组端过压 1 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.2', field: '2', address: '2', label: '组端过压 2 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.3', field: '3', address: '3', label: '组端过压 3 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.4', field: '4', address: '4', label: '组端过压报警回差值', unit: 'V', min: 0, max: 25, scale: 10 },
-        { key: 'bms.5', field: '5', address: '5', label: '组端欠压 1 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.6', field: '6', address: '6', label: '组端欠压 2 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.7', field: '7', address: '7', label: '组端欠压 3 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.8', field: '8', address: '8', label: '组端欠压报警回差值', unit: 'V', min: 0, max: 25, scale: 10 },
-        { key: 'bms.9', field: '9', address: '9', label: '组端放电过流 1 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.10', field: '10', address: '10', label: '组端放电过流 2 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.11', field: '11', address: '11', label: '组端放电过流 3 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.12', field: '12', address: '12', label: '组端放电过流报警回差值', unit: 'A', min: 0, max: 25, scale: 10 },
-        { key: 'bms.13', field: '13', address: '13', label: '组端充电过流 1 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.14', field: '14', address: '14', label: '组端充电过流 2 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.15', field: '15', address: '15', label: '组端充电过流 3 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.16', field: '16', address: '16', label: '组端充电过流报警回差值', unit: 'A', min: 0, max: 25, scale: 10 },
-        { key: 'bms.17', field: '17', address: '17', label: '组端绝缘 1 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
-        { key: 'bms.18', field: '18', address: '18', label: '组端绝缘 2 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
-        { key: 'bms.19', field: '19', address: '19', label: '组端绝缘 3 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
-        { key: 'bms.20', field: '20', address: '20', label: '组端绝缘报警回差值', unit: 'kΩ', min: 0, max: 255 },
-        { key: 'bms.21', field: '21', address: '21', label: '单体充电过温 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.22', field: '22', address: '22', label: '单体充电过温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.23', field: '23', address: '23', label: '单体充电过温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.24', field: '24', address: '24', label: '电池充电过温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
-        { key: 'bms.25', field: '25', address: '25', label: '单体充电欠温 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.26', field: '26', address: '26', label: '单体充电欠温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.27', field: '27', address: '27', label: '单体充电欠温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.28', field: '28', address: '28', label: '单体充电欠温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
-        { key: 'bms.29', field: '29', address: '29', label: '单体电压过压 1 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.30', field: '30', address: '30', label: '单体电压过压 2 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.31', field: '31', address: '31', label: '单体电压过压 3 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.32', field: '32', address: '32', label: '单体电压过压报警回差值', unit: 'V', min: 0, max: 0.25, scale: 1000 },
-        { key: 'bms.33', field: '33', address: '33', label: '单体电压欠压 1 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.34', field: '34', address: '34', label: '单体电压欠压 2 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.35', field: '35', address: '35', label: '单体电压欠压 3 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.36', field: '36', address: '36', label: '单体电压欠压报警回差值', unit: 'V', min: 0, max: 0.25, scale: 1000 },
-        { key: 'bms.37', field: '37', address: '37', label: '单体电压差压 1 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.38', field: '38', address: '38', label: '单体电压差压 2 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.39', field: '39', address: '39', label: '单体电压差压 3 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
-        { key: 'bms.40', field: '40', address: '40', label: '单体电压差压报警回差值', unit: 'V', min: 0, max: 0.25, scale: 1000 },
-        { key: 'bms.41', field: '41', address: '41', label: '单体温度温差 1 级报警阈值', unit: '℃', min: 0, max: 100, scale: 10 },
-        { key: 'bms.42', field: '42', address: '42', label: '单体温度温差 2 级报警阈值', unit: '℃', min: 0, max: 100, scale: 10 },
-        { key: 'bms.43', field: '43', address: '43', label: '单体温度温差 3 级报警阈值', unit: '℃', min: 0, max: 100, scale: 10 },
-        { key: 'bms.44', field: '44', address: '44', label: '单体温度温差报警回差值', unit: '℃', min: 0, max: 10, scale: 10 },
-        { key: 'bms.45', field: '45', address: '45', label: 'SOC 过低 1 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
-        { key: 'bms.46', field: '46', address: '46', label: 'SOC 过低 2 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
-        { key: 'bms.47', field: '47', address: '47', label: 'SOC 过低 3 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
-        { key: 'bms.48', field: '48', address: '48', label: 'SOC 过低报警回差值', unit: '%', min: 0, max: 100, scale: 10 },
-        { key: 'bms.49', field: '49', address: '49', label: '动力插箱温度过高 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.50', field: '50', address: '50', label: '动力插箱温度过高 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.51', field: '51', address: '51', label: '动力插箱温度过高 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.52', field: '52', address: '52', label: '动力插箱温度过高报警回差值', unit: '℃', min: 0, max: 25, scale: 10 },
-        { key: 'bms.53', field: '53', address: '53', label: '电池模组过压 1 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.54', field: '54', address: '54', label: '电池模组过压 2 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.55', field: '55', address: '55', label: '电池模组过压 3 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.56', field: '56', address: '56', label: '电池模组过压报警回差值', unit: 'V', min: 0, max: 25, scale: 10 },
-        { key: 'bms.57', field: '57', address: '57', label: '电池模组欠压 1 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.58', field: '58', address: '58', label: '电池模组欠压 2 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.59', field: '59', address: '59', label: '电池模组欠压 3 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
-        { key: 'bms.60', field: '60', address: '60', label: '电池模组欠压报警回差值', unit: 'V', min: 0, max: 25, scale: 10 },
-        { key: 'bms.61', field: '61', address: '61', label: '单体放电过温 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.62', field: '62', address: '62', label: '单体放电过温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.63', field: '63', address: '63', label: '单体放电过温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.64', field: '64', address: '64', label: '单体放电过温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
-        { key: 'bms.65', field: '65', address: '65', label: '单体放电欠温 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.66', field: '66', address: '66', label: '单体放电欠温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.67', field: '67', address: '67', label: '单体放电欠温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.68', field: '68', address: '68', label: '电池放电欠温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
-        { key: 'bms.69', field: '69', address: '69', label: 'SOC 过高 1 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
-        { key: 'bms.70', field: '70', address: '70', label: 'SOC 过高 2 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
-        { key: 'bms.71', field: '71', address: '71', label: 'SOC 过高 3 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
-        { key: 'bms.72', field: '72', address: '72', label: 'SOC 过高报警回差值', unit: '%', min: 0, max: 100, scale: 10 },
-        { key: 'bms.73', field: '73', address: '73', label: '温升快 1 级报警阈值', unit: '℃/min', min: 0, max: 100, scale: 10 },
-        { key: 'bms.74', field: '74', address: '74', label: '温升快 2 级报警阈值', unit: '℃/min', min: 0, max: 100, scale: 10 },
-        { key: 'bms.75', field: '75', address: '75', label: '温升快 3 级报警阈值', unit: '℃/min', min: 0, max: 100, scale: 10 },
-        { key: 'bms.76', field: '76', address: '76', label: '温升快报警回差值', unit: '℃/min', min: 0, max: 100, scale: 10 },
-        { key: 'bms.102', field: '102', address: '102', label: '风扇启动温度', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.103', field: '103', address: '103', label: '风扇关闭温度', unit: '℃', min: -40, max: 120, temperature: true },
-        { key: 'bms.104', field: '104', address: '104', label: 'SOC/SOH 设置电池序号', unit: '', min: 0, max: 480 },
+        { key: 'bms.1', field: 'B0', address: '1', label: '组端过压 1 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.2', field: 'B2', address: '2', label: '组端过压 2 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.3', field: 'B4', address: '3', label: '组端过压 3 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.4', field: 'B6', address: '4', label: '组端过压报警回差值', unit: 'V', min: 0, max: 25, scale: 10 },
+        { key: 'bms.5', field: 'B8', address: '5', label: '组端欠压 1 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.6', field: 'B10', address: '6', label: '组端欠压 2 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.7', field: 'B12', address: '7', label: '组端欠压 3 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.8', field: 'B14', address: '8', label: '组端欠压报警回差值', unit: 'V', min: 0, max: 25, scale: 10 },
+        { key: 'bms.9', field: 'B16', address: '9', label: '组端放电过流 1 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.10', field: 'B18', address: '10', label: '组端放电过流 2 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.11', field: 'B20', address: '11', label: '组端放电过流 3 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.12', field: 'B22', address: '12', label: '组端放电过流报警回差值', unit: 'A', min: 0, max: 25, scale: 10 },
+        { key: 'bms.13', field: 'B24', address: '13', label: '组端充电过流 1 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.14', field: 'B26', address: '14', label: '组端充电过流 2 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.15', field: 'B28', address: '15', label: '组端充电过流 3 级报警阈值', unit: 'A', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.16', field: 'B30', address: '16', label: '组端充电过流报警回差值', unit: 'A', min: 0, max: 25, scale: 10 },
+        { key: 'bms.17', field: 'B32', address: '17', label: '组端绝缘 1 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
+        { key: 'bms.18', field: 'B34', address: '18', label: '组端绝缘 2 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
+        { key: 'bms.19', field: 'B36', address: '19', label: '组端绝缘 3 级报警阈值', unit: 'kΩ', min: 0, max: 60000 },
+        { key: 'bms.20', field: 'B38', address: '20', label: '组端绝缘报警回差值', unit: 'kΩ', min: 0, max: 255 },
+        { key: 'bms.21', field: 'B40', address: '21', label: '单体充电过温 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.22', field: 'B42', address: '22', label: '单体充电过温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.23', field: 'B44', address: '23', label: '单体充电过温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.24', field: 'B46', address: '24', label: '电池充电过温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.25', field: 'B48', address: '25', label: '单体充电欠温 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.26', field: 'B50', address: '26', label: '单体充电欠温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.27', field: 'B52', address: '27', label: '单体充电欠温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.28', field: 'B54', address: '28', label: '单体充电欠温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.29', field: 'B56', address: '29', label: '单体电压过压 1 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.30', field: 'B58', address: '30', label: '单体电压过压 2 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.31', field: 'B60', address: '31', label: '单体电压过压 3 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.32', field: 'B62', address: '32', label: '单体电压过压报警回差值', unit: 'V', min: 0, max: 0.25, scale: 1000 },
+        { key: 'bms.33', field: 'B64', address: '33', label: '单体电压欠压 1 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.34', field: 'B66', address: '34', label: '单体电压欠压 2 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.35', field: 'B68', address: '35', label: '单体电压欠压 3 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.36', field: 'B70', address: '36', label: '单体电压欠压报警回差值', unit: 'V', min: 0, max: 0.25, scale: 1000 },
+        { key: 'bms.37', field: 'B72', address: '37', label: '单体电压差压 1 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.38', field: 'B74', address: '38', label: '单体电压差压 2 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.39', field: 'B76', address: '39', label: '单体电压差压 3 级报警阈值', unit: 'V', min: 0, max: 4.5, scale: 1000 },
+        { key: 'bms.40', field: 'B78', address: '40', label: '单体电压差压报警回差值', unit: 'V', min: 0, max: 0.25, scale: 1000 },
+        { key: 'bms.41', field: 'B80', address: '41', label: '单体温度温差 1 级报警阈值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.42', field: 'B82', address: '42', label: '单体温度温差 2 级报警阈值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.43', field: 'B84', address: '43', label: '单体温度温差 3 级报警阈值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.44', field: 'B86', address: '44', label: '单体温度温差报警回差值', unit: '℃', min: 0, max: 10, scale: 10 },
+        { key: 'bms.45', field: 'B88', address: '45', label: 'SOC 过低 1 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.46', field: 'B90', address: '46', label: 'SOC 过低 2 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.47', field: 'B92', address: '47', label: 'SOC 过低 3 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.48', field: 'B94', address: '48', label: 'SOC 过低报警回差值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.49', field: 'B96', address: '49', label: '动力插箱温度过高 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.50', field: 'B98', address: '50', label: '动力插箱温度过高 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.51', field: 'B100', address: '51', label: '动力插箱温度过高 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.52', field: 'B102', address: '52', label: '动力插箱温度过高报警回差值', unit: '℃', min: 0, max: 25, scale: 10 },
+        { key: 'bms.53', field: 'B104', address: '53', label: '电池模组过压 1 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.54', field: 'B106', address: '54', label: '电池模组过压 2 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.55', field: 'B108', address: '55', label: '电池模组过压 3 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.56', field: 'B110', address: '56', label: '电池模组过压报警回差值', unit: 'V', min: 0, max: 25, scale: 10 },
+        { key: 'bms.57', field: 'B112', address: '57', label: '电池模组欠压 1 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.58', field: 'B114', address: '58', label: '电池模组欠压 2 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.59', field: 'B116', address: '59', label: '电池模组欠压 3 级报警阈值', unit: 'V', min: 0, max: 1000, scale: 10 },
+        { key: 'bms.60', field: 'B118', address: '60', label: '电池模组欠压报警回差值', unit: 'V', min: 0, max: 25, scale: 10 },
+        { key: 'bms.61', field: 'B120', address: '61', label: '单体放电过温 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.62', field: 'B122', address: '62', label: '单体放电过温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.63', field: 'B124', address: '63', label: '单体放电过温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.64', field: 'B126', address: '64', label: '单体放电过温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.65', field: 'B128', address: '65', label: '单体放电欠温 1 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.66', field: 'B130', address: '66', label: '单体放电欠温 2 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.67', field: 'B132', address: '67', label: '单体放电欠温 3 级报警阈值', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.68', field: 'B134', address: '68', label: '电池放电欠温报警回差值', unit: '℃', min: 0, max: 100, scale: 10 },
+        { key: 'bms.69', field: 'B136', address: '69', label: 'SOC 过高 1 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.70', field: 'B138', address: '70', label: 'SOC 过高 2 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.71', field: 'B140', address: '71', label: 'SOC 过高 3 级报警阈值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.72', field: 'B142', address: '72', label: 'SOC 过高报警回差值', unit: '%', min: 0, max: 100, scale: 10 },
+        { key: 'bms.73', field: 'B144', address: '73', label: '温升快 1 级报警阈值', unit: '℃/min', min: 0, max: 100, scale: 10 },
+        { key: 'bms.74', field: 'B146', address: '74', label: '温升快 2 级报警阈值', unit: '℃/min', min: 0, max: 100, scale: 10 },
+        { key: 'bms.75', field: 'B148', address: '75', label: '温升快 3 级报警阈值', unit: '℃/min', min: 0, max: 100, scale: 10 },
+        { key: 'bms.76', field: 'B150', address: '76', label: '温升快报警回差值', unit: '℃/min', min: 0, max: 100, scale: 10 },
+        { key: 'bms.102', field: 'B174', address: '102', label: '风扇启动温度', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.103', field: 'B176', address: '103', label: '风扇关闭温度', unit: '℃', min: -40, max: 120, temperature: true },
+        { key: 'bms.104', field: 'B178', address: '104', label: 'SOC/SOH 设置电池序号', unit: '', min: 0, max: 480 },
         {
-          key: 'bms.105', field: '105', address: '105', label: 'SOC/SOH 设置', type: 'combined',
+          key: 'bms.105', field: 'B180', address: '105', label: 'SOC/SOH 设置', type: 'combined',
           modeOptions: [
             { label: 'SOC', value: '1' },
             { label: 'SOH', value: '2' }
@@ -337,33 +327,33 @@ export default {
           min: 0,
           max: 100
         },
-        { key: 'bms.107', field: '107', address: '107', label: '可调风扇控制-占空比', unit: '%', min: 0, max: 100, fanControl: true },
-        { 
-          key: 'bms.112', field: '112', address: '112', label: '累计充电电量', type: 'combined',
+        { key: 'bms.107', field: 'B184', address: '107', label: '可调风扇控制-占空比', unit: '%', min: 0, max: 100, fanControl: true },
+        {
+          key: 'bms.112', field: 'B194', address: '112', label: '累计充电电量', type: 'combined',
           highAddress: '112', lowAddress: '113',
           powerLabel: '累计充电电量',
           unit: 'kWh',
           scale: 10,
           hex16: true,
         },
-        { 
-          key: 'bms.114', field: '114', address: '114', label: '累计放电电量', type: 'combined',
+        {
+          key: 'bms.114', field: 'B198', address: '114', label: '累计放电电量', type: 'combined',
           highAddress: '114', lowAddress: '115',
           powerLabel: '累计放电电量',
           unit: 'kWh',
           scale: 10,
           hex16: true,
         },
-        { key: 'bms.117', field: '117', address: '117', label: '电池容量', unit: 'Ah' },
-        { key: 'bms.118', field: '118', address: '118', label: '电传感器量程 1', unit: '' },
-        { key: 'bms.119', field: '119', address: '119', label: '电传感器量程 2', unit: '' },
-        { key: 'bms.120', field: '120', address: '120', label: '电传感器量程 3', unit: '' },
-        { key: 'bms.121', field: '121', address: '121', label: '簇内电池节数', unit: '' },
-        { key: 'bms.122', field: '122', address: '122', label: '簇内电压个数', unit: '' },
-        { key: 'bms.123', field: '123', address: '123', label: '簇内从控模块个数', unit: '' },
-        { key: 'bms.124', field: '124', address: '124', label: '从控 1~48 的电压个数', unit: '' },
-        { key: 'bms.172', field: '172', address: '172', label: '从控 1~48 的温度个数', unit: '' },
-        { key: 'bms.220', field: '220', address: '220', label: '从控站址自动分配', unit: '' }
+        { key: 'bms.117', field: 'B204', address: '117', label: '电池容量', unit: 'Ah' },
+        { key: 'bms.118', field: 'B206', address: '118', label: '电传感器量程 1', unit: '' },
+        { key: 'bms.119', field: 'B208', address: '119', label: '电传感器量程 2', unit: '' },
+        { key: 'bms.120', field: 'B210', address: '120', label: '电传感器量程 3', unit: '' },
+        { key: 'bms.121', field: 'B212', address: '121', label: '簇内电池节数', unit: '' },
+        { key: 'bms.122', field: 'B214', address: '122', label: '簇内电压个数', unit: '' },
+        { key: 'bms.123', field: 'B216', address: '123', label: '簇内从控模块个数', unit: '' },
+        { key: 'bms.124', field: 'B218', address: '124', label: '从控 1~48 的电压个数', unit: '' },
+        { key: 'bms.172', field: 'B220', address: '172', label: '从控 1~48 的温度个数', unit: '' },
+        { key: 'bms.220', field: 'B222', address: '220', label: '从控站址自动分配', unit: '' }
       ],
       bmsSwitchParams: [
         // { key: 'bms.99', address: '99', label: '控制指令模式', options: [
@@ -376,26 +366,26 @@ export default {
         //   { label: '下电', value: '0xAA', dangerous: true }
         // ]},
         {
-          key: 'bms.101', address: '101', label: 'DO 控制', options: [
+          key: 'bms.101', field: 'B172', address: '101', label: 'DO 控制', options: [
             { label: '闭合', value: '1' },
             { label: '断开', value: '0' }
           ]
         },
         {
-          key: 'bms.106', address: '106', label: '绝缘采集控制', options: [
+          key: 'bms.106', field: 'B182', address: '106', label: '绝缘采集控制', options: [
             { label: '开启', value: '1' },
             { label: '关闭', value: '0' },
             { label: '无效值', value: '2' }
           ]
         },
         {
-          key: 'bms.108', address: '108', label: '复归指令', options: [
+          key: 'bms.108', field: 'B186', address: '108', label: '复归指令', options: [
             { label: '默认状态', value: '0' },
             { label: '复归准备', value: '1' }
           ]
         },
         {
-          key: 'bms.109', address: '109', label: '跳机指令', options: [
+          key: 'bms.109', field: 'B188', address: '109', label: '跳机指令', options: [
             { label: '默认状态', value: '0' },
             { label: '跳机', value: '1', dangerous: true }
           ]
@@ -405,7 +395,7 @@ export default {
         //   { label: '故障', value: '1' }
         // ]},
         {
-          key: 'bms.111', address: '111', label: '主控均衡控制', options: [
+          key: 'bms.111', field: 'B192', address: '111', label: '主控均衡控制', options: [
             { label: '关闭均衡', value: '0' },
             { label: '开启均衡', value: '1' },
             { label: '主控自主', value: '2' }
@@ -425,7 +415,99 @@ export default {
       ]
     }
   },
+  computed: {
+    userId() {
+      return this.$store.state.userInfo?.userId 
+    },
+    bmsDevice() {
+      return this.deviceList.find(item => item && item.deviceType === '171C')
+    },
+    device171F() {
+      return this.deviceList.find(item => item && item.deviceType === '171F')
+    },
+    bmsValues() {
+      const device = this.bmsDevice
+      const values = {}
+
+      const getRawValue = (field) => {
+        if (device && device.controlData && device.controlData[field]) {
+          const v = device.controlData[field].value
+          if (v !== undefined && v !== null && v !== '' && v !== '--') return v
+        }
+        const v = this.params.bms[field]
+        return (v !== undefined && v !== null && v !== '' && v !== '--') ? v : '--'
+      }
+
+      this.bmsSwitchParams.forEach(param => {
+        values[param.key] = String(getRawValue(param.field))
+      })
+
+      this.bmsParams.forEach(param => {
+        if (param.type === 'combined') {
+          const existing = this.combinedParams && this.combinedParams[param.key]
+          if (existing) {
+            const { selectedMode, powerValue } = existing
+            if (param.modeOptions && selectedMode !== undefined) {
+              const modeLabel = selectedMode === '1' ? 'SOC' : selectedMode === '2' ? 'SOH' : ''
+              values[param.key] = modeLabel ? `${modeLabel}: ${powerValue || '--'}%` : '--'
+            } else {
+              values[param.key] = powerValue !== undefined ? `${powerValue || '--'}` : '--'
+            }
+          } else {
+            const v = getRawValue(param.field)
+            values[param.key] = (v !== '--' && v !== undefined && v !== null && v !== '') ? v : '--'
+          }
+        } else {
+          values[param.key] = getRawValue(param.field)
+        }
+      })
+
+      return values
+    }
+  },
+  mounted() {
+    const currentDevice = this.$store.state.currentSelectDevice || {}
+    const deviceControl = currentDevice.list.find(item => item.controlType == 1);
+    if (deviceControl) {
+      this.idCode = deviceControl.homeBarCode || deviceControl.barCode || '';
+    }
+    this.initDevice()
+    this.deviceList = [...realtimeDataProvider.getDeviceList()]
+    realtimeDataProvider.onDataUpdate = () => {
+      this.deviceList = [...realtimeDataProvider.getDeviceList()]
+    }
+  },
+  beforeDestroy() {
+    realtimeDataProvider.onDataUpdate = null
+  },
   methods: {
+    initDevice() {
+      const currentDevice = this.$store.state.currentSelectDevice || {}
+      const deviceTypes = ['171C', '171F']
+      const deviceList = deviceTypes.map(deviceType => {
+        const foundDevice = currentDevice.list?.find(item =>
+          item.typeCode === deviceType || item.deviceType === deviceType || item.description?.includes(deviceType)
+        )
+        const defaultAddress = deviceType === '171C' ? '01' : '01'
+        return foundDevice ? {
+          deviceType,
+          typeCode: deviceType,
+          address: foundDevice.address || defaultAddress,
+          barCode: foundDevice.barCode || foundDevice.homeBarCode || '',
+          deviceId: foundDevice.deviceId || `${deviceType}001`,
+          name: foundDevice.name || `设备${deviceType}`
+        } : {
+          deviceType,
+          typeCode: deviceType,
+          address: defaultAddress,
+          barCode: '',
+          deviceId: `${deviceType}001`,
+          name: `设备${deviceType}`
+        }
+      })
+      realtimeDataProvider.initDeviceList(deviceList)
+    },
+
     checkEditMode() {
       if (!this.isEditing) {
         this.showToast('请先点击修改配置', 'warning')
@@ -454,7 +536,7 @@ export default {
     },
 
     getCurrentOptionLabel(param) {
-      const currentValue = this.getParamValue(param.key)
+      const currentValue = this.bmsValues[param.key]
       const option = param.options.find(opt => opt.value === currentValue)
       return option ? option.label : ''
     },
@@ -462,7 +544,7 @@ export default {
     handleSwitchClick(param, option) {
       if (!this.checkEditMode()) return
 
-      const currentValue = this.getParamValue(param.key)
+      const currentValue = this.bmsValues[param.key]
       if (currentValue === option.value) {
         this.showToast('已经是当前设置', 'warning')
         return
@@ -531,14 +613,6 @@ export default {
         this.isSubmitting = false
       }
       this.closeConfirmPopup()
-    },
-
-    formatParamValue(param) {
-      const value = this.params.bms[param.field]
-      if (value === undefined || value === null || value === '') {
-        return '--'
-      }
-      return value
     },
 
     handleInputBlur(param) {
@@ -625,7 +699,7 @@ export default {
         this.openConfirmPopup({
           title: '参数下发确认',
           content: `确定要下发"${param.label}"参数吗？`,
-          oldValue: this.params.bms[param.field] || '--',
+          oldValue: this.bmsValues[param.key],
           newValue: newValue,
           isDangerous: false,
           param: param,
@@ -710,19 +784,6 @@ export default {
       }
     },
 
-    showCombinedValue(param) {
-      const paramKey = param.key
-      if (this.combinedParams && this.combinedParams[paramKey]) {
-        const { selectedMode, powerValue } = this.combinedParams[paramKey]
-        if (param.modeOptions && selectedMode !== undefined) {
-          const modeLabel = selectedMode === '1' ? 'SOC' : selectedMode === '2' ? 'SOH' : ''
-          return modeLabel ? `${modeLabel}: ${powerValue || '--'}%` : '--'
-        }
-        return powerValue !== undefined ? `${powerValue || '--'}` : '--'
-      }
-      return '--'
-    },
-
     async executeSubmitParam(param, value) {
       this.isSubmitting = true
       this.lastSendTimes[param.key] = Date.now()
@@ -738,13 +799,13 @@ export default {
           const rawValue = parseFloat(combinedData.powerValue)
           const scaledValue = param.scale ? rawValue * param.scale : rawValue
           const intValue = Math.round(scaledValue)
-          
+
           const highPart = (intValue >> 16) & 0xFFFF
           const lowPart = intValue & 0xFFFF
-          
+
           const highValue = highPart.toString(16).toUpperCase().padStart(4, '0')
           const lowValue = lowPart.toString(16).toUpperCase().padStart(4, '0')
-          
+
           const commandData1 = {
             apiSufix: 'multiControl',
             idCode: this.idCode,
@@ -764,7 +825,7 @@ export default {
               extra3: '00'
             }]
           }
-          
+
           const commandData2 = {
             apiSufix: 'multiControl',
             idCode: this.idCode,
@@ -784,10 +845,10 @@ export default {
               extra3: '00'
             }]
           }
-          
+
           await sendCommandFrame(commandData1)
           await sendCommandFrame(commandData2)
-          
+
           this.params.bms[param.field] = combinedData.powerValue
           this.editingParam = ''
           this.showToast(`${param.label}: ${combinedData.powerValue}${param.unit || ''}下发成功`, 'success')
@@ -892,19 +953,13 @@ export default {
       this.params[module][key] = value
     },
 
-    getParamValue(paramKey) {
-      const [module, key] = paramKey.split('.')
-      return this.params[module]?.[key]
-    },
-
     handleEditConfig() {
       const currentRoleId = this.$store.state.currentEsRoleId
       if (![1, 2, 4, 5].includes(currentRoleId)) {
         uni.showToast({ title: '无权限操作', icon: 'none' });
         return;
       }
-      const deviceList = realtimeDataProvider.getDeviceList()
-      const device171F = deviceList.find(item => item && item.deviceType === '171F')
+      const device171F = this.device171F
       const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
       console.log('b12Value:', b12Value)
       if (b12Value === undefined || b12Value === null || b12Value === '--') {
@@ -944,7 +999,8 @@ export default {
         return;
       }
       this.editingParam = param.key
-      this.tempValue = this.params.bms[param.field] || ''
+      const displayValue = this.bmsValues[param.key]
+      this.tempValue = displayValue !== '--' ? displayValue : ''
     },
 
     handleParamCancel() {

@@ -4,6 +4,15 @@
 import request from '../utils/request'
 import { URL } from '../utils/forSpringBoot'
 
+// 获取设备功率统计
+export const getDevicePowerStatistics = (params) => {
+	return request({
+		url: '/api/energyStation/getDevicePowerStatistics',
+		method: 'GET',
+		params
+	})
+}
+
 // 获取电力数据
 export const getPowerData = (params) => {
 	return request({

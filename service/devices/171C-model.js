@@ -257,101 +257,138 @@ export class Model171C extends DeviceBase {
 
 	// 处理控制数据（完全对齐PCS模板格式）
 	getControlData(jsonData) {
+		// console.log(jsonData)
 		// 控制数据字段赋值（带单位，完全对齐PCS模板格式）
 		// 组端过压/欠压相关（V）
-		this.controlData.B0.value = jsonData.data.B0?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B2.value = jsonData.data.B2?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B4.value = jsonData.data.B4?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B6.value = jsonData.data.B6?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B8.value = jsonData.data.B8?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B10.value = jsonData.data.B10?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B12.value = jsonData.data.B12?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B14.value = jsonData.data.B14?.toFixed(2) + this.setHtmlText('V');
+		this.controlData.B0.value = jsonData.data.B0 ;
+		this.controlData.B2.value = jsonData.data.B2 ;
+		this.controlData.B4.value = jsonData.data.B4 ;
+		this.controlData.B6.value = jsonData.data.B6 ;
+		this.controlData.B8.value = jsonData.data.B8 ;
+		this.controlData.B10.value = jsonData.data.B10 ;
+		this.controlData.B12.value = jsonData.data.B12 ;
+		this.controlData.B14.value = jsonData.data.B14 ;
 		// 放电/充电过流相关（A）
-		this.controlData.B16.value = jsonData.data.B16?.toFixed(2) + this.setHtmlText('A');
-		this.controlData.B18.value = jsonData.data.B18?.toFixed(2) + this.setHtmlText('A');
-		this.controlData.B20.value = jsonData.data.B20?.toFixed(2) + this.setHtmlText('A');
-		this.controlData.B22.value = jsonData.data.B22?.toFixed(2) + this.setHtmlText('A');
-		this.controlData.B24.value = jsonData.data.B24?.toFixed(2) + this.setHtmlText('A');
-		this.controlData.B26.value = jsonData.data.B26?.toFixed(2) + this.setHtmlText('A');
-		this.controlData.B28.value = jsonData.data.B28?.toFixed(2) + this.setHtmlText('A');
-		this.controlData.B30.value = jsonData.data.B30?.toFixed(2) + this.setHtmlText('A');
+		this.controlData.B16.value = jsonData.data.B16 ;
+		this.controlData.B18.value = jsonData.data.B18 ;
+		this.controlData.B20.value = jsonData.data.B20 ;
+		this.controlData.B22.value = jsonData.data.B22 ;
+		this.controlData.B24.value = jsonData.data.B24 ;
+		this.controlData.B26.value = jsonData.data.B26 ;
+		this.controlData.B28.value = jsonData.data.B28 ;
+		this.controlData.B30.value = jsonData.data.B30 ;
 		// 组端绝缘相关（kΩ）
-		this.controlData.B32.value = jsonData.data.B32?.toFixed(2) + this.setHtmlText('kΩ');
-		this.controlData.B34.value = jsonData.data.B34?.toFixed(2) + this.setHtmlText('kΩ');
-		this.controlData.B36.value = jsonData.data.B36?.toFixed(2) + this.setHtmlText('kΩ');
-		this.controlData.B38.value = jsonData.data.B38?.toFixed(2) + this.setHtmlText('kΩ');
+		this.controlData.B32.value = jsonData.data.B32;
+		this.controlData.B34.value = jsonData.data.B34;
+		this.controlData.B36.value = jsonData.data.B36;
+		this.controlData.B38.value = jsonData.data.B38;
 		// 单体充电过温相关（℃）
-		this.controlData.B40.value = jsonData.data.B40?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B42.value = jsonData.data.B42?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B44.value = jsonData.data.B44?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B46.value = jsonData.data.B46?.toFixed(2) + this.setHtmlText('℃');
+		this.controlData.B40.value = jsonData.data.B40 ;
+		this.controlData.B42.value = jsonData.data.B42 ;
+		this.controlData.B44.value = jsonData.data.B44 ;
+		this.controlData.B46.value = jsonData.data.B46 ;
 		// 单体充电欠温相关（℃）
-		this.controlData.B48.value = jsonData.data.B48?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B50.value = jsonData.data.B50?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B52.value = jsonData.data.B52?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B54.value = jsonData.data.B54?.toFixed(2) + this.setHtmlText('℃');
+		this.controlData.B48.value = jsonData.data.B48 ;
+		this.controlData.B50.value = jsonData.data.B50 ;
+		this.controlData.B52.value = jsonData.data.B52 ;
+		this.controlData.B54.value = jsonData.data.B54 ;
 		// 单体电压过压相关（mV）
-		this.controlData.B56.value = jsonData.data.B56?.toFixed(2) + this.setHtmlText('mV');
-		this.controlData.B58.value = jsonData.data.B58?.toFixed(2) + this.setHtmlText('mV');
-		this.controlData.B60.value = jsonData.data.B60?.toFixed(2) + this.setHtmlText('mV');
-		this.controlData.B62.value = jsonData.data.B62?.toFixed(2) + this.setHtmlText('mV');
+		this.controlData.B56.value = jsonData.data.B56 ;
+		this.controlData.B58.value = jsonData.data.B58 ;
+		this.controlData.B60.value = jsonData.data.B60 ;
+		this.controlData.B62.value = jsonData.data.B62 ;
 		// 单体电压欠压相关（mV）
-		this.controlData.B64.value = jsonData.data.B64?.toFixed(2) + this.setHtmlText('mV');
-		this.controlData.B66.value = jsonData.data.B66?.toFixed(2) + this.setHtmlText('mV');
-		this.controlData.B68.value = jsonData.data.B68?.toFixed(2) + this.setHtmlText('mV');
-		this.controlData.B70.value = jsonData.data.B70?.toFixed(2) + this.setHtmlText('mV');
+		this.controlData.B64.value = jsonData.data.B64 ;
+		this.controlData.B66.value = jsonData.data.B66 ;
+		this.controlData.B68.value = jsonData.data.B68 ;
+		this.controlData.B70.value = jsonData.data.B70 ;
 		// 单体电压差压相关（mV）
-		this.controlData.B72.value = jsonData.data.B72?.toFixed(2) + this.setHtmlText('mV');
-		this.controlData.B74.value = jsonData.data.B74?.toFixed(2) + this.setHtmlText('mV');
-		this.controlData.B76.value = jsonData.data.B76?.toFixed(2) + this.setHtmlText('mV');
-		this.controlData.B78.value = jsonData.data.B78?.toFixed(2) + this.setHtmlText('mV');
+		this.controlData.B72.value = jsonData.data.B72 ;
+		this.controlData.B74.value = jsonData.data.B74 ;
+		this.controlData.B76.value = jsonData.data.B76 ;
+		this.controlData.B78.value = jsonData.data.B78 ;
 		// 单体温度温差相关（℃）
-		this.controlData.B80.value = jsonData.data.B80?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B82.value = jsonData.data.B82?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B84.value = jsonData.data.B84?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B86.value = jsonData.data.B86?.toFixed(2) + this.setHtmlText('℃');
+		this.controlData.B80.value = jsonData.data.B80 ;
+		this.controlData.B82.value = jsonData.data.B82 ;
+		this.controlData.B84.value = jsonData.data.B84 ;
+		this.controlData.B86.value = jsonData.data.B86 ;
 		// SOC过低相关（%）
-		this.controlData.B88.value = jsonData.data.B88?.toFixed(2) + this.setHtmlText('%');
-		this.controlData.B90.value = jsonData.data.B90?.toFixed(2) + this.setHtmlText('%');
-		this.controlData.B92.value = jsonData.data.B92?.toFixed(2) + this.setHtmlText('%');
-		this.controlData.B94.value = jsonData.data.B94?.toFixed(2) + this.setHtmlText('%');
+		this.controlData.B88.value = jsonData.data.B88 ;
+		this.controlData.B90.value = jsonData.data.B90 ;
+		this.controlData.B92.value = jsonData.data.B92 ;
+		this.controlData.B94.value = jsonData.data.B94 ;
 		// 动力插箱温度过高相关（℃）
-		this.controlData.B96.value = jsonData.data.B96?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B98.value = jsonData.data.B98?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B100.value = jsonData.data.B100?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B102.value = jsonData.data.B102?.toFixed(2) + this.setHtmlText('℃');
+		this.controlData.B96.value = jsonData.data.B96 ;
+		this.controlData.B98.value = jsonData.data.B98 ;
+		this.controlData.B100.value = jsonData.data.B100 ;
+		this.controlData.B102.value = jsonData.data.B102 ;
 		// 电池模组过压相关（V）
-		this.controlData.B104.value = jsonData.data.B104?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B106.value = jsonData.data.B106?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B108.value = jsonData.data.B108?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B110.value = jsonData.data.B110?.toFixed(2) + this.setHtmlText('V');
+		this.controlData.B104.value = jsonData.data.B104 ;
+		this.controlData.B106.value = jsonData.data.B106 ;
+		this.controlData.B108.value = jsonData.data.B108 ;
+		this.controlData.B110.value = jsonData.data.B110 ;
 		// 电池模组欠压相关（V）
-		this.controlData.B112.value = jsonData.data.B112?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B114.value = jsonData.data.B114?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B116.value = jsonData.data.B116?.toFixed(2) + this.setHtmlText('V');
-		this.controlData.B118.value = jsonData.data.B118?.toFixed(2) + this.setHtmlText('V');
+		this.controlData.B112.value = jsonData.data.B112 ;
+		this.controlData.B114.value = jsonData.data.B114 ;
+		this.controlData.B116.value = jsonData.data.B116 ;
+		this.controlData.B118.value = jsonData.data.B118 ;
 		// 单体放电过温相关（℃）
-		this.controlData.B120.value = jsonData.data.B120?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B122.value = jsonData.data.B122?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B124.value = jsonData.data.B124?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B126.value = jsonData.data.B126?.toFixed(2) + this.setHtmlText('℃');
+		this.controlData.B120.value = jsonData.data.B120 ;
+		this.controlData.B122.value = jsonData.data.B122 ;
+		this.controlData.B124.value = jsonData.data.B124 ;
+		this.controlData.B126.value = jsonData.data.B126 ;
 		// 单体放电欠温相关（℃）
-		this.controlData.B128.value = jsonData.data.B128?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B130.value = jsonData.data.B130?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B132.value = jsonData.data.B132?.toFixed(2) + this.setHtmlText('℃');
-		this.controlData.B134.value = jsonData.data.B134?.toFixed(2) + this.setHtmlText('℃');
+		this.controlData.B128.value = jsonData.data.B128 ;
+		this.controlData.B130.value = jsonData.data.B130 ;
+		this.controlData.B132.value = jsonData.data.B132 ;
+		this.controlData.B134.value = jsonData.data.B134 ;
 		// SOC过高相关（%）
-		this.controlData.B136.value = jsonData.data.B136?.toFixed(2) + this.setHtmlText('%');
-		this.controlData.B138.value = jsonData.data.B138?.toFixed(2) + this.setHtmlText('%');
-		this.controlData.B140.value = jsonData.data.B140?.toFixed(2) + this.setHtmlText('%');
-		this.controlData.B142.value = jsonData.data.B142?.toFixed(2) + this.setHtmlText('%');
+		this.controlData.B136.value = jsonData.data.B136 ;
+		this.controlData.B138.value = jsonData.data.B138 ;
+		this.controlData.B140.value = jsonData.data.B140 ;
+		this.controlData.B142.value = jsonData.data.B142 ;
 		// 温升快相关（℃/min）
-		this.controlData.B144.value = jsonData.data.B144?.toFixed(2) + this.setHtmlText('℃/min');
-		this.controlData.B146.value = jsonData.data.B146?.toFixed(2) + this.setHtmlText('℃/min');
-		this.controlData.B148.value = jsonData.data.B148?.toFixed(2) + this.setHtmlText('℃/min');
-		this.controlData.B150.value = jsonData.data.B150?.toFixed(2) + this.setHtmlText('℃/min');
-
+		this.controlData.B144.value = jsonData.data.B144 ;
+		this.controlData.B146.value = jsonData.data.B146 ;
+		this.controlData.B148.value = jsonData.data.B148 ;
+		this.controlData.B150.value = jsonData.data.B150 ;
+		// 控制指令模式相关
+		this.controlData.B168.value = jsonData.data.B168 ;
+		this.controlData.B170.value = jsonData.data.B170 ;
+		this.controlData.B172.value = jsonData.data.B172 ;
+		// 风扇温度相关（℃）
+		this.controlData.B174.value = jsonData.data.B174 ;
+		this.controlData.B176.value = jsonData.data.B176 ;
+		// SOC/SOH设置相关
+		this.controlData.B178.value = jsonData.data.B178 ;
+		this.controlData.B180.value = jsonData.data.B180 ;
+		// 控制开关相关
+		this.controlData.B182.value = jsonData.data.B182 ;
+		this.controlData.B184.value = jsonData.data.B184 ;
+		this.controlData.B186.value = jsonData.data.B186 ;
+		this.controlData.B188.value = jsonData.data.B188 ;
+		this.controlData.B190.value = jsonData.data.B190 ;
+		this.controlData.B192.value = jsonData.data.B192 ;
+		// 电量相关（kWh）
+		this.controlData.B194.value = jsonData.data.B194 ;
+		this.controlData.B198.value = jsonData.data.B198 ;
+		// 电池类型和容量
+		this.controlData.B202.value = jsonData.data.B202 ;
+		this.controlData.B204.value = jsonData.data.B204 ;
+		// 电传感器量程
+		this.controlData.B206.value = jsonData.data.B206 ;
+		this.controlData.B208.value = jsonData.data.B208 ;
+		this.controlData.B210.value = jsonData.data.B210 ;
+		// 簇内配置参数
+		this.controlData.B212.value = jsonData.data.B212 ;
+		this.controlData.B214.value = jsonData.data.B214 ;
+		this.controlData.B216.value = jsonData.data.B216 ;
+		this.controlData.B218.value = jsonData.data.B218 ;
+		this.controlData.B220.value = jsonData.data.B220 ;
+		this.controlData.B222.value = jsonData.data.B222 ;
+		// 风扇控制功能
+		this.controlData.B224.value = jsonData.data.B224 ;
+		// console.log(this.controlData)
 	}
 
 	// 工具方法：带单位的HTML文本（完全对齐PCS模板）
@@ -429,7 +466,7 @@ export class Model171C extends DeviceBase {
 
 	// 工具方法：故障等级转换（与PCS模板结构完全一致）
 	setFaultLevel(key) {
-	
+
 		switch (key) {
 			case 0:
 				return '初始值';
@@ -848,7 +885,117 @@ export class StateData {
 
 export class ControlData {
 	constructor() {
-		this.B128 = { name: '电池簇 SOC', value: "--" };
+		this.B0 = { name: '组端过压 1 级报警阈值', value: "--" };
+		this.B2 = { name: '组端过压 2 级报警阈值', value: "--" };
+		this.B4 = { name: '组端过压 3 级报警阈值', value: "--" };
+		this.B6 = { name: '组端过压报警回差值', value: "--" };
+		this.B8 = { name: '组端欠压 1 级报警阈值', value: "--" };
+		this.B10 = { name: '组端欠压 2 级报警阈值', value: "--" };
+		this.B12 = { name: '组端欠压 3 级报警阈值', value: "--" };
+		this.B14 = { name: '组端欠压报警回差值', value: "--" };
+		this.B16 = { name: '组端放电过流 1 级报警阈值', value: "--" };
+		this.B18 = { name: '组端放电过流 2 级报警阈值', value: "--" };
+		this.B20 = { name: '组端放电过流 3 级报警阈值', value: "--" };
+		this.B22 = { name: '组端放电过流报警回差值', value: "--" };
+		this.B24 = { name: '组端充电过流 1 级报警阈值', value: "--" };
+		this.B26 = { name: '组端充电过流 2 级报警阈值', value: "--" };
+		this.B28 = { name: '组端充电过流 3 级报警阈值', value: "--" };
+		this.B30 = { name: '组端充电过流报警回差值', value: "--" };
+		this.B32 = { name: '组端绝缘 1 级报警阈值', value: "--" };
+		this.B34 = { name: '组端绝缘 2 级报警阈值', value: "--" };
+		this.B36 = { name: '组端绝缘 3 级报警阈值', value: "--" };
+		this.B38 = { name: '组端绝缘报警回差值', value: "--" };
+		this.B40 = { name: '单体充电过温 1 级报警阈值', value: "--" };
+		this.B42 = { name: '单体充电过温 2 级报警阈值', value: "--" };
+		this.B44 = { name: '单体充电过温 3 级报警阈值', value: "--" };
+		this.B46 = { name: '电池充电过温报警回差值', value: "--" };
+		this.B48 = { name: '单体充电欠温 1 级报警阈值', value: "--" };
+		this.B50 = { name: '单体充电欠温 2 级报警阈值', value: "--" };
+		this.B52 = { name: '单体充电欠温 3 级报警阈值', value: "--" };
+		this.B54 = { name: '单体充电欠温报警回差值', value: "--" };
+		this.B56 = { name: '单体电压过压 1 级报警阈值', value: "--" };
+		this.B58 = { name: '单体电压过压 2 级报警阈值', value: "--" };
+		this.B60 = { name: '单体电压过压 3 级报警阈值', value: "--" };
+		this.B62 = { name: '单体电压过压报警回差值', value: "--" };
+		this.B64 = { name: '单体电压欠压 1 级报警阈值', value: "--" };
+		this.B66 = { name: '单体电压欠压 2 级报警阈值', value: "--" };
+		this.B68 = { name: '单体电压欠压 3 级报警阈值', value: "--" };
+		this.B70 = { name: '单体电压欠压报警回差值', value: "--" };
+		this.B72 = { name: '单体电压差压 1 级报警阈值', value: "--" };
+		this.B74 = { name: '单体电压差压 2 级报警阈值', value: "--" };
+		this.B76 = { name: '单体电压差压 3 级报警阈值', value: "--" };
+		this.B78 = { name: '单体电压差压报警回差值', value: "--" };
+		this.B80 = { name: '单体温度温差 1 级报警阈值', value: "--" };
+		this.B82 = { name: '单体温度温差 2 级报警阈值', value: "--" };
+		this.B84 = { name: '单体温度温差 3 级报警阈值', value: "--" };
+		this.B86 = { name: '单体温度温差报警回差值', value: "--" };
+		this.B88 = { name: 'SOC 过低 1 级报警阈值', value: "--" };
+		this.B90 = { name: 'SOC 过低 2 级报警阈值', value: "--" };
+		this.B92 = { name: 'SOC 过低 3 级报警阈值', value: "--" };
+		this.B94 = { name: 'SOC 过低报警回差值', value: "--" };
+		this.B96 = { name: '动力插箱温度过高 1 级报警阈值', value: "--" };
+		this.B98 = { name: '动力插箱温度过高 2 级报警阈值', value: "--" };
+		this.B100 = { name: '动力插箱温度过高 3 级报警阈值', value: "--" };
+		this.B102 = { name: '动力插箱温度过高报警回差值', value: "--" };
+		this.B104 = { name: '电池模组过压 1 级报警阈值', value: "--" };
+		this.B106 = { name: '电池模组过压 2 级报警阈值', value: "--" };
+		this.B108 = { name: '电池模组过压 3 级报警阈值', value: "--" };
+		this.B110 = { name: '电池模组过压报警回差值', value: "--" };
+		this.B112 = { name: '电池模组欠压 1 级报警阈值', value: "--" };
+		this.B114 = { name: '电池模组欠压 2 级报警阈值', value: "--" };
+		this.B116 = { name: '电池模组欠压 3 级报警阈值', value: "--" };
+		this.B118 = { name: '电池模组欠压报警回差值', value: "--" };
+		this.B120 = { name: '单体放电过温 1 级报警阈值', value: "--" };
+		this.B122 = { name: '单体放电过温 2 级报警阈值', value: "--" };
+		this.B124 = { name: '单体放电过温 3 级报警阈值', value: "--" };
+		this.B126 = { name: '单体放电过温报警回差值', value: "--" };
+		this.B128 = { name: '单体放电欠温 1 级报警阈值', value: "--" };
+		this.B130 = { name: '单体放电欠温 2 级报警阈值', value: "--" };
+		this.B132 = { name: '单体放电欠温 3 级报警阈值', value: "--" };
+		this.B134 = { name: '电池放电欠温报警回差值', value: "--" };
+		this.B136 = { name: 'SOC 过高 1 级报警阈值', value: "--" };
+		this.B138 = { name: 'SOC 过高 2 级报警阈值', value: "--" };
+		this.B140 = { name: 'SOC 过高 3 级报警阈值', value: "--" };
+		this.B142 = { name: 'SOC 过高报警回差值', value: "--" };
+		this.B144 = { name: '温升快 1 级报警阈值', value: "--" };
+		this.B146 = { name: '温升快 2 级报警阈值', value: "--" };
+		this.B148 = { name: '温升快 3 级报警阈值', value: "--" };
+		this.B150 = { name: '温升快报警回差值', value: "--" };
+
+
+		this.B168 = { name: '控制指令模式', value: "--" };
+		this.B170 = { name: '上下电控制指令', value: "--" };
+		this.B172 = { name: 'DO 控制', value: "--" };
+		this.B174 = { name: '风扇启动温度', value: "--" };
+		this.B176 = {name: '风扇关闭温度', value: '--'};
+		this.B178 = { name: 'SOC/SOH 设置电池序号', value: '--' };
+		this.B180 = {name: 'SOC/SOH 设置', value: '--'};
+		this.B182 = {name: '绝缘采集控制', value: '--'};
+		this.B184 = { name: '可调风扇控制-占空比', unit: 'Ah' };
+		this.B186 = { name: '复归指令', value: "--" };
+		this.B188 = { name: '跳机指令', value: "--" };
+		this.B190 = { name: '显控检测故障', value: "--" };
+
+		this.B192 = { name: '主控均衡控制', value: "--" };
+		this.B194 = { name: '累计充电电量', value: "--" };
+		this.B198 = { name: '累计放电电量', value: "--" };
+		this.B202 = { name: '电池类型', value: "--" };
+		this.B204 = { name: '电池容量', value: "--" };
+
+
+		this.B206 = { name: '电传感器量程 1', unit: '' };
+		this.B208 = { name: '电传感器量程 2', unit: '' };
+		this.B210 = { name: '电传感器量程 3', unit: '' };
+		this.B212 = { name: '簇内电池节数', unit: '' };
+		this.B214 = { name: '簇内电压个数', unit: '' };
+		this.B216 = { name: '簇内从控模块个数', unit: '' };
+		this.B218 = { name: '从控 1~48 的电压个数', unit: '' };
+		this.B220 = { name: '从控 1~48 的温度个数', unit: '' };
+		this.B222 = { name: '从控站址自动分配', unit: '' };
+		this.B224 = { name: '风扇控制功能', value: "--" };
 	}
 }
+
+
+
 

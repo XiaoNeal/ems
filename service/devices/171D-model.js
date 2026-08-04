@@ -141,33 +141,25 @@ export class Model171D extends DeviceBase {
 
 	// 处理控制数据（完全对齐1707格式，协议全量25个字段）
 	getControlData(jsonData) {
+		// console.log(jsonData);
 
 		// 控制数据字段赋值（带单位，完全对齐1707格式）
-		this.controlData.B0.value = this.setCanBaudRate(jsonData.data.B0);
-		this.controlData.B2.value = this.setAuthStandardCode(jsonData.data.B2);
-		this.controlData.B4.value = this.setSwitchStatus(jsonData.data.B4);
-		this.controlData.B6.value = this.setSwitchStatus(jsonData.data.B6);
-		this.controlData.B8.value = this.setSystemWorkStatus(jsonData.data.B8);
-		this.controlData.B10.value = this.setBatteryWorkStatus(jsonData.data.B10);
-		this.controlData.B12.value = jsonData.data.B12.toFixed(2) + this.setHtmlText('0.1V');
-		this.controlData.B14.value = jsonData.data.B14.toFixed(2) + this.setHtmlText('0.1V');
-		this.controlData.B16.value = jsonData.data.B16.toFixed(2) + this.setHtmlText('0.1V');
-		this.controlData.B18.value = jsonData.data.B18.toFixed(2) + this.setHtmlText('0.1V');
-		this.controlData.B20.value = jsonData.data.B20.toFixed(2) + this.setHtmlText('0.1A');
-		this.controlData.B22.value = jsonData.data.B22.toFixed(2) + this.setHtmlText('0.1A');
-		this.controlData.B24.value = jsonData.data.B24.toFixed(2) + this.setHtmlText('0.1W');
-		this.controlData.B26.value = jsonData.data.B26.toFixed(2) + this.setHtmlText('0.1W');
-		this.controlData.B28.value = jsonData.data.B28.toFixed(2) + this.setHtmlText('0.1℃');
-		this.controlData.B30.value = jsonData.data.B30.toFixed(2) + this.setHtmlText('0.1℃');
-		this.controlData.B32.value = jsonData.data.B32.toFixed(2) + this.setHtmlText('0.1℃');
-		this.controlData.B34.value = jsonData.data.B34.toFixed(2) + this.setHtmlText('0.1℃');
-		this.controlData.B36.value = jsonData.data.B36.toFixed(2) + this.setHtmlText('0.1V');
-		this.controlData.B38.value = jsonData.data.B38.toFixed(2) + this.setHtmlText('0.1A');
-		this.controlData.B40.value = jsonData.data.B40.toFixed(2) + this.setHtmlText('0.1W');
-		this.controlData.B42.value = this.setSwitchStatus(jsonData.data.B42);
-		this.controlData.B44.value = jsonData.data.B44.toFixed(2) + this.setHtmlText('0.1V');
-		this.controlData.B46.value = jsonData.data.B46.toFixed(2) + this.setHtmlText('0.1V');
-		this.controlData.B48.value = jsonData.data.B48;
+		for (let i = 0; i <= 48; i++) {
+			if (jsonData.data[`B${i}`] !== undefined) {
+				this.controlData[`B${i}`].value = jsonData.data[`B${i}`];
+			}
+		}
+		if (jsonData.data.B50 !== undefined) {
+			this.controlData.B50.value = jsonData.data.B50;
+		}
+		if (jsonData.data.B53b0 !== undefined) {
+			this.controlData.B53b0.value = jsonData.data.B53b0;
+		}
+		if (jsonData.data.B53b1 !== undefined) {
+			this.controlData.B53b1.value = jsonData.data.B53b1;
+		}
+
+		// console.log(this.controlData, "控制数据");
 	}
 
 	// 工具方法：带单位的HTML文本（完全对齐1707原生格式）
@@ -397,7 +389,7 @@ export class EnergyData {
 		this.B44b5 = { name: 'BUS母线短路', value: "--" };
 		this.B44b6 = { name: 'BUS母线欠压关机', value: "--" };
 		this.B44b7 = { name: 'BUS+母线快速欠压', value: "--" };
-		
+
 
 		this.B45b0 = { name: 'BUS-母线快速欠压', value: "--" };
 		this.B45b1 = { name: 'DCDC1过流', value: "--" };
@@ -449,7 +441,7 @@ export class EnergyData {
 
 
 
-		
+
 
 
 
@@ -462,16 +454,25 @@ export class StateData {
 	// 无有效字段，完全按协议置空
 }
 
-// 控制数据类（协议全量25个有效字段，完全对齐1707格式）
+// 控制数据类（协议全量字段，完全对齐1707格式）
 export class ControlData {
 	constructor() {
-		// 动态生成25个字段，完全匹配协议
-		for (let i = 0; i < 49; i += 2) {
+		// 动态生成字段，完全匹配协议
+		for (let i = 0; i <= 48; i++) {
 			this[`B${i}`] = {
 				name: `控制数据字段${i}`,
 				value: "--"
 			};
 		}
+		this.B53b0 = {
+			name: 'CAN通讯使能位',
+			value: "--"
+		};
+		this.B53b1 = {
+			name: '485通讯使能位',
+			value: "--"
+		};
+
 		// 核心字段重命名，匹配协议
 		this.B0.name = 'Can波特率设置';
 		this.B2.name = '认证标准码';
@@ -493,14 +494,15 @@ export class ControlData {
 		this.B34.name = '放电电压设置';
 		this.B36.name = '放电电流设置';
 		this.B38.name = '电池过压关机点';
-		this.B40.name = '电池低压告警点';
-		this.B42.name = '电池低压关机点';
+		this.B40.name = '电池欠压告警点';
+		this.B42.name = '电池欠压关机点';
 		this.B44.name = '电池激活功能';
 		this.B46.name = '自动重启功能';
 		this.B48.name = '充电母线电压上限';
-		// this.B50.name = '放电母线电压下限';
-		// this.B53b0.name = 'CAN通讯使能位';
-		// this.B53b1.name = '485通讯使能位';
+		this.B50 =  {
+			name: '放电母线电压下限',
+			value: "--"
+		};
 
 	}
 }

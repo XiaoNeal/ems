@@ -16,7 +16,7 @@ export default class RealTimeWebSokcetProtocolHandler {
 
 
 	initDevice(jsonData, gateway, deviceList) {
-
+		// console.log(jsonData,'-----------111111-111111')
 		let model = DeviceFactory.create(jsonData, gateway);
 		if (model)
 			deviceList.push(model)
@@ -29,11 +29,33 @@ export default class RealTimeWebSokcetProtocolHandler {
 		// let key = gateway + jsonData.deviceType + jsonData.address
 		// // let deviceList = store.getters.deviceList
 
-		let model = deviceList.find(ele => ele && (ele.address == jsonData.address && (ele.deviceType ==
-			jsonData.deviceType||jsonData.deviceType.includes(ele.deviceType))  && ele.barCode == gateway))
+		let model = deviceList.find(ele => ele && (ele.address == jsonData.address && 
+			(ele.deviceType == jsonData.deviceType || 
+			 jsonData.deviceType.includes(ele.deviceType) ||
+			 (ele.rawDeviceType && (ele.rawDeviceType == jsonData.deviceType || jsonData.deviceType.includes(ele.rawDeviceType))))  
+			 && ele.barCode == gateway))
 
 		if (model) {
+			// console.log('parseJsonData - 匹配成功:', {
+			// 	address: jsonData.address,
+			// 	deviceType: jsonData.deviceType,
+			// 	modelType: model.deviceType,
+			// 	modelTypeCode: model.typeCode,
+			// 	modelRawType: model.rawDeviceType
+			// });
 			model.getDeviceData(jsonData, gateway)
+		} else {
+			// console.log('parseJsonData - 匹配失败:', {
+			// 	address: jsonData.address,
+			// 	deviceType: jsonData.deviceType,
+			// 	availableDevices: deviceList.map(d => ({
+			// 		address: d.address,
+			// 		deviceType: d.deviceType,
+			// 		typeCode: d.typeCode,
+			// 		rawDeviceType: d.rawDeviceType,
+			// 		barCode: d.barCode
+			// 	}))
+			// });
 		} 
 
 	}
