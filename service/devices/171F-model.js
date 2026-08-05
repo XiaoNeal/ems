@@ -328,8 +328,8 @@ class ControlData171F_V2 {
         this.B2 = { name: 'PCS模式选择', value: "--" };
         this.B4 = { name: '充电功率设置', value: "--" };
         this.B6 = { name: '放电功率设置', value: "--" };
-        this.B8 = { name: '预留', value: "--" };
-        this.B10 = { name: 'PCS开关机', value: "--" };
+        this.B8 = { name: 'PCS开关机', value: "--" };
+        this.B10 = { name: '光伏DC控制', value: "--" };
         this.B12 = { name: '启动按钮', value: "--" };
         this.B14 = { name: '运行策略', value: "--" };
         this.B16 = { name: '电池优先策略的目标SOC值', value: "--" };

@@ -230,16 +230,16 @@ export default {
       if (v === 2 || v === '2') return 'stop'
       return this.selectedStorageDcAction || ''
     },
-    // 光伏DC控制状态
+      // 光伏DC控制状态
     pvDcStatus() {
-      const v = this.controlData.B2?.value
+      const v = this.controlData.B10?.value
       if (v === 1 || v === '1') return 'start'
       if (v === 2 || v === '2') return 'stop'
       return this.selectedPvDcAction || ''
     },
     // PCS模式选择状态
     pcsModeStatus() {
-      const v = this.controlData.B4?.value
+      const v = this.controlData.B2?.value
       if (v === 1 || v === '1') return 'charge'
       if (v === 2 || v === '2') return 'discharge'
       if (v === 3 || v === '3') return 'off-grid'
@@ -247,25 +247,25 @@ export default {
     },
     // 充电功率：原始数据 *10（单位 0.1kW），显示为 kW
     chargePower() {
-      const v = this.controlData.B6?.value
+      const v = this.controlData.B4?.value
       if (v !== undefined && v !== null && v !== '--' && v !== '') {
         const num = parseFloat(v)
-        if (!isNaN(num)) return (num / 10).toFixed(1)
+        if (!isNaN(num)) return (num ).toFixed(1)
       }
       return this._localChargePower || '--'
     },
     // 放电功率
     dischargePower() {
-      const v = this.controlData.B8?.value
+      const v = this.controlData.B6?.value
       if (v !== undefined && v !== null && v !== '--' && v !== '') {
         const num = parseFloat(v)
-        if (!isNaN(num)) return (num / 10).toFixed(1)
+        if (!isNaN(num)) return (num).toFixed(1)
       }
       return this._localDischargePower || '--'
     },
     // PCS开关机状态
     pcsActionStatus() {
-      const v = this.controlData.B10?.value
+      const v = this.controlData.B8?.value
       if (v === 1 || v === '1') return 'start'
       if (v === 2 || v === '2') return 'stop'
       return this.selectedPcsAction || ''

@@ -823,7 +823,7 @@ export default {
 
   &.ios-platform {
     .fixed-placeholder {
-      height: calc(59px + 44px);
+      height: calc( 44px);
       background: #fff;
     }
   }

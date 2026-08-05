@@ -9,7 +9,7 @@
         <text class="info-label">设备名称</text>
         <text class="info-value">{{ deviceInfo.deviceName || '--' }}</text>
       </view>
-      <view class="info-item">
+      <!-- <view class="info-item">
         <text class="info-label">设备类型</text>
         <text class="info-value">{{ formatDeviceType(energyData.B2) }}</text>
       </view>
@@ -28,7 +28,7 @@
       <view class="info-item">
         <text class="info-label">所属子网关ID</text>
         <text class="info-value">{{ getFieldValue(energyData.B42) || '--' }}</text>
-      </view>
+      </view> -->
     </view>
 
     <!-- 实时运行数据 -->
@@ -50,7 +50,7 @@
         <text class="info-label">实时功率</text>
         <text class="info-value">{{ formatPower(energyData.B24) }}</text>
       </view>
-      <view class="info-item">
+      <!-- <view class="info-item">
         <text class="info-label">累计正向电能</text>
         <text class="info-value">{{ formatEnergy(energyData.B28) }}</text>
       </view>
@@ -74,11 +74,11 @@
             {{ level }}级
           </view>
         </view>
-      </view>
+      </view> -->
     </view>
 
     <!-- 调控数据 -->
-    <view class="device-info-card">
+    <view v-if="false" class="device-info-card">
       <view class="card-title">调控数据</view>
       <view class="info-item">
         <text class="info-label">开关</text>
@@ -127,7 +127,7 @@
     </view>
 
     <!-- 电量统计 -->
-    <view class="chart-card">
+    <view v-if="false" class="chart-card">
       <view class="chart-header">
         <text class="chart-title">电量统计</text>
       </view>
@@ -206,7 +206,7 @@ export default {
       chartOpts: {
         color: ['#00c934', '#1890ff'],
         dataLabel: false,
-        padding: [15, 20, 0, 15],
+        padding: [15, 20, 30, 25],
         dataPointShape: false,
         enableScroll: false,
         legend: {
@@ -214,7 +214,7 @@ export default {
           position: 'bottom',
           borderWidth: 0
         },
-        xAxis: { labelCount: 6, disableGrid: true },
+        xAxis: { labelCount: 5, disableGrid: true },
         yAxis: {
           gridType: 'dash',
           showTitle: true,
@@ -264,7 +264,7 @@ export default {
       return {
         color: ['#00c934', '#1890ff'],
         dataLabel: false,
-        padding: [15, 20, 0, 15],
+        padding: [15, 20, 30, 25],
         dataPointShape: false,
         enableScroll: false,
         legend: {
@@ -272,7 +272,7 @@ export default {
           position: 'bottom',
           borderWidth: 0
         },
-        xAxis: { labelCount: 5, disableGrid: true },
+        xAxis: { labelCount: 5, disableGrid: true, rotateLabel: true },
         yAxis: {
           gridType: 'dash',
           showTitle: true,
@@ -594,7 +594,7 @@ export default {
 }
 
 .chart-container {
-  height: 260px;
+  height: 300px;
   position: relative;
   padding: 0 -10px;
 }

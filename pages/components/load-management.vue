@@ -189,7 +189,7 @@ export default {
         color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
         dataLabel: false,
         dataPointShape: false,
-        xAxis: { labelCount: 6, disableGrid: true },
+        xAxis: { labelCount: 6, disableGrid: true,type:"time",  },
         padding: [15, 20, 20, 15],
         yAxis: {
           gridType: "dash",
