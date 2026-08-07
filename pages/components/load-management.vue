@@ -8,19 +8,19 @@
       </view>
       <view class="device-grid">
         <view class="device-item">
-          <text class="number">{{ nyzData.dljQuantity || 1 }}</text>
+          <text class="number">{{ deviceCounts.dljQuantity }}</text>
           <text class="text">空调</text>
         </view>
         <view class="device-item">
-          <text class="number">{{ nyzData.cdzQuantity || 1 }}</text>
+          <text class="number">{{ deviceCounts.cdzQuantity }}</text>
           <text class="text">充电桩</text>
         </view>
         <view class="device-item">
-          <text class="number">{{ nyzData.lightQuantity || 0 }}</text>
+          <text class="number">{{ deviceCounts.lightQuantity }}</text>
           <text class="text">照明</text>
         </view>
         <view class="device-item">
-          <text class="number">{{ nyzData.unknownDeviceQuantity || 0 }}</text>
+          <text class="number">{{ deviceCounts.unknownDeviceQuantity }}</text>
           <text class="text">未知设备</text>
         </view>
       </view>
@@ -183,13 +183,35 @@ export default {
     realtimeDataProvider.onDataUpdate = null;
   },
   computed: {
+    // 设备分类统计：从 deviceList 实时计算，保证与列表一致
+    deviceCounts() {
+      let dlj = 0, cdz = 0, light = 0, unknown = 0
+      this.deviceList.forEach(item => {
+        const hex = this.getTypeHex(item.type)
+        if (hex === '0x0305' || hex === '0x0306' || hex === '0x1313') {
+          dlj++
+        } else if (hex === '0x1310') {
+          cdz++
+        } else if (hex === '0x0201') {
+          light++
+        } else {
+          unknown++
+        }
+      })
+      return {
+        dljQuantity: dlj,
+        cdzQuantity: cdz,
+        lightQuantity: light,
+        unknownDeviceQuantity: unknown
+      }
+    },
     loadChartOptions() {
       const maxValue = calculateYAxisMax(this.loadChartData.series[0]?.data || []);
       return {
         color: ["#1890FF", "#91CB74", "#FAC858", "#EE6666", "#73C0DE", "#3CA272", "#FC8452", "#9A60B4", "#ea7ccc"],
         dataLabel: false,
         dataPointShape: false,
-        xAxis: { labelCount: 6, disableGrid: true,type:"time",  },
+        xAxis: { labelCount: 6, disableGrid: true,type:"time",  boundaryGap: true, },
         padding: [15, 20, 20, 15],
         yAxis: {
           gridType: "dash",
@@ -353,7 +375,7 @@ export default {
         const deviceName = `${typeLabel}${devId}`;
         console.log(item,typeLabel,rawType,flexTypeMap,'item')
         return {
-          deviceName: deviceName,
+          deviceName:  item.deviceName,
           devId: devId,
           deviceId: item.deviceId || item.devId || '--',
           address: matchAddress,  // 使用 realAddress 匹配
@@ -397,8 +419,8 @@ export default {
       this.deviceListRealtime = realtimeDataProvider.getDeviceList();
       this.device1712 = this.deviceListRealtime.find(item => item && (item.deviceType === '1712' || item.typeCode === '1712'));
       this.device1713 = this.deviceListRealtime.find(item => item && (item.deviceType === '1713' || item.typeCode === '1713'));
-      // 筛选 load 类设备（使用 typeCode === '1714' 来识别）
-      this.realtimeLoadDevices = this.deviceListRealtime.filter(item => item && item.typeCode === '1714');
+      // 筛选 load 类设备：兼容 typeCode 和 deviceType（实时数据创建的设备可能没有 typeCode）
+      this.realtimeLoadDevices = this.deviceListRealtime.filter(item => item && (item.typeCode === '1714' || item.deviceType === '1714'));
       this.buildDeviceList();
       this.updateNyzData();
     },
@@ -446,7 +468,7 @@ export default {
           type: newType,
           typeLabel: newTypeLabel,
           // 设备名称：类型 + devId
-          deviceName: `${newTypeLabel}${devId}`,
+          // deviceName: `${newTypeLabel}${devId}`,
           deviceStatusName: isValidValue(statusVal) ? statusMap[String(statusVal)] : item.deviceStatusName,
           projectAddress: isValidValue(ed.B4?.value) ? ed.B4.value : item.projectAddress,
           gateway: isValidValue(ed.B42?.value) ? ed.B42.value : item.gateway,

@@ -42,41 +42,49 @@ export default {
 					"token": this.token
 				},
 				success: (res) => {
-					res = JSON.parse(decrypt(res.data))
-					if (res.status == 200 && res.data.updateStatus == 3) {
+					let parsed
+					try {
+						parsed = JSON.parse(decrypt(res.data))
+					} catch (e) {
+						console.error('更新信息解密失败:', e)
 						return
-					} else if (res.status == 200 && res.data.updateStatus === 1) {
+					}
+					if (!parsed || parsed.status != 200 || !parsed.data) return
+					const data = parsed.data
+					if (data.updateStatus == 3) {
+						return
+					} else if (data.updateStatus === 1) {
 						// 整包更新
-						if (this.newVersion === res.data.versione) {
+						if (this.newVersion === data.version) {
 							return
 						}
-						let downapk = 'https://serviceiems.gree.com/home/springboot_service/mobile_service/mobile_apk/GIEMS�?apk'
-						uni.showModal({ //提醒用户更新  
+						let downapk = data.url
+						uni.showModal({ //提醒用户更新
 							title: "更新提示",
-							content: `${res.data.note}`,
+							content: `${data.note}`,
 							success: (sus) => {
 								if (sus.confirm) {
 									plus.runtime.openURL(downapk);
 								}
 								if (sus.cancel) {
 									this.$u.vuex('notUpdated', true);
-									this.$u.vuex('newVersion', res.data.version);
+									this.$u.vuex('newVersion', data.version);
 								}
 
 							}
 						})
-					} else if (res.status == 200 && res.data.updateStatus === 2) {
+					} else if (data.updateStatus === 2) {
 						uni.downloadFile({
-							url: res.data.url,
+							url: data.url,
 							success: (downloadResult) => {
-								if (downloadResult.status === 200) {
+								if (downloadResult.statusCode === 200) {
 									plus.runtime.install(downloadResult.tempFilePath, {
 										force: false
 									},
-										function () {
-											plus.runtime.restart();
-										},
-										function (e) { });
+									function () {
+										plus.runtime.restart();
+									},
+									function (e) { });
 								}
 							}
 						});

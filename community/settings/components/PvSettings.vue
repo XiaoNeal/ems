@@ -558,8 +558,8 @@ export default {
       }
       const device171F = this.device171F
       const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
-      
-      if (b12Value === undefined || b12Value === null || b12Value === '--') {
+
+      if (b12Value === undefined || b12Value === null || b12Value === '' || b12Value === '--') {
         uni.showModal({
           title: '提示',
           content: '当前设备离线，暂不支持修改',

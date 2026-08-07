@@ -129,13 +129,7 @@
 		{
 			"root": "pages-public",
 			"pages": [
-				{
-					"path": "about/about",
-					"style": {
-						"navigationStyle": "custom",
-						"navigationBarTitleText": "关于我们"
-					}
-				},
+				
 				{
 					"path": "password/password",
 					"style": {

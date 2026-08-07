@@ -1058,8 +1058,6 @@ export default {
 
     async submitSwitchParam(paramKey, value) {
       const param = this.pcsSwitchParams.find(p => p.key === paramKey)
-
-      console.log(param, paramKey, value, registerAddress, "0000000000089898989")
       if (!param) return
 
       const registerAddress = param.address
@@ -1104,8 +1102,8 @@ export default {
       }
       const device171F = this.device171F
       const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
-      
-      if (b12Value === undefined || b12Value === null || b12Value === '--') {
+
+      if (b12Value === undefined || b12Value === null || b12Value === '' || b12Value === '--') {
         uni.showModal({
           title: '提示',
           content: '当前设备离线，暂不支持修改',
@@ -1134,13 +1132,15 @@ export default {
     },
 
     handleParamEdit(param) {
-      this.isEditing = true
+      if (!this.isEditing) {
+        uni.showToast({
+          title: '请先点击修改配置',
+          icon: 'none'
+        })
+        return
+      }
       this.editingParam = param.key
       this.tempValue = this.params.pcs[param.field] || ''
-
-      console.log('handleParamEdit start:', param.key)
-      console.log('combinedParams before:', this.combinedParams)
-      console.log('originalParams before:', this.originalParams)
 
       // 如果是组合参数，保存原始值以便取消时恢复
       if (param.type === 'combined') {
@@ -1155,31 +1155,23 @@ export default {
             ? { selectedMode: '0x0000', powerValue: '', voltageValue: '' }
             : { selectedMode: '', powerValue: '' }
           )
-          console.log('created new combinedParams[param.key]:', this.combinedParams[param.key])
         } else {
           // 如果对象存在但缺少字段，补全字段（使用 $set 确保响应式）
           const existing = this.combinedParams[param.key]
-          console.log('existing combinedParams[param.key]:', existing)
           if (param.voltageMin && existing.voltageValue === undefined) {
             this.$set(existing, 'voltageValue', '')
-            console.log('added voltageValue')
           }
           if (existing.powerValue === undefined) {
             this.$set(existing, 'powerValue', '')
-            console.log('added powerValue')
           }
           if (existing.selectedMode === undefined) {
             this.$set(existing, 'selectedMode', param.voltageMin ? '0x0000' : '')
-            console.log('added selectedMode')
           }
         }
 
         // 保存原始值
         this.originalParams[param.key] = JSON.parse(JSON.stringify(this.combinedParams[param.key]))
-        console.log('saved originalParams[param.key]:', this.originalParams[param.key])
       }
-
-      // console.log('combinedParams after:', this.combinedParams)
     },
 
     handleParamCancel() {

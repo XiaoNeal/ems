@@ -16,6 +16,7 @@ export class Model171C extends DeviceBase {
 
 	// 处理能源数据（完全对齐PCS模板格式，协议全量字段）
 	getEnergyData(jsonData, jsonData2) {
+		if (!jsonData) return
 		// 能源数据字段赋值（带单位，完全对齐PCS模板格式）
 		// 处理位字段 B0-B10
 		// console.log(jsonData, "999999999999999999999999999999");
@@ -235,8 +236,6 @@ export class Model171C extends DeviceBase {
 		this.energyData.B182.value = jsonData.B182;
 		this.energyData.B184.value = jsonData.B184;
 		this.energyData.B186.value = jsonData.B186;
-		this.energyData.B184.value = jsonData.B184;
-		this.energyData.B186.value = jsonData.B186;
 		this.energyData.B188.value = jsonData.B188;
 		this.energyData.B190.value = jsonData.B190;
 		this.energyData.B192.value = jsonData.B192;
@@ -257,6 +256,7 @@ export class Model171C extends DeviceBase {
 
 	// 处理控制数据（完全对齐PCS模板格式）
 	getControlData(jsonData) {
+		if (!jsonData || !jsonData.data) return
 		// console.log(jsonData)
 		// 控制数据字段赋值（带单位，完全对齐PCS模板格式）
 		// 组端过压/欠压相关（V）
@@ -393,12 +393,12 @@ export class Model171C extends DeviceBase {
 
 	// 工具方法：带单位的HTML文本（完全对齐PCS模板）
 	setHtmlText(unit) {
-		return Math.random() + `<span style='font-size:.8rem'>  ${unit}</span>`
+		return `<span style='font-size:.8rem'>  ${unit}</span>`
 	}
 
 	// 工具方法：数值固定2位小数（完全对齐PCS模板）
 	toFixed(data) {
-		return parseFloat(data) ? parseFloat(data).toFixed(2) : (Math.random() * 100).toFixed(2)
+		return parseFloat(data) ? parseFloat(data).toFixed(2) : '--'
 	}
 
 	// 工具方法：告警状态转换（0-无告警，1-告警）

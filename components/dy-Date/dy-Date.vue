@@ -125,8 +125,8 @@
 			this.array = []
 			this.yearArr = []
 			this.monthArr = []
-			let minDate = this.formatDate(this.minSelect) || []
-			let maxDate = this.formatDate(this.maxSelect) || []
+			let minDate = this.formatDate(this.minSelect) || ''
+			let maxDate = this.formatDate(this.maxSelect) || ''
 			minDate = minDate ? minDate.split(' ') : ''
 			maxDate = maxDate ? maxDate.split(' ') : ''
 			minDate = minDate[0] ? minDate[0].split('-') : 1900
@@ -166,7 +166,7 @@
 			this.array[0] = this.yearArr
 			
 			if (type === 'month' || type === 'day') {
-				this.array[1] = this.monthArr.length && this.monthArr[0]
+				this.array[1] = (this.monthArr.length && this.monthArr[0]) || []
 			}
 			if (type === 'day') {
 				this.array[2] = this.getDateArr(
@@ -343,6 +343,7 @@
 			if (this.childValue || defaultTime) {
 				let value = this.childValue || defaultTime
 				value = this.formatDate(value)
+				if (!value || typeof value !== 'string') return
 				value = value.split('-')
 				let index =
 					this.array[0].findIndex(

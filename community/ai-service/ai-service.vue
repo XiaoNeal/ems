@@ -48,6 +48,7 @@
           </view>
         </view>
       </view>
+      <view id="bottom"></view>
     </scroll-view>
 
     <!-- 输入区域 -->
@@ -118,6 +119,10 @@ export default {
         role: 'user',
         content: userMessage.content
       });
+      // 限制历史长度，保留最近10轮（20条）
+      if (this.conversationHistory.length > 20) {
+        this.conversationHistory = this.conversationHistory.slice(-20)
+      }
 
       // 滚动到底部
       this.scrollToBottom();
@@ -140,7 +145,10 @@ export default {
           role: 'assistant',
           content: response
         });
-        
+        if (this.conversationHistory.length > 20) {
+          this.conversationHistory = this.conversationHistory.slice(-20)
+        }
+
         this.scrollToBottom();
         // 保存历史记录
         this.saveHistory();
@@ -195,7 +203,11 @@ export default {
         }
 
         if (response.statusCode === 200) {
-          return response.data.choices[0].message.content;
+          const choices = response.data && response.data.choices
+          if (!choices || !choices.length || !choices[0].message) {
+            throw new Error('AI服务返回数据格式异常')
+          }
+          return choices[0].message.content;
         } else {
           throw new Error(`API请求失败: ${response.statusCode}`);
         }

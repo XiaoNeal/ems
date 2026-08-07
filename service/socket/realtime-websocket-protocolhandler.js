@@ -26,9 +26,7 @@ export default class RealTimeWebSokcetProtocolHandler {
 
 	parseJsonData(jsonData, gateway, deviceList) {
 
-		// let key = gateway + jsonData.deviceType + jsonData.address
-		// // let deviceList = store.getters.deviceList
-
+		// 第一优先：按 address + deviceType + barCode 精确匹配
 		let model = deviceList.find(ele => ele && (ele.address == jsonData.address && 
 			(ele.deviceType == jsonData.deviceType || 
 			 jsonData.deviceType.includes(ele.deviceType) ||
@@ -36,28 +34,26 @@ export default class RealTimeWebSokcetProtocolHandler {
 			 && ele.barCode == gateway))
 
 		if (model) {
-			// console.log('parseJsonData - 匹配成功:', {
-			// 	address: jsonData.address,
-			// 	deviceType: jsonData.deviceType,
-			// 	modelType: model.deviceType,
-			// 	modelTypeCode: model.typeCode,
-			// 	modelRawType: model.rawDeviceType
-			// });
 			model.getDeviceData(jsonData, gateway)
-		} else {
-			// console.log('parseJsonData - 匹配失败:', {
-			// 	address: jsonData.address,
-			// 	deviceType: jsonData.deviceType,
-			// 	availableDevices: deviceList.map(d => ({
-			// 		address: d.address,
-			// 		deviceType: d.deviceType,
-			// 		typeCode: d.typeCode,
-			// 		rawDeviceType: d.rawDeviceType,
-			// 		barCode: d.barCode
-			// 	}))
-			// });
-		} 
+			return
+		}
 
+		// 第二优先：按 address + deviceType 匹配（网关可能已变更为服务端推送的 gateway）
+		model = deviceList.find(ele => ele && (ele.address == jsonData.address && 
+			(ele.deviceType == jsonData.deviceType || 
+			 jsonData.deviceType.includes(ele.deviceType) ||
+			 (ele.rawDeviceType && (ele.rawDeviceType == jsonData.deviceType || jsonData.deviceType.includes(ele.rawDeviceType))))))
+
+		if (model) {
+			// 更新设备的 barCode 为服务端实际推送的 gateway，确保后续匹配和下发一致
+			if (model.barCode !== gateway) {
+				model.barCode = gateway
+				// 同步更新 store 中的 deviceMap key
+				const storeKey = `${gateway}_${model.address}_${model.deviceType}`
+				// 注意：此处不重建 store，仅更新模型自身字段
+			}
+			model.getDeviceData(jsonData, gateway)
+		} 
 	}
 
 	/**GDC升级方法之后单独抽离出来 */

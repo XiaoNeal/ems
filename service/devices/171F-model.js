@@ -8,8 +8,28 @@ export class Model171F extends DeviceBase {
         this.energyData = new EnergyData();
         this.stateData = new StateData();
         this.controlData = new ControlData171F_V2();
+        this.lastUpdateTime = null; // 记录最后更新时间
     }
 
+    // 检查数据是否超时（超过5分钟未更新则清空）
+    checkDataExpired() {
+        if (this.lastUpdateTime) {
+            const now = Date.now();
+            if (now - this.lastUpdateTime > 5 * 60 * 1000) {
+                this.resetDataToDefault();
+                this.lastUpdateTime = null;
+            }
+        }
+    }
+
+    // 将所有数据置为 '--'
+    resetDataToDefault() {
+        for (const key in this.energyData) {
+            if (this.energyData[key]) {
+                this.energyData[key].value = '--';
+            }
+        }
+    }
 
     getEnergyData(jsonData, jsonData2, barCode) {
         // console.log(jsonData, "jsonData");
@@ -28,6 +48,8 @@ export class Model171F extends DeviceBase {
                 this.energyData[key].value = value;
             }
         }
+        // 记录最后更新时间
+        this.lastUpdateTime = Date.now();
         // console.log(this.energyData, "energyData");
     }
 

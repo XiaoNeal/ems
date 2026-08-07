@@ -84,7 +84,7 @@
 			// } else {
 			// 	this.appVersion = 'V' + (manifest.versionName || '1.0.0');
 			// }
-			this.appVersion = 'V' + ('1.0.8');
+			this.appVersion = 'V' + ('1.0.10');
 			uni.getSystemInfo({
 				success: (res) => {
 					this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";

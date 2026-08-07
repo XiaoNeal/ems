@@ -86,9 +86,9 @@ function contact() {
 var result = 0;
 var CNContactStore = plus.ios.import("CNContactStore");
 var cnAuthStatus = CNContactStore.authorizationStatusForEntityType(0);
-if (authStatus === 0) {
+if (cnAuthStatus === 0) {
 result = null;
-} else if (authStatus == 3) {
+} else if (cnAuthStatus == 3) {
 result = 1;
 } else {
 result = 0;
@@ -264,7 +264,9 @@ intent.putExtra("app_package", pkName);
 intent.putExtra("app_uid", uid);
 } else {
 //(<21)其他--跳转到该应用管理的详情页
-intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+var Settings = plus.android.importClass('android.provider.Settings');
+var Uri = plus.android.importClass('android.net.Uri');
+var intent = new Intent('android.settings.APPLICATION_DETAILS_SETTINGS');
 var uri = Uri.fromParts("package", pkName, null);
 intent.setData(uri);
 }

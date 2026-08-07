@@ -126,7 +126,6 @@ const request = (options) => {
       }
       
       const currentTime = new Date().toISOString().replace('T', ' ').slice(0, 23);
-      console.log(sessionId, 'currentTime:', currentTime);
       const sign = aesMinEncrypt(
         'ABCDEFGHIJKL_key',
         'ABCDEFGHIJKLM_iv',
@@ -185,15 +184,42 @@ const request = (options) => {
                 title: "网络连接超时，请检查网络",
                 icon: "none"
               });
-              resolve(false);
+              reject(new Error('网络连接超时'));
               return;
             }
           }
 
+          // HTTP 状态码 401：会话过期
+          if (statusCode === 401) {
+            const pages = getCurrentPages();
+            const currentPage = pages[pages.length - 1];
+            if (!(currentPage && currentPage.route === 'pages/login/login')) {
+              uni.showToast({
+                title: '会话已过期，请重新登录',
+                icon: 'none',
+                success() {
+                  RealtimeDataProviderService.closeSocket();
+                  uni.clearStorageSync();
+                  uni.reLaunch({
+                    url: '/pages/login/login'
+                  });
+                }
+              });
+            }
+            reject(new Error('会话已过期'));
+            return;
+          }
+
           let result = data;
 
+          // 空响应兜底
+          if (result == null || result === '') {
+            resolve(result);
+            return;
+          }
+
           // 业务状态码判断
-          if (result.status == 200 || result.code == 10000 || Array.isArray(result)) {
+          if (typeof result === 'object' && (result.status == 200 || result.code == 10000 || Array.isArray(result))) {
             resolve(result);
             return;
           }
@@ -242,41 +268,23 @@ const request = (options) => {
             return;
           }
 
-          // 最终错误处理
-          const response = error.response || {};
-          const { code, msg } = response.data || {};
           console.error('请求最终失败:', error);
 
           // 获取当前页面
           const pages = getCurrentPages();
           const currentPage = pages[pages.length - 1];
-          if (currentPage?.route === "pages/login/login") {
+          if (currentPage && currentPage.route === "pages/login/login") {
             reject(error);
             return;
           }
 
-          // token过期处理
-          if (code === '401') {
-            uni.showToast({
-              title: '会话已过期，请重新登录',
-              icon: 'none',
-              success() {
-                RealtimeDataProviderService.closeSocket();
-                uni.clearStorageSync();
-                uni.reLaunch({
-                  url: `/pages/login/login`
-                });
-              }
-            });
-          } else {
-            // 其他错误
-            const errorMessage = msg || error.errMsg || '网络请求失败';
-            uni.showToast({
-              title: errorMessage,
-              icon: 'none'
-            });
-            reject(new Error(errorMessage));
-          }
+          // 其他错误
+          const errorMessage = error.errMsg || '网络请求失败';
+          uni.showToast({
+            title: errorMessage,
+            icon: 'none'
+          });
+          reject(new Error(errorMessage));
         }
       });
     };

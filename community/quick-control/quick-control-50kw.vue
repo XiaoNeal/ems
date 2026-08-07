@@ -197,6 +197,7 @@ export default {
   mounted() {
     const currentDevice = this.$store.state.currentSelectDevice || {}
     const deviceControl = currentDevice.list.find(item => item.controlType == 1);
+    console,log(deviceControl,'111111111111111')
     if (deviceControl) {
       this.deviceConfig.idCode = deviceControl.homeBarCode || deviceControl.barCode || '';
       this.deviceConfig.typeCode = deviceControl.typeCode || '3401';

@@ -30,9 +30,15 @@
 export default {
   name: 'DyNavbar',
   data() {
-    const windowInfo = uni.getWindowInfo()
+    let platform = 'android'
+    try {
+      const sysInfo = uni.getSystemInfoSync()
+      platform = sysInfo.platform || 'android'
+    } catch (e) {
+      console.error('getSystemInfoSync failed', e)
+    }
     return {
-      platformClass: windowInfo.platform === 'ios' ? 'ios-platform' : 'android-platform'
+      platformClass: platform === 'ios' ? 'ios-platform' : 'android-platform'
     }
   },
   props: {

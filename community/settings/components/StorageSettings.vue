@@ -479,7 +479,10 @@ export default {
         this.showToast(`不能大于${param.max}`, 'warning')
       }
 
-      value = Math.round(value)
+      const decimals = param.decimals != null
+        ? param.decimals
+        : (param.scale && param.scale !== 1 ? String(param.scale).length - 1 : 0)
+      value = parseFloat(value.toFixed(decimals))
       this.tempValue = value.toString()
     },
 
@@ -654,7 +657,7 @@ export default {
       const device171F = this.device171F
       const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
 
-      if (b12Value === undefined || b12Value === null || b12Value === '--') {
+      if (b12Value === undefined || b12Value === null || b12Value === '' || b12Value === '--') {
         uni.showModal({
           title: '提示',
           content: '当前设备离线，暂不支持修改',

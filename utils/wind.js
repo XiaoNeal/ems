@@ -37,7 +37,7 @@ WWindUtil.WDJson = {
         "desc": "东南偏东"
     },
     "SE": {
-        "en": "SNE",
+        "en": "SE",
         "cn": "东南",
         "desc": "东南"
     },
@@ -82,7 +82,7 @@ WWindUtil.WDJson = {
         "desc": "西北"
     },
     "NNW": {
-        "en": "NW",
+        "en": "NNW",
         "cn": "北西北",
         "desc": "西北偏北"
     },
@@ -184,7 +184,7 @@ WWindUtil.WRatingArr = [{
     {
         "min": 32.7,
         "max": 36.9,
-        "level": 0,
+        "level": 12,
         "name": "飓风",
         "landScene": "摧毁极大"
     },
@@ -405,7 +405,7 @@ WWindUtil.WindtoLevel = function(value) {
 WWindUtil.windValueFormat = function(value) {
     try {
         let vl = Number(value);
-        if (!vl || vl > 360 || vl < 0) {
+        if (isNaN(vl) || vl > 360 || vl < 0) {
             return '-';
         }
         return WWindUtil.to16WindDirection(value).desc;
@@ -420,7 +420,7 @@ WWindUtil.windValueFormat = function(value) {
 WWindUtil.windFormatLevel = function(value) {
     try {
         let vl = Number(value);
-        if (!vl || vl > 100 || vl < 0) {
+        if (isNaN(vl) || vl > 100 || vl < 0) {
             return "-";
         }
         return WWindUtil.WindtoLevel(value).level + "级(" + WWindUtil.WindtoLevel(value).name + ")";

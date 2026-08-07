@@ -38,14 +38,14 @@
         <text class="info-label">额定功率</text>
         <text class="info-value">{{ formatPower(energyData.B12) }}</text>
       </view>
-      <view class="info-item">
+      <!-- <view class="info-item">
         <text class="info-label">设备电压</text>
         <text class="info-value">{{ formatVoltage(energyData.B16) }}</text>
       </view>
       <view class="info-item">
         <text class="info-label">设备电流</text>
         <text class="info-value">{{ formatCurrent(energyData.B20) }}</text>
-      </view>
+      </view> -->
       <view class="info-item">
         <text class="info-label">实时功率</text>
         <text class="info-value">{{ formatPower(energyData.B24) }}</text>
@@ -149,9 +149,21 @@
     <view class="chart-card">
       <view class="chart-header">
         <text class="chart-title">功率曲线</text>
+        <dy-date timeType="day" @getData="handleDatePicker" v-model="selectedDate" class="custom-picker date-picker" />
       </view>
       <view class="chart-container">
-        <qiun-data-charts type="area" :opts="chartOpts" :chartData="chartData" canvas-id="devicePowerChart"
+        <!-- 加载状态 -->
+        <view v-if="chartLoading" class="chart-loading">
+          <view class="loading-spinner"></view>
+          <text class="loading-text">加载中...</text>
+        </view>
+        <!-- 无数据状态 -->
+        <view v-else-if="chartNoData" class="chart-no-data">
+          <text class="no-data-icon">📊</text>
+          <text class="no-data-text">暂无功率数据</text>
+        </view>
+        <!-- 图表 -->
+        <qiun-data-charts v-else type="area" :opts="chartOpts" :chartData="chartData" canvas-id="devicePowerChart"
           :canvas2d="canvas2d" :ontouch="true" />
       </view>
     </view>
@@ -161,12 +173,14 @@
 
 <script>
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+import DyDate from '@/components/dy-Date/dy-Date.vue'
 import { realtimeDataProvider } from '@/service/websocket'
 import { getDevicePowerStatistics } from '@/api/power'
 
 export default {
   components: {
-    DyNavbar
+    DyNavbar,
+    DyDate
   },
   name: 'device-detail',
   data() {
@@ -179,6 +193,10 @@ export default {
       canvas2d: this.$Config.ISCANVAS2D,
       platformClass: "",
       dataVersion: 0,
+      chartLoading: true,
+      chartNoData: false,
+      // 缓存功率标签，避免因数据到达时机不同导致闪烁
+      powerLabelsCached: { charge: '正向功率', discharge: '反向功率' },
       deviceInfo: {
         address: '',
         deviceName: '--',
@@ -229,6 +247,10 @@ export default {
     };
   },
   computed: {
+    // 使用缓存的功率标签，避免闪烁
+    powerLabels() {
+      return this.powerLabelsCached;
+    },
     energyData() {
       void this.dataVersion
       var address = this.deviceInfo.address
@@ -293,6 +315,14 @@ export default {
         const parsed = JSON.parse(decoded);
         this.deviceInfo = { ...this.deviceInfo, ...parsed };
         console.log('device-detail - deviceInfo:', this.deviceInfo);
+
+        // 根据设备类型确定功率标签，只初始化一次避免闪烁
+        const rawData = parsed.rawData || {};
+        const rawDeviceType = rawData.rawDeviceType || rawData.deviceType || '';
+        const typeCode = parsed.typeCode || parsed.deviceType || '';
+        if (rawDeviceType === '1310' || typeCode === '1310') {
+          this.powerLabelsCached = { discharge: '放电功率', charge: '充电功率' };
+        }
       } catch (e) {
         console.warn('deviceInfo parse failed:', e);
       }
@@ -330,9 +360,16 @@ export default {
   methods: {
     async loadPowerChart() {
       try {
-        console.log('loadPowerChart - selectedDate:', this.selectedDate,this.deviceInfo);
+        console.log('loadPowerChart - selectedDate:', this.selectedDate, this.deviceInfo);
         const deviceId = this.deviceInfo.deviceId;
-        if (!deviceId || deviceId === '--') return;
+        if (!deviceId || deviceId === '--') {
+          this.chartLoading = false;
+          this.chartNoData = true;
+          return;
+        }
+
+        this.chartLoading = true;
+        this.chartNoData = false;
 
         const result = await getDevicePowerStatistics({
           interval: 10,
@@ -341,7 +378,11 @@ export default {
         });
 
         const data = result?.data || result?.res?.data || [];
-        if (!Array.isArray(data) || data.length === 0) return;
+        if (!Array.isArray(data) || data.length === 0) {
+          this.chartLoading = false;
+          this.chartNoData = true;
+          return;
+        }
 
         // 转换数据用于图表
         const categories = data.map(item => {
@@ -350,8 +391,8 @@ export default {
           return parts[1] ? parts[1].substring(0, 5) : ''; // HH:mm
         });
 
-        // 放电功率（flexPower）
-        const dischargeData = data.map(item => {
+        // 充电功率/正向功率（flexPower）
+        const chargeData = data.map(item => {
           if (item.flexPower != null) {
             const val = parseFloat(item.flexPower);
             return isNaN(val) ? 0 : val;
@@ -359,8 +400,8 @@ export default {
           return 0;
         });
 
-        // 充电功率（flexPowerReverse，取绝对值显示）
-        const chargeData = data.map(item => {
+        // 放电功率/反向功率（flexPowerReverse，取绝对值显示）
+        const dischargeData = data.map(item => {
           if (item.flexPowerReverse != null) {
             const val = parseFloat(item.flexPowerReverse);
             return isNaN(val) ? 0 : Math.abs(val);
@@ -371,12 +412,16 @@ export default {
         this.chartData = {
           categories: categories,
           series: [
-            { name: '正向功率', data: dischargeData },
-            { name: '反向功率', data: chargeData }
+            { name: this.powerLabels.charge, data: chargeData },
+            { name: this.powerLabels.discharge, data: dischargeData }
           ]
         };
+        this.chartLoading = false;
+        this.chartNoData = false;
       } catch (err) {
         console.error('加载功率曲线失败:', err);
+        this.chartLoading = false;
+        this.chartNoData = true;
       }
     },
     getFieldValue(field) {
@@ -476,8 +521,9 @@ export default {
 
       return hexMap[hex] || field.value;
     },
-    onDateChange(e) {
-      this.selectedDate = e.detail.value;
+    handleDatePicker(value) {
+      this.selectedDate = value;
+      this.loadPowerChart();
     }
   }
 };
@@ -597,6 +643,50 @@ export default {
   height: 300px;
   position: relative;
   padding: 0 -10px;
+}
+
+.chart-loading,
+.chart-no-data {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 10;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f0f0f0;
+  border-top-color: #1890ff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 14px;
+  color: #999;
+}
+
+.no-data-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.no-data-text {
+  font-size: 14px;
+  color: #999;
 }
 
 .energy-stats {

@@ -244,7 +244,7 @@ export function toggleClass(element, className) {
   let classString = element.className
   const nameIndex = classString.indexOf(className)
   if (nameIndex === -1) {
-    classString += '' + className
+    classString += ' ' + className
   } else {
     classString =
       classString.substr(0, nameIndex) +
@@ -314,8 +314,8 @@ export function debounce(func, wait, immediate) {
  * @returns {Object}
  */
 export function deepClone(source) {
-  if (!source && typeof source !== 'object') {
-    throw new Error('error arguments', 'deepClone')
+  if (source === null || typeof source !== 'object') {
+    return source
   }
   const targetObj = source.constructor === Array ? [] : {}
   Object.keys(source).forEach(keys => {

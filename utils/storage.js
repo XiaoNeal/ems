@@ -25,7 +25,7 @@
  */
 
 export const getItem = name => {
-  const data = window.localStorage.getItem(name)
+  const data = uni.getStorageSync(name)
   try {
     return JSON.parse(data)
   } catch (err) {
@@ -38,9 +38,9 @@ export const setItem = (name, value) => {
     value = JSON.stringify(value)
   }
 
-  window.localStorage.setItem(name, value)
+  uni.setStorageSync(name, value)
 }
 
 export const removeItem = name => {
-  window.localStorage.removeItem(name)
+  uni.removeStorageSync(name)
 }

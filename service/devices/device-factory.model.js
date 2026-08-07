@@ -154,15 +154,15 @@ export class DeviceFactory {
 				dev = new Model1904()
 				break;
 			}
-			case '1D02_V2':
-			{
-				dev = new Model1D02()
-				break;
-			}
-			case '1D02':{
-				dev = new Model1D02()
-				break;
-			}
+			// case '1D02_V2':
+			// {
+			// 	dev = new Model1D02()
+			// 	break;
+			// }
+			// case '1D02':{
+			// 	dev = new Model1D02()
+			// 	break;
+			// }
 			case '0319':{
 				dev = new Model0319()
 				break;
@@ -227,18 +227,19 @@ export class DeviceFactory {
 			
 
 			default:
-				// dev = new DeviceBase();
-				break;
+			console.warn('未知 deviceType:', jsonData.deviceType)
+			break;
 		}
 
 		if (dev) {
 			dev.address = jsonData.address;
 			dev.deviceType = jsonData.deviceType
+			// 设置 typeCode：对于 0305 类型映射为 1714
+			dev.typeCode = jsonData.deviceType === '0305' ? '1714' : jsonData.deviceType
 			dev.barCode = gateway
 			dev.deviceId = jsonData.deviceId
 			dev.name = jsonData.name
 		}
-console.log(jsonData)
 		return dev;
 	}
 }

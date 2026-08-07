@@ -16,73 +16,75 @@ export class Model171B extends DeviceBase {
 
 	// 处理能源数据（完全对齐1707格式，协议全量字段）
 	getEnergyData(jsonData, jsonData2) {
+		if (!jsonData) return
+		const fmt = v => (v == null || v === '') ? '--' : v
 		// 能源数据字段赋值（带单位，完全对齐1707格式）
-		this.energyData.B0.value = jsonData.B0 + this.setHtmlText('V');
-		this.energyData.B2.value = jsonData.B2 + this.setHtmlText('A');
-		this.energyData.B4.value = jsonData.B4 + this.setHtmlText('V');
-		this.energyData.B6.value = jsonData.B6 + this.setHtmlText('A');
-		this.energyData.B8.value = jsonData.B8 + this.setHtmlText('V');
-		this.energyData.B10.value = jsonData.B10 + this.setHtmlText('A');
-		this.energyData.B12.value = jsonData.B12 + this.setHtmlText('V');
-		this.energyData.B16.value = jsonData.B16 + this.setHtmlText('V');
-		this.energyData.B20.value = jsonData.B20 + this.setHtmlText('V');
-		this.energyData.B24.value = (jsonData.B24 / 1000) + this.setHtmlText('kW');
-		this.energyData.B26.value = (jsonData.B26 / 1000) + this.setHtmlText('kVar');
-		this.energyData.B28.value = (jsonData.B28 / 1000) + this.setHtmlText('kW');
-		this.energyData.B30.value = (jsonData.B30 / 1000) + this.setHtmlText('kVar');
-		this.energyData.B32.value = (jsonData.B32 / 1000) + this.setHtmlText('kW');
-		this.energyData.B34.value = (jsonData.B34 / 1000) + this.setHtmlText('kVar');
-		this.energyData.B36.value = (jsonData.B36 / 1000) + this.setHtmlText('Hz');
-		this.energyData.B40.value = jsonData.B40 + this.setHtmlText('℃');
-		this.energyData.B44.value = (jsonData.B44 / 1000) + this.setHtmlText('kW');
-		this.energyData.B48.value = (jsonData.B48 / 1000) + this.setHtmlText('kVar');
-		this.energyData.B52.value = (jsonData.B52 / 1000) + this.setHtmlText('kVA');
-		this.energyData.B56.value = jsonData.B56 + this.setHtmlText('V');
-		this.energyData.B58.value = jsonData.B58 + this.setHtmlText('A');
-		this.energyData.B60.value = (jsonData.B60 / 1000) + this.setHtmlText('kW');
-		const b64 = jsonData.B64;
-		const workMode = (b64 >> 12) & 0x03;
-		const u1Status = (b64 >> 21) & 0x01;
-		const u2Status = (b64 >> 22) & 0x01;
+		this.energyData.B0.value = fmt(jsonData.B0) + this.setHtmlText('V');
+		this.energyData.B2.value = fmt(jsonData.B2) + this.setHtmlText('A');
+		this.energyData.B4.value = fmt(jsonData.B4) + this.setHtmlText('V');
+		this.energyData.B6.value = fmt(jsonData.B6) + this.setHtmlText('A');
+		this.energyData.B8.value = fmt(jsonData.B8) + this.setHtmlText('V');
+		this.energyData.B10.value = fmt(jsonData.B10) + this.setHtmlText('A');
+		this.energyData.B12.value = fmt(jsonData.B12) + this.setHtmlText('V');
+		this.energyData.B16.value = fmt(jsonData.B16) + this.setHtmlText('V');
+		this.energyData.B20.value = fmt(jsonData.B20) + this.setHtmlText('V');
+		this.energyData.B24.value = fmt(jsonData.B24 / 1000) + this.setHtmlText('kW');
+		this.energyData.B26.value = fmt(jsonData.B26 / 1000) + this.setHtmlText('kVar');
+		this.energyData.B28.value = fmt(jsonData.B28 / 1000) + this.setHtmlText('kW');
+		this.energyData.B30.value = fmt(jsonData.B30 / 1000) + this.setHtmlText('kVar');
+		this.energyData.B32.value = fmt(jsonData.B32 / 1000) + this.setHtmlText('kW');
+		this.energyData.B34.value = fmt(jsonData.B34 / 1000) + this.setHtmlText('kVar');
+		this.energyData.B36.value = fmt(jsonData.B36 / 1000) + this.setHtmlText('Hz');
+		this.energyData.B40.value = fmt(jsonData.B40) + this.setHtmlText('℃');
+		this.energyData.B44.value = fmt(jsonData.B44 / 1000) + this.setHtmlText('kW');
+		this.energyData.B48.value = fmt(jsonData.B48 / 1000) + this.setHtmlText('kVar');
+		this.energyData.B52.value = fmt(jsonData.B52 / 1000) + this.setHtmlText('kVA');
+		this.energyData.B56.value = fmt(jsonData.B56) + this.setHtmlText('V');
+		this.energyData.B58.value = fmt(jsonData.B58) + this.setHtmlText('A');
+		this.energyData.B60.value = fmt(jsonData.B60 / 1000) + this.setHtmlText('kW');
+		const b64 = Number(jsonData.B64) || 0;
+		const workMode = (b64 >>> 12) & 0x03;
+		const u1Status = (b64 >>> 21) & 0x01;
+		const u2Status = (b64 >>> 22) & 0x01;
 		const modeMap = { 0: '并网', 1: '离网', 2: '整流' };
-		
+
 		const statusList = [];
 		statusList.push(`工作模式:${modeMap[workMode] || workMode}`);
 		statusList.push(`U1状态:${u1Status === 0 ? '开机' : '关机'}`);
 		statusList.push(`U2状态:${u2Status === 0 ? '开机' : '关机'}`);
-		statusList.push(`模块故障:${(b64 >> 0) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`模块保护:${(b64 >> 1) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`交流输入缺相:${(b64 >> 2) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`SCI通信故障:${(b64 >> 3) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`交流侧接线错相:${(b64 >> 4) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`孤岛告警:${(b64 >> 5) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`内部母线过欠压:${(b64 >> 6) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`交流侧欠压:${(b64 >> 7) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`交流侧过压:${(b64 >> 8) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`直流侧过压:${(b64 >> 9) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`直流侧欠压:${(b64 >> 10) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`锁相错误:${(b64 >> 11) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`U1过流保护:${(b64 >> 14) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`风扇故障:${(b64 >> 15) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`CAN通信故障:${(b64 >> 16) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`模块不均流:${(b64 >> 17) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`地址重复:${(b64 >> 18) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`泄放故障:${(b64 >> 20) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`模块限功率:${(b64 >> 23) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`温度限功率:${(b64 >> 24) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`交流限功率:${(b64 >> 25) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`交流侧欠频:${(b64 >> 26) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`交流侧过频:${(b64 >> 27) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`直流侧短路:${(b64 >> 28) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`堵风道过温:${(b64 >> 29) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`模块过温:${(b64 >> 30) & 0x01 ? '发生' : '正常'}`);
-		statusList.push(`环温过温:${(b64 >> 31) & 0x01 ? '发生' : '正常'}`);
-		
+		statusList.push(`模块故障:${(b64 >>> 0) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`模块保护:${(b64 >>> 1) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`交流输入缺相:${(b64 >>> 2) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`SCI通信故障:${(b64 >>> 3) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`交流侧接线错相:${(b64 >>> 4) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`孤岛告警:${(b64 >>> 5) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`内部母线过欠压:${(b64 >>> 6) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`交流侧欠压:${(b64 >>> 7) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`交流侧过压:${(b64 >>> 8) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`直流侧过压:${(b64 >>> 9) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`直流侧欠压:${(b64 >>> 10) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`锁相错误:${(b64 >>> 11) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`U1过流保护:${(b64 >>> 14) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`风扇故障:${(b64 >>> 15) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`CAN通信故障:${(b64 >>> 16) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`模块不均流:${(b64 >>> 17) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`地址重复:${(b64 >>> 18) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`泄放故障:${(b64 >>> 20) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`模块限功率:${(b64 >>> 23) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`温度限功率:${(b64 >>> 24) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`交流限功率:${(b64 >>> 25) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`交流侧欠频:${(b64 >>> 26) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`交流侧过频:${(b64 >>> 27) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`直流侧短路:${(b64 >>> 28) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`堵风道过温:${(b64 >>> 29) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`模块过温:${(b64 >>> 30) & 0x01 ? '发生' : '正常'}`);
+		statusList.push(`环温过温:${(b64 >>> 31) & 0x01 ? '发生' : '正常'}`);
+
 		this.energyData.B64.value = statusList.join('; ');
 		this.energyData.B68.value = this.setResetStatus(jsonData.B68);
 		this.energyData.B72.value = jsonData.B72;
 		this.energyData.B74.value = jsonData.B74;
-		this.energyData.B76.value = jsonData.B76 + this.setHtmlText('m');
+		this.energyData.B76.value = fmt(jsonData.B76) + this.setHtmlText('m');
 		this.energyData.B82.value = jsonData.B82;
 	}
 
@@ -93,7 +95,9 @@ export class Model171B extends DeviceBase {
 
 	// 处理控制数据【已修正，仅保留协议唯一有效字段】
 	getControlData(jsonData) {
-		this.controlData.B0.value = jsonData.data.B0.toFixed(2) + this.setHtmlText('m');
+		if (!jsonData || !jsonData.data) return
+		const data = jsonData.data
+		this.controlData.B0.value = (Number(data.B0) || 0).toFixed(2) + this.setHtmlText('m');
 		this.controlData.B8.value = jsonData.data.B8;
 		this.controlData.B12.value = jsonData.data.B12;
 		this.controlData.B16.value = jsonData.data.B16;
@@ -136,12 +140,11 @@ export class Model171B extends DeviceBase {
 	// 工具方法：带单位的HTML文本（完全对齐1707）
 	setHtmlText(unit) {
 		return ""
-		return  Math.random()+ `<span style='font-size:.8rem'>  ${unit}</span>`
 	}
 
 	// 工具方法：数值固定2位小数（完全对齐1707）
 	toFixed(data) {
-		return parseFloat(data) ? parseFloat(data).toFixed(2) : (Math.random()*100).toFixed(2)
+		return parseFloat(data) ? parseFloat(data).toFixed(2) : '--'
 	}
 
 	// 工具方法：通信状态转换

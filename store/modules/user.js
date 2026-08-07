@@ -29,6 +29,7 @@ const state = {
 		roleName: '',
 		permissions: [],
 		esIds: [], // 设备列表
+		esUsers: [], // 设备角色关联
 	},
 	hasLogin: false,
 	nickname: '',
@@ -72,11 +73,12 @@ const mutations = {
 		state.loginTime = payload.loginTime
 		state.avatar = payload.avatar
 		state.stationId = payload.stationId
-		state.stationIds = payload.stationIds
+		state.stationIds = payload.stationIds || []
 		state.roleId = payload.roleId
 		state.roleName = payload.roleName
-		state.permissions = payload.permissions
+		state.permissions = payload.permissions || []
 		state.esIds = payload.esIds || []
+		state.esUsers = payload.esUsers || []
 
 		// 新增持久化存储
 		uni.setStorageSync('userInfo', {
@@ -87,11 +89,12 @@ const mutations = {
 			loginTime: payload.loginTime,
 			avatar: payload.avatar,
 			stationId: payload.stationId,
-			stationIds: payload.stationIds,
+			stationIds: payload.stationIds || [],
 			roleId: payload.roleId,
 			roleName: payload.roleName,
-			permissions: payload.permissions,
-			esIds: payload.esIds || []
+			permissions: payload.permissions || [],
+			esIds: payload.esIds || [],
+			esUsers: payload.esUsers || []
 		})
 	},
 
@@ -135,7 +138,8 @@ const actions = {
 				const code = response.status || response.code
 				if (code != 200 && code != 10000) { resolve(code); return; }
 				resolve(response)
-
+			}).catch(error => {
+				reject(error)
 			})
 		})
 	},
@@ -152,7 +156,8 @@ const actions = {
 				const code = response.code
 				if (code != 200) { resolve(code); return; }
 				resolve(response)
-
+			}).catch(error => {
+				reject(error)
 			})
 		})
 
@@ -194,7 +199,6 @@ const actions = {
 
 	async getInfo({ commit }, { userId,sessionId, loginTime }) {
 		const { data } = await getUserInfoApi(userId)
-		console.log('getUserInfoApi', data)
 		const payload = {
 			id: userId,
 			sessionId: sessionId,
@@ -202,8 +206,10 @@ const actions = {
 			roleId: data.roleId,
 			roleName: data.roleName,
 			stationId: 0,
-			stationIds: data.esIds,
-			permissions: data.pagePermission,
+			stationIds: data.esIds || [],
+			esIds: data.esIds || [],
+			esUsers: data.esUsers || data.es_users || [],
+			permissions: data.pagePermission || [],
 		}
 		commit('SET_USER_INFO', payload)
 	},
@@ -218,6 +224,11 @@ const actions = {
 			commit('SET_AVATAR', '')
 			commit('SET_BALANCE', '')
 			commit('SET_MEMBERID', '')
+			commit('SET_USER_INFO', {
+				id: '', userName: '', token: '', sessionId: '', loginTime: '',
+				avatar: '', stationId: '', stationIds: [], roleId: '', roleName: '',
+				permissions: [], esIds: [], esUsers: []
+			})
 			resolve()
 		})
 	}
@@ -225,10 +236,10 @@ const actions = {
 
 const getters = {
 	isLoggedIn: (state) => !!state.sessionId,
-	isSingle: (state) => state.stationIds.length == 1,
-	hasRole: (state) => (role) => state.roles.includes(role),
+	isSingle: (state) => (state.stationIds || []).length == 1,
+	hasRole: (state) => (role) => (state.roles || []).includes(role),
 	hasPermission: (state) => (permission) =>
-		state.permissions.includes(permission),
+		(state.permissions || []).includes(permission),
 	pagePermission: (state) => (pageId) => {
 		console.log(state.permissions, pageId, 'pagePermission');
 		const permissionItem = state.permissions.find((item) => item.pageId === pageId);

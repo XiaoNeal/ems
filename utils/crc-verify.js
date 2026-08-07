@@ -10,7 +10,7 @@ export function crcVerify(cmd){
         continue;
       }
       let currentCode = parseInt(input[i], 16);
-      if (currentCode === undefined) {
+      if (isNaN(currentCode)) {
         continue;
       }
       crcCode = crcCode ^ currentCode;

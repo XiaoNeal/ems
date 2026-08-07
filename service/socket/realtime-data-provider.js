@@ -15,6 +15,30 @@ export class RealtimeDataProviderService {
 
 	constructor() {
 		this.createScoket()
+		// 定时检查数据是否超时（每分钟检查一次）
+		this.expiredCheckTimer = setInterval(() => {
+			this.checkAllDevicesExpired();
+		}, 60 * 1000);
+	}
+
+	// 检查所有设备数据是否超时
+	checkAllDevicesExpired() {
+		let hasExpired = false;
+		for (let i = 0; i < this.deviceList.length; i++) {
+			const device = this.deviceList[i];
+			if (device && typeof device.checkDataExpired === 'function') {
+				const before = device.lastUpdateTime;
+				device.checkDataExpired();
+				// 如果数据被清空了，标记需要刷新UI
+				if (before && !device.lastUpdateTime) {
+					hasExpired = true;
+				}
+			}
+		}
+		// 如果有数据超时被清空，触发UI更新
+		if (hasExpired && typeof this.onDataUpdate === 'function') {
+			this.onDataUpdate();
+		}
 	}
 
 
@@ -42,10 +66,9 @@ export class RealtimeDataProviderService {
 	// IEMS_1702State_
 
 	clearDeviceState() {
-		console.log('clearDeviceState-------------------------------------')
+		this.unregister()
 		this.deviceList = [];
 		this.barCode = new Set()
-		this.registeredBarCodes = new Set()
 		store.commit('CLEAR_DEVICE_STATE');
 	}
 	initDeviceList(deviceList) {
@@ -113,9 +136,16 @@ export class RealtimeDataProviderService {
 	}
 
 	unregister() {
-		this.barCode.forEach((value, key) => {
-			socket.emit('unregister', value);
+		if (!socket) return
+		this.registeredBarCodes.forEach((barCode) => {
+			try {
+				socket.emit('unregister', barCode)
+				socket.off("IEMS_" + barCode)
+			} catch (e) {
+				console.error('unregister error', barCode, e)
+			}
 		})
+		this.registeredBarCodes.clear()
 	}
 	getDeviceList() {
 		return this.deviceList
@@ -123,13 +153,13 @@ export class RealtimeDataProviderService {
 
 	bindDevicesRealtimeData(barCode) {
 		if (!socket) this.createScoket(uni.getStorageSync('currentTemplate'), uni.getStorageSync('urlPrefix'))
-		socket.emit('register', barCode);
-		
+
 		if (this.registeredBarCodes.has(barCode)) {
 			return;
 		}
 		this.registeredBarCodes.add(barCode);
-		
+		socket.emit('register', barCode);
+
 		socket.on("IEMS_" + barCode, (jsonData) => {
 			try {
 				if (typeof jsonData == 'string') {
@@ -137,15 +167,19 @@ export class RealtimeDataProviderService {
 					if (index >= 0) {
 						jsonData = jsonData.substring(0, index + 1);
 					}
-					if (jsonData.includes('\"dataType\"' + ':' + '\"1\"') || jsonData.includes('gateway'))
+					// dataType=1 是心跳/注册消息，跳过；但不能因为包含 gateway 字段就跳过数据帧
+					if (jsonData.includes('\"dataType\"' + ':' + '\"1\"'))
 						return
 					jsonData = JSON.parse(jsonData);
-					this.realTimeWebSocketProtocolHandler.parseJsonData(jsonData, barCode, this.deviceList);
+					// 优先使用服务端推送的 gateway，确保显示与下发使用同一网关
+					const actualGateway = jsonData.gateway || barCode;
+					this.realTimeWebSocketProtocolHandler.parseJsonData(jsonData, actualGateway, this.deviceList);
 					if (typeof this.onDataUpdate === 'function') {
 						this.onDataUpdate();
 					}
 				}
 			} catch (error) {
+				console.error('parseJsonData error', barCode, error)
 			}
 		});
 	}

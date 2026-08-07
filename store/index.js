@@ -61,7 +61,6 @@ const store = new Vuex.Store({
 			return state.esConfig
 		},
 		getEsVersion: (state) => {
-			console.log('当前设备:', state.currentSelectDevice) // 调试输出
 			const versionMap = new Map()
 				.set(1, 2).set(2, 2).set(3, 2).set(4, 1).set(5, 2)
 			const deviceId = state.currentSelectDevice?.id || state.currentSelectDevice?.esId || 0
@@ -110,7 +109,6 @@ const store = new Vuex.Store({
 		},
 		// 存储完整设备对象
 		changeCurrentSelectDevice(state, data) {
-			console.log('changeCurrentSelectDevice', data)
 			state.currentSelectDevice = data || {}
 			saveLifeData('currentSelectDevice', data)
 		},

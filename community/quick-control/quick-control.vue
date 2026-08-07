@@ -179,8 +179,12 @@ export default {
   data() {
     return {
       platformClass: "",
-      deviceConfig: {
-        idCode: '',
+      // 下发网关（homeBarCode）
+      sendBarCode: '',
+      // 接收网关（设备实际连接的 gateway）
+      receiveBarCode: '',
+      // 下发配置
+      sendConfig: {
         typeCode: '3401',
         address: '01'
       },
@@ -218,7 +222,9 @@ export default {
     },
     device171F() {
       const list = this.deviceList
-      return list.find(item => item && item.deviceType === '171F')
+      // 按接收网关匹配
+      let device = list.find(item => item && item.deviceType === '171F' && item.barCode === this.receiveBarCode)
+      return device
     },
     controlData() {
       return (this.device171F && this.device171F.controlData) || {}
@@ -283,6 +289,9 @@ export default {
       this._dataVersion++;
     };
 
+    // 清空旧设备列表，防止跨页面残留的不同网关设备导致显示与下发不一致
+    realtimeDataProvider.clearDeviceState();
+
     // 注册 171F 设备
     this.init171FDevice();
 
@@ -292,24 +301,32 @@ export default {
   methods: {
     init171FDevice() {
       const currentDevice = this.$store.state.currentSelectDevice || {};
-      const foundDevice = currentDevice.list && currentDevice.list.find(item =>
-        item.typeCode === '171F' || item.deviceType === '171F' || (item.description && item.description.includes('171F'))
-      );
 
-      let address = this.deviceConfig.address;
-      let barCode = this.deviceConfig.idCode;
+      // 下发：通过 controlType == 1 查找控制设备，使用 homeBarCode
+      const deviceControl = currentDevice.list && currentDevice.list.find(item => item.controlType == 1);
+      if (deviceControl) {
+        this.sendBarCode = deviceControl.homeBarCode;
+        // this.sendConfig.typeCode = deviceControl.typeCode;
+        // this.sendConfig.address = deviceControl.address;
+      }
 
-      if (foundDevice) {
-        address = foundDevice.address || address;
-        barCode = foundDevice.barCode || foundDevice.homeBarCode || barCode;
-        this.deviceConfig.idCode = barCode;
+      // 接收：通过 171F 类型查找设备，使用 barCode
+      let address = '';
+      if (currentDevice.list && Array.isArray(currentDevice.list)) {
+        const foundDevice = currentDevice.list.find(item =>
+          item.typeCode === '171F' || item.deviceType === '171F' || item.description?.includes('171F')
+        );
+        if (foundDevice) {
+          this.receiveBarCode = foundDevice.barCode;
+          address = foundDevice.address;
+        }
       }
 
       const deviceConfig = {
         deviceType: '171F',
         typeCode: '171F',
         address: address,
-        barCode: barCode,
+        barCode: this.receiveBarCode,
         deviceId: '171F001',
         name: 'DCDC设备171F'
       };
@@ -350,9 +367,9 @@ export default {
 
               await sendCommandFrame({
                 apiSufix,
-                idCode: this.deviceConfig.idCode,
-                typeCode: this.deviceConfig.typeCode,
-                address: this.deviceConfig.address,
+                idCode: this.sendBarCode,
+                typeCode: this.sendConfig.typeCode,
+                address: this.sendConfig.address,
                 userId: this.userId,
                 commands
               });
@@ -408,7 +425,7 @@ export default {
         title: 'PCS开关机',
         content: `确定要执行PCS${actionText}操作吗？`,
         apiSufix: 'pcsControl',
-        commandBuilder: () => this.buildCommand('16', action === 'start' ? '1' : '2'),
+        commandBuilder: () => this.buildCommand('108', action === 'start' ? '1' : '2'),
         action,
         stateKey: 'selectedPcsAction',
         successMsg: `PCS${actionText}成功`,
@@ -429,7 +446,7 @@ export default {
         title: '光伏DC控制',
         content: `确定要执行光伏DC${actionText}操作吗？`,
         apiSufix: 'pvDcControl',
-        commandBuilder: () => this.buildCommand('14', action === 'start' ? '1' : '2'),
+        commandBuilder: () => this.buildCommand('110', action === 'start' ? '1' : '2'),
         action,
         stateKey: 'selectedPvDcAction',
         successMsg: `光伏DC${actionText}成功`,
@@ -450,7 +467,7 @@ export default {
         title: '储能DC一键控制',
         content: `确定要执行储能DC${actionText}操作吗？`,
         apiSufix: 'storageDcControl',
-        commandBuilder: () => this.buildCommand('12', action === 'start' ? '1' : '2'),
+        commandBuilder: () => this.buildCommand('100', action === 'start' ? '1' : '2'),
         action,
         stateKey: 'selectedStorageDcAction',
         successMsg: `储能DC${actionText}成功`,
@@ -481,11 +498,11 @@ export default {
       try {
         await sendCommandFrame({
           apiSufix: 't3401_171F_control',
-          idCode: this.deviceConfig.idCode,
-          typeCode: this.deviceConfig.typeCode,
-          address: this.deviceConfig.address,
+          idCode: this.sendBarCode,
+          typeCode: this.sendConfig.typeCode,
+          address: this.sendConfig.address,
           userId: this.userId,
-          commands: this.buildCommand('14', modeMap[mode] || '0')
+          commands: this.buildCommand('102', modeMap[mode] || '0')
         });
         this.selectedPcsMode = mode;
         uni.showToast({
@@ -508,11 +525,10 @@ export default {
         uni.showToast({ title: '无权限操作', icon: 'none' });
         return;
       }
-      const deviceList = realtimeDataProvider.getDeviceList()
-      const device171F = deviceList.find(item => item && item.deviceType === '171F')
+      const device171F = this.device171F
       const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
       
-      if (b12Value === undefined || b12Value === null) {
+      if (b12Value === undefined || b12Value === null || b12Value === '' || b12Value === '--') {
         uni.showModal({
           title: '提示',
           content: '当前设备离线，暂不支持修改',
@@ -610,11 +626,11 @@ export default {
       try {
         await sendCommandFrame({
           apiSufix: 't3401_171F_control',
-          idCode: this.deviceConfig.idCode,
-          typeCode: this.deviceConfig.typeCode,
-          address: this.deviceConfig.address,
+          idCode: this.sendBarCode,
+          typeCode: this.sendConfig.typeCode,
+          address: this.sendConfig.address,
           userId: this.userId,
-          commands: this.buildCommand('16', this.tempChargePower * 10)
+          commands: this.buildCommand('104', this.tempChargePower * 10)
         });
         this._localChargePower = this.tempChargePower;
         this.editingChargePower = false;
@@ -696,11 +712,11 @@ export default {
       try {
         await sendCommandFrame({
           apiSufix: 't3401_171F_control',
-          idCode: this.deviceConfig.idCode,
-          typeCode: this.deviceConfig.typeCode,
-          address: this.deviceConfig.address,
+          idCode: this.sendBarCode,
+          typeCode: this.sendConfig.typeCode,
+          address: this.sendConfig.address,
           userId: this.userId,
-          commands: this.buildCommand('18', this.tempDischargePower * 10)
+          commands: this.buildCommand('106', this.tempDischargePower * 10)
         });
         this._localDischargePower = this.tempDischargePower;
         this.editingDischargePower = false;

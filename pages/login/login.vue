@@ -17,13 +17,12 @@
                     <image src="https://iems.neiic.com/wechatImage/images/slogan.png" mode="aspectFit"></image>
                 </view>
             </view>
-            <!-- 微信登录 -->
+            <!-- 一键登录 -->
             <view class="login-tab" v-if="loginType === 'wechat' && !showWechatRegister">
-                <!-- 微信登录按钮 -->
+                <!-- 一键登录按钮 -->
                 <button class="btn-wechat" open-type="getUserInfo" @getuserinfo="handleWechatAuth"
                     :disabled="!agreeAgreement">
-                    <image class="wechat-icon" src="@/static/images/wechat.svg"></image>
-                    <text style="min-width:fit-content;">微信登录</text>
+                    <text style="min-width:fit-content;">手机号快捷登录</text>
                 </button>
 
                 <!-- 协议 -->
@@ -52,7 +51,7 @@
                 </view>
             </view>
 
-            <!-- 微信新用户完善信息 -->
+            <!-- 新用户完善信息 -->
             <view class="register-tab" v-if="showWechatRegister">
                 <view class="form-header">
                     <text class="form-title">完善账号信息</text>
@@ -149,7 +148,7 @@
                     </button>
 
                     <view class="login-switch">
-                        <text class="switch-item" @click="switchLoginType('wechat')">微信登录</text>
+                        <text class="switch-item" @click="switchLoginType('wechat')">手机号快捷登录</text>
                         <text class="switch-item" @click="switchLoginType('account')">账号密码登录</text>
                     </view>
                 </view>
@@ -197,7 +196,7 @@
                     </button>
 
                     <view class="login-switch">
-                        <text class="switch-item" @click="switchLoginType('wechat')">微信登录</text>
+                        <text class="switch-item" @click="switchLoginType('wechat')">手机号快捷登录</text>
                         <text class="switch-item" @click="switchLoginType('sms')">短信登录</text>
                     </view>
                 </view>
@@ -237,7 +236,7 @@ export default {
             isPhoneValid: false,
             lastCountDown: 0,
 
-            // 微信注册补充信息
+            // 注册补充信息
             wechatUserInfo: {
                 nickname: '',
                 avatarUrl: '',
@@ -292,7 +291,7 @@ export default {
             }
         },
 
-        // 微信授权登录
+        // 授权登录
         handleWechatAuth(e) {
             if (!this.agreeAgreement) {
                 uni.showToast({ title: '请先同意协议', icon: 'none' });
@@ -303,43 +302,11 @@ export default {
                 uni.showLoading({ title: '登录中...' });
                 wx.login({
                     success: (loginRes) => {
-                        //  console.log(loginRes, "-------121-----------------")
-                        // return
                         this.checkWechatUserStatus(loginRes.code, e.detail.userInfo);
-                        return
-                        if (loginRes.code) {
-                            console.log(loginRes, "------------")
-                            // 使用新的微信登录接口
-                            wechatLogin(loginRes.code, 1).then(res => {
-                                uni.hideLoading();
-
-                                console.log(res, "------------")
-                                if (res.code === 200) {
-                                    if (res.data.newUser) {
-                                        this.showWechatRegister = true;
-                                        this.tempWechatCode = loginRes.code;
-                                        this.wechatUserInfo.nickname = (e.detail.userInfo.nickName || '').trim();
-                                        this.wechatUserInfo.avatarUrl = e.detail.userInfo.avatarUrl || '';
-                                    } else {
-                                        this.saveLoginState(res.data);
-                                        uni.showToast({ title: '登录成功', icon: 'success' });
-                                        uni.navigateTo({ url: '/pages/index/index' });
-                                    }
-                                } else {
-                                    uni.showToast({ title: res.message || '登录失败，请重试', icon: 'none' });
-                                }
-                            }).catch(err => {
-                                uni.hideLoading();
-                                uni.showToast({ title: '微信登录失败', icon: 'none' });
-                            });
-                        } else {
-                            uni.hideLoading();
-                            uni.showToast({ title: '获取登录信息失败', icon: 'none' });
-                        }
                     },
                     fail: (err) => {
                         uni.hideLoading();
-                        uni.showToast({ title: '微信登录失败', icon: 'none' });
+                        uni.showToast({ title: '登录失败', icon: 'none' });
                     }
                 });
             } else {
@@ -347,7 +314,7 @@ export default {
             }
         },
 
-        // 检查微信用户状态
+        // 检查用户状态
         checkWechatUserStatus(code, userInfo) {
             wxLoginApi(code).then(res => {
                 uni.hideLoading();
@@ -361,7 +328,7 @@ export default {
                     } else {
                         this.saveLoginState(res.data);
                         uni.showToast({ title: '登录成功', icon: 'success' });
-                        uni.navigateTo({ url: '/pages/index/index' });
+                        uni.reLaunch({ url: '/pages/index/index' });
                     }
                 } else {
                     uni.showToast({ title: res.message || '登录失败，请重试', icon: 'none' });
@@ -372,12 +339,12 @@ export default {
             });
         },
 
-        // 微信新用户-验证手机号
+        // 新用户-验证手机号
         validatePhoneForWechat() {
             this.isWechatPhoneValid = /^1[3-9]\d{9}$/.test(this.wechatUserInfo.phone);
         },
 
-        // 微信新用户-获取验证码
+        // 新用户-获取验证码
         getWechatVerifyCode() {
             if (!this.isWechatPhoneValid) {
                 return uni.showToast({ title: '请输入正确的手机号', icon: 'none' });
@@ -398,7 +365,7 @@ export default {
             });
         },
 
-        // 微信新用户-开始倒计时
+        // 新用户-开始倒计时
         startWechatCountDown() {
             this.wechatCountDown = 60;
             this.wechatTimer = setInterval(() => {
@@ -406,7 +373,7 @@ export default {
             }, 1000);
         },
 
-        // 微信新用户-清除倒计时
+        // 新用户-清除倒计时
         clearWechatCountDown() {
             if (this.wechatTimer) {
                 clearInterval(this.wechatTimer);
@@ -415,7 +382,7 @@ export default {
             this.wechatCountDown = 0;
         },
 
-        // 微信新用户-提交注册信息
+        // 新用户-提交注册信息
         submitWechatRegister() {
             const { phone, verifyCode } = this.wechatUserInfo;
             if (!this.isWechatPhoneValid) {
@@ -453,7 +420,7 @@ export default {
                                     if (result.code == 200) {
                                         uni.showToast({ title: '注册成功', icon: 'success' });
                                         this.saveLoginState(result.data);
-                                        uni.navigateTo({ url: '/pages/index/index' });
+                                        uni.reLaunch({ url: '/pages/index/index' });
                                     } else {
                                         uni.showToast({ title: result.message || '注册失败', icon: 'none' });
                                     }
@@ -471,12 +438,12 @@ export default {
                 },
                 fail: (err) => {
                     uni.hideLoading();
-                    uni.showToast({ title: '获取微信code失败', icon: 'none' });
+                    uni.showToast({ title: '获取登录凭证失败', icon: 'none' });
                 }
             });
         },
 
-        // 取消微信注册
+        // 取消注册
         cancelWechatRegister() {
             this.showWechatRegister = false;
             this.clearWechatCountDown();
@@ -546,7 +513,7 @@ export default {
                     this.saveLoginState(res.data);
                     const message = res.data.newUser ? '注册并登录成功' : '登录成功';
                     uni.showToast({ title: message, icon: 'success' });
-                    uni.navigateTo({ url: '/pages/index/index' });
+                    uni.reLaunch({ url: '/pages/index/index' });
                 } else {
                     uni.showToast({ title: res.message || '操作失败', icon: 'none' });
                 }
@@ -578,12 +545,12 @@ export default {
                         // 保存登录状态并跳转
                         this.saveLoginState(res.data);
                         uni.showToast({ title: '登录成功', icon: 'success' });
-                        uni.navigateTo({ url: '/pages/index/index' });
+                        uni.reLaunch({ url: '/pages/index/index' });
                     }).catch(() => {
                         // 即使获取areaLevelId失败，也继续登录流程
                         this.saveLoginState(res.data);
                         uni.showToast({ title: '登录成功', icon: 'success' });
-                        uni.navigateTo({ url: '/pages/index/index' });
+                        uni.reLaunch({ url: '/pages/index/index' });
                     });
                 } else {
                     uni.showToast({ title: res.message || '登录失败，请重试', icon: 'none' });
@@ -596,7 +563,6 @@ export default {
 
         // 统一存储登录状态
         saveLoginState(res) {
-            console.log(res, "res")
             try {
                 const userInfo = {
                     isLogin: true,
@@ -606,9 +572,10 @@ export default {
                     balance: res.accountBalance,
                     sessionId: res.sessionId,
                     loginTime: new Date().getTime(),
-                    // avatarUrl: res.wxAvaterUrl && res.wxAvaterUrl.trim() !== '' ? "https://iems.neiic.com" + res.wxAvaterUrl : undefined,
                     areaLevelId: res.areaLevelId,
-                    esIds: res.energyStations
+                    esIds: res.energyStations,
+                    roleId: res.roleId,
+                    esUsers: res.es_users || []
                 };
                 this.$store.commit("SET_LOGIN", userInfo);
             } catch (e) {
@@ -1040,7 +1007,7 @@ input::placeholder {
     transform: none;
 }
 
-/* 微信按钮 */
+/* 一键登录按钮 */
 .btn-wechat {
     height: 104rpx;
     border-radius: 24rpx;
@@ -1070,12 +1037,6 @@ input::placeholder {
     opacity: 0.4;
     box-shadow: none;
     transform: none;
-}
-
-.wechat-icon {
-    width: 48rpx;
-    height: 48rpx;
-    filter: drop-shadow(0 2rpx 4rpx rgba(255, 255, 255, 0.3));
 }
 
 /* 协议样式 */

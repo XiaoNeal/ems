@@ -16,9 +16,9 @@ function login(param) {
 				that.$u.vuex("vuex_token", loginToken);
 			}
 			if (currentUser.userId != null) {
-				that.$u.vuex('vuex_userInfo', currentUser); //这里要先保存一下用户的信息,假如后续用户拒绝同步,就是当前用户信息
-			}
-			if (currentUser.nickName.length < 1) {
+			that.$u.vuex('vuex_userInfo', currentUser); //这里要先保存一下用户的信息,假如后续用户拒绝同步,就是当前用户信息
+		}
+		if (currentUser && currentUser.nickName != null && currentUser.nickName.length < 1) {
 				//跳转第四步
 			return getWxUserInfo();
 			} else {

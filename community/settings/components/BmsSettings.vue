@@ -949,8 +949,7 @@ export default {
 
       await sendCommandFrame(commandData)
 
-      const [module, key] = param.key.split('.')
-      this.params[module][key] = value
+      this.params.bms[param.field] = value
     },
 
     handleEditConfig() {
@@ -961,24 +960,24 @@ export default {
       }
       const device171F = this.device171F
       const b12Value = device171F && device171F.controlData && device171F.controlData.B12 && device171F.controlData.B12.value
-      console.log('b12Value:', b12Value)
-      if (b12Value === undefined || b12Value === null || b12Value === '--') {
-        uni.showModal({
-          title: '提示',
-          content: '当前设备离线，暂不支持修改',
-          showCancel: false
-        })
-        return
-      }
 
-      if (b12Value !== 0 && b12Value !== '0') {
-        uni.showModal({
-          title: '提示',
-          content: '策略运行中，参数修改需停止策略！！！',
-          showCancel: false
-        })
-        return
-      }
+      // if (b12Value === undefined || b12Value === null || b12Value === '' || b12Value === '--') {
+      //   uni.showModal({
+      //     title: '提示',
+      //     content: '当前设备离线，暂不支持修改',
+      //     showCancel: false
+      //   })
+      //   return
+      // }
+
+      // if (b12Value !== 0 && b12Value !== '0') {
+      //   uni.showModal({
+      //     title: '提示',
+      //     content: '策略运行中，参数修改需停止策略！！！',
+      //     showCancel: false
+      //   })
+      //   return
+      // }
 
       this.isEditing = true
       this.showToast('已进入编辑模式', 'success')

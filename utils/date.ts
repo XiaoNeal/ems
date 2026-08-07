@@ -5,10 +5,21 @@ const digit = (value:number|string, length = 2) => {
     return (Array(length).join('0') + value).slice(-length)
 }
 
+// 兼容 iOS 的日期解析：将 'yyyy-MM-dd HH:mm:ss' 转为 'yyyy/MM/ddTHH:mm:ss'
+const parseDate = (time: any): Date => {
+    if (time instanceof Date) return time
+    if (typeof time === 'string') {
+        const normalized = time.replace(/-/g, '/').replace(/ /g, 'T')
+        return new Date(normalized)
+    }
+    return new Date(time)
+}
+
 // 格式化日期 默认到秒
 export const dateFormatterSec = (time:string, format = 'yyyy-MM-dd HH:mm:ss') => {
     if(!time) return ''
-    const date = new Date(time)
+    const date = parseDate(time)
+    if (isNaN(date.getTime())) return ''
     const ymd = [
         digit(date.getFullYear(), 4),
         digit(date.getMonth() + 1),
@@ -32,7 +43,8 @@ export const dateFormatterSec = (time:string, format = 'yyyy-MM-dd HH:mm:ss') =>
 // 格式化日期 默认到毫秒
 export const dateFormatter = (time:string, format = 'yyyy-MM-dd HH:mm:ss:SSS') => {
     if(!time) return ''
-    const date = new Date(time)
+    const date = parseDate(time)
+    if (isNaN(date.getTime())) return ''
     const ymd = [
         digit(date.getFullYear(), 4),
         digit(date.getMonth() + 1),
@@ -57,13 +69,14 @@ export const dateFormatter = (time:string, format = 'yyyy-MM-dd HH:mm:ss:SSS') =
 // 日期只取日月年
 export const dateYMD = (time:string, format = 'yyyy-MM-dd') => {
     if(!time) return ''
-    const date = new Date(time)
+    const date = parseDate(time)
+    if (isNaN(date.getTime())) return ''
     const ymd = [
         digit(date.getFullYear(), 4),
         digit(date.getMonth() + 1),
         digit(date.getDate())
     ]
-  
+
     return format
     .replace(/yyyy/g, ymd[0].toString())
     .replace(/MM/g, ymd[1].toString())
