@@ -10,6 +10,27 @@ export class Model1714 extends DeviceBase {
 		this.energyData = new EnergyData();
 		this.stateData = new StateData();
 		this.controlData = new ControlData();
+		this.lastUpdateTime = null;
+	}
+
+	// 检查数据是否超时（超过5分钟未更新则清空）
+	checkDataExpired() {
+		if (this.lastUpdateTime) {
+			const now = Date.now();
+			if (now - this.lastUpdateTime > 5 * 60 * 1000) {
+				this.resetDataToDefault();
+				this.lastUpdateTime = null;
+			}
+		}
+	}
+
+	// 将所有数据置为 '--'
+	resetDataToDefault() {
+		for (const key in this.energyData) {
+			if (this.energyData[key]) {
+				this.energyData[key].value = '--';
+			}
+		}
 	}
 
 	getEnergyData(jsonData, jsonData2) {
@@ -17,22 +38,22 @@ export class Model1714 extends DeviceBase {
 		// 倍率转换表：{ 字段: 转换函数 }
 		// 传输值 = 实际值 * 倍率，所以实际值 = 传输值 / 倍率
 		const scaleMap = {
-			
+
 			'B6': v => v ,   // 设备柔度
 			'B8': v => v ,   // 设备负载率
 			'B52': v => v ,  // 设置柔度
-		
+
 			'B12': v => v / 1000, // 设备额定功率
 			'B16': v => v , // 设备电压
 			'B20': v => v , // 设备电流
 			'B24': v => v / 1000, // 设备功率
 			'B56': v => v / 1000, // 可调节功率
 			'B66': v => v , // 累计响应电量
-		
+
 			'B28': v => v ,  // 设备累计正向电能
 			'B32': v => v ,  // 设备累计反向电能
 		};
-		
+
 		for (const key in data) {
 			if (this.energyData.hasOwnProperty(key) && this.energyData[key]) {
 				let value = data[key];
@@ -43,6 +64,8 @@ export class Model1714 extends DeviceBase {
 				this.energyData[key].value = value;
 			}
 		}
+		// 记录最后更新时间
+		this.lastUpdateTime = Date.now();
 	}
 
 	getStatusData(jsonData) {

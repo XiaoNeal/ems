@@ -430,11 +430,25 @@ export default {
         return;
       }
       const isValidValue = (v) => v != null && v !== '--' && v !== '' && v !== undefined && v !== null
+      // 检查实时数据是否超时（超过5分钟未更新）
+      const isDataExpired = (dev) => !dev.lastUpdateTime
       this.deviceList = this.deviceList.map(item => {
         const dev = this.realtimeLoadDevices.find(d => d && d.address === item.address);
         if (!dev) {
           console.log(`未找到 address=${item.address} 的实时设备`);
           return item;
+        }
+        // 数据超时则功率等实时字段置为 '--'
+        if (isDataExpired(dev)) {
+          return {
+            ...item,
+            power: '--',
+            energyConsumption: '--',
+            adjustablePower: '--',
+            deviceFlexibility: '--',
+            deviceLoadRatio: '--',
+            _rawEnergyData: dev.energyData || {}
+          };
         }
         const ed = dev.energyData || {};
         const typeMap = { '0': '无效', '1': '分体机', '2': '多联机', '3': '充电桩', '4': '照明' };
