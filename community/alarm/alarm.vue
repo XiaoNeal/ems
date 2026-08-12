@@ -49,8 +49,8 @@
         </view>
       </view>
 
-      <!-- 日期选择栏 -->
-      <view class="date-picker-wrap">
+      <!-- 日期选择栏（普通用户不显示） -->
+      <view v-if="canViewList" class="date-picker-wrap">
         <picker mode="date" :value="selectedDate" @change="onDateChange">
           <view class="date-picker">
             <view class="date-icon-wrap">
@@ -68,8 +68,8 @@
         </view>
       </view>
 
-      <!-- 搜索栏 -->
-      <view class="search-wrap">
+      <!-- 搜索栏（仅超管/测试人员可见） -->
+      <view v-if="canViewDetail" class="search-wrap">
         <view class="search-input">
           <text class="search-icon">🔍</text>
           <input v-model="searchKeyword" @input="handleSearch" placeholder="请输入告警名称" />
@@ -80,7 +80,7 @@
         </view>
       </view>
 
-      <!-- 筛选弹窗 -->
+      <!-- 筛选弹窗（仅超管/测试人员可见） -->
       <u-popup v-model="showFilter" mode="bottom" :border-radius="20" :closeable="true">
         <view class="filter-popup">
           <view class="popup-header">
@@ -127,8 +127,8 @@
         </view>
       </u-popup>
 
-      <!-- 列表切换 -->
-      <view class="table-tab">
+      <!-- 列表切换（普通用户不显示） -->
+      <view v-if="canViewList" class="table-tab">
         <view class="tab-btn" :class="{ active: tableType === 1 }" @click="ontableTypeChange(1)">
           进行中（{{ alarmTimes.proceed }}）
         </view>
@@ -140,8 +140,8 @@
         </view>
       </view>
 
-      <!-- 列表 -->
-      <uni-scroll-view class="list-container" scroll-y refresher-enabled :refresher-loading="refresherLoading"
+      <!-- 列表（普通用户不显示） -->
+      <uni-scroll-view v-if="canViewList" class="list-container" scroll-y refresher-enabled :refresher-loading="refresherLoading"
         @refresherrefresh="onRefresh">
         <!-- 加载中 -->
         <view v-if="listLoading && apiDataShow.length === 0" class="loading">
@@ -167,7 +167,7 @@
               <text class="level-tag" :class="'level-' + item.alarmLevel">{{ item.alarmLevel === 0 ? '故障' :
                 item.alarmLevel === 1 ? '保护' : '告警' }}</text>
               <text class="type-name">{{ item.typeName }}</text>
-              {{ item.alarmName }}
+              <text v-if="canViewDetail">{{ item.alarmName }}</text>
             </view>
             <view class="time-row">
               <text class="time-item">{{ item.alarmTime }}</text>
@@ -298,13 +298,22 @@ export default {
         let alarmList = res.data || []
         // 按告警时间倒序，最新时间放最前面
         alarmList = alarmList.sort((a, b) => {
-          // 方案A：时间戳字段
-          // return b.alarmTime - a.alarmTime
-          // 方案B：日期字符串（'2026-07-08 12:30:00'），兼容iOS
           const parseDate = (str) => new Date((str || '').replace(/-/g, '/'))
           return parseDate(b.alarmTime) - parseDate(a.alarmTime)
         })
-        console.log('告警接口返回数据:', alarmList)
+        // 非超管/测试人员：同一设备类型去重，只保留最新的一条（已恢复的不算重复）
+        if(this.$store.state.userInfo?.roleId!=1 && this.$store.state.currentEsRoleId!=4) {
+          const seen = new Set()
+          alarmList = alarmList.filter(item => {
+            // 已恢复的告警不去重，全部保留
+            if (item.recoverTime) return true
+            const key = item.typeName || item.alarmName || ''
+            if (seen.has(key)) return false
+            seen.add(key)
+            return true
+          })
+        }
+        console.log('告警接口返回数据:', alarmList, this.$store.state.userInfo?.roleId, this.$store.state.currentEsRoleId)
         const list = (alarmList || []).map(it => this.formatAlarmItem(it))
         this.apiData = list
         this.totalCount = list.length
@@ -482,6 +491,16 @@ export default {
   computed: {
     hasActiveFilter() {
       return this.filterLevel !== -1 || this.filterStartTime || this.filterEndTime
+    },
+    // 超级管理员(roleId=1)和测试人员(currentEsRoleId=4)可查看详细告警
+    canViewDetail() {
+      if(this.$store.state.userInfo?.roleId==1) return true
+      if(this.$store.state.currentEsRoleId==4) return true
+      return false
+    },
+    // 所有用户都可以查看告警列表
+    canViewList() {
+      return true
     }
   }
 }

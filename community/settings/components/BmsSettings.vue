@@ -874,7 +874,7 @@ export default {
           const scaledValue = param.scale ? rawValue * param.scale : rawValue
           registerValue = Math.round(scaledValue).toString(16).toUpperCase().padStart(4, '0')
         } else if (param.temperature) {
-          registerValue = (parseFloat(value) - 40) * 10
+          registerValue = (parseFloat(value) + 40) * 10
         } else if (param.fanControl) {
           const val = parseFloat(value)
           registerValue = val >= 0 && val <= 100 ? val * 10 : 255

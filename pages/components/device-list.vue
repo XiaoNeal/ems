@@ -91,7 +91,7 @@
       <view class="share-modal" @click.stop>
         <view class="modal-head">
           <text class="modal-title">
-            {{ shareModalType === 'code' ? '设备8位分享码' : '设备分享链接' }}
+            {{ shareModalType === 'code' ? '设备11位分享码' : '设备分享链接' }}
           </text>
           <view class="modal-close" @click="closeShareModal">
             <uni-icons type="close" size="22" color="#a0a6b2" />
@@ -104,7 +104,7 @@
           </view>
           <view class="copy-block">
             <text class="copy-label">
-              {{ shareModalType === 'code' ? '8位分享码（有效期7天）' : '通用分享链接' }}
+              {{ shareModalType === 'code' ? '11位分享码（有效期7天）' : '通用分享链接' }}
             </text>
             <view class="code-wrap">
               <text selectable class="code-text">
@@ -163,13 +163,11 @@ export default {
       return 'online'
     },
     showDeviceMenu(esId) {
-      const isAdmin = this.isAdmin(esId)
-      const menuItems = isAdmin ? ['删除该设备'] : ['取消']
       uni.showActionSheet({
-        itemList: menuItems,
-        itemColor: '#4080f0',
+        itemList: ['删除该设备'],
+        itemColor: '#ee5b5b',
         success: (res) => {
-          if (res.tapIndex === 0 && isAdmin) {
+          if (res.tapIndex === 0) {
             this.deleteDevice(esId)
           }
         }
@@ -259,7 +257,7 @@ export default {
       uni.showModal({
         title: '手动绑定储能设备',
         editable: true,
-        placeholderText: '输入设备8位编号 / 完整绑定链接',
+        placeholderText: '输入设备11位编号',
         confirmText: '确认绑定',
         cancelText: '取消',
         success: res => {
