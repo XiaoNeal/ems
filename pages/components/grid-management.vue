@@ -339,9 +339,9 @@ export default {
         const currentDevice = this.$store.state.currentSelectDevice || {};
 
         const params = {
-          esId: currentDevice.id || 28,
+          esId: currentDevice.id,
           date: this.powerDate,
-          areaLevelIds: currentDevice.areaLevelId || 991
+          areaLevelIds: currentDevice.areaLevelId 
         };
         const res = await getPowerData(params);
         if (res && res.data && res.data.length > 0) {

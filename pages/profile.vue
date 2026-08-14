@@ -49,6 +49,7 @@
           <uni-icons type="list" size="20" color="#007AFF"></uni-icons>
           <view class="item-title-wrapper">
             <text class="item-title">设备列表</text>
+            <view v-if="currentDeviceName" class="title-divider"></view>
             <text v-if="currentDeviceName" class="device-name">{{ currentDeviceName }}</text>
           </view>
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
@@ -108,8 +109,8 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
 import { decrypt } from "@/utils/decryptData.js";
+import { findUserInfoByCodeId } from "@/api/user.js";
 export default {
   data() {
     return {
@@ -117,7 +118,17 @@ export default {
     }
   },
   computed: {
-    ...mapState(['user', 'userInfo']),
+    userInfoData() {
+      return this.$store.state.userInfo || {}
+    },
+    user() {
+      const info = this.userInfoData
+      return {
+        avatar: info.imageFile || info.wxAvaterUrl || '',
+        userName: info.user_name || info.userName || '',
+        mobile: info.mobile_phone || info.mobile || ''
+      }
+    },
     currentDeviceName() {
       const currentDevice = this.$store.state.currentSelectDevice
       if (!currentDevice) {
@@ -125,7 +136,7 @@ export default {
       }
 
       // 如果用户没有设备列表，直接返回空
-      if (!this.userInfo?.esIds || !Array.isArray(this.userInfo.esIds) || this.userInfo.esIds.length === 0) {
+      if (!this.userInfoData?.esIds || !Array.isArray(this.userInfoData.esIds) || this.userInfoData.esIds.length === 0) {
         return ''
       }
 
@@ -136,7 +147,7 @@ export default {
 
       // 如果 currentDevice 是对象但没有 name，从 esIds 中查找
       const deviceId = currentDevice.id || currentDevice.esId
-      const device = this.userInfo.esIds.find(item => {
+      const device = this.userInfoData.esIds.find(item => {
         if (typeof item === 'object') {
           return item.esId === deviceId || item.id === deviceId
         }
@@ -189,7 +200,7 @@ export default {
         });
 
         const userInfo = {
-          ...this.userInfo,
+          ...this.userInfoData,
           roleId: res.data.roleId,
           esIds: energyStations,
           esUsers: res.data.es_users || []
@@ -205,7 +216,26 @@ export default {
       this.loading = false
     }
   },
+  onShow() {
+    this.refreshUserInfo()
+  },
   methods: {
+    async refreshUserInfo() {
+      try {
+        const userId = this.$store.state.userInfo?.userId || this.$store.state.user?.id
+        if (!userId) return
+        const res = await findUserInfoByCodeId(userId)
+        if (res.code === 200 && res.data) {
+          const userInfo = { ...this.$store.state.userInfo, ...res.data }
+          if (!userInfo.sessionId) {
+            userInfo.sessionId = this.$store.state.userInfo.sessionId
+          }
+          this.$store.commit('SET_LOGIN', userInfo)
+        }
+      } catch (e) {
+        console.error('刷新用户信息失败', e)
+      }
+    },
     // 新增方法：加载用户数据
     loadUserData() {
       const userData = uni.getStorageSync('loginData') || {};
@@ -457,13 +487,26 @@ export default {
   flex: 1;
   margin-left: 15px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+}
+
+.item-title-wrapper .item-title {
+  flex: none;
+  margin-left: 0;
+}
+
+.title-divider {
+  width: 1px;
+  height: 24rpx;
+  background: #dcdfe6;
+  margin: 0 12rpx;
 }
 
 .device-name {
-  font-size: 12px;
+  font-size: 14px;
   color: #999;
-  margin-top: 4px;
+  margin-left: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -35,7 +35,7 @@
           </view>
           <text class="item-label">邮箱</text>
           <view class="item-value">
-            <text class="value-text">{{ email || '未绑定' }}</text>
+            <text class="value-text">{{ displayEmail }}</text>
             <uni-icons class="arrow-right" type="arrowright" size="24" color="#ccc" />
           </view>
         </view>
@@ -55,10 +55,10 @@
 <script>
 import store from '@/store'
 import {
-  updateUserInfo
+  updateUserInfo,
+  findUserInfoByCodeId
 } from "@/api/user.js"
 import md5 from "@/utils/md5.min.js"
-import { mapState } from 'vuex';
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 
 export default {
@@ -71,17 +71,26 @@ export default {
       isOK: true,
       oldPassword: '',
       isAdmin: null,
-      platformClass: ''
+      platformClass: '',
+      refreshTick: 0
     }
   },
   computed: {
-    ...mapState('user', ['userId', 'userName', 'mobile', 'email', 'avatar']),
+    userInfo() {
+      return this.$store.state.userInfo || {}
+    },
+    userName() {
+      return this.userInfo.user_name || this.userInfo.userName || ''
+    },
     displayPhone() {
-      return this.mobile || uni.getStorageSync('phone') || '未绑定'
+      return this.userInfo.mobile_phone || this.userInfo.mobile || '未绑定'
     },
     displayEmail() {
-      return this.email || '未绑定'
+      return this.userInfo.email || '未绑定'
     },
+    avatar() {
+      return this.userInfo.imageFile || this.userInfo.wxAvaterUrl || ''
+    }
   },
   onLoad: function (option) {
     this.isAdmin = option.admin
@@ -91,7 +100,35 @@ export default {
       },
     });
   },
+  onShow() {
+    this.refreshTick++
+    this.refreshUserInfo()
+  },
+  watch: {
+    '$store.state.userInfo': {
+      handler() {
+        this.refreshTick++
+      },
+      deep: true
+    }
+  },
   methods: {
+    async refreshUserInfo() {
+      try {
+        const userId = this.$store.state.userInfo?.userId || this.$store.state.user?.id
+        if (!userId) return
+        const res = await findUserInfoByCodeId(userId)
+        if (res.code === 200 && res.data) {
+          const userInfo = { ...this.$store.state.userInfo, ...res.data }
+          if (!userInfo.sessionId) {
+            userInfo.sessionId = this.$store.state.userInfo.sessionId
+          }
+          this.$store.commit('SET_LOGIN', userInfo)
+        }
+      } catch (e) {
+        console.error('刷新用户信息失败', e)
+      }
+    },
     goto(e) {
       uni.navigateTo({
         url: `/pages-public/userOptions/setUserName?type=${e}`

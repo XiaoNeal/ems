@@ -481,9 +481,9 @@ export default {
       const currentDevice = this.$store.state.currentSelectDevice || {};
 
       const params = {
-        esId: currentDevice.id || 28,
+        esId: currentDevice.id ,
         date: this.powerDate,
-        areaLevelIds: currentDevice.areaLevelId || 991
+        areaLevelIds: currentDevice.areaLevelId 
       };
       getPowerData(params).then((res) => {
         const categories = [], chargeData = [], dischargeData = [];

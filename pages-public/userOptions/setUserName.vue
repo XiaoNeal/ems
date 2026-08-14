@@ -289,30 +289,27 @@ export default {
 			}
 
 			//
-			let that = this
-			let formData = JSON.stringify({
-				userId: that.id,
-				tel: that.mobile,
-				password: md5(that.newPassword).toString(),
-				code: that.verificationCode
-			})
+		let that = this
+		const currentUser = this.$store.state.userInfo || this.$store.state.user || {}
+		const currentId = currentUser.id || currentUser.userId
+		let formData = JSON.stringify({
+			userId: currentId,
+			tel: that.mobile,
+			password: md5(that.newPassword).toString(),
+			code: that.verificationCode
+		})
 			console.log(formData, "验证码");
 			UpdatePasswordBySms(formData).then(res => {
 				console.log(res, "修改密码");
 				if (res.status == 200) {
-					uni.showModal({
-						title: '温馨提示',
-						content: '修改完成，请点击确定重新登录',
-						showCancel: false,
-						success(response) {
-							if (response.confirm) {
-								uni.navigateBack({
-									delta: 2
-								})
-								that.$u.vuex('currentTemplate', 0);
-							}
-						}
+					uni.showToast({
+						title: '密码修改成功',
+						icon: 'success',
+						duration: 1500
 					})
+					setTimeout(() => {
+						uni.navigateBack({ delta: 1 })
+					}, 1500)
 				} else if (res.status == 500 && res.msg == '用户名已存在,请重新设置') {
 					that.showToast({
 						type: 'error',
@@ -345,19 +342,16 @@ export default {
 			})
 			updateUserInfo(formData).then(res => {
 				if (res.status == 200) {
-					uni.showModal({
-						title: '温馨提示',
-						content: '修改完成，请点击确定重新登录',
-						showCancel: false,
-						success(response) {
-							if (response.confirm) {
-								uni.navigateBack({
-									delta: 2
-								})
-								that.$u.vuex('currentTemplate', 0);
-							}
-						}
+					const userInfo = { ...this.$store.state.userInfo, mobile_phone: that.setUserPhone }
+					this.$store.commit('SET_LOGIN', userInfo)
+					uni.showToast({
+						title: '修改成功',
+						icon: 'success',
+						duration: 1500
 					})
+					setTimeout(() => {
+						uni.navigateBack({ delta: 1 })
+					}, 1500)
 				} else if (res.status == 500 && res.msg == '手机号已存在') {
 					that.showToast({
 						type: 'error',
@@ -383,9 +377,11 @@ export default {
 				return
 			}
 			const currentUser = this.$store.state.userInfo || this.$store.state.user || {}
-			let formData = {
-				id: that.id,
-				user_name: that.setUserName,
+		console.log(currentUser, "currentUser");
+		const currentId = currentUser.id || currentUser.userId
+		let formData = {
+			id: currentId,
+			user_name: that.setUserName,
 				email: currentUser.email || '',
 				baseName: currentUser.baseName || currentUser.user_name || '',
 				mobile_phone: currentUser.mobile_phone || that.mobile || '',
@@ -394,21 +390,21 @@ export default {
 				accountBalance: currentUser.accountBalance || 0.0
 			}
 			updateUserInfoById(formData).then(res => {
-				if (res.status == 200) {
-					uni.showModal({
-						title: '温馨提示',
-						content: '修改完成，请点击确定重新登录',
-						showCancel: false,
-						success(response) {
-							if (response.confirm) {
-								// uni.reLaunch({
-								// 	url: '/pages/index/index'
-								// })
-								that.$u.vuex('currentTemplate', 0);
-							}
-						}
+				if (res.code == 200) {
+					const userInfo = { ...this.$store.state.userInfo, ...res.data }
+					if (!userInfo.sessionId) {
+						userInfo.sessionId = this.$store.state.userInfo.sessionId
+					}
+					this.$store.commit('SET_LOGIN', userInfo)
+					uni.showToast({
+						title: '修改成功',
+						icon: 'success',
+						duration: 1500
 					})
-				} else if (res.status == 500 && res.msg == '用户名已存在,请重新设置') {
+					setTimeout(() => {
+						uni.navigateBack({ delta: 1 })
+					}, 1500)
+				} else if (res.code == 500 && res.msg == '用户名已存在,请重新设置') {
 					that.showToast({
 						type: 'error',
 						message: res.msg

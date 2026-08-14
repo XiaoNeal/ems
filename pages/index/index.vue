@@ -269,10 +269,12 @@ export default {
           energyStations = res.data.energyStations || []
         }
 
-        const userInfo = { ...this.userInfo }
+        const userInfo = { ...this.userInfo, ...res.data }
         userInfo.esIds = energyStations
         userInfo.esUsers = res.data.es_users || []
-        userInfo.roleId = res.data.roleId
+        if (!userInfo.sessionId) {
+          userInfo.sessionId = this.userInfo.sessionId
+        }
         this.$store.commit('SET_LOGIN', userInfo)
 
         // 如果只有一个设备，自动选中

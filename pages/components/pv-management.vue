@@ -188,8 +188,13 @@ export default {
   },
   watch: {
     '$store.state.currentSelectDevice': {
-      handler() {
+      handler(newVal) {
+        console.log(newVal, 'newVal')
         this.updateDevice171F()
+        if (newVal && (newVal.id || newVal.esId)) {
+          this.getDayGeneratedPower();
+          this.getElectricityStatistic();
+        }
       },
       immediate: true,
       deep: true
@@ -260,8 +265,6 @@ export default {
   },
   mounted() {
     this.init171FDevice();
-    this.getDayGeneratedPower();
-    this.getElectricityStatistic();
   },
 
   methods: {
@@ -304,12 +307,16 @@ export default {
     },
 
     getDayGeneratedPower() {
+      const currentDevice = this.$store.state.currentSelectDevice;
+      if (!currentDevice || (!currentDevice.id && !currentDevice.esId)) {
+        this.powerCurveLoading = false;
+        return;
+      }
       this.powerCurveLoading = true;
-      const currentDevice = this.$store.state.currentSelectDevice || {};
       const params = {
-        esId: currentDevice.id || 28,
+        esId: currentDevice.id || currentDevice.esId,
         date: this.powerDate,
-        areaLevelIds: currentDevice.areaLevelId || 991
+        areaLevelIds: currentDevice.areaLevelId
       };
       getPowerData(params).then((res) => {
           if (!res.data || res.data.length === 0) {
@@ -355,6 +362,10 @@ export default {
 
     getDayElectricityStatistic() {
       const currentDevice = this.$store.state.currentSelectDevice;
+      if (!currentDevice || (!currentDevice.id && !currentDevice.esId)) {
+        this.generationLoading = false;
+        return;
+      }
       const esId = currentDevice.esId || currentDevice.id;
       const areaLevelIds = currentDevice.areaLevelId;
 
@@ -382,7 +393,11 @@ export default {
       const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
       const endDate = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
 
-      const currentDevice = this.$store.state.currentSelectDevice || {};
+      const currentDevice = this.$store.state.currentSelectDevice;
+      if (!currentDevice || (!currentDevice.id && !currentDevice.esId)) {
+        this.generationLoading = false;
+        return;
+      }
       const esId = currentDevice.esId || currentDevice.id;
       const areaLevelIds = currentDevice.areaLevelId;
 
@@ -411,7 +426,11 @@ export default {
       const date = new Date(this.selectedDate);
       const year = date.getFullYear();
 
-      const currentDevice = this.$store.state.currentSelectDevice || {};
+      const currentDevice = this.$store.state.currentSelectDevice;
+      if (!currentDevice || (!currentDevice.id && !currentDevice.esId)) {
+        this.generationLoading = false;
+        return;
+      }
       const esId = currentDevice.esId || currentDevice.id;
       const areaLevelIds = currentDevice.areaLevelId;
 

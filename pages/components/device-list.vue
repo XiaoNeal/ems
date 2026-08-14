@@ -5,7 +5,7 @@
 
     <view v-if="loading" class="loading-card">
       <view class="loading-spinner"></view>
-      <text class="loading-text">正在加载你的储能设备...</text>
+      <text class="loading-text">正在加载设备列表...</text>
     </view>
 
     <view v-else>
@@ -14,13 +14,13 @@
         <view class="empty-icon-box">
           <uni-icons type="folder-empty" size="96" color="#8cb0e8" />
         </view>
-        <text class="empty-title">暂无绑定储能设备</text>
-        <text class="empty-desc">扫码设备二维码 / 输入设备编号即可快速绑定，查看储能实时数据</text>
+        <text class="empty-title">暂无绑定设备</text>
+        <text class="empty-desc">扫码或输入设备编号即可绑定，实时查看设备运行数据</text>
         <button class="empty-add-btn" @click="showAddOptions">
           <uni-icons type="plus" size="26" color="#fff" />
           <text>立即添加设备</text>
         </button>
-        <view class="empty-tip-text">一台设备可多人绑定，管理员拥有全部操作权限</view>
+        <view class="empty-tip-text">一台设备支持多人绑定，管理员拥有全部操作权限</view>
       </view>
 
       <!-- 设备列表容器 -->
@@ -28,11 +28,11 @@
         <!-- 列表头部 -->
         <view class="list-header">
           <view class="header-left">
-            <text class="header-title">我的微能站设备</text>
-            <text class="header-subtitle">实时监控微能站运行状态</text>
+            <text class="header-title">我的设备</text>
+            <text class="header-subtitle">实时查看设备运行状态</text>
           </view>
           <view class="header-right-group">
-            <text class="device-total">{{ esIds.length }}台设备</text>
+            <text class="device-total">共{{ esIds.length }}台</text>
             <view class="header-add-btn" @click="showAddOptions">
               <uni-icons type="plus" size="20" color="#4080f0" />
             </view>
@@ -40,8 +40,8 @@
         </view>
 
         <scroll-view scroll-y class="device-scroll" scrollbar-hidden>
-          <view v-for="(esId, index) in esIds" :key="index" class="device-item">
-            <view class="device-card" @click.stop="selectDevice(esId)">
+          <view v-for="(esId, index) in esIds" :key="index" class="device-card" @click.stop="selectDevice(esId)">
+            <view class="device-top">
               <view class="device-left">
                 <view class="device-avatar-wrap">
                   <image
@@ -52,12 +52,10 @@
                   />
                   <image
                     v-else
-                    src="https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=smart%20energy%20storage%20device%20icon%20modern%20minimal%20style&image_size=square"
-                    mode="aspectFill"
-                    class="avatar-img"
+                    src="/static/images/device.png"
+                    mode="aspectFit"
+                    class="avatar-img avatar-default"
                   />
-                  <!-- 设备在线状态点 -->
-                  <view class="status-dot online"></view>
                 </view>
                 <view class="info-text">
                   <view class="name-line">
@@ -65,19 +63,15 @@
                     <text v-if="isAdmin(esId)" class="admin-label">管理员</text>
                   </view>
                   <view class="desc-line">
-                    <text class="device-id">设备ID：{{ esId.esId || esId.id }}</text>
-                    <text v-if="esId.description" class="device-area">{{ esId.description }}</text>
+                    <text class="device-id">编号：{{ esId.es_pile_no || '--' }}</text>
                   </view>
                 </view>
               </view>
-              <view class="device-right">
-                <view class="action-group">
-                  <view class="action-btn" @click.stop="showDeviceMenu(esId)">
-                    <uni-icons type="more-filled" size="24" color="#9499a4" />
-                  </view>
-                </view>
-                <uni-icons type="arrowright" size="22" color="#c2c7d2" />
-              </view>
+              <uni-icons type="arrowright" size="22" color="#c2c7d2" />
+            </view>
+            <view class="action-btn" @click.stop="deleteDevice(esId)">
+              <uni-icons type="trash" size="14" color="#b3b8c2" />
+              <text class="action-text">解绑</text>
             </view>
           </view>
           <!-- 底部留白，避免scroll被底部tab遮挡 -->
@@ -91,7 +85,7 @@
       <view class="share-modal" @click.stop>
         <view class="modal-head">
           <text class="modal-title">
-            {{ shareModalType === 'code' ? '设备11位分享码' : '设备分享链接' }}
+            {{ shareModalType === 'code' ? '设备分享码' : '设备分享链接' }}
           </text>
           <view class="modal-close" @click="closeShareModal">
             <uni-icons type="close" size="22" color="#a0a6b2" />
@@ -99,25 +93,25 @@
         </view>
         <view class="modal-body">
           <view class="form-row">
-            <text class="form-label">目标设备</text>
+            <text class="form-label">分享设备</text>
             <text class="form-value">{{ currentShareDeviceName }}</text>
           </view>
           <view class="copy-block">
             <text class="copy-label">
-              {{ shareModalType === 'code' ? '11位分享码（有效期7天）' : '通用分享链接' }}
+              {{ shareModalType === 'code' ? '分享码（有效期7天）' : '分享链接' }}
             </text>
             <view class="code-wrap">
               <text selectable class="code-text">
                 {{ shareModalType === 'code' ? currentShareCode : currentShareLink }}
               </text>
             </view>
-            <text class="copy-tip">长按文本可快速复制，发给好友即可绑定设备</text>
+            <text class="copy-tip">长按文本可复制，发送给同事即可绑定设备</text>
           </view>
           <button class="copy-main-btn" @tap="handleCopyClick">
             <uni-icons type="copy" size="20" color="#fff" />
-            <text>一键复制分享内容</text>
+            <text>复制分享内容</text>
           </button>
-          <text class="share-safe-tip">温馨提示：仅管理员可生成分享内容，非管理员无权限分享</text>
+          <text class="share-safe-tip">仅设备管理员可生成分享内容</text>
         </view>
       </view>
     </view>
@@ -159,34 +153,20 @@ export default {
       const esUser = esUsers.find(item => item.esId === deviceId)
       return esUser && [1, 2].includes(esUser.esRoleId)
     },
-    getDeviceStatus(esId) {
-      return 'online'
-    },
-    showDeviceMenu(esId) {
-      uni.showActionSheet({
-        itemList: ['删除该设备'],
-        itemColor: '#ee5b5b',
-        success: (res) => {
-          if (res.tapIndex === 0) {
-            this.deleteDevice(esId)
-          }
-        }
-      })
-    },
     selectDevice(esId) {
       const device = typeof esId === 'object' ? esId : { id: esId }
       this.$emit('selectDevice', device)
     },
     deleteDevice(esId) {
       uni.showModal({
-        title: '确认移除设备',
-        content: `确定解除绑定设备「${this.getDeviceName(esId)}」？解绑后无法查看该设备所有历史与实时数据，管理员权限同步收回`,
+        title: '解绑设备',
+        content: `确定解绑「${this.getDeviceName(esId)}」？解绑后将无法查看该设备的实时与历史数据`,
         confirmText: '确认解绑',
         cancelText: '再想想',
         confirmColor: '#ee5b5b',
         success: async (res) => {
           if (res.confirm) {
-            uni.showLoading({ title: '解绑处理中...' })
+            uni.showLoading({ title: '解绑中...' })
             try {
               const userId = this.userInfo.userId
               const areaId = esId.areaId || esId.id || 0
@@ -194,14 +174,14 @@ export default {
               const delParams = [{ baseUserInfoId: userId, areaId: areaId, levelId: levelId }]
               const res = await deleteEsUser(delParams)
               if (res.status === 200) {
-                uni.showToast({ title: '设备解绑成功', icon: 'success' })
+                uni.showToast({ title: '解绑成功', icon: 'success' })
                 await this.refreshDeviceList()
                 this.$emit('deviceDeleted', esId)
               } else {
                 uni.showToast({ title: res.msg || '解绑失败，请重试', icon: 'none' })
               }
             } catch (err) {
-              uni.showToast({ title: '网络异常，请检查网络', icon: 'none' })
+              uni.showToast({ title: '网络异常，请稍后重试', icon: 'none' })
             } finally {
               uni.hideLoading()
             }
@@ -226,9 +206,9 @@ export default {
         fail: () => {
           uni.showModal({
             title: '需要相机权限',
-            content: '扫描设备二维码必须开启相机权限，前往系统设置授权',
+            content: '扫码绑定需要相机权限，请前往系统设置开启',
             confirmText: '去设置',
-            cancelText: '稍后再说',
+            cancelText: '稍后',
             success: res => res.confirm && uni.openSetting()
           })
         }
@@ -255,9 +235,9 @@ export default {
     },
     showInputModal() {
       uni.showModal({
-        title: '手动绑定储能设备',
+        title: '手动绑定设备',
         editable: true,
-        placeholderText: '输入设备11位编号',
+        placeholderText: '请输入设备编号',
         confirmText: '确认绑定',
         cancelText: '取消',
         success: res => {
@@ -278,19 +258,19 @@ export default {
     validateAndAddDevice(qrId) {
       uni.showModal({
         title: '确认绑定设备',
-        content: '系统将根据编号绑定对应储能设备，绑定成功后可查看全部运行数据',
+        content: '绑定成功后即可查看设备运行数据',
         success: async res => {
           if (res.confirm) {
-            uni.showLoading({ title: '设备绑定中...' })
+            uni.showLoading({ title: '绑定中...' })
             try {
               const uid = this.userInfo.userId
               const res = await bindEsUserByQrId(qrId, uid)
               if (res.status === 200) {
                 await this.refreshDeviceList()
-                uni.showToast({ title: '设备绑定成功', icon: 'success' })
+                uni.showToast({ title: '绑定成功', icon: 'success' })
                 this.$emit('deviceAdded', qrId)
               } else {
-                uni.showToast({ title: res.msg || '绑定失败，编号不存在', icon: 'none' })
+                uni.showToast({ title: res.msg || '编号不存在，绑定失败', icon: 'none' })
               }
             } catch {
               uni.showToast({ title: '网络异常，请稍后重试', icon: 'none' })
@@ -307,10 +287,12 @@ export default {
         console.log('获取用户设备列表:', res)
         if (res.code === 200 && res.data) {
           this.esIds = res.data.energyStations || []
-          const userInfo = { ...this.userInfo }
+          const userInfo = { ...this.userInfo, ...res.data }
           userInfo.esIds = this.esIds
           userInfo.esUsers = res.data.es_users || []
-          userInfo.roleId = res.data.roleId
+          if (!userInfo.sessionId) {
+            userInfo.sessionId = this.userInfo.sessionId
+          }
           this.$store.commit('SET_LOGIN', userInfo)
         }
       } catch (err) {
@@ -320,7 +302,7 @@ export default {
       }
     },
     showShareOptions() {
-      if (!this.esIds.length) return uni.showToast({ title: '请先绑定储能设备', icon: 'none' })
+      if (!this.esIds.length) return uni.showToast({ title: '请先绑定设备', icon: 'none' })
       const adminList = this.esIds.filter(item => this.isAdmin(item))
       if (!adminList.length) return uni.showToast({ title: '仅设备管理员可生成分享码', icon: 'none' })
       if (adminList.length === 1) {
@@ -335,7 +317,7 @@ export default {
     shareDevice(esId) {
       const name = this.getDeviceName(esId)
       uni.showActionSheet({
-        itemList: ['生成8位分享码', '生成分享二维码', '生成分享链接'],
+        itemList: ['生成分享码', '生成分享二维码', '生成分享链接'],
         itemColor: '#4080f0',
         success: res => {
           if (res.tapIndex === 0) {
@@ -358,18 +340,18 @@ export default {
       const text = this.shareModalType === 'code' ? this.currentShareCode : this.currentShareLink
       uni.setClipboardData({
         data: text,
-        success: () => uni.showToast({ title: '复制成功，可直接分享', icon: 'success' }),
-        fail: () => uni.showToast({ title: '复制失败，长按文本复制', icon: 'none' })
+        success: () => uni.showToast({ title: '已复制，可直接分享', icon: 'success' }),
+        fail: () => uni.showToast({ title: '复制失败，请长按文本复制', icon: 'none' })
       })
     },
     generateQRCode(esId, name) {
       const code = this.generateRandomCode()
       uni.showModal({
         title: '设备分享二维码',
-        content: `设备：${name}\n8位分享码：${code}\n他人扫码即可一键绑定设备`,
-        confirmText: '保存二维码到相册',
-        cancelText: '关闭弹窗',
-        success: res => res.confirm && uni.showToast({ title: '二维码已保存相册', icon: 'success' })
+        content: `设备：${name}\n分享码：${code}\n他人扫码即可绑定设备`,
+        confirmText: '保存到相册',
+        cancelText: '关闭',
+        success: res => res.confirm && uni.showToast({ title: '二维码已保存到相册', icon: 'success' })
       })
     },
     closeShareModal() {
@@ -395,7 +377,6 @@ $text-light-gray: #b0b6c2;
 $line-color: #eff2f8;
 $bg-page: #f7f9fe;
 $bg-card: #ffffff;
-$success-green: #07c160;
 $warn-orange: #ea580c;
 $danger-red: #ee5b5b;
 $radius-sm: 12rpx;
@@ -418,7 +399,7 @@ $radius-xl: 32rpx;
 
 // 加载状态卡片
 .loading-card {
-  margin-top: 220rpx;
+  margin-top: 200rpx;
   padding: 100rpx 40rpx;
   background: $bg-card;
   border-radius: $radius-xl;
@@ -447,7 +428,7 @@ $radius-xl: 32rpx;
 
 // 空状态卡片
 .empty-card {
-  margin-top: 180rpx;
+  margin-top: 200rpx;
   padding: 110rpx 40rpx;
   background: $bg-card;
   border-radius: $radius-xl;
@@ -541,14 +522,14 @@ $radius-xl: 32rpx;
   .header-right-group {
     display: flex;
     align-items: center;
-    gap: 30rpx;
+    gap: 24rpx;
     .device-total {
-      font-size: 28rpx;
+      font-size: 26rpx;
       color: $text-gray;
     }
     .header-add-btn {
-      width: 68rpx;
-      height: 68rpx;
+      width: 64rpx;
+      height: 64rpx;
       border-radius: 50%;
       background: $main-light;
       display: flex;
@@ -565,65 +546,42 @@ $radius-xl: 32rpx;
 }
 
 // 单设备条目
-.device-item {
-  padding: 32rpx;
-  padding-bottom: 0;
-  margin-bottom: 28rpx;
-  &:last-child { margin-bottom: 0; }
-}
 .device-card {
+  display: flex;
+  flex-direction: column;
+  padding: 32rpx 36rpx 24rpx;
+  background: $bg-card;
+  border-bottom: 1rpx solid $line-color;
+  transition: background 0.2s ease;
+
+  &:last-child { border-bottom: none; }
+  &:active { background: #f7f9fe; }
+}
+
+.device-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 32rpx;
-  background: $bg-card;
-  border-radius: $radius-lg;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03);
-  border: 1rpx solid #f3f5fa;
-  transition: all 0.2s ease;
-
-  &:active {
-    transform: scale(0.99);
-    box-shadow: 0 1rpx 6rpx rgba(0, 0, 0, 0.05);
-  }
+  width: 100%;
 }
 
 .device-left {
   display: flex;
   align-items: center;
-  gap: 28rpx;
+  gap: 24rpx;
   flex: 1;
   overflow: hidden;
 }
 .device-avatar-wrap {
-  position: relative;
-  width: 104rpx;
-  height: 104rpx;
+  width: 96rpx;
+  height: 96rpx;
   border-radius: $radius-md;
   background: #f3f5fa;
   overflow: hidden;
   flex-shrink: 0;
 
   .avatar-img { width: 100%; height: 100%; }
-  .status-dot {
-    position: absolute;
-    bottom: 6rpx;
-    right: 6rpx;
-    width: 22rpx;
-    height: 22rpx;
-    border-radius: 50%;
-    border: 4rpx solid #fff;
-    &.online { background: $success-green; }
-    &.offline { background: $text-gray; }
-    &.alarm {
-      background: $danger-red;
-      animation: pulse 1.5s infinite;
-    }
-  }
-}
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.7; }
+  .avatar-default { padding: 8rpx; box-sizing: border-box; }
 }
 
 .info-text {
@@ -635,7 +593,7 @@ $radius-xl: 32rpx;
     gap: 16rpx;
     margin-bottom: 10rpx;
     .device-name {
-      font-size: 34rpx;
+      font-size: 32rpx;
       color: $text-dark;
       font-weight: 500;
       overflow: hidden;
@@ -644,7 +602,7 @@ $radius-xl: 32rpx;
     }
     .admin-label {
       font-size: 22rpx;
-      padding: 5rpx 14rpx;
+      padding: 4rpx 14rpx;
       background: linear-gradient(135deg, #fff7ed, #ffedd5);
       color: $warn-orange;
       border-radius: $radius-sm;
@@ -654,35 +612,26 @@ $radius-xl: 32rpx;
   .desc-line {
     display: flex;
     align-items: center;
-    gap: 22rpx;
+    gap: 20rpx;
     flex-wrap: wrap;
     .device-id { font-size: 26rpx; color: $text-gray; }
-    .device-area {
-      font-size: 24rpx;
-      color: $text-normal;
-      padding: 4rpx 14rpx;
-      background: #f3f5fa;
-      border-radius: $radius-sm;
-    }
   }
 }
 
-.device-right {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  flex-shrink: 0;
-}
-.action-group { display: flex; align-items: center; }
 .action-btn {
-  width: 66rpx;
-  height: 66rpx;
+  align-self: flex-end;
+  margin-top: 20rpx;
+  padding: 10rpx 20rpx;
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-radius: 50%;
+  gap: 6rpx;
+  border-radius: 24rpx;
   transition: background 0.2s;
-  &:active { background: #eff2f8; }
+  &:active { background: rgba(0, 0, 0, 0.04); }
+  .action-text {
+    font-size: 22rpx;
+    color: #b3b8c2;
+  }
 }
 
 // 分享弹窗
