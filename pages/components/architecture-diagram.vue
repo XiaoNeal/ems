@@ -216,7 +216,7 @@
     <!-- 启动弹窗 -->
     <view class="modal-overlay" v-if="showModal" @click="closeModal">
       <!-- 警告图标 - 位于弹窗正上方，确保在最上层 -->
-      <image src="/static/images/img-警告.png" class="modal-icon-absolute" />
+      <image src="/static/images/img-warning.png" class="modal-icon-absolute" />
       <view class="modal-content" @click.stop>
         <view class="modal-header">
           <text class="modal-title">是否启动策略</text>
@@ -234,7 +234,7 @@
     <!-- 停止策略弹窗 -->
     <view class="modal-overlay" v-if="showStopModal" @click="closeStopModal">
       <!-- 警告图标 - 位于弹窗正上方，确保在最上层 -->
-      <image src="/static/images/img-警告.png" class="modal-icon-absolute" />
+      <image src="/static/images/img-warning.png" class="modal-icon-absolute" />
       <view class="modal-content" @click.stop>
         <view class="modal-header">
           <text class="modal-title">是否停止策略</text>

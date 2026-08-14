@@ -13,13 +13,13 @@
           <view class="item-row">
             <view class="item" @click="goToAlarm">
               <view class="item-icon alarm-icon">
-                <image src="/static/images/报警.png" class="icon-image" />
+                <image src="/static/images/alarm.png" class="icon-image" />
               </view>
               <text class="item-text">报警</text>
             </view>
             <view class="item" @click="goToOperationRecord">
               <view class="item-icon record-icon">
-                <image src="/static/images/操作.png" class="icon-image" />
+                <image src="/static/images/action.png" class="icon-image" />
               </view>
               <text class="item-text">操作记录</text>
             </view>
@@ -34,7 +34,7 @@
           <view class="item-row">
             <view class="item" @click="goToStrategyConfig">
               <view class="item-icon strategy-icon">
-                <image src="/static/images/配置.png" class="icon-image" />
+                <image src="/static/images/config.png" class="icon-image" />
               </view>
               <text class="item-text">策略配置</text>
             </view>
@@ -49,19 +49,19 @@
           <view class="item-row">
             <view class="item" @click="goToMonitorData">
               <view class="item-icon data-icon">
-                <image src="/static/images/监控数据.png" class="icon-image" />
+                <image src="/static/images/monitor-data.png" class="icon-image" />
               </view>
               <text class="item-text">监控数据</text>
             </view>
             <view class="item" @click="goToQuickControl">
               <view class="item-icon control-icon">
-                <image src="/static/images/快捷.png" class="icon-image" />
+                <image src="/static/images/quick.png" class="icon-image" />
               </view>
               <text class="item-text">快捷控制</text>
             </view>
             <view class="item" @click="goToSettings">
               <view class="item-icon setting-icon">
-                <image src="/static/images/设置.png" class="icon-image" />
+                <image src="/static/images/settings.png" class="icon-image" />
               </view>
               <text class="item-text">设置参数</text>
             </view>
@@ -76,7 +76,7 @@
           <view class="item-row">
             <view class="item" @click="goToAIService">
               <view class="item-icon ai-icon">
-                <image src="/static/images/矢量智能对象.png" class="icon-image" />
+                <image src="/static/images/vector-object.png" class="icon-image" />
               </view>
               <text class="item-text">AI客服</text>
             </view>

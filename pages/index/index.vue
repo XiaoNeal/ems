@@ -127,12 +127,12 @@ export default {
       inactiveColor: '#8a8a8a',
       activeIcons: {
         0: require('../../community/static/images/monitor-active.png'),
-        1: require('../../community/static/images/系统-pre.png'),
+        1: require('../../community/static/images/system-pre.png'),
         2: require('../../community/static/images/mine-active.png')
       },
       inactiveIcons: {
         0: require('../../community/static/images/monitor.png'),
-        1: require('../../community/static/images/系统-nor.png'),
+        1: require('../../community/static/images/system-nor.png'),
         2: require('../../community/static/images/mine.png')
       },
       scrollPositions: { 0: 0, 1: 0, 2: 0 },

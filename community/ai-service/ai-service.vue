@@ -26,7 +26,7 @@
         <!-- AI消息 -->
         <template v-else>
           <view class="message-avatar ai-avatar">
-            <image src="/static/images/矢量智能对象.png" class="avatar-image" />
+            <image src="/static/images/vector-object.png" class="avatar-image" />
           </view>
           <view class="message-content ai-content">
             <text class="message-text">{{ message.content }}</text>
@@ -38,7 +38,7 @@
       <!-- 加载动画 -->
       <view class="message-item ai-message" v-if="isLoading">
         <view class="message-avatar ai-avatar">
-          <image src="/static/images/矢量智能对象.png" class="avatar-image" />
+          <image src="/static/images/vector-object.png" class="avatar-image" />
         </view>
         <view class="message-content ai-content">
           <view class="loading-indicator">
