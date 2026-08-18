@@ -19,7 +19,14 @@ var getBaseURL = () => {
 const buildURL = (url, params) => {
   if (!params) return url;
   const paramsArray = [];
-  Object.keys(params).forEach(key => paramsArray.push(`${key}=${encodeURIComponent(params[key])}`));
+  Object.keys(params).forEach(key => {
+    const value = params[key];
+    // 过滤掉 undefined 和 null 值，避免拼接成 "undefined" 字符串
+    if (value !== undefined && value !== null && value !== '') {
+      paramsArray.push(`${key}=${encodeURIComponent(value)}`);
+    }
+  });
+  if (paramsArray.length === 0) return url;
   return url.includes('?') ? `${url}&${paramsArray.join('&')}` : `${url}?${paramsArray.join('&')}`;
 }
 

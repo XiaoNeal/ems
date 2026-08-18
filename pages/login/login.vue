@@ -212,7 +212,7 @@
 </template>
 
 <script>
-import { wechatLoginByTel, sendSmsCode, wxLoginApi, wxRegisterApi, wechatLogin, userLogin, getUserAreaLevel } from '@/api/user'
+import { wechatLoginByTel, sendSmsCode, wxLoginApi, wxRegisterApi, wechatLogin, userLogin, getUserCenterInfo, findUserInfoByCodeId, findEnergyStation } from '@/api/user'
 import { decrypt } from "@/utils/decryptData.js"
 import md5 from "@/utils/md5.min.js"
 export default {
@@ -523,7 +523,7 @@ export default {
             });
         },
 
-        // 账号密码登录
+        // 账号密码登录（参考网页版 micro-energy-station 登录流程）
         accountLogin() {
             if (!this.agreeAgreement) {
                 return uni.showToast({ title: '请先同意服务协议与隐私条款', icon: 'none' });
@@ -533,26 +533,59 @@ export default {
             }
             uni.showLoading({ title: '登录中...' });
             const encryptedPassword = md5(this.accountInfo.password).toString();
-            userLogin(this.accountInfo.username, encryptedPassword).then(res => {
-                uni.hideLoading();
+            userLogin(this.accountInfo.username, encryptedPassword).then(async res => {
                 if (res.code === 200) {
-                    // 调用接口获取areaLevelId
-                    getUserAreaLevel(res.data.userid).then(areaRes => {
-                        if (areaRes.code === 200) {
-                            // 将areaLevelId添加到登录状态中
-                            res.data.areaLevelId = areaRes.data.areaLevelId;
-                        }
-                        // 保存登录状态并跳转
-                        this.saveLoginState(res.data);
+                    try {
+                        // 1. SSO登录返回：data.code为userId，sessionId在顶层
+                        const userId = res.data.code;
+                        const sessionId = res.sessionId;
+                        // 先保存基础登录状态，让后续请求能带上sessionId
+                        this.$store.commit('SET_LOGIN', {
+                            isLogin: true,
+                            userId: userId,
+                            sessionId: sessionId,
+                            loginType: 'account',
+                            loginTime: new Date().getTime(),
+                            expireMinite: res.data.expireMinite
+                        });
+                        // 2. 调用 getUserCenterInfo 获取用户详情（不含/es/）
+                        const userInfoRes = await getUserCenterInfo(userId);
+                        const userData = (userInfoRes.code === 200 && userInfoRes.data) ? userInfoRes.data : {};
+                        // 3. 根据 roleId 决定 findEnergyStation 是否带 userId
+                        // roleId 为 1（超管）或 2（管理员）时不传 userId，获取所有能源站
+                        const stationUserId = [1, 2].includes(userData.roleId) ? null : userId;
+                        const stationRes = await findEnergyStation('microStation', stationUserId);
+                        const stations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : [];
+                        // 4. 合并数据
+                        const merged = {
+                            ...userData,
+                            energyStations: stations,
+                            sessionId: sessionId,
+                            userid: userId,
+                            id: userData.id || userId,
+                            userName: userData.user_name || '',
+                            mobile_phone: userData.mobile_phone || '',
+                            imageFile: userData.imageFile || '',
+                            wxAvaterUrl: userData.wxAvaterUrl || '',
+                            roleId: userData.roleId,
+                            esIds: stations,
+                            esUsers: userData.es_users || [],
+                            loginType: 'account',
+                            isLogin: true,
+                            loginTime: new Date().getTime(),
+                            expireMinite: res.data.expireMinite
+                        };
+                        this.saveLoginState(merged);
+                        uni.hideLoading();
                         uni.showToast({ title: '登录成功', icon: 'success' });
                         uni.reLaunch({ url: '/pages/index/index' });
-                    }).catch(() => {
-                        // 即使获取areaLevelId失败，也继续登录流程
-                        this.saveLoginState(res.data);
+                    } catch (e) {
+                        uni.hideLoading();
                         uni.showToast({ title: '登录成功', icon: 'success' });
                         uni.reLaunch({ url: '/pages/index/index' });
-                    });
+                    }
                 } else {
+                    uni.hideLoading();
                     uni.showToast({ title: res.message || '登录失败，请重试', icon: 'none' });
                 }
             }).catch(err => {
@@ -565,15 +598,17 @@ export default {
         saveLoginState(res) {
             try {
                 const userInfo = {
+                    ...res,
                     isLogin: true,
-                    userId: res.id,
+                    loginType: res.loginType || 'phone',
+                    userId: res.id || res.userid,
                     userName: res.user_name,
                     mobile_phone: res.mobile_phone,
                     balance: res.accountBalance,
                     sessionId: res.sessionId,
                     loginTime: new Date().getTime(),
                     areaLevelId: res.areaLevelId,
-                    esIds: res.energyStations,
+                    esIds: res.energyStations || [],
                     roleId: res.roleId,
                     esUsers: res.es_users || []
                 };

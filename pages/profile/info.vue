@@ -56,7 +56,9 @@
 import store from '@/store'
 import {
   updateUserInfo,
-  findUserInfoByCodeId
+  findUserInfoByCodeId,
+  getUserCenterInfo,
+  findEnergyStation
 } from "@/api/user.js"
 import md5 from "@/utils/md5.min.js"
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
@@ -117,9 +119,30 @@ export default {
       try {
         const userId = this.$store.state.userInfo?.userId || this.$store.state.user?.id
         if (!userId) return
-        const res = await findUserInfoByCodeId(userId)
-        if (res.code === 200 && res.data) {
-          const userInfo = { ...this.$store.state.userInfo, ...res.data }
+        const loginType = this.$store.state.userInfo?.loginType
+        let userInfo = {}
+        if (loginType === 'account') {
+          // 账号密码登录：先 getUserCenterInfo，再根据 roleId 决定 findEnergyStation 是否带 userId
+          const userRes = await getUserCenterInfo(userId)
+          const userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
+          const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
+          const stationRes = await findEnergyStation('microStation', stationUserId)
+          const stations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
+          userInfo = {
+            ...this.$store.state.userInfo,
+            ...userData,
+            energyStations: stations,
+            esIds: stations,
+            esUsers: userData.es_users || []
+          }
+        } else {
+          // 手机快捷登录：调用 findUserInfoByCodeId（含/es/）
+          const res = await findUserInfoByCodeId(userId)
+          if (res.code === 200 && res.data) {
+            userInfo = { ...this.$store.state.userInfo, ...res.data }
+          }
+        }
+        if (userInfo && Object.keys(userInfo).length) {
           if (!userInfo.sessionId) {
             userInfo.sessionId = this.$store.state.userInfo.sessionId
           }

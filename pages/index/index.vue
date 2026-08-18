@@ -16,7 +16,7 @@
     </view>
 
     <!-- 内容区域 -->
-    <scroll-view class="content-scroll" scroll-y enable-back-to-top @scrolltolower="tabbarPageScrollLower"
+    <scroll-view class="content-scroll" scroll-y enable-back-to-top scroll-with-animation @scrolltolower="tabbarPageScrollLower"
       :scroll-top="scrollTop" ref="contentScroll" :bounces="false" @scroll="onScroll">
       <view class="content-pages">
         <!-- 设备列表页面 -->
@@ -52,7 +52,7 @@
           <text class="tab-text">监测</text>
         </view>
         <!-- 系统Tab - 非设备列表页面且有设备且选择设备后才显示 -->
-        <view v-if="!this.showDeviceList && esIds.length > 0 && selectedDeviceId" class="tab-item"
+        <view v-if="!showDeviceList && esIds.length > 0 && selectedDeviceId" class="tab-item"
           :class="{ 'active': currentTab === 1 }" @click="switchTab(1)">
           <view class="tab-icon">
             <image :src="currentTab === 1 ? activeIcons[1] : inactiveIcons[1]" mode="widthFix" />
@@ -77,7 +77,7 @@ import Monitor from '../monitor.vue'
 import Profile from '../profile.vue'
 import System from '../system.vue'
 import DeviceList from '../components/device-list.vue'
-import { findUserInfoByCodeId } from '@/api/user'
+import { findUserInfoByCodeId, getUserCenterInfo, findEnergyStation } from '@/api/user'
 import { getDeviceByAreaId } from '@/api/devices'
 import { realtimeDataProvider } from '@/service/websocket'
 
@@ -126,14 +126,14 @@ export default {
       activeColor: '#007aff',
       inactiveColor: '#8a8a8a',
       activeIcons: {
-        0: require('../../community/static/images/monitor-active.png'),
-        1: require('../../community/static/images/system-pre.png'),
-        2: require('../../community/static/images/mine-active.png')
+        0: '/community/static/images/monitor-active.png',
+        1: '/community/static/images/system-pre.png',
+        2: '/community/static/images/mine-active.png'
       },
       inactiveIcons: {
-        0: require('../../community/static/images/monitor.png'),
-        1: require('../../community/static/images/system-nor.png'),
-        2: require('../../community/static/images/mine.png')
+        0: '/community/static/images/monitor.png',
+        1: '/community/static/images/system-nor.png',
+        2: '/community/static/images/mine.png'
       },
       scrollPositions: { 0: 0, 1: 0, 2: 0 },
       scrollTop: 0,
@@ -242,7 +242,7 @@ export default {
     checkLoginStatus() {
       console.log('checkLoginStatus', this.userInfo)
 
-      if (!this.userInfo || !this.userInfo.isLogin) {
+      if (!this.userInfo || !this.userInfo.isLogin || !this.userInfo.sessionId) {
         uni.redirectTo({
           url: '/pages/login/login'
         })
@@ -261,17 +261,26 @@ export default {
 
       try {
         const userId = this.userInfo.userId
-        const res = await findUserInfoByCodeId(userId)
-        console.log('获取设备列表:', res)
-
+        const loginType = this.userInfo.loginType
+        let userData = {}
         let energyStations = []
-        if (res.code === 200 && res.data) {
-          energyStations = res.data.energyStations || []
+        if (loginType === 'account') {
+          // 账号密码登录：先 getUserCenterInfo，再根据 roleId 决定 findEnergyStation 是否带 userId
+          const userRes = await getUserCenterInfo(userId)
+          userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
+          const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
+          const stationRes = await findEnergyStation('microStation', stationUserId)
+          energyStations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
+        } else {
+          // 手机快捷登录：调用 findUserInfoByCodeId（含/es/）
+          const userInfoRes = await findUserInfoByCodeId(userId)
+          userData = (userInfoRes.code === 200 && userInfoRes.data) ? userInfoRes.data : {}
+          energyStations = userData.energyStations || []
         }
 
-        const userInfo = { ...this.userInfo, ...res.data }
+        const userInfo = { ...this.userInfo, ...userData }
         userInfo.esIds = energyStations
-        userInfo.esUsers = res.data.es_users || []
+        userInfo.esUsers = userData.es_users || []
         if (!userInfo.sessionId) {
           userInfo.sessionId = this.userInfo.sessionId
         }
@@ -285,8 +294,6 @@ export default {
           console.log('自动选中设备:', deviceId, '设备信息:', device)
           // this.$store.commit('changeCurrentSelectDevice', device)
           // uni.setStorageSync('currentSelectDevice', device)
-
-        
 
           const areaId = device.areaId
           try {
@@ -516,8 +523,14 @@ export default {
     // 优化：简化滚动到顶部操作
     scrollToTop() {
       this.$nextTick(() => {
-        this.scrollTop = 0
-        this.$refs.contentScroll?.scrollTo({ top: 0, duration: 100 })
+        if (this.realScrollTop === 0) {
+          this.scrollTop = 1
+          this.$nextTick(() => {
+            this.scrollTop = 0
+          })
+        } else {
+          this.scrollTop = 0
+        }
       })
     },
 

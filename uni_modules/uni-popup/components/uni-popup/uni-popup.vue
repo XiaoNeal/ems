@@ -203,13 +203,6 @@
 				} = uni.getWindowInfo()
 				// #endif
 				// #ifndef MP-WEIXIN
-				const {
-					windowWidth,
-					windowHeight,
-					windowTop,
-					safeArea,
-					screenHeight,
-					safeAreaInsets
 				let windowWidth, windowHeight, windowTop, safeArea, screenHeight, safeAreaInsets
 				try {
 					const windowInfo = uni.getWindowInfo()

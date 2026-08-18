@@ -109,8 +109,7 @@
 </template>
 
 <script>
-import { decrypt } from "@/utils/decryptData.js";
-import { findUserInfoByCodeId } from "@/api/user.js";
+import { findUserInfoByCodeId, getUserCenterInfo, findEnergyStation } from "@/api/user.js";
 export default {
   data() {
     return {
@@ -161,57 +160,55 @@ export default {
     }
   },
   mounted() {
-    console.log(this.user, "this.user")
-
   },
   async created() {
     try {
-      // 获取用户ID，优先从 userInfo（根 store）中获取，其次从 user 模块中获取
       const userId = this.$store.state.userInfo?.userId || this.$store.state.user?.id || '';
-
-      if (!userId) {
-        console.warn('用户ID为空，跳过获取用户信息');
-        return;
-      }
-
-      let res = await uni.request({
-        url: 'https://iems.neiic.com/SsoServer/es/FindUserInfoByCodeId',
-        method: 'GET',
-        data: {
-          CodeId: userId
-        },
-        header: {
-          'Content-Type': 'application/json'
-        }
-      })
-      res = JSON.parse(decrypt(res[1].data));
-      console.log(res, "res121212")
-      if (res.code === 200) {
-        const energyStations = res.data.energyStations || []
-        
-        this.$store.commit('user/UPDATE_USER', {
-          avatar: res.data.imageFile && res.data.imageFile.trim() ? 'https://iems.neiic.com/' + res.data.imageFile : undefined,
-          mobile: res.data.mobile_phone,
-          userName: res.data.user_name,
-          email: res.data.email,
-          imageFile: res.data.imageFile && res.data.imageFile.trim() ? 'https://iems.neiic.com/' + res.data.imageFile.replace(/`/g, '') : undefined,
-          roleId: res.data.roleId,
-          roleName: res.data.roleName
-        });
-
-        const userInfo = {
+      if (!userId) return
+      const loginType = this.$store.state.userInfo?.loginType
+      let userInfo = {}
+      if (loginType === 'account') {
+        // 账号密码登录：先 getUserCenterInfo，再根据 roleId 决定 findEnergyStation 是否带 userId
+        const userRes = await getUserCenterInfo(userId)
+        const userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
+        const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
+        const stationRes = await findEnergyStation('microStation', stationUserId)
+        const stations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
+        userInfo = {
           ...this.userInfoData,
-          roleId: res.data.roleId,
-          esIds: energyStations,
-          esUsers: res.data.es_users || []
+          ...userData,
+          energyStations: stations,
+          esIds: stations,
+          esUsers: userData.es_users || [],
+          userName: userData.user_name || '',
+          mobile_phone: userData.mobile_phone || '',
+          imageFile: userData.imageFile || '',
+          wxAvaterUrl: userData.wxAvaterUrl || '',
+          roleId: userData.roleId || this.userInfoData.roleId
         }
-        this.$store.commit('SET_LOGIN', userInfo)
       } else {
-        throw new Error(res.data.msg || '请求失败')
+        // 手机快捷登录：调用 findUserInfoByCodeId（含/es/）
+        const emsRes = await findUserInfoByCodeId(userId)
+        const emsData = (emsRes.code === 200 && emsRes.data) ? emsRes.data : {}
+        userInfo = {
+          ...this.userInfoData,
+          ...emsData,
+          energyStations: emsData.energyStations || [],
+          esIds: emsData.energyStations || [],
+          esUsers: emsData.es_users || [],
+          userName: emsData.user_name || '',
+          mobile_phone: emsData.mobile_phone || '',
+          imageFile: emsData.imageFile || '',
+          wxAvaterUrl: emsData.wxAvaterUrl || '',
+          roleId: emsData.roleId || this.userInfoData.roleId
+        }
       }
+      if (!userInfo.sessionId) {
+        userInfo.sessionId = this.$store.state.userInfo.sessionId
+      }
+      this.$store.commit('SET_LOGIN', userInfo)
     } catch (e) {
       console.log(e)
-      uni.showToast({ title: '数据加载失败', icon: 'none' })
     } finally {
       this.loading = false
     }
@@ -224,14 +221,46 @@ export default {
       try {
         const userId = this.$store.state.userInfo?.userId || this.$store.state.user?.id
         if (!userId) return
-        const res = await findUserInfoByCodeId(userId)
-        if (res.code === 200 && res.data) {
-          const userInfo = { ...this.$store.state.userInfo, ...res.data }
-          if (!userInfo.sessionId) {
-            userInfo.sessionId = this.$store.state.userInfo.sessionId
+        const loginType = this.$store.state.userInfo?.loginType
+        let userInfo = {}
+        if (loginType === 'account') {
+          // 账号密码登录：先 getUserCenterInfo，再根据 roleId 决定 findEnergyStation 是否带 userId
+          const userRes = await getUserCenterInfo(userId)
+          const userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
+          const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
+          const stationRes = await findEnergyStation('microStation', stationUserId)
+          const stations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
+          userInfo = {
+            ...this.$store.state.userInfo,
+            ...userData,
+            energyStations: stations,
+            esIds: stations,
+            esUsers: userData.es_users || [],
+            userName: userData.user_name || this.$store.state.userInfo.userName || '',
+            mobile_phone: userData.mobile_phone || this.$store.state.userInfo.mobile_phone || '',
+            imageFile: userData.imageFile || this.$store.state.userInfo.imageFile || '',
+            wxAvaterUrl: userData.wxAvaterUrl || this.$store.state.userInfo.wxAvaterUrl || ''
           }
-          this.$store.commit('SET_LOGIN', userInfo)
+        } else {
+          // 手机快捷登录：调用 findUserInfoByCodeId（含/es/）
+          const emsRes = await findUserInfoByCodeId(userId)
+          const emsData = (emsRes.code === 200 && emsRes.data) ? emsRes.data : {}
+          userInfo = {
+            ...this.$store.state.userInfo,
+            ...emsData,
+            energyStations: emsData.energyStations || [],
+            esIds: emsData.energyStations || [],
+            esUsers: emsData.es_users || [],
+            userName: emsData.user_name || this.$store.state.userInfo.userName || '',
+            mobile_phone: emsData.mobile_phone || this.$store.state.userInfo.mobile_phone || '',
+            imageFile: emsData.imageFile || this.$store.state.userInfo.imageFile || '',
+            wxAvaterUrl: emsData.wxAvaterUrl || this.$store.state.userInfo.wxAvaterUrl || ''
+          }
         }
+        if (!userInfo.sessionId) {
+          userInfo.sessionId = this.$store.state.userInfo.sessionId
+        }
+        this.$store.commit('SET_LOGIN', userInfo)
       } catch (e) {
         console.error('刷新用户信息失败', e)
       }

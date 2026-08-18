@@ -2,25 +2,20 @@
  * 用户相关api
  */
 import request from '@/utils/request'
-import store from '@/store'
 import md5 from "@/utils/md5.min.js";
 export const userLogin = (userName, password) => {
 	const windowInfo = uni.getWindowInfo()
 	const deviceInfo = uni.getDeviceInfoSync ? uni.getDeviceInfoSync() : { brand: 'unknown', model: 'unknown' }
 	let deviceId = `${deviceInfo.brand}-${deviceInfo.model}-${windowInfo.screenWidth}x${windowInfo.screenHeight}`;
 	let deviceHash = md5(deviceId);
-	const requestData = {
-		username: userName,
-		password: password,
-		hashIP: deviceHash
-	};
+	const requestData = `username=${encodeURIComponent(userName)}&password=${encodeURIComponent(password)}&HashIP=${encodeURIComponent(deviceHash)}`;
 
 	return request({
-		url: `/SsoServer/app/LoginByJson`,
+		url: `/SsoServer/app/Login`,
 		method: 'post',
-		data: JSON.stringify(requestData),
+		data: requestData,
 		header: {
-			'Content-Type': 'application/json'
+			'Content-Type': 'application/x-www-form-urlencoded'
 		}
 	});
 };
@@ -136,6 +131,9 @@ export function loginByPhone(phone, verificationCode) {
 	});
 }
 
+// 手机号验证码登录（别名）
+export const wechatLoginByTel = loginByPhone;
+
 // export function sendSmsCode(phoneNumber) {
 // 	return uni.request({
 // 		url: '/youlai-auth/sms-code',
@@ -250,7 +248,7 @@ export const wxLoginApi = (code, key = 0) => {
 	})
 }
 
-// 根据用户CodeId获取设备列表信息
+// 根据用户CodeId获取设备列表信息（EMS专用，含energyStations和es_users）
 export const findUserInfoByCodeId = (codeId) => {
 	return request({
 		url: `/SsoServer/es/FindUserInfoByCodeId`,
@@ -258,6 +256,31 @@ export const findUserInfoByCodeId = (codeId) => {
 		data: {
 			CodeId: codeId
 		}
+	})
+}
+
+// 获取用户中心信息（通用，与网页版一致）
+export const getUserCenterInfo = (codeId) => {
+	return request({
+		url: `/SsoServer/FindUserInfoByCodeId`,
+		method: 'GET',
+		data: {
+			CodeId: codeId
+		}
+	})
+}
+
+// 获取能源站列表（与网页版一致）
+// roleId 为 1（超管）时不传 userId，获取所有能源站
+export const findEnergyStation = (type = 'microStation', userId) => {
+	const data = { type: type }
+	if (userId !== undefined && userId !== null && userId !== '') {
+		data.userId = userId
+	}
+	return request({
+		url: `/api/energyStation/findEnergyStation`,
+		method: 'GET',
+		data: data
 	})
 }
 

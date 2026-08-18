@@ -120,7 +120,7 @@
 
 <script>
 import { mapState } from 'vuex'
-import { bindEsUserByQrId, findUserInfoByCodeId, deleteEsUser } from '@/api/user'
+import { bindEsUserByQrId, findUserInfoByCodeId, getUserCenterInfo, findEnergyStation, deleteEsUser } from '@/api/user'
 
 export default {
   computed: {
@@ -282,19 +282,36 @@ export default {
       })
     },
     async refreshDeviceList() {
+      if (!this.userInfo || !this.userInfo.sessionId) {
+        this.loading = false
+        return
+      }
       try {
-        const res = await findUserInfoByCodeId(this.userInfo.userId)
-        console.log('获取用户设备列表:', res)
-        if (res.code === 200 && res.data) {
-          this.esIds = res.data.energyStations || []
-          const userInfo = { ...this.userInfo, ...res.data }
-          userInfo.esIds = this.esIds
-          userInfo.esUsers = res.data.es_users || []
-          if (!userInfo.sessionId) {
-            userInfo.sessionId = this.userInfo.sessionId
-          }
-          this.$store.commit('SET_LOGIN', userInfo)
+        const userId = this.userInfo.userId
+        const loginType = this.userInfo.loginType
+        let stations = []
+        let userData = {}
+        if (loginType === 'account') {
+          // 账号密码登录：先 getUserCenterInfo，再根据 roleId 决定 findEnergyStation 是否带 userId
+          const userRes = await getUserCenterInfo(userId)
+          userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
+          const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
+          const stationRes = await findEnergyStation('microStation', stationUserId)
+          stations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
+        } else {
+          // 手机快捷登录：调用 findUserInfoByCodeId（含/es/）
+          const userInfoRes = await findUserInfoByCodeId(userId)
+          userData = (userInfoRes.code === 200 && userInfoRes.data) ? userInfoRes.data : {}
+          stations = userData.energyStations || []
         }
+        this.esIds = stations
+        const userInfo = { ...this.userInfo, ...userData }
+        userInfo.esIds = stations
+        userInfo.esUsers = userData.es_users || []
+        if (!userInfo.sessionId) {
+          userInfo.sessionId = this.userInfo.sessionId
+        }
+        this.$store.commit('SET_LOGIN', userInfo)
       } catch (err) {
         console.error('刷新列表失败', err)
       } finally {

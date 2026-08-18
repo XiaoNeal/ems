@@ -17,7 +17,7 @@
 		<view class="list" :style="{'color':fontColor}">
 			<view class="items">
 				<text>当前版本</text>
-				<text style="color: #aaa;">V{{appVersion}}</text>
+				<text style="color: #aaa;">{{appVersion}}</text>
 			</view>
 			<view class="items">
 				<text>检查更新</text>
@@ -59,7 +59,10 @@
 
 <script>
 	import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
-	// import manifest from '@/manifest.json'
+
+	// APP_VERSION 由 vue.config.js chainWebpack DefinePlugin 在构建时注入
+	// 若未注入（如未重启开发服务器），则回退到默认值
+	const VERSION_NAME = typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'V1.0.11';
 
 	export default {
 		components: { DyNavbar },
@@ -79,12 +82,12 @@
 			}
 		},
 		onLoad(options) {
-			// if (options?.version) {
-			// 	this.appVersion = options.version;
-			// } else {
-			// 	this.appVersion = 'V' + (manifest.versionName || '1.0.0');
-			// }
-			this.appVersion = 'V' + ('1.0.11');
+			// #ifdef APP-PLUS
+			this.appVersion = plus.runtime.version ? 'V' + plus.runtime.version : VERSION_NAME;
+			// #endif
+			// #ifndef APP-PLUS
+			this.appVersion = VERSION_NAME;
+			// #endif
 			uni.getSystemInfo({
 				success: (res) => {
 					this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";

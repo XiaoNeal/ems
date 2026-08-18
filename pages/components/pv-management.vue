@@ -312,9 +312,19 @@ export default {
         this.powerCurveLoading = false;
         return;
       }
+      // 如果 currentDevice 缺少 areaLevelId，从 esIds 中补全
+      const deviceId = currentDevice.id || currentDevice.esId;
+      if (!currentDevice.areaLevelId) {
+        const esIds = this.$store.state.userInfo?.esIds || [];
+        const found = esIds.find(item => (item.id || item.esId) === deviceId);
+        if (found) {
+          currentDevice.areaLevelId = found.areaLevelId;
+          currentDevice.areaId = currentDevice.areaId || found.areaId;
+        }
+      }
       this.powerCurveLoading = true;
       const params = {
-        esId: currentDevice.id || currentDevice.esId,
+        esId: deviceId,
         date: this.powerDate,
         areaLevelIds: currentDevice.areaLevelId
       };

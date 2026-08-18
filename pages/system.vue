@@ -99,6 +99,7 @@
 
 <script>
 import { decrypt } from "@/utils/decryptData.js";
+import { findUserInfoByCodeId, getUserCenterInfo, findEnergyStation } from '@/api/user';
 
 export default {
   name: "System",
@@ -120,33 +121,41 @@ export default {
         console.warn('用户ID为空，跳过获取用户信息');
         return;
       }
-
-      let res = await uni.request({
-        url: 'https://iems.neiic.com/SsoServer/es/FindUserInfoByCodeId',
-        method: 'GET',
-        data: { CodeId: userId },
-        header: { 'Content-Type': 'application/json' }
-      })
-      res = JSON.parse(decrypt(res[1].data));
-      
-      if (res.code === 200) {
-        const energyStations = res.data.energyStations || []
-        const userInfo = {
-          ...this.$store.state.userInfo,
-          roleId: res.data.roleId,
-          esIds: energyStations,
-          esUsers: res.data.es_users || []
+      const loginType = this.$store.state.userInfo?.loginType
+      let energyStations = []
+      let esUsers = []
+      let roleId = null
+      if (loginType === 'account') {
+        // 账号密码登录：先 getUserCenterInfo，再根据 roleId 决定 findEnergyStation 是否带 userId
+        const userRes = await getUserCenterInfo(userId)
+        const userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
+        const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
+        const stationRes = await findEnergyStation('microStation', stationUserId)
+        energyStations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
+        esUsers = userData.es_users || []
+        roleId = userData.roleId
+      } else {
+        // 手机快捷登录：调用 findUserInfoByCodeId（含/es/）
+        const res = await findUserInfoByCodeId(userId)
+        if (res.code === 200 && res.data) {
+          energyStations = res.data.energyStations || []
+          esUsers = res.data.es_users || []
+          roleId = res.data.roleId
         }
-        this.$store.commit('SET_LOGIN', userInfo)
-        
-        const currentDevice = this.$store.state.currentSelectDevice || {}
-        const deviceId = currentDevice.id || currentDevice.esId
-        if (deviceId) {
-          const esUsers = userInfo.esUsers || []
-          const esUser = esUsers.find(item => item.esId === deviceId)
-          const roleId = esUser?.esRoleId || 0
-          this.$store.commit('SET_CURRENT_ES_ROLE_ID', roleId)
-        }
+      }
+      const userInfo = {
+        ...this.$store.state.userInfo,
+        roleId: roleId,
+        esIds: energyStations,
+        esUsers: esUsers
+      }
+      this.$store.commit('SET_LOGIN', userInfo)
+      const currentDevice = this.$store.state.currentSelectDevice || {}
+      const deviceId = currentDevice.id || currentDevice.esId
+      if (deviceId) {
+        const esUser = esUsers.find(item => item.esId === deviceId)
+        const currentRoleId = esUser?.esRoleId || 0
+        this.$store.commit('SET_CURRENT_ES_ROLE_ID', currentRoleId)
       }
     } catch (e) {
       console.error('获取用户信息失败:', e)
