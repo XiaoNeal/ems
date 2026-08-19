@@ -131,8 +131,25 @@ export function loginByPhone(phone, verificationCode) {
 	});
 }
 
-// 手机号验证码登录（别名）
-export const wechatLoginByTel = loginByPhone;
+// 手机号验证码登录（es 命名空间）
+export const wechatLoginByTel = (phone, verificationCode) => {
+	const windowInfo = uni.getWindowInfo()
+	const deviceInfo = uni.getDeviceInfoSync ? uni.getDeviceInfoSync() : { brand: 'unknown', model: 'unknown' }
+	let deviceId = `${deviceInfo.brand}-${deviceInfo.model}-${windowInfo.screenWidth}x${windowInfo.screenHeight}`;
+	let deviceHash = md5(deviceId);
+	return request({
+		url: '/SsoServer/es/wechatLoginByTel',
+		method: 'POST',
+		header: {
+			'Content-Type': 'application/json'
+		},
+		data: JSON.stringify({
+			tel: phone,
+			code: verificationCode,
+			hashIP: deviceHash
+		})
+	})
+}
 
 // export function sendSmsCode(phoneNumber) {
 // 	return uni.request({

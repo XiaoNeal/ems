@@ -57,7 +57,7 @@
 
       <!-- 卡片网格容器 -->
       <view class="device-card-grid">
-        <view v-for="(item, index) in deviceList" :key="index" @click="onDeviceClick(item)" class="device-card">
+        <view v-for="(item, index) in deviceList" :key="index" @click="onDeviceClick(item)" class="device-card" :class="{ 'device-offline': !isDeviceOnline(item) }">
           <view class="device-name">{{ item.deviceName }}</view>
           <!-- 设备图标 -->
           <view class="device-image">
@@ -71,7 +71,8 @@
             <view class="device-data">
               <view class="data-item">
                 <text class="data-label">功率</text>
-                <text class="data-value">{{ item.power || '--' }} kW</text>
+                <!-- 离线时强制显示 -- -->
+                <text class="data-value">{{ isDeviceOnline(item) ? (item.power || '--') : '--' }} kW</text>
               </view>
               <!-- <view class="data-item">
                 <text class="data-label">用电量</text>
@@ -395,6 +396,8 @@ export default {
           powerUpCap: item.powerUpCap != null ? (parseFloat(item.powerUpCap) / 1000).toFixed(4) : '0.0000',
           powerDownCap: item.powerDownCap != null ? (parseFloat(item.powerDownCap) / 1000).toFixed(4) : '0.0000',
           flexDevice: item.flexDevice || '0',
+          // B38 设备通讯状态：0=离线 1=在线；接口数据未含此字段时默认 null（视为离线）
+          commStatus: null,
           _rawData: item,
           _rawEnergyData: null
         };
@@ -442,6 +445,8 @@ export default {
         if (isDataExpired(dev)) {
           return {
             ...item,
+            // 数据超时视为离线
+            commStatus: 0,
             power: '--',
             energyConsumption: '--',
             adjustablePower: '--',
@@ -475,9 +480,12 @@ export default {
         // 获取实时数据中的devId
         const devIdFromRealTime = ed.B0?.value;
         const devId = (devIdFromRealTime != null && devIdFromRealTime !== '--' && devIdFromRealTime !== '') ? devIdFromRealTime : item.devId;
+        // B38 设备通讯状态：0=离线 1=在线；解析失败时回退 null
+        const commStatusVal = isValidValue(ed.B38 && ed.B38.value) ? Number(ed.B38.value) : null;
         // console.log(newTypeLabel,item, `buildDeviceList - 匹配成功: ${item} -> ${devId}`);
         return {
           ...item,
+          commStatus: commStatusVal,
           devId: devId,
           type: newType,
           typeLabel: newTypeLabel,
@@ -574,7 +582,16 @@ export default {
       const map = { '0': '离线', '1': '等待注册', '2': '等待配置', '3': '运行', '4': '在线' };
       return map[idx]
     },
+    // 设备是否在线：依据 B38 通讯状态，1=在线；0、null、undefined 均视为离线
+    isDeviceOnline(item) {
+      return !!(item && Number(item.commStatus) === 1);
+    },
     onDeviceClick(device) {
+      // 离线设备禁止进入详情
+      if (!this.isDeviceOnline(device)) {
+        uni.showToast({ title: '设备离线，不可查看', icon: 'none' });
+        return;
+      }
       const rawData = device._rawData || {};
       const payload = {
         deviceType: '1714',
@@ -830,6 +847,15 @@ export default {
   align-items: center;
   text-align: center;
   box-sizing: border-box;
+}
+
+/* 离线设备：颜色变灰，禁止点击 */
+.device-card.device-offline {
+  background: #F5F5F5;
+  opacity: 0.6;
+  filter: grayscale(1);
+  pointer-events: none;
+  box-shadow: none;
 }
 
 .device-name {

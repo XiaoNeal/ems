@@ -126,14 +126,14 @@ export default {
       activeColor: '#007aff',
       inactiveColor: '#8a8a8a',
       activeIcons: {
-        0: '/community/static/images/monitor-active.png',
-        1: '/community/static/images/system-pre.png',
-        2: '/community/static/images/mine-active.png'
+        0: '/static/images/monitor-active.png',
+        1: '/static/images/system-pre.png',
+        2: '/static/images/mine-active.png'
       },
       inactiveIcons: {
-        0: '/community/static/images/monitor.png',
-        1: '/community/static/images/system-nor.png',
-        2: '/community/static/images/mine.png'
+        0: '/static/images/monitor.png',
+        1: '/static/images/system-nor.png',
+        2: '/static/images/mine.png'
       },
       scrollPositions: { 0: 0, 1: 0, 2: 0 },
       scrollTop: 0,
