@@ -1,12 +1,53 @@
 import RealTimeWebSokcetProtocolHandler from '@/service/socket/realtime-websocket-protocolhandler';
+import { parseIemsFrame, isIemsBinaryFrame } from '@/service/socket/iems-frame-parser';
 import store from '@/store';
 
 import io from '@hyoga/uni-socket.io';
 var socket = undefined;
 // let realtimeDataProvider = new RealtimeDataProviderService();
 
+/** 检查是否已登录（从 lifeData.hasLogin 判断） */
+function isLoggedIn() {
+	try {
+		const lifeData = uni.getStorageSync('lifeData') || {};
+		console.log(lifeData,'lifeData')
+		return !!lifeData.hasLogin;
+	} catch (e) {
+		return false;
+	}
+}
+
+/** 检查是否处于直连模式
+ * 核心规则：只要是登录用户就不是直连模式（直连是绕开云端登录的纯本地调试）
+ */
+function isDirectMode() {
+	try {
+		if (isLoggedIn()) return false;
+
+		const cfg = uni.getStorageSync('direct_device_config');
+		const activated = !!uni.getStorageSync('direct_device_activated');
+		const enabled = !!(cfg && cfg.enabled);
+		const hasValidBroker = !!(cfg && (cfg.brokerUrl || (cfg.ip && cfg.ip.trim())));
+		return enabled && hasValidBroker && activated;
+	} catch (e) {
+		return false;
+	}
+}
+
+/** 检查是否应该跳过云端 WebSocket（直连模式 或 未登录） */
+function shouldSkipCloudSocket() {
+	try {
+		if (!isLoggedIn()) {
+			console.log('[RealtimeDataProvider] 未登录，跳过云端 WebSocket');
+			return true;
+		}
+		return isDirectMode();
+	} catch (e) {
+		return false;
+	}
+}
+
 export class RealtimeDataProviderService {
-	// upgradeProgramResponseFrame: EventEmitter<any>;
 	deviceList = [];
 	barCode = new Set()
 	realTimeWebSocketProtocolHandler = new RealTimeWebSokcetProtocolHandler()
@@ -14,11 +55,31 @@ export class RealtimeDataProviderService {
 	onDataUpdate = null
 
 	constructor() {
-		this.createScoket()
+		// 直连模式或未登录时不自动连接云端 WebSocket
+		if (shouldSkipCloudSocket()) {
+			return;
+		}
+		this._initConnection();
+	}
+
+	/** 初始化 WebSocket 和定时器（登录后延迟创建时用） */
+	_initConnection() {
+		this.createScoket();
 		// 定时检查数据是否超时（每分钟检查一次）
-		this.expiredCheckTimer = setInterval(() => {
-			this.checkAllDevicesExpired();
-		}, 60 * 1000);
+		if (!this.expiredCheckTimer) {
+			this.expiredCheckTimer = setInterval(() => {
+				this.checkAllDevicesExpired();
+			}, 60 * 1000);
+		}
+	}
+
+	/** 确保 WebSocket 已连接——登录成功后调用 */
+	ensureConnected() {
+		if (socket) return; // 已连接
+		if (shouldSkipCloudSocket()) return; // 仍然不该连
+
+		console.log('[RealtimeDataProvider] ensureConnected: 延迟创建云端 WebSocket（登录后）');
+		this._initConnection();
 	}
 
 	// 检查所有设备数据是否超时
@@ -43,6 +104,10 @@ export class RealtimeDataProviderService {
 
 
 	createScoket() {
+		// 直连模式或未登录时跳过创建云端 WebSocket
+		if (shouldSkipCloudSocket()) {
+			return;
+		}
 		// let urlPrefix = ""
 		// if (currentTemplate == 3) {
 		// 	urlPrefix = _urlPrefix
@@ -79,6 +144,11 @@ export class RealtimeDataProviderService {
 			let address = deviceList[i].address
 			// 使用原始 deviceType 用于 WebSocket 匹配
 			let deviceType = deviceList[i].deviceType || deviceList[i].typeCode
+			// 跳过没有 deviceType 的设备，避免匹配错误
+			if (!deviceType) {
+				console.warn('设备缺少 deviceType，跳过初始化:', deviceList[i])
+				continue
+			}
 			// 保存原始类型用于匹配
 			let originalDeviceType = deviceList[i].rawDeviceType || deviceType
 
@@ -152,7 +222,18 @@ export class RealtimeDataProviderService {
 	}
 
 	bindDevicesRealtimeData(barCode) {
-		if (!socket) this.createScoket(uni.getStorageSync('currentTemplate'), uni.getStorageSync('urlPrefix'))
+		// 直连模式或未登录下跳过云端 WebSocket 绑定——数据由 MQTT/Modbus 提供或用户未登录
+		if (shouldSkipCloudSocket()) {
+			return;
+		}
+
+		if (!socket) this.createScoket()
+
+		// createScoket 可能因直连模式/未登录等原因未成功创建 socket
+		if (!socket) {
+			console.warn('[RealtimeDataProvider] socket 未创建成功，跳过绑定:', barCode)
+			return;
+		}
 
 		if (this.registeredBarCodes.has(barCode)) {
 			return;
@@ -163,17 +244,37 @@ export class RealtimeDataProviderService {
 		socket.on("IEMS_" + barCode, (jsonData) => {
 			try {
 				if (typeof jsonData == 'string') {
-					let index = jsonData.lastIndexOf("}");
+					let index = jsonData.lastIndexOf("}")
 					if (index >= 0) {
 						jsonData = jsonData.substring(0, index + 1);
 					}
-					// dataType=1 是心跳/注册消息，跳过；但不能因为包含 gateway 字段就跳过数据帧
 					if (jsonData.includes('\"dataType\"' + ':' + '\"1\"'))
 						return
 					jsonData = JSON.parse(jsonData);
-					// 优先使用服务端推送的 gateway，确保显示与下发使用同一网关
+					// console.log('[数据流] 收到 IEMS_' + barCode + ' 数据, deviceType:', jsonData.deviceType, 'gateway:', jsonData.gateway)
 					const actualGateway = jsonData.gateway || barCode;
 					this.realTimeWebSocketProtocolHandler.parseJsonData(jsonData, actualGateway, this.deviceList);
+					if (typeof this.onDataUpdate === 'function') {
+						this.onDataUpdate();
+					}
+				} else if (jsonData instanceof ArrayBuffer || (jsonData && jsonData.buffer instanceof ArrayBuffer)) {
+					// 二进制帧：使用协议模块解析
+					const bytes = jsonData instanceof Uint8Array ? jsonData : new Uint8Array(jsonData)
+					if (!isIemsBinaryFrame(bytes)) return
+					const frame = parseIemsFrame(bytes)
+					if (!frame) return
+					// 跳过设备信息帧（dataType=1）
+					if (frame._dataTypeNum === 0x01) return
+					// 转换为 parseJsonData 期望的格式
+					const parsedJson = {
+						deviceType: frame.deviceType,
+						address: parseInt(frame.address, 16).toString(), // 转十进制字符串以匹配设备列表
+						dataType: String(frame._dataTypeNum),
+						data: frame.data,
+						dateTime: frame.dateTime,
+						gateway: barCode,
+					}
+					this.realTimeWebSocketProtocolHandler.parseJsonData(parsedJson, barCode, this.deviceList)
 					if (typeof this.onDataUpdate === 'function') {
 						this.onDataUpdate();
 					}
@@ -193,8 +294,15 @@ export class RealtimeDataProviderService {
 	//     }
 
 	getConnectedSocket() {
-		// console.log("socket", socket)
-		if (!socket) this.createScoket(uni.getStorageSync('currentTemplate'), uni.getStorageSync('urlPrefix'))
+		if (isDirectMode()) {
+			console.log('[RealtimeDataProvider] 直连模式，跳过 getConnectedSocket')
+			return;
+		}
+		if (!socket) this.createScoket()
+		if (!socket) {
+			console.warn('[RealtimeDataProvider] socket 未创建，跳过事件绑定')
+			return;
+		}
 		socket.on('connect', () => {
 			console.log("socket已连接上");
 

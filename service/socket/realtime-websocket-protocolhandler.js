@@ -25,13 +25,27 @@ export default class RealTimeWebSokcetProtocolHandler {
 	}
 
 	parseJsonData(jsonData, gateway, deviceList) {
+		// 类型匹配：精确相等 或 版本前缀匹配（如 "171C_V1_1" 匹配 "171C"）
+		// 使用 '_' 分隔符匹配，避免裸 includes() 子串误匹配（如 "171" 误匹配 "1712"）
+		// 同时支持 jsonData.deviceType 为数组（服务端可能下发多个候选类型）
+		const matchDeviceType = (ele) => {
+			if (!ele.deviceType || !jsonData.deviceType) return false
+			const jsonType = jsonData.deviceType
+			const types = Array.isArray(jsonType) ? jsonType : [jsonType]
+			const isMatch = (t) => {
+				if (t == null) return false
+				const ts = String(t)
+				return types.some(jt => {
+					const js = String(jt)
+					return js === ts || js.startsWith(ts + '_') || ts.startsWith(js + '_')
+				})
+			}
+			return isMatch(ele.deviceType) || (ele.rawDeviceType && isMatch(ele.rawDeviceType))
+		}
 
 		// 第一优先：按 address + deviceType + barCode 精确匹配
-		let model = deviceList.find(ele => ele && (ele.address == jsonData.address && 
-			(ele.deviceType == jsonData.deviceType || 
-			 jsonData.deviceType.includes(ele.deviceType) ||
-			 (ele.rawDeviceType && (ele.rawDeviceType == jsonData.deviceType || jsonData.deviceType.includes(ele.rawDeviceType))))  
-			 && ele.barCode == gateway))
+		let model = deviceList.find(ele => ele && (ele.address == jsonData.address &&
+			matchDeviceType(ele) && ele.barCode == gateway))
 
 		if (model) {
 			model.getDeviceData(jsonData, gateway)
@@ -39,10 +53,8 @@ export default class RealTimeWebSokcetProtocolHandler {
 		}
 
 		// 第二优先：按 address + deviceType 匹配（网关可能已变更为服务端推送的 gateway）
-		model = deviceList.find(ele => ele && (ele.address == jsonData.address && 
-			(ele.deviceType == jsonData.deviceType || 
-			 jsonData.deviceType.includes(ele.deviceType) ||
-			 (ele.rawDeviceType && (ele.rawDeviceType == jsonData.deviceType || jsonData.deviceType.includes(ele.rawDeviceType))))))
+		model = deviceList.find(ele => ele && (ele.address == jsonData.address &&
+			matchDeviceType(ele)))
 
 		if (model) {
 			// 更新设备的 barCode 为服务端实际推送的 gateway，确保后续匹配和下发一致

@@ -59,6 +59,20 @@
       </view>
     </view>
 
+    <!-- 直连设备配置入口 -->
+    <view class="custom-list">
+      <view class="list-item" @click="enterDirectDevice">
+        <view class="item-left">
+          <uni-icons type="wifi" size="20" color="#007AFF" />
+          <text class="item-title">直连设备配置</text>
+        </view>
+        <view class="item-right">
+          <text class="right-text">{{ directDeviceStatus }}</text>
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#ccc" />
+        </view>
+      </view>
+    </view>
+
 
   </view>
 </template>
@@ -75,7 +89,8 @@ export default {
       theme: '默认',
       cacheSize: '0MB',
       fontSize: 1,
-      platformClass: ""
+      platformClass: "",
+      directDeviceConfig: null
     }
   },
   computed: {
@@ -85,6 +100,13 @@ export default {
     }),
     fontSizeText() {
       return ['小', '中', '大'][this.fontSize]
+    },
+    directDeviceStatus() {
+      const cfg = this.directDeviceConfig
+      if (cfg && cfg.enabled && cfg.ip) {
+        return '已启用'
+      }
+      return 'Modbus TCP'
     }
   },
   onLoad() {
@@ -97,6 +119,7 @@ export default {
   onShow() {
     this.loadSettings()
     this.calculateCacheSize()
+    this.loadDirectDeviceConfig()
   },
   methods: {
     loadSettings() {
@@ -218,6 +241,33 @@ export default {
     },
     navigateTo(url) {
       uni.navigateTo({ url })
+    },
+    loadDirectDeviceConfig() {
+      try {
+        const cfg = uni.getStorageSync('direct_device_config')
+        this.directDeviceConfig = cfg || null
+      } catch (e) {
+        this.directDeviceConfig = null
+      }
+    },
+    enterDirectDevice() {
+      const cfg = this.directDeviceConfig
+      // 未开启或未配置 IP：跳转配置页
+      if (!cfg || !cfg.enabled || !cfg.ip) {
+        uni.navigateTo({ url: '/pages/profile/direct-device-config' })
+        return
+      }
+      // 弹出选择：进入监测页 / 修改配置
+      uni.showActionSheet({
+        itemList: ['进入监测页', '修改配置'],
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            uni.navigateTo({ url: '/pages/profile/direct-device' })
+          } else {
+            uni.navigateTo({ url: '/pages/profile/direct-device-config' })
+          }
+        }
+      })
     },
   }
 }

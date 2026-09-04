@@ -384,8 +384,13 @@ export default {
   watch: {
     '$store.state.currentSelectDevice': {
       handler() {
-        console.log('currentSelectDevice111111111', this.$store.state.currentSelectDevice)
-        this.updateDevice171F()
+        const device = this.$store.state.currentSelectDevice;
+        if (device && device.id) {
+          console.log('currentSelectDevice changed:', device.id, 'areaLevelId:', device.areaLevelId);
+          this.updateDevice171F();
+          // 设备信息变更时重新获取电力数据
+          this.getPowerData();
+        }
       },
       immediate: true,
       deep: true
@@ -440,8 +445,6 @@ export default {
     const currentDevice = this.$store.state.currentSelectDevice || {}
     const deviceControl = (currentDevice.list || []).find(item => item.controlType == 1);
     this.deviceConfig.idCode = deviceControl?.homeBarCode || '';
-    // this.deviceConfig.typeCode = deviceControl || '3401';
-    // this.deviceConfig.address = deviceControl?.address || '01';
 
     // 获取系统信息并设置CSS变量
     const systemInfo = uni.getSystemInfoSync();
@@ -451,7 +454,6 @@ export default {
     // 设置CSS变量用于全屏模式（仅在H5环境中执行）
     const safeAreaTop = systemInfo.safeArea?.top || systemInfo.statusBarHeight || 0;
     const safeAreaBottom = systemInfo.safeArea?.bottom || 0;
-    // 检查是否为H5环境（小程序中没有document对象）
     if (typeof document !== 'undefined' && document.documentElement) {
       try {
         document.documentElement.style.setProperty('--safe-area-top', safeAreaTop + 'px');
@@ -460,7 +462,10 @@ export default {
         console.warn('Failed to set CSS variables:', e);
       }
     }
-    this.getPowerData();
+    // 只有当设备信息已就绪时才获取数据，否则由 watch 触发
+    if (currentDevice && currentDevice.id) {
+      this.getPowerData();
+    }
   },
   beforeDestroy() {
     this.dataInterval && clearInterval(this.dataInterval);

@@ -16,10 +16,10 @@ export class Model171C extends DeviceBase {
 
 	// 处理能源数据（完全对齐PCS模板格式，协议全量字段）
 	getEnergyData(jsonData, jsonData2) {
-		if (!jsonData) return
+		if (!jsonData || !jsonData.hasOwnProperty('B0b0')) return
 		// 能源数据字段赋值（带单位，完全对齐PCS模板格式）
 		// 处理位字段 B0-B10
-		// console.log(jsonData, "999999999999999999999999999999");
+		
 		this.energyData.B0b0.value = this.setAlarmStatus(jsonData.B0b0);
 		this.energyData.B0b1.value = this.setAlarmStatus(jsonData.B0b1);
 		this.energyData.B0b2.value = this.setAlarmStatus(jsonData.B0b2);
@@ -247,10 +247,12 @@ export class Model171C extends DeviceBase {
 		this.energyData.B208.value = jsonData.B208;
 		this.energyData.B210.value = jsonData.B210;
 		// }
+		// console.log(jsonData)
 	}
 
 	// 处理状态数据【按模板规范置空，无有效字段，仅保留基础结构】
 	getStatusData(jsonData) {
+		// console.log("jsonDataControl", jsonData)
 		// 无有效字段，仅保留空方法对齐PCS模板格式
 	}
 

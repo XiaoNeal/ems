@@ -203,6 +203,21 @@
             </view>
         </view>
 
+        <!-- 设备直连入口 -->
+        <view class="device-direct-entry" @click="goDirectDevice">
+            <view class="entry-divider">
+                <view class="divider-line"></view>
+                <text class="divider-text">设备直连模式</text>
+                <view class="divider-line"></view>
+            </view>
+            <view class="entry-content">
+                <uni-icons type="wifi" size="16" color="#86909c"></uni-icons>
+                <text class="entry-title">局域网连接</text>
+                <uni-icons type="arrowright" size="12" color="#c9cdd4"></uni-icons>
+            </view>
+            <text class="entry-desc">无需账号登录，直连本地设备进行调试</text>
+        </view>
+
         <!-- 底部版权 -->
 
         <view class="copyright">
@@ -275,6 +290,11 @@ export default {
         }
     },
     methods: {
+        // 进入无网络直连设备模式
+        goDirectDevice() {
+            uni.navigateTo({ url: '/pages/profile/direct-device-config' });
+        },
+
         // 切换登录方式
         switchLoginType(type) {
             this.loginType = type;
@@ -328,7 +348,6 @@ export default {
                     } else {
                         this.saveLoginState(res.data);
                         uni.showToast({ title: '登录成功', icon: 'success' });
-                        uni.reLaunch({ url: '/pages/index/index' });
                     }
                 } else {
                     uni.showToast({ title: res.message || '登录失败，请重试', icon: 'none' });
@@ -420,7 +439,6 @@ export default {
                                     if (result.code == 200) {
                                         uni.showToast({ title: '注册成功', icon: 'success' });
                                         this.saveLoginState(result.data);
-                                        uni.reLaunch({ url: '/pages/index/index' });
                                     } else {
                                         uni.showToast({ title: result.message || '注册失败', icon: 'none' });
                                     }
@@ -513,7 +531,6 @@ export default {
                     this.saveLoginState(res.data);
                     const message = res.data.newUser ? '注册并登录成功' : '登录成功';
                     uni.showToast({ title: message, icon: 'success' });
-                    uni.reLaunch({ url: '/pages/index/index' });
                 } else {
                     uni.showToast({ title: res.message || '操作失败', icon: 'none' });
                 }
@@ -578,11 +595,9 @@ export default {
                         this.saveLoginState(merged);
                         uni.hideLoading();
                         uni.showToast({ title: '登录成功', icon: 'success' });
-                        uni.reLaunch({ url: '/pages/index/index' });
                     } catch (e) {
                         uni.hideLoading();
                         uni.showToast({ title: '登录成功', icon: 'success' });
-                        uni.reLaunch({ url: '/pages/index/index' });
                     }
                 } else {
                     uni.hideLoading();
@@ -597,6 +612,13 @@ export default {
         // 统一存储登录状态
         saveLoginState(res) {
             try {
+                // 确保 token 存进 storage——shouldSkipCloudSocket 要读它
+                if (res.sessionId) {
+                    uni.setStorageSync('token', res.sessionId);
+                }
+
+                // 确保 energyStations 中每个对象都有 esId 字段
+                const stations = (res.energyStations || []).map(s => ({ ...s, esId: s.esId || s.id }));
                 const userInfo = {
                     ...res,
                     isLogin: true,
@@ -608,11 +630,35 @@ export default {
                     sessionId: res.sessionId,
                     loginTime: new Date().getTime(),
                     areaLevelId: res.areaLevelId,
-                    esIds: res.energyStations || [],
+                    esIds: stations,
+                    energyStations: stations,
                     roleId: res.roleId,
                     esUsers: res.es_users || []
                 };
                 this.$store.commit("SET_LOGIN", userInfo);
+                // 强制写入 storage，确保 reLaunch 后能立即读取
+                uni.setStorageSync('lifeData', {
+                    ...(uni.getStorageSync('lifeData') || {}),
+                    userInfo: userInfo,
+                    hasLogin: true
+                });
+
+                // 登录成功后延迟创建云端 WebSocket（模块加载时因无 token 被 skip 了）
+                this.$nextTick(() => {
+                    try {
+                        const { realtimeDataProvider } = require('@/service/websocket.js');
+                        if (realtimeDataProvider && typeof realtimeDataProvider.ensureConnected === 'function') {
+                            realtimeDataProvider.ensureConnected();
+                        }
+                    } catch (e) {
+                        console.warn('延迟创建 WebSocket 失败（可忽略，首页会重试）:', e.message);
+                    }
+                });
+
+                // 跳转首页
+                setTimeout(() => {
+                    uni.reLaunch({ url: '/pages/index/index' });
+                }, 50);
             } catch (e) {
                 console.error('存储登录状态失败:', e);
             }
@@ -891,7 +937,8 @@ export default {
     /* margin-bottom: 80rpx; */
     /* animation: slideIn 0.8s ease-out; */
     backdrop-filter: blur(10rpx);
-    min-height: calc(100vh - 120rpx - 36px);
+    padding-bottom: 20rpx;
+    /* min-height: calc(100vh - 120rpx - 36px); */
 }
 
 @keyframes slideIn {
@@ -1235,9 +1282,65 @@ input::placeholder {
     font-size: 24rpx;
     color: #c9cdd4;
     padding: 20rpx 30rpx;
-    /* position: fixed; */
     z-index: 1;
-    margin-top: 20rpx;
-    bottom: 0;
+    margin-top: auto;
+}
+
+/* 设备直连入口 - 弱化样式 */
+.device-direct-entry {
+    width: 100%;
+    max-width: 500px;
+    padding: 30rpx 40rpx 10rpx;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16rpx;
+    /* margin-top: 20rpx; */
+}
+
+.entry-divider {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 20rpx;
+}
+
+.divider-line {
+    flex: 1;
+    height: 1rpx;
+    background: #e5e6eb;
+}
+
+.divider-text {
+    font-size: 22rpx;
+    color: #c9cdd4;
+    letter-spacing: 1rpx;
+}
+
+.entry-content {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+    padding: 16rpx 32rpx;
+    border-radius: 36rpx;
+    background: #f7f8fa;
+    transition: all 0.2s ease;
+}
+
+.entry-content:active {
+    background: #e5e6eb;
+    transform: scale(0.98);
+}
+
+.entry-title {
+    font-size: 26rpx;
+    color: #86909c;
+    font-weight: 400;
+}
+
+.entry-desc {
+    font-size: 22rpx;
+    color: #c9cdd4;
+    text-align: center;
 }
 </style>

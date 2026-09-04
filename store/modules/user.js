@@ -5,6 +5,7 @@ import {
 	loginByPhone,
 	getUserInfoApi
 } from '@/api/user'
+import { realtimeDataProvider } from '@/service/websocket.js'
 
 
 
@@ -218,6 +219,12 @@ const actions = {
 		commit
 	}) {
 		return new Promise((resolve, reject) => {
+			// 清理 WebSocket 连接
+			try {
+				realtimeDataProvider.clearDeviceState();
+			} catch (e) {
+				console.warn('清理实时数据连接失败:', e);
+			}
 			uni.clearStorageSync();
 			commit('SET_HAS_LOGIN', false)
 			commit('SET_NICKNAME', '')

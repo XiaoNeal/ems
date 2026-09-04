@@ -226,7 +226,7 @@ const request = (options) => {
           }
 
           // 业务状态码判断
-          if (typeof result === 'object' && (result.status == 200 || result.code == 10000 || Array.isArray(result))) {
+          if (typeof result === 'object' && (result.status == 200 || result.code == 200 || result.code == 10000 || Array.isArray(result))) {
             resolve(result);
             return;
           }

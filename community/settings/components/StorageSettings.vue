@@ -613,8 +613,8 @@ export default {
       const device = this.device171D
 
       if (device) {
-        if (device.energyData && device.energyData['B2']) {
-          const systemStatus = device.energyData['B2'].value
+        if (device.controlData && device.controlData['B2']) {
+          const systemStatus = device.controlData['B2'].value
           if (systemStatus !== undefined && systemStatus !== null && systemStatus !== '--') {
             if (key === 'B12') {
               return systemStatus === '待机' ? '0x00AA' : '0x0055'
@@ -626,12 +626,15 @@ export default {
           }
         }
 
-        if (device.energyData && device.energyData['B6']) {
-          const chargeStatus = device.energyData['B6'].value
+        if (device.controlData && device.controlData['B24']) {
+          const chargeStatus = device.controlData['B24'].value
           if (chargeStatus !== undefined && chargeStatus !== null && chargeStatus !== '--') {
             if (key === 'B24') {
-              const chargeMap = { '待机': '0', '恒流': '1', '恒功率': '1', '恒压': '1', '浮充': '1', '充满': '2' }
-              return chargeMap[chargeStatus] || '0'
+              // console.log(chargeStatus, 'chargeStatus',key)
+              
+              const chargeMap = { '0': '待机', '1': '充电', '2': '放电', '3': 'BAT自动切换', '4': 'BUS自动切换', '5': '关充电', '6': '高压PV模式', '7': '低压PV模式' }
+              // return chargeMap[String(chargeStatus)] || '未知'
+              return String(chargeStatus)
             }
           }
         }

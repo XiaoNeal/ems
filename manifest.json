@@ -3,7 +3,7 @@
     "name" : "微能站",
     "appid" : "__UNI__D7E714F",
     "description" : "",
-    "versionName" : "V1.0.11",
+    "versionName" : "V1.0.12",
     "versionCode" : 185,
     "transformPx" : false,
     "networkTimeout" : {
@@ -42,6 +42,8 @@
                 "permissions" : [
                     "<uses-feature android:name=\"android.hardware.camera\"/>",
                     "<uses-feature android:name=\"android.hardware.camera.autofocus\"/>",
+                    "<uses-permission android:name=\"android.permission.INTERNET\"/>",
+                    "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>",
                     "<uses-permission android:name=\"android.permission.CAMERA\"/>",
                     "<uses-permission android:name=\"android.permission.CHANGE_NETWORK_STATE\"/>",
                     "<uses-permission android:name=\"android.permission.FLASHLIGHT\"/>",

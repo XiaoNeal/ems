@@ -249,15 +249,29 @@
 					}
 				},
 				{
-					"path": "user-management",
-					"style": {
-						"navigationStyle": "custom",
-						"navigationBarTitleText": "用户管理"
-					}
+				"path": "user-management",
+				"style": {
+					"navigationStyle": "custom",
+					"navigationBarTitleText": "用户管理"
 				}
-			]
+			},
+			{
+			"path": "direct-device-config",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "直连设备配置"
+			}
+		},
+		{
+			"path": "direct-device",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "直连设备监测"
+			}
 		}
-	],
+	]
+	}
+],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "微能站",

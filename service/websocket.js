@@ -1,11 +1,55 @@
 import io from '@hyoga/uni-socket.io';
 import { RealtimeDataProviderService } from './socket/realtime-data-provider';
 
+/** 检查是否已登录（从 lifeData.hasLogin 判断） */
+function isLoggedIn() {
+	try {
+		const lifeData = uni.getStorageSync('lifeData') || {};
+		return !!lifeData.hasLogin;
+	} catch (e) {
+		return false;
+	}
+}
+
+/** 检查是否处于直连模式
+ * 核心规则：只要是登录用户就不是直连模式
+ */
+function isDirectMode() {
+	try {
+		if (isLoggedIn()) return false;
+
+		const cfg = uni.getStorageSync('direct_device_config');
+		const activated = !!uni.getStorageSync('direct_device_activated');
+		const enabled = !!(cfg && cfg.enabled);
+		const hasValidBroker = !!(cfg && (cfg.brokerUrl || (cfg.ip && cfg.ip.trim())));
+		return enabled && hasValidBroker && activated;
+	} catch (e) {
+		return false;
+	}
+}
+
 let instance = ""
+// RealtimeDataProviderService 内部已做直连模式判断，这里照常实例化即可
 let realtimeDataProvider = new RealtimeDataProviderService();
+
+/** 检查是否应该跳过云端 WebSocket（直连模式 或 未登录） */
+function shouldSkipCloudSocket() {
+	try {
+		if (!isLoggedIn()) {
+			console.log('[CloudSocket] 未登录，跳过云端 WebSocket');
+			return true;
+		}
+		return isDirectMode();
+	} catch (e) {
+		return false;
+	}
+}
 
 class NodeWebsocket {
     constructor() {
+        if (shouldSkipCloudSocket()) {
+            return;
+        }
         this.token = uni.getStorageSync('token');
 
         this.socket = io.connect('wss://serviceiems.gree.com', {
@@ -44,6 +88,10 @@ class NodeWebsocket {
 }
 
 function createSocket() {
+    // 直连模式或未登录时跳过创建云端 WebSocket
+    if (shouldSkipCloudSocket()) {
+        return;
+    }
     if (instance === "") {
         instance = new NodeWebsocket();
     }

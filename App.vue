@@ -4,6 +4,12 @@ import {
 } from "@/utils/decryptData.js"
 export default {
 	onLaunch: function () {
+		// 启动时清除直连激活标记——防止 storage 残留 enabled:true 但用户并未真正进入直连模式
+		// 直连标记只在用户真正进入 direct-device 页面并连上 MQTT 时才会被设置
+		try {
+			uni.removeStorageSync('direct_device_activated');
+		} catch (e) { }
+
 		// #ifdef MP-WEIXIN
 		const updateManager = wx.getUpdateManager()
 

@@ -62,7 +62,7 @@
 
 	// APP_VERSION 由 vue.config.js chainWebpack DefinePlugin 在构建时注入
 	// 若未注入（如未重启开发服务器），则回退到默认值
-	const VERSION_NAME = typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'V1.0.11';
+	const VERSION_NAME = typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'V1.0.13';
 
 	export default {
 		components: { DyNavbar },

@@ -948,6 +948,7 @@ export default {
                           canvas._width = data.width * this.pixel;
                           canvas._height = data.height * this.pixel;
                           setTimeout(()=>{
+                            if(!cfu.option[cid] || !cfu.option[cid].context){return}
                             cfu.option[cid].context.restore();
                             cfu.option[cid].context.save();
                             this._newChart(cid)
@@ -967,6 +968,7 @@ export default {
                     this._updataUChart(cid)
                   }else{
                     setTimeout(()=>{
+                      if(!cfu.option[cid] || !cfu.option[cid].context){return}
                       cfu.option[cid].context.restore();
                       cfu.option[cid].context.save();
                       this._newChart(cid)
@@ -1421,6 +1423,7 @@ export default {
           this.updataUChart()
         }else{
           setTimeout(()=>{
+            if(!cfu.option[cid] || !cfu.option[cid].context){return}
             cfu.option[cid].context.restore();
             cfu.option[cid].context.save();
             this.newUChart()

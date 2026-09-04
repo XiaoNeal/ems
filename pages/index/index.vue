@@ -89,14 +89,6 @@ export default {
     DeviceList
   },
   computed: {
-    // 获取 esIds 数组
-    esIds() {
-      if (this.userInfo && this.userInfo.esIds) {
-        return Array.isArray(this.userInfo.esIds) ? this.userInfo.esIds : []
-      }
-      return []
-    },
-
     // 是否显示设备列表
     showDeviceList() {
       return this.esIds.length === 0 || (this.esIds.length >= 2 && !this.selectedDeviceId) || this.fromProfile
@@ -145,11 +137,31 @@ export default {
       isNavigating: false, // 防止重复跳转的节流锁
       lastClickTime: 0, // 上次点击时间戳，用于防重复点击
       device171FList: [],
-      device171FRegistered: false
+      device171FRegistered: false,
+      esIds: [] // 响应式设备列表（替代 computed，确保 reLaunch 后立即可用）
     }
   },
   mounted() {
-    this.checkLoginStatus()
+    this._initEsIds()
+    const userInfo = this._getUserInfo();
+    if (!userInfo || !userInfo.isLogin || !userInfo.sessionId) {
+      uni.redirectTo({ url: '/pages/login/login' })
+      return
+    }
+    // 登录后兜底：确保云端 WebSocket 已连接
+    try {
+      const { realtimeDataProvider } = require('@/service/websocket.js');
+      if (realtimeDataProvider && typeof realtimeDataProvider.ensureConnected === 'function') {
+        realtimeDataProvider.ensureConnected();
+      }
+    } catch (e) {
+      console.warn('[mounted] ensureConnected 失败:', e.message);
+    }
+    // 统一在 mounted 中触发数据加载
+    if (!this.isDeviceListLoaded && !this.deviceListLoading) {
+      console.log('[mounted] 触发 fetchDeviceList')
+      this.fetchDeviceList()
+    }
   },
   onLoad(options) {
     console.log('onLoad', options)
@@ -199,27 +211,10 @@ export default {
   },
   onShow() {
     this.checkFromProfile()
-    // 如果不是从profile跳转过来，且没有选中设备，尝试恢复之前保存的设备选择
-    if (!this.fromProfile && !this.selectedDeviceId) {
-      const savedDevice = uni.getStorageSync('currentSelectDevice')
-      if (savedDevice) {
-        const savedDeviceId = savedDevice.id || savedDevice.esId
-        // 检查保存的设备是否在当前设备列表中
-        if (this.esIds.length > 0) {
-          const foundDevice = this.esIds.find(item => {
-            const itemId = item.id || item.esId
-            return itemId === savedDeviceId
-          })
-          if (foundDevice) {
-            this.selectedDeviceId = savedDeviceId
-            // 清空之前设备的数据
-            // realtimeDataProvider.clearDeviceState()
-            this.$store.commit('changeCurrentSelectDevice', foundDevice)
-            this.updateCurrentEsRole(savedDeviceId)
-            console.log('onShow恢复之前选择的设备:', savedDeviceId)
-          }
-        }
-      }
+    // 只从 storage 初始化 esIds，不做任何 store 操作
+    // 所有 store 写入统一由 fetchDeviceList 完成，避免竞态
+    if (!this.isDeviceListLoaded) {
+      this._initEsIds()
     }
   },
   onReady() {
@@ -239,10 +234,33 @@ export default {
         }
       }
     },
-    checkLoginStatus() {
-      console.log('checkLoginStatus', this.userInfo)
+    // 初始化 esIds（从 storage 或 Vuex 读取到 data 属性）
+    _initEsIds() {
+      const lifeData = uni.getStorageSync('lifeData') || {};
+      const stored = lifeData.userInfo?.esIds;
+      if (stored && Array.isArray(stored) && stored.length > 0) {
+        this.esIds = stored;
+        return;
+      }
+      const vi = this._getUserInfo();
+      if (vi.esIds && Array.isArray(vi.esIds) && vi.esIds.length > 0) {
+        this.esIds = vi.esIds;
+        return;
+      }
+      this.esIds = [];
+    },
 
-      if (!this.userInfo || !this.userInfo.isLogin || !this.userInfo.sessionId) {
+    // 从 storage 读取用户信息（比 Vuex mapState 更可靠）
+    _getUserInfo() {
+      const lifeData = uni.getStorageSync('lifeData') || {};
+      return lifeData.userInfo || this.$store.state.userInfo || this.userInfo || {};
+    },
+
+    checkLoginStatus() {
+      const userInfo = this._getUserInfo();
+      console.log('checkLoginStatus', userInfo)
+
+      if (!userInfo || !userInfo.isLogin || !userInfo.sessionId) {
         uni.redirectTo({
           url: '/pages/login/login'
         })
@@ -254,95 +272,67 @@ export default {
       }
     },
 
-    // 获取设备列表 - 优化：只在首次加载或从profile跳转时调用
+    // 获取设备列表 - 统一入口，消除竞态
     async fetchDeviceList() {
       if (this.deviceListLoading) return
       this.deviceListLoading = true
 
       try {
-        const userId = this.userInfo.userId
-        const loginType = this.userInfo.loginType
+        const storeUserInfo = this._getUserInfo();
+        const userId = storeUserInfo.userId
+        const loginType = storeUserInfo.loginType
         let userData = {}
         let energyStations = []
         if (loginType === 'account') {
-          // 账号密码登录：先 getUserCenterInfo，再根据 roleId 决定 findEnergyStation 是否带 userId
           const userRes = await getUserCenterInfo(userId)
           userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
           const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
           const stationRes = await findEnergyStation('microStation', stationUserId)
           energyStations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
         } else {
-          // 手机快捷登录：调用 findUserInfoByCodeId（含/es/）
           const userInfoRes = await findUserInfoByCodeId(userId)
+          // console.log('[数据流] findUserInfoByCodeId 响应:', JSON.stringify(userInfoRes).slice(0, 200))
           userData = (userInfoRes.code === 200 && userInfoRes.data) ? userInfoRes.data : {}
           energyStations = userData.energyStations || []
+          // console.log('[数据流] energyStations 数量:', energyStations.length)
         }
 
-        const userInfo = { ...this.userInfo, ...userData }
+        const userInfo = { ...storeUserInfo, ...userData }
         userInfo.esIds = energyStations
+        userInfo.energyStations = energyStations
         userInfo.esUsers = userData.es_users || []
         if (!userInfo.sessionId) {
-          userInfo.sessionId = this.userInfo.sessionId
+          userInfo.sessionId = storeUserInfo.sessionId
         }
         this.$store.commit('SET_LOGIN', userInfo)
+        this.esIds = energyStations
+        // console.log('[数据流] 设置 esIds:', this.esIds.length, '个')
 
-        // 如果只有一个设备，自动选中
-        if (energyStations.length === 1) {
-          const device = energyStations[0]
-          const deviceId = device.id || device.esId || device
-          this.selectedDeviceId = deviceId
-          console.log('自动选中设备:', deviceId, '设备信息:', device)
-          // this.$store.commit('changeCurrentSelectDevice', device)
-          // uni.setStorageSync('currentSelectDevice', device)
+        if (energyStations.length >= 1) {
+          const station = energyStations[0]
+          const stationId = station.id || station.esId
+          this.selectedDeviceId = stationId
+          this.updateCurrentEsRole(stationId)
 
-          const areaId = device.areaId
+          const areaId = station.areaId
           try {
             const deviceInfo = await getDeviceByAreaId(areaId)
-            console.log('获取设备信息:', deviceInfo)
-            if (deviceInfo && deviceInfo.data && deviceInfo.data.list) {
-              device.list = deviceInfo.data.list
-              console.log('获取设备信息:', device)
-                this.register171FDevice()
-              // 清空之前设备的数据
-              // realtimeDataProvider.clearDeviceState()
-              this.$store.commit('changeCurrentSelectDevice', device)
-              this.updateCurrentEsRole(deviceId)
-              uni.setStorageSync('currentSelectDevice', device)
-            }
+            const list = deviceInfo?.data?.list || []
+            // console.log('[数据流] 设备列表长度:', list.length)
+
+            // 把设备列表附加到能源站对象，一次性提交到 store
+            station.list = list
+            // 附加额外信息
+            station.areaId = station.areaId || areaId
+
+            // 一次性提交所有数据
+            this.$store.commit('changeCurrentSelectDevice', station)
+            uni.setStorageSync('currentSelectDevice', station)
+
+            // 直接传递设备列表，不再从 store 读取
+            this.registerDevices(list)
           } catch (err) {
-            console.error('获取设备信息失败:', err)
-          }
-        } else if (energyStations.length > 1) {
-          // 如果有多个设备，尝试恢复之前保存的设备选择
-          const savedDevice = uni.getStorageSync('currentSelectDevice')
-          if (savedDevice) {
-            const savedDeviceId = savedDevice.id || savedDevice.esId
-            // 检查保存的设备是否在当前设备列表中
-            const foundDevice = energyStations.find(item => {
-              const itemId = item.id || item.esId
-              return itemId === savedDeviceId
-            })
-            if (foundDevice) {
-              this.selectedDeviceId = savedDeviceId
-              console.log('恢复之前选择的设备:', savedDeviceId)
-              // 清空之前设备的数据
-              // realtimeDataProvider.clearDeviceState()
-              this.$store.commit('changeCurrentSelectDevice', foundDevice)
-              this.updateCurrentEsRole(savedDeviceId)
-              const areaId = foundDevice.areaId
-              try {
-                const deviceInfo = await getDeviceByAreaId(areaId)
-                console.log('获取设备信息:', deviceInfo)
-                if (deviceInfo && deviceInfo.data && deviceInfo.data.list) {
-                  foundDevice.list = deviceInfo.data.list
-                  console.log('获取设备信息:', foundDevice)
-                  this.$store.commit('changeCurrentSelectDevice', foundDevice)
-                  uni.setStorageSync('currentSelectDevice', foundDevice)
-                }
-              } catch (err) {
-                console.error('获取设备信息失败:', err)
-              }
-            }
+            console.error('[数据流] 获取设备信息失败:', err)
           }
         }
 
@@ -352,6 +342,52 @@ export default {
       } finally {
         this.deviceListLoading = false
       }
+    },
+
+    // 直接用设备列表注册 WebSocket，不依赖 store 状态
+    registerDevices(list) {
+      if (!list || list.length === 0) {
+        console.warn('[数据流] 设备列表为空，跳过注册')
+        return
+      }
+
+      // 过滤有效设备
+      const validDevices = list.filter(item => {
+        const typeCode = (item.typeCode || '').trim();
+        const homeBarCode = (item.homeBarCode || '').trim();
+        const barCode = (item.barCode || '').trim();
+        return (typeCode && typeCode !== '-1') || homeBarCode || barCode;
+      });
+      console.log('[数据流] 有效设备:', validDevices.length, '个')
+
+      const configs = validDevices.map(item => {
+        const typeCode = (item.typeCode || '').trim() || String(item.deviceType || '');
+        const barCode = (item.homeBarCode || item.barCode || '').trim();
+        return {
+          deviceType: typeCode,
+          typeCode: typeCode,
+          address: (item.address || '').trim(),
+          barCode: barCode,
+          deviceId: item.id || item.deviceId,
+          name: item.deviceName || item.description || typeCode,
+          rawDeviceType: item.deviceType
+        };
+      });
+
+      // 检查是否有 171F，没有则用第一个替代
+      const has171F = configs.some(c => c.typeCode === '171F');
+      if (!has171F && configs.length > 0) {
+        configs[0].deviceType = '171F';
+        configs[0].typeCode = '171F';
+        console.log('[数据流] 无171F设备，使用', configs[0].name, '作为汇总设备')
+      }
+
+      console.log('[数据流] 准备注册:', configs.length, '个设备')
+      realtimeDataProvider.initDeviceList(configs)
+      const registeredList = realtimeDataProvider.getDeviceList();
+      console.log('[数据流] 注册完成, 设备列表:', registeredList.length, '个设备')
+      this.device171FList = registeredList;
+      this.device171FRegistered = true;
     },
 
     // 处理设备选择
@@ -437,41 +473,55 @@ export default {
 
     register171FDevice() {
       if (this.device171FRegistered) {
-        console.log('171F设备已注册，跳过', this.device171FList);
+        console.log('[数据流] 设备已注册，跳过', this.device171FList.length, '个设备');
         this.device171FList = realtimeDataProvider.getDeviceList();
         return this.device171FList;
       }
 
       const currentDevice = this.$store.state.currentSelectDevice || {};
-      console.log('注册171F设备:', currentDevice);
+      const deviceList = currentDevice.list || [];
+      console.log('[数据流] register171FDevice 设备列表:', deviceList.length, '个设备');
 
-      let address = '';
-      let barCode = '';
+      // 收集所有有效设备（有 typeCode 或 homeBarCode）
+      const validDevices = deviceList.filter(item => {
+        const typeCode = (item.typeCode || '').trim();
+        const homeBarCode = (item.homeBarCode || '').trim();
+        const barCode = (item.barCode || '').trim();
+        return (typeCode && typeCode !== '-1') || homeBarCode || barCode;
+      });
+      console.log('[数据流] 有效设备:', validDevices.length, '个');
+      validDevices.forEach(d => console.log('  -', d.typeCode, d.description, 'barCode:', d.homeBarCode?.trim() || d.barCode?.trim()));
 
-      if (currentDevice.list && Array.isArray(currentDevice.list)) {
-        const foundDevice = currentDevice.list.find(item =>
-          item.typeCode === '171F' || item.deviceType === '171F' || item.description?.includes('171F')
-        );
-        if (foundDevice) {
-          address = foundDevice.address || address;
-          barCode = foundDevice.barCode || foundDevice.homeBarCode || barCode;
-          console.log('找到171F设备:', foundDevice);
-        }
+      // 构建注册配置列表
+      const configs = validDevices.map(item => {
+        const typeCode = (item.typeCode || '').trim() || String(item.deviceType || '');
+        const barCode = (item.homeBarCode || item.barCode || '').trim();
+        return {
+          deviceType: typeCode,
+          typeCode: typeCode,
+          address: (item.address || '').trim(),
+          barCode: barCode,
+          deviceId: item.id || item.deviceId,
+          name: item.deviceName || item.description || typeCode,
+          rawDeviceType: item.deviceType
+        };
+      });
+
+      // 检查是否有 171F 设备，没有则用第一个有效设备作为替代
+      const has171F = configs.some(c => c.typeCode === '171F');
+      if (!has171F && configs.length > 0) {
+        // 用第一个有效设备作为汇总设备
+        configs[0].deviceType = '171F';
+        configs[0].typeCode = '171F';
+        configs[0].name = configs[0].name + '(汇总)';
+        console.log('[数据流] 无171F设备，使用', configs[0].typeCode, '作为汇总设备');
       }
 
-      const deviceConfig = {
-        deviceType: '171F',
-        typeCode: '171F',
-        address: address,
-        barCode: barCode,
-        deviceId: '171F001',
-        name: 'DCDC设备171F'
-      };
-      console.log('注册171F设备:', deviceConfig);
-      realtimeDataProvider.initDeviceList([deviceConfig]);
+      console.log('[数据流] 准备注册:', configs.length, '个设备');
+      realtimeDataProvider.initDeviceList(configs);
       this.device171FList = realtimeDataProvider.getDeviceList();
       this.device171FRegistered = true;
-      console.log('171F设备注册完成:', this.device171FList);
+      console.log('[数据流] 注册完成, 设备列表:', this.device171FList.length, '个设备');
       return this.device171FList;
     },
 

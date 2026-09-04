@@ -39,13 +39,13 @@ export class Model171E extends DeviceBase {
         faultList.push({ name: '输入模式不匹配', value: (b56 >> 5) & 1 ? '发生' : '正常', isAlarm: (b56 >> 5) & 1 ? 1 : 0 });
         faultList.push({ name: 'DCDC过压', value: (b56 >> 7) & 1 ? '发生' : '正常', isAlarm: (b56 >> 7) & 1 ? 1 : 0 });
         faultList.push({ name: 'PFC电压异常', value: (b56 >> 8) & 1 ? '发生' : '正常', isAlarm: (b56 >> 8) & 1 ? 1 : 0 });
-        faultList.push({ name: '交流过压', value: (b56 >> 9) & 1 ? '发生' : '正常', isAlarm: (b56 >> 9) & 1 ? 1 : 0 });
-        faultList.push({ name: '交流欠压', value: (b56 >> 14) & 1 ? '发生' : '正常', isAlarm: (b56 >> 14) & 1 ? 1 : 0 });
+        faultList.push({ name: '光伏侧欠压', value: (b56 >> 9) & 1 ? '发生' : '正常', isAlarm: (b56 >> 9) & 1 ? 1 : 0 });
+        faultList.push({ name: '光伏侧欠压', value: (b56 >> 14) & 1 ? '发生' : '正常', isAlarm: (b56 >> 14) & 1 ? 1 : 0 });
         faultList.push({ name: 'CAN通信故障', value: (b56 >> 16) & 1 ? '发生' : '正常', isAlarm: (b56 >> 16) & 1 ? 1 : 0 });
         faultList.push({ name: '模块不均流', value: (b56 >> 17) & 1 ? '发生' : '正常', isAlarm: (b56 >> 17) & 1 ? 1 : 0 });
         faultList.push({ name: '模块限功率', value: (b56 >> 23) & 1 ? '发生' : '正常', isAlarm: (b56 >> 23) & 1 ? 1 : 0 });
         faultList.push({ name: '温度限功率', value: (b56 >> 24) & 1 ? '发生' : '正常', isAlarm: (b56 >> 24) & 1 ? 1 : 0 });
-        faultList.push({ name: '交流限功率', value: (b56 >> 25) & 1 ? '发生' : '正常', isAlarm: (b56 >> 25) & 1 ? 1 : 0 });
+        faultList.push({ name: '光伏侧限功率', value: (b56 >> 25) & 1 ? '发生' : '正常', isAlarm: (b56 >> 25) & 1 ? 1 : 0 });
         faultList.push({ name: '风扇故障', value: (b56 >> 27) & 1 ? '发生' : '正常', isAlarm: (b56 >> 27) & 1 ? 1 : 0 });
         faultList.push({ name: 'DCDC短路', value: (b56 >> 28) & 1 ? '发生' : '正常', isAlarm: (b56 >> 28) & 1 ? 1 : 0 });
         faultList.push({ name: 'DCDC过温', value: (b56 >> 30) & 1 ? '发生' : '正常', isAlarm: (b56 >> 30) & 1 ? 1 : 0 });
