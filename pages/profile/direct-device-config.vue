@@ -108,6 +108,28 @@
       </view>
     </view>
 
+    <!-- 操作码 -->
+    <view class="section">
+      <view class="section-title">
+        <text class="title-bar"></text>
+        <text>操作码</text>
+        <text class="title-hint-optional">选填</text>
+      </view>
+      <view class="card form-card">
+        <view class="form-group">
+          <view class="form-item item-inline">
+            <view class="form-label-row">
+              <uni-icons type="locked" size="14" color="#86909c" />
+              <text class="form-label">操作码</text>
+            </view>
+            <view class="form-control">
+              <input class="form-input" type="text" v-model="form.accessCode" placeholder="请输入操作码" />
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
     <!-- 使用提示 / 注意事项 -->
     <view class="help-section">
       <view class="tips-card">
@@ -146,6 +168,7 @@ import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 import { testMqttConnection } from '@/service/socket/mqtt-client.js'
 
 const STORAGE_KEY = 'direct_device_config'
+const ACCESS_CODE = '123456'
 const DEFAULT_CONFIG = {
   enabled: true,
   deviceType: '20kW',
@@ -154,6 +177,7 @@ const DEFAULT_CONFIG = {
   port: '1883',
   username: '',
   password: '',
+  accessCode: '',
   // realtimeTopic: 'neiic/microEnergyStation001',
   realtimeTopic: 'neiic/microEnergyStationCtl002',
   controlSetTopic: 'neiic/microEnergyStationCtl002',
@@ -169,8 +193,8 @@ export default {
       testing: false,
       platformClass: '',
       deviceTypes: [
-        { value: '20kW', label: '20kW', desc: '微能量站' },
-        { value: '50kW', label: '50kW', desc: '微能量站' }
+        { value: '20kW', label: '20kW', desc: '微能站' },
+        { value: '50kW', label: '50kW', desc: '能源站' }
       ]
     }
   },
@@ -202,7 +226,7 @@ export default {
       try {
         const cfg = uni.getStorageSync(STORAGE_KEY)
         if (cfg) {
-          this.form = { ...DEFAULT_CONFIG, ...cfg, protocol: 'mqtt' }
+          this.form = { ...DEFAULT_CONFIG, ...cfg, protocol: 'mqtt', accessCode: '' }
         }
         // 只在 form.ip 有有效值时才覆盖 ipSeg，否则保留 data() 里的默认 [192,168,88,1]
         const ip = (this.form.ip || '').trim()
@@ -314,6 +338,8 @@ export default {
         })
     },
     buildConfig() {
+      const rawCode = (this.form.accessCode || '').trim()
+      const accessCode = rawCode === ACCESS_CODE ? rawCode : ''
       const cfg = {
         enabled: this.form.enabled,
         deviceType: this.form.deviceType,
@@ -323,6 +349,7 @@ export default {
         port: (this.form.port || '').trim() || '1883',
         username: '',
         password: '',
+        accessCode,
         realtimeTopic: 'neiic/microEnergyStationCtl002',
         controlSetTopic: 'neiic/microEnergyStationCtl002',
         controlRespTopic: 'neiic/microEnergyStationCtl002'
@@ -560,6 +587,13 @@ export default {
   margin-left: auto;
 }
 
+.title-hint-optional {
+  font-size: 20rpx;
+  color: #86909c;
+  font-weight: normal;
+  margin-left: auto;
+}
+
 /* ========== 卡片基础 ========== */
 .card {
   background: #fff;
@@ -593,7 +627,8 @@ export default {
 
   &.item-inline {
     flex-direction: row;
-    align-items: stretch;
+    align-items: center;
+    gap: 32rpx;
   }
 }
 

@@ -252,57 +252,38 @@
                 <view class="arch-section-title">
                   <text class="arch-title-text">电网数据</text>
                 </view>
-                <view class="arch-stats-container">
+                <view class="arch-stats-box">
                   <view class="arch-stat-row">
-                    <view class="arch-stat-item double">
+                    <view class="arch-stat-item vertical">
                       <view class="arch-stat-subitem">
                         <text class="arch-stat-label">电网实时功率</text>
-                        <view>
-                          <text class="arch-stat-value">{{ formattedValues['archGridPower'] || '--' }}</text>
-                          <text class="arch-stat-unit">kW</text>
-                        </view>
+                        <text class="arch-stat-value">{{ formattedValues['archGridPower'] || '--' }}<text class="arch-stat-unit">kW</text></text>
                       </view>
                       <view class="arch-stat-subitem">
                         <text class="arch-stat-label">电网频率</text>
-                        <view>
-                          <text class="arch-stat-value">{{ formattedValues['archGridFrequency'] || '--' }}</text>
-                          <text class="arch-stat-unit">Hz</text>
-                        </view>
+                        <text class="arch-stat-value">{{ formattedValues['archGridFrequency'] || '--' }}<text class="arch-stat-unit">Hz</text></text>
                       </view>
                     </view>
                     <view class="arch-stat-divider"></view>
-                    <view class="arch-stat-item double">
+                    <view class="arch-stat-item vertical">
                       <view class="arch-stat-subitem">
                         <text class="arch-stat-label">电网今日馈电量</text>
-                        <view>
-                          <text class="arch-stat-value">{{ formattedValues['archTodayFeedEnergy'] || '--' }}</text>
-                          <text class="arch-stat-unit">kWh</text>
-                        </view>
+                        <text class="arch-stat-value">{{ formattedValues['archTodayFeedEnergy'] || '--' }}<text class="arch-stat-unit">kWh</text></text>
                       </view>
                       <view class="arch-stat-subitem">
                         <text class="arch-stat-label">电网累计馈电量</text>
-                        <view>
-                          <text class="arch-stat-value">{{ formattedValues['archTotalFeedEnergy'] || '--' }}</text>
-                          <text class="arch-stat-unit">kWh</text>
-                        </view>
+                        <text class="arch-stat-value">{{ formattedValues['archTotalFeedEnergy'] || '--' }}<text class="arch-stat-unit">kWh</text></text>
                       </view>
                     </view>
-                  </view>
-                  <view class="arch-stat-row">
-                    <view class="arch-stat-item double">
+                    <view class="arch-stat-divider"></view>
+                    <view class="arch-stat-item vertical">
                       <view class="arch-stat-subitem">
                         <text class="arch-stat-label">电网今日供电</text>
-                        <view>
-                          <text class="arch-stat-value">{{ formattedValues['archTodaySupplyEnergy'] || '--' }}</text>
-                          <text class="arch-stat-unit">kWh</text>
-                        </view>
+                        <text class="arch-stat-value">{{ formattedValues['archTodaySupplyEnergy'] || '--' }}<text class="arch-stat-unit">kWh</text></text>
                       </view>
                       <view class="arch-stat-subitem">
                         <text class="arch-stat-label">电网累计供电</text>
-                        <view>
-                          <text class="arch-stat-value">{{ formattedValues['archTotalSupplyEnergy'] || '--' }}</text>
-                          <text class="arch-stat-unit">kWh</text>
-                        </view>
+                        <text class="arch-stat-value">{{ formattedValues['archTotalSupplyEnergy'] || '--' }}<text class="arch-stat-unit">kWh</text></text>
                       </view>
                     </view>
                   </view>
@@ -655,8 +636,8 @@
           </scroll-view>
         </swiper-item>
 
-        <!-- 设置标签页（数据驱动，v-for 遍历 SETTINGS_TABS） -->
-        <swiper-item v-for="tabCfg in settingsTabs" :key="tabCfg.tab">
+        <!-- 设置标签页（数据驱动，v-for 遍历 SETTINGS_TABS，无操作码时不渲染） -->
+        <swiper-item v-if="hasAccessCode" v-for="tabCfg in settingsTabs" :key="tabCfg.tab">
           <scroll-view class="module-scroll" scroll-y="true">
             <view class="content">
               <view class="settings-header" :class="tabCfg.theme">
@@ -1018,6 +999,7 @@ export default {
         protocol: 'mqtt',
         ip: '', port: '1883',
         brokerUrl: '', username: '', password: '',
+        accessCode: '',
         realtimeTopic: 'neiic/microEnergyStation001',
         controlSetTopic: 'neiic/microEnergyStationCtl002',
         controlRespTopic: 'neiic/microEnergyStationCtl002'
@@ -1102,10 +1084,15 @@ export default {
       return TAB_LIST
     },
     tabGroupMonitor() {
-      return TAB_GROUP_MONITOR
+      // 没有操作码时只显示概览（tab 0），有操作码才显示全部监测 tab
+      return this.hasAccessCode ? TAB_GROUP_MONITOR : [0]
     },
     tabGroupControl() {
-      return TAB_GROUP_CONTROL
+      // 没有操作码时隐藏设置面板，只显示概览和监测数据
+      return this.hasAccessCode ? TAB_GROUP_CONTROL : []
+    },
+    hasAccessCode() {
+      return !!(this.config && this.config.accessCode === '123456')
     },
     settingsTabs() {
       return SETTINGS_TABS
@@ -1653,6 +1640,7 @@ export default {
             brokerUrl,
             username: cfg.username || '',
             password: cfg.password || '',
+            accessCode: cfg.accessCode || '',
             realtimeTopic: cfg.realtimeTopic || 'neiic/microEnergyStation001',
             controlSetTopic: cfg.controlSetTopic || 'neiic/microEnergyStationCtl002',
             controlRespTopic: cfg.controlRespTopic || 'neiic/microEnergyStationCtl002'
@@ -3319,55 +3307,58 @@ export default {
 
 /* ========== 公共区块标题（对齐所有组件 section-header）========== */
 .arch-section-title {
-  margin-bottom: 12rpx;
-  padding-bottom: 10rpx;
-  padding-left: 16rpx;
+  margin-bottom: 16rpx;
+  padding-bottom: 0;
+  padding-left: 20rpx;
   position: relative;
-  border-bottom: 1rpx solid #e8e8e8;
 
   &::before {
     content: '';
     position: absolute;
     left: 0;
-    top: 4rpx;
-    bottom: 14rpx;
+    top: 50%;
+    transform: translateY(-50%);
     width: 6rpx;
+    height: 30rpx;
     border-radius: 3rpx;
-    background: #007aff;
+    background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
   }
 }
 
 .arch-title-text {
-  font-size: 30rpx;
-  font-weight: bold;
+  font-size: 32rpx;
+  font-weight: 600;
   color: #333;
 }
 
 /* ========== 电网统计 / 光伏统计 模块通用（对齐 grid-management.vue / pv-management.vue）========== */
 .arch-stats-section,
 .arch-device-stats {
-  background-color: #fff;
+  background: #ffffff;
   border-radius: 16rpx;
-  padding: 16rpx 24rpx;
+  padding: 28rpx 32rpx;
   margin-bottom: 16rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
 }
 
 .arch-stats-container,
 .arch-stats-box {
   width: 100%;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 4rpx 0;
 }
 
 .arch-stat-row {
   display: flex;
   align-items: stretch;
-  min-height: 110rpx;
+  min-height: 120rpx;
 }
 
 .arch-stat-divider {
   width: 1rpx;
   background-color: #e8e8e8;
-  margin: 12rpx 0;
+  margin: 16rpx 0;
 }
 
 .arch-section-divider {
@@ -3380,7 +3371,7 @@ export default {
   flex: 1;
   display: flex;
   align-items: center;
-  padding: 12rpx 0;
+  padding: 16rpx 0;
 
   &.double {
     display: flex;
@@ -3389,20 +3380,21 @@ export default {
 
   &.vertical {
     flex-direction: column;
-    align-items: flex-start;
-    justify-content: space-around;
-    padding: 16rpx 12rpx;
-    gap: 12rpx;
+    align-items: stretch;
+    justify-content: center;
+    padding: 20rpx 24rpx;
+    gap: 16rpx;
   }
 
   &.arch-center {
     justify-content: center;
+    align-items: center;
   }
 }
 
 .arch-stat-item.double .arch-stat-subitem {
   flex: 1;
-  padding: 0 16rpx;
+  padding: 0 24rpx;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -3412,31 +3404,34 @@ export default {
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 10rpx;
+  gap: 6rpx;
 }
 
 .arch-stat-label {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #888;
+  letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .arch-stat-value {
   font-size: 32rpx;
-  font-weight: bold;
+  font-weight: 700;
   color: #333;
+  line-height: 1.3;
 
   &.small {
-    font-size: 24rpx;
-    font-weight: normal;
-    color: #888;
+    font-size: 26rpx;
+    font-weight: 400;
+    color: #666;
   }
 }
 
 .arch-stat-unit {
   font-size: 22rpx;
   color: #999;
-  font-weight: normal;
-  margin-left: 6rpx;
+  font-weight: 400;
+  margin-left: 4rpx;
 }
 
 /* ========== 负荷设备模块（对齐 load-management.vue）========== */
