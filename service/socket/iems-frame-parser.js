@@ -250,18 +250,18 @@ function parsePayloadWithProtocol(payload, deviceTypeHex, dataType) {
         // console.log(`[iems-frame-parser] 使用协议模块解析: ${deviceTypeHex}.${parseMethod} 产出${Object.keys(result).length}个字段`)
         return result
       } catch (e) {
-        console.warn('[iems-frame-parser] 协议解析失败，回退通用解析:', deviceTypeHex, e.message)
+        // console.warn('[iems-frame-parser] 协议解析失败，回退通用解析:', deviceTypeHex, e.message)
       }
     } else {
-      console.warn(`[iems-frame-parser] ${deviceTypeHex} 无匹配的解析方法(dataType=${dataType})，回退通用解析`)
+      // console.warn(`[iems-frame-parser] ${deviceTypeHex} 无匹配的解析方法(dataType=${dataType})，回退通用解析`)
     }
   } else {
-    console.warn(`[iems-frame-parser] 未找到 ${deviceTypeHex} 协议模块，回退通用解析`)
+    // console.warn(`[iems-frame-parser] 未找到 ${deviceTypeHex} 协议模块，回退通用解析`)
   }
 
   // 回退到通用 16 位解析
   const result = parsePayloadGeneric(payload, parseInt(deviceTypeHex, 16))
-  console.log(`[iems-frame-parser] 通用解析产出${Object.keys(result).length}个字段`)
+  // console.log(`[iems-frame-parser] 通用解析产出${Object.keys(result).length}个字段`, result)
   return result
 }
 
@@ -487,4 +487,162 @@ function pad(num, width) {
 
 function padHex(num, width) {
   return Number(num).toString(16).toUpperCase().padStart(width, '0')
+}
+
+/**
+ * 构建 IEMS 命令控制帧（参考后端 QuickQueryConfigImpl.sendCommandFrame / IEMSControlFrame）
+ *
+ * 帧结构（Hex 字符串拼接）：
+ *   functionCode(1B "16") + deviceType(2B) + tag(2B "0001") +
+ *   address(1B) + dataLength(1B) + dataType(1B "C2") +
+ *   startAddress(1B) + validData(NB) + CRCCode(2B 大端)
+ *
+ * validData 结构（参考 Java buildCommandFrameData）：
+ *   命令个数(1B) + 控制类型(4B=0) + 预留(2B=0) + 预留(2B=0) + N条19B命令
+ *
+ * 每条命令19字节（9个字段，注意：没有 valueType！）：
+ *   deviceCategory(2B) + addr(1B) + deviceId(2B) + registerAddress(4B) +
+ *   registerValue(4B) + registerType(1B) + extra1(1B) + extra2(2B) + extra3(2B)
+ *
+ * @param {string} deviceType 设备类型码（如 '171C'、'3401'）
+ * @param {Array} commands 命令列表 [{ registerAddress: number|string, registerValue: number|string, ... }]
+ * @param {object} [opts] 可选参数 { address, startAddress, deviceCategory, addr, deviceId, registerType, extra1, extra2, extra3 }
+ * @returns {Uint8Array} 完整帧字节数组
+ */
+export function buildIemsCommandFrame(deviceType, commands, opts = {}) {
+  if (!commands || commands.length === 0) {
+    throw new Error('commands 不能为空')
+  }
+  if (commands.length > 10) {
+    throw new Error('命令个数超过最大限制')
+  }
+
+  // 协议字段统一默认值（对齐 Java buildCommandFrameData）
+  const defaults = {
+    address: '01',
+    startAddress: '00',
+    deviceCategory: '0102',
+    addr: '01',
+    deviceId: '0001',
+    registerType: '01',
+    extra1: '00',
+    extra2: '0000',
+    extra3: '0000',
+    ...opts
+  }
+
+  // 1. 构建 validData
+  let validData = ''
+  // 命令个数 1字节
+  validData += toHexStr(commands.length, 1)
+  // 控制类型 4字节=0
+  validData += toHexStr(0, 4)
+  // 预留 2字节=0
+  validData += toHexStr(0, 2)
+  // 预留 2字节=0
+  validData += toHexStr(0, 2)
+
+  for (const cmd of commands) {
+    validData += formatTwoByteDeviceCategory(cmd.deviceCategory || defaults.deviceCategory)
+    validData += padHexStr(cmd.addr || defaults.addr, 2)
+    validData += padHexStr(cmd.deviceId || defaults.deviceId, 4)
+    validData += padHexStr(cmd.registerAddress, 8)
+    validData += padHexStr(cmd.registerValue, 8)
+    validData += padHexStr(cmd.registerType || defaults.registerType, 2)
+    validData += padHexStr(cmd.extra1 || defaults.extra1, 2)
+    validData += padHexStr(cmd.extra2 || defaults.extra2, 4)
+    validData += padHexStr(cmd.extra3 || defaults.extra3, 4)
+  }
+
+  // 2. 组装帧头
+  const functionCode = '16'
+  const tag = '0001'
+  const dataType = 'C2'
+  const dataLength = toHexStr(validData.length / 2 + 2, 1)
+
+  const frameHex = functionCode + deviceType.toUpperCase() + tag +
+    defaults.address + dataLength + dataType +
+    defaults.startAddress + validData
+
+  // 3. 计算 CRC（高字节在前，与后端 FrameUtil.getModbusCRC 一致）
+  const frameBytes = hexStringToBytes(frameHex)
+  const crc = crc16Modbus(frameBytes)
+  const crcHigh = ((crc >> 8) & 0xff).toString(16).toUpperCase().padStart(2, '0')
+  const crcLow = (crc & 0xff).toString(16).toUpperCase().padStart(2, '0')
+
+  // 4. 拼接完整帧并转字节数组
+  const fullHex = frameHex + crcHigh + crcLow
+  const result = hexStringToBytes(fullHex)
+
+  console.log('[命令帧构建] deviceType=' + deviceType + ' commands=' + commands.length +
+    ' frameLen=' + result.length + 'bytes')
+  console.log('[命令帧构建] hex: ' + fullHex.match(/.{2}/g).join(' '))
+
+  return result
+}
+
+/**
+ * 格式化 2 字节 deviceCategory（纯 hex 处理，不做十进制转换）
+ * 对齐 Java QuickQueryConfigImpl.formatTwoByteDeviceCategory
+ * @param {string} deviceCategory 如 "0102"、"0x0102"、"1A"
+ * @returns {string} 4 个 hex 字符（2 字节）
+ */
+function formatTwoByteDeviceCategory(deviceCategory) {
+  if (deviceCategory === undefined || deviceCategory === null || String(deviceCategory).trim() === '') {
+    throw new Error('deviceCategory 不能为空')
+  }
+  let formatted = String(deviceCategory).trim()
+  if (formatted.startsWith('0x') || formatted.startsWith('0X')) {
+    formatted = formatted.substring(2)
+  }
+  if (!/^[0-9A-Fa-f]{1,4}$/.test(formatted)) {
+    throw new Error('deviceCategory 必须是 1 到 4 个 hex 字符，例如 0102')
+  }
+  while (formatted.length < 4) {
+    formatted = '0' + formatted
+  }
+  return formatted.toUpperCase()
+}
+
+/** Hex 字符串左补零（支持 hex 字符串和十进制数字） */
+function padHexStr(value, targetLength) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    throw new Error('字段不能为空')
+  }
+  let formatted = String(value).trim()
+  if (formatted.startsWith('0x') || formatted.startsWith('0X')) {
+    formatted = formatted.substring(2)
+  }
+  // 纯数字（不含 A-F）→ 当作十进制转 hex
+  if (!/[A-Fa-f]/.test(formatted)) {
+    formatted = Math.round(Number(formatted)).toString(16)
+  }
+  formatted = formatted.toUpperCase()
+  if (formatted.length > targetLength) {
+    throw new Error('字段长度超过限制：' + value)
+  }
+  while (formatted.length < targetLength) {
+    formatted = '0' + formatted
+  }
+  return formatted
+}
+
+/** 数字转指定字节数 hex 字符串 */
+function toHexStr(value, byteSize) {
+  const mask = byteSize >= 8 ? -1 : ((1 << (byteSize * 8)) - 1)
+  const result = value & mask
+  let hex = (result >>> 0).toString(16).toUpperCase()
+  while (hex.length < byteSize * 2) {
+    hex = '0' + hex
+  }
+  return hex
+}
+
+/** Hex 字符串转 Uint8Array */
+function hexStringToBytes(hex) {
+  const bytes = new Uint8Array(hex.length / 2)
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16)
+  }
+  return bytes
 }

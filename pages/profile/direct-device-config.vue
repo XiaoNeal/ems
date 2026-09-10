@@ -23,6 +23,15 @@
       </view>
     </view>
 
+    <!-- 扫码连 WiFi -->
+    <view class="scan-bar">
+      <view class="scan-btn" @click="handleScanWifi">
+        <uni-icons type="scan" size="22" color="#007AFF" />
+        <text class="scan-btn-text">扫码连接 WiFi</text>
+        <uni-icons type="right" size="14" color="#c9cdd4" />
+      </view>
+    </view>
+
     <!-- 配置摘要预览 -->
     <view class="preview-bar" v-if="form.ip">
       <view class="preview-item">
@@ -222,6 +231,122 @@ export default {
     }
   },
   methods: {
+    /**
+     * 扫二维码连接 WiFi
+     * 支持标准 WiFi 二维码格式：WIFI:S:<SSID>;T:<WPA|WEP|nopass>;P:<password>;H:<hidden>;;
+     * 也支持纯 SSID 文本
+     */
+    handleScanWifi() {
+      // #ifdef APP-PLUS || MP-WEIXIN
+      uni.scanCode({
+        onlyFromCamera: true,
+        scanType: ['qrCode'],
+        success: (res) => {
+          const raw = (res.result || '').trim()
+          if (!raw) {
+            uni.showToast({ title: '二维码内容为空', icon: 'none' })
+            return
+          }
+          this.parseAndConnectWifi(raw)
+        },
+        fail: () => {
+          uni.showToast({ title: '扫码取消或失败', icon: 'none' })
+        }
+      })
+      // #endif
+      // #ifndef APP-PLUS || MP-WEIXIN
+      uni.showToast({ title: '请在 App 或微信小程序端使用扫码功能', icon: 'none' })
+      // #endif
+    },
+
+    /**
+     * 解析二维码内容并连接 WiFi
+     * @param {string} raw 二维码原始内容
+     */
+    parseAndConnectWifi(raw) {
+      let ssid = ''
+      let password = ''
+      let security = ''
+
+      // 尝试匹配标准 WIFI: 格式
+      const wifiMatch = raw.match(/^WIFI:(.*);;?$/i)
+      if (wifiMatch) {
+        const fields = wifiMatch[1]
+        const ssidMatch = fields.match(/S:([^;]*)/i)
+        const passMatch = fields.match(/P:([^;]*)/i)
+        const typeMatch = fields.match(/T:([^;]*)/i)
+        if (ssidMatch) ssid = ssidMatch[1]
+        if (passMatch) password = passMatch[1]
+        if (typeMatch) security = typeMatch[1]
+      } else {
+        // 非标准格式，把整行当 SSID
+        ssid = raw
+      }
+
+      if (!ssid) {
+        uni.showToast({ title: '未识别到 WiFi 名称', icon: 'none' })
+        return
+      }
+
+      // 无密码开放网络也要走 connectWifi
+      const params = { SSID: ssid }
+      if (password) params.password = password
+      // nopass 不传 password
+      if (security && security.toLowerCase() === 'nopass') {
+        delete params.password
+      }
+
+      const maskedPwd = password ? password.replace(/./g, '*') : ''
+      const content = `SSID: ${ssid}${password ? '\n密码: ' + maskedPwd : '\n(无密码)'}`
+
+      uni.showModal({
+        title: '确认连接 WiFi',
+        content,
+        confirmText: '连接',
+        success: (modalRes) => {
+          if (!modalRes.confirm) return
+          this.doConnectWifi(params)
+        }
+      })
+    },
+
+    /**
+     * 调用 uni-wifi 插件连接 WiFi
+     */
+    doConnectWifi({ SSID, password }) {
+      uni.showLoading({ title: '正在连接 WiFi...', mask: true })
+
+      uni.startWifi({
+        success: () => {
+          const opts = { SSID }
+          if (password) opts.password = password
+          opts.success = () => {
+            uni.hideLoading()
+            uni.showToast({ title: `已连接 ${SSID}`, icon: 'success' })
+          }
+          opts.fail = (err) => {
+            uni.hideLoading()
+            console.error('connectWifi fail:', err)
+            uni.showModal({
+              title: '连接失败',
+              content: err.errMsg || `无法连接到 ${SSID}，请手动到系统设置连接`,
+              showCancel: false
+            })
+          }
+          uni.connectWifi(opts)
+        },
+        fail: (err) => {
+          uni.hideLoading()
+          console.error('startWifi fail:', err)
+          uni.showModal({
+            title: 'WiFi 模块启动失败',
+            content: err.errMsg || '请检查 WiFi 权限设置',
+            showCancel: false
+          })
+        }
+      })
+    },
+
     loadConfig() {
       try {
         const cfg = uni.getStorageSync(STORAGE_KEY)
@@ -514,6 +639,32 @@ export default {
   .hero-off & {
     color: #86909c;
   }
+}
+
+/* ========== 扫码连 WiFi ========== */
+.scan-bar {
+  margin: 0 20rpx 20rpx;
+}
+.scan-btn {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 24rpx 28rpx;
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.08), rgba(0, 122, 255, 0.03));
+  border: 2rpx solid rgba(0, 122, 255, 0.15);
+  border-radius: 14rpx;
+  transition: all 0.2s ease;
+
+  &:active {
+    transform: scale(0.98);
+    background: rgba(0, 122, 255, 0.1);
+  }
+}
+.scan-btn-text {
+  flex: 1;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #007AFF;
 }
 
 /* ========== 配置摘要预览 ========== */

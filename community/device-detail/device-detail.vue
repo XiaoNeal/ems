@@ -173,7 +173,7 @@
 
 <script>
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
-import DyDate from '@/components/dy-Date/dy-Date.vue'
+import DyDate from '@/community/components/dy-Date/dy-Date.vue'
 import { realtimeDataProvider } from '@/service/websocket'
 import { getDevicePowerStatistics } from '@/api/power'
 

@@ -15,7 +15,7 @@
 
 import { UniappWebSocketAdapter } from './uniapp-websocket-shim.js'
 import { UniappTcpAdapter } from './uniapp-tcp-adapter.js'
-import { buildIemsControlFrame } from './iems-frame-parser.js'
+import { buildIemsCommandFrame } from './iems-frame-parser.js'
 
 /**
  * 根据 brokerUrl 协议自动选择传输适配器
@@ -363,62 +363,74 @@ export class LightMqttClient {
   }
 
   /**
-   * 下发 IEMS 二进制控制帧
-   * @param {string} field 参数字段名 (如 'B12', 'B0')
-   * @param {*} value 目标值（整数）
-   * @param {string} [deviceType] 设备类型 (如 '171C', '171F')，不传则用 setDeviceType 设置的默认值
-   * @param {object} [opts] 可选参数 { address, startAddr }
+   * 下发 IEMS 命令控制帧（参考 Settings 组件 + 后端 QuickQueryConfigImpl.sendCommandFrame）
+   *
+   * @param {string} field 参数字段名 (如 'B168')
+   * @param {*} value 目标值（整数，UINT32 直接传 32 位值）
+   * @param {string} [deviceType] 目标设备类型码（如 '171C','171E','171F'），不传则用 setDeviceType 设置的默认值
+   * @param {object} [overrides] 可选覆盖 { registerAddress, deviceCategory, addr, deviceId, registerType, extra1, extra2, extra3 }
    */
-  async sendControl(field, value, deviceType, opts = {}) {
-    // deviceType 没传 → 用 setDeviceType 设置的默认值
+  async sendControl(field, value, deviceType, overrides = {}) {
     const dt = deviceType || this._deviceType
     if (!dt) {
       throw new Error('sendControl: 未指定 deviceType，请先调 setDeviceType 或在调用时传入')
     }
 
-    // 构建寄存器映射：{ B{n}: value }
-    const registers = {}
-    const numValue = Number(value)
-    const width = opts.width || 16
-
-    if (width === 32) {
-      // UINT32: 拆成高低两个 16 位寄存器
-      // B20 (UINT32) → B20 = 高16位, B22 = 低16位
-      const m = field.match(/^B(\d+)$/)
-      if (m) {
-        const base = parseInt(m[1], 10)
-        const lo = numValue & 0xffff
-        const hi = (numValue >>> 16) & 0xffff
-        registers['B' + base] = hi
-        registers['B' + (base + 2)] = lo
-        console.log('[MQTT] UINT32 field=' + field + ' split: B' + base + '=0x' + hi.toString(16).padStart(4,'0') +
-          ' B' + (base + 2) + '=0x' + lo.toString(16).padStart(4,'0') + ' (raw=0x' + (numValue >>> 0).toString(16) + ')')
-      } else {
-        registers[field] = numValue & 0xffff
-      }
+    // 寄存器地址：优先用 overrides.registerAddress，否则从 field 推导 B{n} → n/2
+    let regAddress
+    if (overrides.registerAddress !== undefined) {
+      regAddress = overrides.registerAddress
     } else {
-      // UINT16: 直接截断
-      registers[field] = numValue & 0xffff
+      const m = String(field).match(/^B(\d+)$/)
+      if (!m) {
+        throw new Error('sendControl: 无效的字段名 ' + field + '，期望格式 B{数字}')
+      }
+      regAddress = parseInt(m[1], 10) / 2
+      if (!Number.isInteger(regAddress)) {
+        throw new Error('sendControl: 字段 ' + field + ' 的寄存器地址不是偶数，无法映射')
+      }
     }
 
-    // 构建 IEMS 下行控制帧
-    const address = opts.address || 1
-    const startAddr = opts.startAddr || 0
-    const frame = buildIemsControlFrame(dt, address, startAddr, registers)
+    // 按设备类型映射命令字段（参考各 Settings 组件的 commandData）
+    const deviceCmdDefaults = {
+      deviceCategory: dt,
+      registerType: '03',
+      ...({
+        '171E': { addr: 6,    deviceId: '6' },
+        '171D': { addr: 30,   deviceId: '30' },
+        '171B': { addr: '01', deviceId: '0001' },
+        '171C': { addr: '01', deviceId: '0001' },
+        '171F': { addr: '01', deviceId: '0001' },
+      })[dt] || { addr: '01', deviceId: '0001' },
+      extra1: '00',
+      extra2: '0000',
+      extra3: '0000',
+    }
+
+    // 合并 overrides（最高优先级）
+    const command = {
+      ...deviceCmdDefaults,
+      ...overrides,
+      registerAddress: regAddress,
+      registerValue: value,
+    }
+
+    // 构建 IEMS 命令控制帧 —— 帧头 deviceType 固定 '3401'（控制帧类型码）
+    // 参考 Settings 组件 typeCode: '3401'
+    const frame = buildIemsCommandFrame('3401', [command])
 
     // 转 hex 字符串方便查看
     const frameHex = Array.from(frame).map(b => b.toString(16).padStart(2, '0')).join(' ')
     const dtHex = typeof dt === 'string' ? dt : dt.toString(16).toUpperCase().padStart(4, '0')
 
-    console.log('========== MQTT 控制指令下发 ==========')
+    console.log('========== MQTT 命令帧下发 ==========')
     console.log('[MQTT] topic    :', this._controlSetTopic || 'neiic/microEnergyStationCtl002')
     console.log('[MQTT] deviceType:', dt, '(0x' + dtHex + ')')
-    console.log('[MQTT] field/value:', field, '=', value, '(width=' + width + ')')
-    console.log('[MQTT] registers:', registers)
-    console.log('[MQTT] address   :', address, '  startAddr:', startAddr)
+    console.log('[MQTT] field    :', field, '→ registerAddress=', regAddress)
+    console.log('[MQTT] value    :', value)
     console.log('[MQTT] frame length:', frame.length, 'bytes')
     console.log('[MQTT] frame hex :', frameHex)
-    console.log('========================================')
+    console.log('====================================')
 
     // 发送二进制帧
     return this.publish(this._controlSetTopic || 'neiic/microEnergyStationCtl002', frame, { retain: false })

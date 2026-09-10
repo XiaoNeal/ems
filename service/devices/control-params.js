@@ -102,9 +102,9 @@ export const PCS_NUMERIC_PARAMS = [
 
 /** PCS 开关型参数 (171B CONTROL 帧，全部 UINT32，width: 32) */
 export const PCS_SWITCH_PARAMS = [
-  { key: 'pcs_B8',  field: 'B8',  width: 32, label: '设置模块地址分配方式', deviceType: '171B', options: [
-    { label: '自动分配', value: 0 }, { label: '拨码设置', value: 1 }
-  ]},
+  // { key: 'pcs_B8',  field: 'B8',  width: 32, label: '设置模块地址分配方式', deviceType: '171B', options: [
+  //   { label: '自动分配', value: 0 }, { label: '拨码设置', value: 1 }
+  // ]},
   { key: 'pcs_B12', field: 'B12', width: 32, label: '设置离网模式交流侧欠压复位', deviceType: '171B', options: [
     { label: '禁止', value: 0 }, { label: '复位', value: 1 }
   ]},
@@ -123,20 +123,20 @@ export const PCS_SWITCH_PARAMS = [
   { key: 'pcs_B32', field: 'B32', width: 32, label: '设置模块短路复位', deviceType: '171B', options: [
     { label: '禁止', value: 0 }, { label: '复位', value: 1 }
   ]},
-  { key: 'pcs_B56', field: 'B56', width: 32, label: '设置交流侧无功功率类型', deviceType: '171B', options: [
-    { label: '不设置无功功率输出', value: 0x00A00000 },
-    { label: '通过 PF 设置命令', value: 0x00A10000 },
-    { label: '通过无功功率设置命令', value: 0x00A20000 }
-  ]},
-  { key: 'pcs_B64', field: 'B64', width: 32, label: '设置是否错相', deviceType: '171B', options: [
-    { label: '不允许', value: 0 }, { label: '允许', value: 1 }
-  ]},
-  { key: 'pcs_B100', field: 'B100', width: 32, label: '设置是否过载输出', deviceType: '171B', options: [
-    { label: '禁用', value: 0 }, { label: '使能', value: 1 }
-  ]},
-  { key: 'pcs_B112', field: 'B112', width: 32, label: '设置是否使能输入电压环', deviceType: '171B', options: [
-    { label: '禁用', value: 0 }, { label: '使能', value: 1 }
-  ]}
+  // { key: 'pcs_B56', field: 'B56', width: 32, label: '设置交流侧无功功率类型', deviceType: '171B', options: [
+  //   { label: '不设置无功功率输出', value: 0x00A00000 },
+  //   { label: '通过 PF 设置命令', value: 0x00A10000 },
+  //   { label: '通过无功功率设置命令', value: 0x00A20000 }
+  // ]},
+  // { key: 'pcs_B64', field: 'B64', width: 32, label: '设置是否错相', deviceType: '171B', options: [
+  //   { label: '不允许', value: 0 }, { label: '允许', value: 1 }
+  // ]},
+  // { key: 'pcs_B100', field: 'B100', width: 32, label: '设置是否过载输出', deviceType: '171B', options: [
+  //   { label: '禁用', value: 0 }, { label: '使能', value: 1 }
+  // ]},
+  // { key: 'pcs_B112', field: 'B112', width: 32, label: '设置是否使能输入电压环', deviceType: '171B', options: [
+  //   { label: '禁用', value: 0 }, { label: '使能', value: 1 }
+  // ]}
 ]
 
 // ============ PV (171E) 控制参数 ============
@@ -208,7 +208,7 @@ export const STORAGE_SWITCH_PARAMS = [
   { key: 'st_B24', field: 'B24', label: '充放电指令', deviceType: '171D', options: [
     { label: '待机', value: 0 }, { label: '充电', value: 1 }, { label: '放电', value: 2 },
     { label: 'BAT自动', value: 3 }, { label: 'BUS自动', value: 4 },
-    { label: '关充电', value: 5 }, { label: '高压PV模式', value: 6 }, { label: '低压PV模式', value: 7 }
+    // { label: '关充电', value: 5 }, { label: '高压PV模式', value: 6 }, { label: '低压PV模式', value: 7 }
   ]}
 ]
 

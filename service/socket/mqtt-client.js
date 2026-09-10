@@ -12,7 +12,7 @@
  */
 
 import { LightMqttClient, testMqttConnection as _testMqttConnection } from './light-mqtt-client.js'
-import { buildIemsControlFrame } from './iems-frame-parser.js'
+import { buildIemsCommandFrame } from './iems-frame-parser.js'
 
 export class MqttDirectClient {
   constructor(config = {}) {
@@ -128,30 +128,81 @@ export class MqttDirectClient {
 
   /**
    * 下发控制指令（IEMS 二进制帧 → hex 字符串，与真实设备兼容）
-   * 真实设备通过 MQTT 传输 hex 字符串格式的 IEMS 帧
+   * 参考 Settings 组件（PvSettings/PcsSettings/BmsSettings/StorageSettings）和后端 QuickQueryConfigImpl.sendCommandFrame
+   *
+   * 调用方式 A（保持旧兼容）：sendControl(field, value, deviceType)
+   *   - 从 field (如 'B12') 自动推导寄存器地址 = 12/2 = 6
+   *   - deviceCategory/addr/deviceId/registerType 按设备类型自动映射
+   *
+   * 调用方式 B（完整命令）：sendControl(field, value, deviceType, { registerAddress, ...overrides })
+   *   - 传入 registerAddress 覆盖自动推导
+   *   - overrides 可覆盖 deviceCategory, addr, deviceId, registerType, extra1/2/3
+   *
    * @param {string} field 寄存器字段名 (如 'B12')
-   * @param {*} value 目标整数值
-   * @param {string} [deviceType] 设备类型，不传则用 setDeviceType 设置的
+   * @param {*} value 目标值（整数或 hex 字符串）
+   * @param {string} [deviceType] 目标设备类型码（如 '171C','171E','171F'），不传则用 setDeviceType 设置的
+   * @param {object} [overrides] 可选覆盖 { registerAddress, deviceCategory, addr, deviceId, registerType, extra1, extra2, extra3 }
    */
-  async sendControl(field, value, deviceType) {
+  async sendControl(field, value, deviceType, overrides = {}) {
     const dt = deviceType || this._currentDeviceType
     if (!dt) throw new Error('sendControl: 未指定 deviceType，请先调 setDeviceType')
 
     const topic = this.controlSetTopic || 'neiic/microEnergyStationCtl002'
-    const registers = {}
-    registers[field] = Number(value) & 0xffff
 
-    // 构建 IEMS 下行控制帧 (frameType=0x16, dataType=0xC2)
-    const frame = buildIemsControlFrame(dt, 1, 0, registers)
+    // 寄存器地址：优先用 overrides.registerAddress，否则从 field 推导 B{n} → n/2
+    let regAddress
+    if (overrides.registerAddress !== undefined) {
+      regAddress = overrides.registerAddress
+    } else {
+      const m = String(field).match(/^B(\d+)$/)
+      if (!m) throw new Error('sendControl: 无效的字段名 ' + field)
+      regAddress = parseInt(m[1], 10) / 2
+      if (!Number.isInteger(regAddress)) throw new Error('sendControl: 字段 ' + field + ' 的寄存器地址不是偶数')
+    }
+
+    // 按设备类型映射命令字段（参考各 Settings 组件）
+    const deviceCmdDefaults = {
+      // deviceCategory = 设备类型码本身
+      deviceCategory: dt,
+      registerType: '03',
+      // addr / deviceId 特殊映射：PV 和 Storage 有独立地址
+      ...({
+        '171E': { addr: 6,    deviceId: '6' },     // PV 逆变器
+        '171D': { addr: 30,   deviceId: '30' },    // 储能 DC-DC
+        '171B': { addr: '01', deviceId: '0001' },  // PCS
+        '171C': { addr: '01', deviceId: '0001' },  // BMS
+        '171F': { addr: '01', deviceId: '0001' },  // 能量控制器
+      })[dt] || { addr: '01', deviceId: '0001' },
+      extra1: '00',
+      extra2: '0000',
+      extra3: '0000',
+    }
+
+    // 合并 overrides（最高优先级）
+    const command = {
+      ...deviceCmdDefaults,
+      ...overrides,
+      registerAddress: regAddress,
+      registerValue: value,
+    }
+
+    // 构建 IEMS 命令控制帧 —— 帧头 deviceType 固定 '3401'（控制帧类型码）
+    // 参考 Settings 组件 typeCode: '3401'
+    const frame = buildIemsCommandFrame('3401', [command])
     // 转为 hex 字符串（真实设备 MQTT 传输格式）
     const frameHex = Array.from(frame).map(b => b.toString(16).padStart(2, '0')).join(' ')
 
-    console.log('========== MQTT 控制指令下发 (MqttDirectClient) ==========')
-    console.log('[MQTT] topic      :', topic)
-    console.log('[MQTT] deviceType :', dt)
-    console.log('[MQTT] field      :', field, '=', value, '(寄存器=' + (Number(value) & 0xffff) + ')')
-    console.log('[MQTT] hex string :', frameHex)
-    console.log('==========================================================')
+    console.log('========== MQTT 命令帧下发 (MqttDirectClient) ==========')
+    console.log('[MQTT] topic        :', topic)
+    console.log('[MQTT] frameDeviceType (帧头) : 3401')
+    console.log('[MQTT] deviceCategory (命令)  :', command.deviceCategory)
+    console.log('[MQTT] field        :', field)
+    console.log('[MQTT] registerAddr :', regAddress, '(0x' + Number(regAddress).toString(16).toUpperCase() + ')')
+    console.log('[MQTT] registerValue:', value)
+    console.log('[MQTT] registerType :', command.registerType)
+    console.log('[MQTT] addr/deviceId:', command.addr, '/' + command.deviceId)
+    console.log('[MQTT] hex string   :', frameHex)
+    console.log('=======================================================')
 
     // 发 hex 字符串，不是二进制
     return this.publish(topic, frameHex, { qos: 1 })

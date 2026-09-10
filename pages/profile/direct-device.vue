@@ -1,78 +1,23 @@
-<template>
+﻿﻿<template>
   <view class="sub-page" :class="platformClass">
     <DyNavbar title="直连设备监测" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
     <view class="fixed-placeholder"></view>
 
     <!-- 顶部设备卡片 -->
-    <view class="device-card" :class="connectionState">
-      <!-- 装饰光斑背景 -->
-      <view class="device-card-bg">
-        <view class="bg-orb bg-orb-1"></view>
-        <view class="bg-orb bg-orb-2"></view>
-        <view class="bg-orb bg-orb-3"></view>
-      </view>
-
-      <view class="device-card-content">
-        <!-- 头部：图标 + 信息 + 操作按钮 -->
-        <view class="device-header">
-          <view class="device-icon-wrap">
-            <view class="device-icon">
-              <uni-icons type="gear-filled" size="26" color="#fff"></uni-icons>
-            </view>
-            <view v-if="connectionState === 'online'" class="icon-pulse"></view>
-          </view>
-
-          <view class="device-info">
-            <view class="device-name-row">
-              <text class="device-name">{{ currentDeviceName }}</text>
-              <view class="status-badge" :class="connectionState">
-                <view class="status-dot" :class="connectionState"></view>
-                <text class="status-text">{{ statusText }}</text>
-              </view>
-            </view>
-            <view class="device-model">
-              <text class="model-label">{{ currentDeviceSubtitle }}</text>
-              <view class="model-chip">{{ config.protocol === 'mqtt' ? 'MQTT直连' : 'TCP' }}</view>
-            </view>
-          </view>
-
-          <view class="header-actions">
-            <view class="action-btn" :class="{ disabled: connecting }" @click="!connecting && manualRefresh()">
-              <uni-icons type="refresh" size="16" color="#fff"></uni-icons>
-            </view>
-            <view class="action-btn" @click="goConfig">
-              <uni-icons type="gear" size="16" color="#fff"></uni-icons>
-            </view>
-            <view class="action-btn more" @click="showDeviceMeta = !showDeviceMeta">
-              <uni-icons :type="showDeviceMeta ? 'up' : 'more'" size="16" color="#fff"></uni-icons>
-            </view>
-          </view>
-        </view>
-
-        <!-- 展开详情 -->
-        <view v-if="showDeviceMeta" class="device-meta">
-          <view class="meta-row">
-            <view class="meta-icon"><uni-icons type="server" size="12" color="rgba(255,255,255,0.6)"></uni-icons></view>
-            <text class="meta-label">{{ config.protocol === 'mqtt' ? 'Broker' : 'IP' }}</text>
-            <text class="meta-value">{{ config.protocol === 'mqtt' ? (config.brokerUrl || '--') : (config.ip || '--') }}</text>
-          </view>
-          <view class="meta-row">
-            <view class="meta-icon"><uni-icons type="paperplane" size="12" color="rgba(255,255,255,0.6)"></uni-icons></view>
-            <text class="meta-label">{{ config.protocol === 'mqtt' ? 'Topic' : 'Port' }}</text>
-            <text class="meta-value">{{ config.protocol === 'mqtt' ? (config.realtimeTopic || '--') : (config.port || '--') }}</text>
-          </view>
-          <view class="meta-row">
-            <view class="meta-icon"><uni-icons type="clock" size="12" color="rgba(255,255,255,0.6)"></uni-icons></view>
-            <text class="meta-label">更新</text>
-            <text class="meta-value">{{ lastUpdateText }}</text>
-          </view>
-          <view v-if="isConnected" class="disconnect-row" @click="onDisconnect">
-            <text class="disconnect-text">断开连接</text>
-            <uni-icons type="right" size="12" color="rgba(255,255,255,0.25)"></uni-icons>
-          </view>
-        </view>
-      </view>
-    </view>
+    <DeviceCard
+      :connectionState="connectionState"
+      :connecting="connecting"
+      :isConnected="isConnected"
+      :config="config"
+      :deviceName="currentDeviceName"
+      :deviceSubtitle="currentDeviceSubtitle"
+      :statusText="statusText"
+      :lastUpdateText="lastUpdateText"
+      :showDeviceMeta.sync="showDeviceMeta"
+      @refresh="manualRefresh"
+      @go-config="goConfig"
+      @disconnect="onDisconnect"
+    />
 
     <!-- 离线 / 未配置 提示 -->
     <view v-if="!config.enabled" class="empty-state">
@@ -121,615 +66,50 @@
       <swiper class="content-swiper" :style="swiperStyle" :current="currentTab" @change="onSwiperChange" :duration="300">
         <!-- 概览标签页 -->
         <swiper-item>
-          <scroll-view class="module-scroll" scroll-y="true">
-            <view class="content">
-              <view class="system-img">
-                <image src="/static/images/system-architecture-new.png"
-                  style="width:100%; height:96%; position: absolute; top:0; left:0; z-index: 1; padding: 20rpx;"></image>
-                <!-- 光伏 -->
-                <view class="device-label-top-left">
-                  <text class="device-name">光伏</text>
-                  <view class="power-row">
-                    <text class="device-power">{{ formattedValues['archPvPower'] || '--' }}</text>
-                    <text class="power-unit">kW</text>
-                  </view>
-                </view>
-                <!-- 电网 -->
-                <view class="device-label-top-right">
-                  <text class="device-name">电网</text>
-                  <view class="power-row">
-                    <text class="device-power">{{ formattedValues['archGridPower'] || '--' }}</text>
-                    <text class="power-unit">kW</text>
-                  </view>
-                </view>
-                <!-- 负荷 -->
-                <view class="device-label" style="left: 36%; top: 31%;">
-                  <view class="power-row">
-                    <text class="device-power">{{ formattedValues['archLoadMidPower'] || '--' }}</text>
-                    <text class="power-unit">kW</text>
-                  </view>
-                </view>
-                <!-- 储能 -->
-                <view class="device-label" style="left: 18%; top: 78%;">
-                  <text class="device-name">储能</text>
-                  <view class="power-row">
-                    <text class="device-power">
-                      <text>{{ formattedValues['archStorageStatus'] || '--' }}</text>
-                      <text> {{ formattedValues['archStoragePower'] || '--' }}</text>
-                    </text>
-                    <text class="power-unit">kW</text>
-                  </view>
-                  <text class="device-soc">{{ formattedValues['archSoc'] || '--' }}%</text>
-                </view>
-                <!-- 交流负荷 -->
-                <view class="device-label" style="left: 3%; top: 75%;">
-                  <text class="device-name">交流负荷</text>
-                  <view class="power-row">
-                    <text class="device-power">{{ formattedValues['archLoadPower'] || '--' }}</text>
-                    <text class="power-unit">kW</text>
-                  </view>
-                </view>
-              </view>
-
-              <!-- 数据卡片 -->
-              <view class="card-section">
-                <view class="card-row">
-                  <view class="card card-top-left">
-                    <view class="card-item">
-                      <text class="card-title">今日发电</text>
-                    </view>
-                    <view class="card-item">
-                      <text class="card-value">{{ formattedValues['archGenToday'] || '--' }}</text>
-                      <text class="card-unit"> kWh</text>
-                    </view>
-                  </view>
-                  <view class="card-horizontal-divider"></view>
-                  <view class="card card-top-right">
-                    <view class="card-item">
-                      <text class="card-title">今日用电</text>
-                    </view>
-                    <view class="card-item">
-                      <text class="card-value">{{ formattedValues['archUseToday'] || '--' }}</text>
-                      <text class="card-unit"> kWh</text>
-                    </view>
-                  </view>
-                </view>
-                <view class="card-divider"></view>
-                <view class="card-row">
-                  <view class="card card-bottom-left">
-                    <view class="card-item">
-                      <text class="card-title">储能剩余</text>
-                    </view>
-                    <view class="card-item">
-                      <text class="card-value">{{ formattedValues['archStorageRemaining'] || '--' }}</text>
-                      <text class="card-unit">%</text>
-                    </view>
-                  </view>
-                  <view class="card-horizontal-divider"></view>
-                  <view class="card card-bottom-right">
-                    <view class="card-item">
-                      <text class="card-title">电网供电</text>
-                    </view>
-                    <view class="card-item">
-                      <text class="card-value">{{ formattedValues['archGridSupply'] || '--' }}</text>
-                      <text class="card-unit"> kWh</text>
-                    </view>
-                  </view>
-                </view>
-              </view>
-
-              <!-- 储能SOC/状态模块（对齐 energy-storage.vue L7-29） -->
-              <view class="arch-status-container">
-                <view class="arch-status-content">
-                  <view class="arch-status-indicator">
-                    <image class="arch-battery-icon" src="/static/images/img-storage.png" />
-                    <view class="arch-soc-container">
-                      <view class="arch-soc-progress">
-                        <image src="/static/images/storage.svg" class="arch-soc-icon" />
-                        <view class="arch-progress-track">
-                          <view class="arch-progress-fill" :style="{
-                            width: (formattedValues['archSocNumeric'] || 0) + '%',
-                            background: formattedValues['archStorageStatusGradient'] || '#8c8c8c'
-                          }">
-                            <text class="arch-progress-text">{{ formattedValues['archSoc'] || '--' }}%</text>
-                          </view>
-                        </view>
-                        <text class="arch-status-text" :style="{ color: formattedValues['archStorageStatusGradient'] || '#8c8c8c' }">
-                          {{ formattedValues['archStorageStatusExtended'] || '--' }}
-                        </text>
-                      </view>
-                      <view class="arch-soc-remaining">
-                        <text>剩余电量预计可用</text>
-                        <text class="arch-soc-hours">{{ formattedValues['archStorageRemainingHours'] || '--' }} 小时</text>
-                      </view>
-                    </view>
-                  </view>
-                </view>
-              </view>
-
-              <!-- 电网统计模块（对齐 grid-management.vue L14-68） -->
-              <view class="arch-stats-section">
-                <view class="arch-section-title">
-                  <text class="arch-title-text">电网数据</text>
-                </view>
-                <view class="arch-stats-box">
-                  <view class="arch-stat-row">
-                    <view class="arch-stat-item vertical">
-                      <view class="arch-stat-subitem">
-                        <text class="arch-stat-label">电网实时功率</text>
-                        <text class="arch-stat-value">{{ formattedValues['archGridPower'] || '--' }}<text class="arch-stat-unit">kW</text></text>
-                      </view>
-                      <view class="arch-stat-subitem">
-                        <text class="arch-stat-label">电网频率</text>
-                        <text class="arch-stat-value">{{ formattedValues['archGridFrequency'] || '--' }}<text class="arch-stat-unit">Hz</text></text>
-                      </view>
-                    </view>
-                    <view class="arch-stat-divider"></view>
-                    <view class="arch-stat-item vertical">
-                      <view class="arch-stat-subitem">
-                        <text class="arch-stat-label">电网今日馈电量</text>
-                        <text class="arch-stat-value">{{ formattedValues['archTodayFeedEnergy'] || '--' }}<text class="arch-stat-unit">kWh</text></text>
-                      </view>
-                      <view class="arch-stat-subitem">
-                        <text class="arch-stat-label">电网累计馈电量</text>
-                        <text class="arch-stat-value">{{ formattedValues['archTotalFeedEnergy'] || '--' }}<text class="arch-stat-unit">kWh</text></text>
-                      </view>
-                    </view>
-                    <view class="arch-stat-divider"></view>
-                    <view class="arch-stat-item vertical">
-                      <view class="arch-stat-subitem">
-                        <text class="arch-stat-label">电网今日供电</text>
-                        <text class="arch-stat-value">{{ formattedValues['archTodaySupplyEnergy'] || '--' }}<text class="arch-stat-unit">kWh</text></text>
-                      </view>
-                      <view class="arch-stat-subitem">
-                        <text class="arch-stat-label">电网累计供电</text>
-                        <text class="arch-stat-value">{{ formattedValues['archTotalSupplyEnergy'] || '--' }}<text class="arch-stat-unit">kWh</text></text>
-                      </view>
-                    </view>
-                  </view>
-                </view>
-              </view>
-
-              <!-- 光伏统计模块（对齐 pv-management.vue L13-35） -->
-              <view class="arch-stats-section">
-                <view class="arch-section-title">
-                  <text class="arch-title-text">光伏数据</text>
-                </view>
-                <view class="arch-stats-box">
-                  <view class="arch-stat-row">
-                    <view class="arch-stat-item vertical arch-center">
-                      <view class="arch-stat-subitem">
-                        <text class="arch-stat-label">当日发电量</text>
-                        <text class="arch-stat-value">{{ formattedValues['archPvTodayGen'] || '--' }}<text class="arch-stat-unit">kWh</text></text>
-                      </view>
-                    </view>
-                    <view class="arch-stat-divider"></view>
-                    <view class="arch-stat-item vertical">
-                      <view class="arch-stat-subitem">
-                        <text class="arch-stat-label">累计发电量</text>
-                        <text class="arch-stat-value">{{ formattedValues['archPvTotalGen'] || '--' }}<text class="arch-stat-unit">kWh</text></text>
-                      </view>
-                      <view class="arch-stat-subitem">
-                        <text class="arch-stat-label">累计发电时长</text>
-                        <text class="arch-stat-value">{{ formattedValues['archPvTotalGenDays'] || '--' }}<text class="arch-stat-unit">天</text></text>
-                      </view>
-                    </view>
-                  </view>
-                  <view class="arch-section-divider"></view>
-                  <view class="arch-stat-row">
-                    <view class="arch-stat-item vertical">
-                      <view class="arch-stat-subitem">
-                        <text class="arch-stat-label">日最高发电量</text>
-                        <text class="arch-stat-value">{{ formattedValues['archPvDayMaxGen'] || '--' }}<text class="arch-stat-unit">kWh</text></text>
-                      </view>
-                      <view class="arch-stat-subitem">
-                        <text class="arch-stat-label">出现在</text>
-                        <text class="arch-stat-value small">{{ formattedValues['archPvDayMaxGenTime'] || '--' }}</text>
-                      </view>
-                    </view>
-                    <view class="arch-stat-divider"></view>
-                    <view class="arch-stat-item vertical">
-                      <view class="arch-stat-subitem">
-                        <text class="arch-stat-label">历史最高发电功率</text>
-                        <text class="arch-stat-value">{{ formattedValues['archPvHistMaxPower'] || '--' }}<text class="arch-stat-unit">kW</text></text>
-                      </view>
-                    </view>
-                  </view>
-                </view>
-              </view>
-
-              <!-- 负荷设备模块（对齐 load-management.vue L7-25） -->
-              <view class="arch-device-stats">
-                <view class="arch-section-title">
-                  <text class="arch-title-text">设备信息</text>
-                </view>
-                <view class="arch-device-grid">
-                  <view class="arch-device-item">
-                    <text class="arch-device-number">{{ formattedValues['archDeviceCounts'] ? formattedValues['archDeviceCounts'].dljQuantity : 0 }}</text>
-                    <text class="arch-device-text">空调</text>
-                  </view>
-                  <view class="arch-device-item">
-                    <text class="arch-device-number">{{ formattedValues['archDeviceCounts'] ? formattedValues['archDeviceCounts'].cdzQuantity : 0 }}</text>
-                    <text class="arch-device-text">充电桩</text>
-                  </view>
-                  <view class="arch-device-item">
-                    <text class="arch-device-number">{{ formattedValues['archDeviceCounts'] ? formattedValues['archDeviceCounts'].lightQuantity : 0 }}</text>
-                    <text class="arch-device-text">照明</text>
-                  </view>
-                  <view class="arch-device-item">
-                    <text class="arch-device-number">{{ formattedValues['archDeviceCounts'] ? formattedValues['archDeviceCounts'].unknownDeviceQuantity : 0 }}</text>
-                    <text class="arch-device-text">未知设备</text>
-                  </view>
-                </view>
-              </view>
-            </view>
-          </scroll-view>
+          <OverviewTab :formattedValues="formattedValues" :systemRunning="archSystemRunning" @start-stop="onSystemStartStop" />
         </swiper-item>
 
         <!-- PCS标签页 -->
         <swiper-item>
-          <scroll-view class="module-scroll" scroll-y="true">
-            <view class="content">
-              <view class="module">
-                <view class="module-title">PCS</view>
-                <view class="data-group">
-                  <view class="group-title">运行状态</view>
-                  <view class="status-grid">
-                    <view
-                      v-for="(status, index) in parsedB64Status.filter(s => ['工作模式', 'U1状态', 'U2状态'].includes(s.name))"
-                      :key="index" class="status-item"
-                      :style="{ backgroundColor: status.bgColor, borderColor: status.borderColor }">
-                      <text class="status-name" :style="{ color: status.color }">{{ status.name }}</text>
-                      <text class="status-value" :class="{ error: status.value === '发生' }">{{ status.value }}</text>
-                    </view>
-                    <text v-if="parsedB64Status.length === 0" class="status-empty">暂无数据</text>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">相电压</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">A相(V)</text><text class="item-value">{{ formattedValues['171B_B0'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">B相(V)</text><text class="item-value">{{ formattedValues['171B_B4'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">C相(V)</text><text class="item-value">{{ formattedValues['171B_B8'] || '--' }}</text></view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">相电流</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">Ia(A)</text><text class="item-value">{{ formattedValues['171B_B2'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">Ib(A)</text><text class="item-value">{{ formattedValues['171B_B6'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">Ic(A)</text><text class="item-value">{{ formattedValues['171B_B10'] || '--' }}</text></view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">线电压</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">AB(V)</text><text class="item-value">{{ formattedValues['171B_B12'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">BC(V)</text><text class="item-value">{{ formattedValues['171B_B16'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">CA(V)</text><text class="item-value">{{ formattedValues['171B_B20'] || '--' }}</text></view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">相功率</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">A相有功(kW)</text><text class="item-value">{{ formattedValues['171B_B24'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">B相有功(kW)</text><text class="item-value">{{ formattedValues['171B_B28'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">C相有功(kW)</text><text class="item-value">{{ formattedValues['171B_B32'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">A相无功(kVar)</text><text class="item-value">{{ formattedValues['171B_B26'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">B相无功(kVar)</text><text class="item-value">{{ formattedValues['171B_B30'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">C相无功(kVar)</text><text class="item-value">{{ formattedValues['171B_B34'] || '--' }}</text></view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">交流侧</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">总有功(kW)</text><text class="item-value">{{ formattedValues['171B_B44'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">总无功(kVar)</text><text class="item-value">{{ formattedValues['171B_B48'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">总视在(kVA)</text><text class="item-value">{{ formattedValues['171B_B52'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">频率(Hz)</text><text class="item-value">{{ formattedValues['171B_B36'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">温度(℃)</text><text class="item-value">{{ formattedValues['171B_B40'] || '--' }}</text></view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">直流侧</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">直流电压(V)</text><text class="item-value">{{ formattedValues['171B_B56'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">直流电流(A)</text><text class="item-value">{{ formattedValues['171B_B58'] || '--' }}</text></view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">故障状态</view>
-                  <view class="status-grid">
-                    <view
-                      v-for="(status, index) in parsedB64Status.filter(s => !['工作模式','U1状态','U2状态'].includes(s.name))"
-                      :key="index" class="fault-item">
-                      <text class="fault-name" :class="{ active: status.value === '发生' }">{{ status.name }}</text>
-                    </view>
-                    <text v-if="parsedB64Status.length === 0" class="status-empty">暂无数据</text>
-                  </view>
-                </view>
-              </view>
-            </view>
-          </scroll-view>
+          <PcsTab :formattedValues="formattedValues" :rawValues="rawValues" />
         </swiper-item>
 
+        <!-- 储能DC标签页 -->
         <swiper-item>
-          <scroll-view class="module-scroll" scroll-y="true">
-            <view class="content">
-              <view class="module">
-                <view class="module-title">储能DC</view>
-                <view class="data-group">
-                  <view class="group-title">DCDC状态</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">故障标志</text><text class="item-value">{{ formattedValues['171D_B0'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">运行状态</text><text class="item-value">{{ formattedValues['171D_B2'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">工作状态</text><text class="item-value">{{ formattedValues['171D_B4'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">充电模式</text><text class="item-value">{{ formattedValues['171D_B6'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">电池电压(V)</text><text class="item-value">{{ formattedValues['171D_B8'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">电池电流(A)</text><text class="item-value">{{ formattedValues['171D_B10'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">充电功率(kW)</text><text class="item-value">{{ formattedValues['171D_B12'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">放电功率(kW)</text><text class="item-value">{{ formattedValues['171D_B14'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">BUS电压(V)</text><text class="item-value">{{ formattedValues['171D_B16'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">BUS+(V)</text><text class="item-value">{{ formattedValues['171D_B18'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">BUS-(V)</text><text class="item-value">{{ formattedValues['171D_B20'] || '--' }}</text></view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">DCDC电气参数</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">环境温度(℃)</text><text class="item-value">{{ formattedValues['171D_B22'] || '--' }}</text></view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">DCDC报警状态</view>
-                  <view class="status-grid">
-                    <view v-for="(status, index) in dcdcAlarmStatus" :key="index" class="fault-item">
-                      <text class="fault-name" :class="{ active: status.isAlarm }">{{ status.name }}</text>
-                    </view>
-                    <text v-if="dcdcAlarmStatus.length === 0" class="status-empty">暂无数据</text>
-                  </view>
-                </view>
-              </view>
-            </view>
-          </scroll-view>
+          <StorageDcTab :formattedValues="formattedValues" :rawValues="rawValues" />
         </swiper-item>
 
+        <!-- 光伏标签页 -->
         <swiper-item>
-          <scroll-view class="module-scroll" scroll-y="true">
-            <view class="content">
-              <view class="module">
-                <view class="module-title">光伏</view>
-                <view class="data-group">
-                  <view class="group-title">运行状态</view>
-                  <view class="data-grid">
-                    <view v-for="(status, index) in parsedB56Status.filter(s => ['DCDC状态'].includes(s.name))" :key="index"
-                      class="grid-item">
-                      <text class="item-label">{{ status.name }}</text>
-                      <text class="item-value">{{ status.value }}</text>
-                    </view>
-                    <view v-if="rawValues['171E'] && rawValues['171E']['B72'] !== undefined" class="grid-item">
-                      <text class="item-label">工作模式</text>
-                      <text class="item-value">{{ formattedValues['171E_B72'] || '--' }}</text>
-                    </view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">电气参数</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">BUS侧电压(V)</text><text class="item-value">{{ formattedValues['171E_B0'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">模块电流(A)</text><text class="item-value">{{ formattedValues['171E_B4'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">模块限流点</text><text class="item-value">{{ formattedValues['171E_B8'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DC板温度(℃)</text><text class="item-value">{{ formattedValues['171E_B12'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">光伏侧电压(V)</text><text class="item-value">{{ formattedValues['171E_B16'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">PFC0电压(V)</text><text class="item-value">{{ formattedValues['171E_B20'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">PFC1电压(V)</text><text class="item-value">{{ formattedValues['171E_B24'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">面板温度(℃)</text><text class="item-value">{{ formattedValues['171E_B28'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">PFC板温度(℃)</text><text class="item-value">{{ formattedValues['171E_B44'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">输入功率(kW)</text><text class="item-value">{{ formattedValues['171E_B64'] || '--' }}</text></view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">告警状态</view>
-                  <view class="status-grid">
-                    <view v-for="(status, index) in parsedB56Status.filter(s => s.name !== 'DCDC状态')" :key="index"
-                      class="fault-item">
-                      <text class="fault-name" :class="{ active: status.isAlarm }">{{ status.name }}</text>
-                    </view>
-                    <text v-if="parsedB56Status.filter(s => s.name !== 'DCDC状态').length === 0" class="status-empty">暂无数据</text>
-                  </view>
-                </view>
-              </view>
-            </view>
-          </scroll-view>
+          <PvTab :formattedValues="formattedValues" :rawValues="rawValues" />
         </swiper-item>
 
+        <!-- BMS标签页 -->
         <swiper-item>
-          <scroll-view class="module-scroll" scroll-y="true">
-            <view class="content">
-              <view class="module">
-                <view class="module-title">BMS</view>
-                <view class="data-group">
-                  <view class="group-title">电池簇运行状态</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">电池状态</text><text class="item-value">{{ formattedValues['171C_B26'] || '--' }}</text></view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">簇级核心电气参数</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">簇电压(V)</text><text class="item-value">{{ formattedValues['171C_B12'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">簇电流(A)</text><text class="item-value">{{ formattedValues['171C_B14'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">负载电压(V)</text><text class="item-value">{{ formattedValues['171C_B144'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">SOC(%)</text><text class="item-value">{{ formattedValues['171C_B16'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">SOH(%)</text><text class="item-value">{{ formattedValues['171C_B18'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">SOE(kWh)</text><text class="item-value">{{ formattedValues['171C_B20'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">绝缘R+(MΩ)</text><text class="item-value">{{ formattedValues['171C_B22'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">绝缘R-(MΩ)</text><text class="item-value">{{ formattedValues['171C_B24'] || '--' }}</text></view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">DI/DO状态</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">DI1</text><text class="item-value">{{ formattedValues['171C_B28b0'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DI2</text><text class="item-value">{{ formattedValues['171C_B28b1'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DI3</text><text class="item-value">{{ formattedValues['171C_B28b2'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DI4</text><text class="item-value">{{ formattedValues['171C_B28b3'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DI5</text><text class="item-value">{{ formattedValues['171C_B28b4'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DI6</text><text class="item-value">{{ formattedValues['171C_B28b5'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DI7</text><text class="item-value">{{ formattedValues['171C_B28b6'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DI8</text><text class="item-value">{{ formattedValues['171C_B28b7'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">SLP</text><text class="item-value">{{ formattedValues['171C_B29b0'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DO1</text><text class="item-value">{{ formattedValues['171C_B30b0'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DO2</text><text class="item-value">{{ formattedValues['171C_B30b1'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DO3</text><text class="item-value">{{ formattedValues['171C_B30b2'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DO4</text><text class="item-value">{{ formattedValues['171C_B30b3'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DO5</text><text class="item-value">{{ formattedValues['171C_B30b4'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DO6</text><text class="item-value">{{ formattedValues['171C_B30b5'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DO7</text><text class="item-value">{{ formattedValues['171C_B30b6'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">DO8</text><text class="item-value">{{ formattedValues['171C_B30b7'] || '--' }}</text></view>
-                  </view>
-                </view>
-                <view class="data-group">
-                  <view class="group-title">温度采集参数</view>
-                  <view class="data-grid">
-                    <view class="grid-item"><text class="item-label">温度点数</text><text class="item-value">{{ formattedValues['171C_B32'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">最高温度(℃)</text><text class="item-value">{{ formattedValues['171C_B34'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">最高温模块</text><text class="item-value">{{ formattedValues['171C_B36'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">最高温序号</text><text class="item-value">{{ formattedValues['171C_B38'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">最低温度(℃)</text><text class="item-value">{{ formattedValues['171C_B40'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">最低温模块</text><text class="item-value">{{ formattedValues['171C_B42'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">最低温序号</text><text class="item-value">{{ formattedValues['171C_B44'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">平均温度(℃)</text><text class="item-value">{{ formattedValues['171C_B46'] || '--' }}</text></view>
-                    <view class="grid-item"><text class="item-label">电池箱最高温(℃)</text><text class="item-value">{{ formattedValues['171C_B106'] || '--' }}</text></view>
-                  </view>
-                </view>
-
-                <view class="data-group">
-                  <view class="group-title">
-                    <text>控制指令</text>
-                    <text class="group-count">{{ controlList.length }}</text>
-                  </view>
-                  <view class="control-card">
-                    <view v-for="ctrl in controlList" :key="ctrl.field" class="control-row">
-                      <view class="control-info">
-                        <text class="control-name">{{ ctrl.name }}</text>
-                        <text class="control-current">当前: {{ ctrl.currentLabel || '--' }}</text>
-                      </view>
-                      <view class="control-btns" :class="{ 'btn-disabled': !isConnected }">
-                        <view
-                          v-for="opt in ctrl.options"
-                          :key="opt.value"
-                          class="ctrl-btn"
-                          :class="{
-                            'btn-active': String(ctrl.currentValue) === String(opt.value),
-                            'btn-danger': opt.dangerous,
-                            'btn-clicked': clickedBtn === ctrl.field + '-' + opt.value
-                          }"
-                          @click="onControlClick(ctrl, opt)"
-                        >{{ opt.label }}</view>
-                      </view>
-                    </view>
-                  </view>
-                </view>
-              </view>
-            </view>
-          </scroll-view>
+          <BmsTab
+            :formattedValues="formattedValues"
+            :controlList="controlList"
+            :isConnected="isConnected"
+            :clickedBtn="clickedBtn"
+            @control-click="onControlClick"
+          />
         </swiper-item>
 
         <!-- 设置标签页（数据驱动，v-for 遍历 SETTINGS_TABS，无操作码时不渲染） -->
         <swiper-item v-if="hasAccessCode" v-for="tabCfg in settingsTabs" :key="tabCfg.tab">
           <scroll-view class="module-scroll" scroll-y="true">
             <view class="content">
-              <view class="settings-header" :class="tabCfg.theme">
-                <text class="settings-title">{{ tabCfg.title }}</text>
-                <view class="edit-toggle" :class="{ active: isEditing(tabCfg.editKey) }" @click="toggleEdit(tabCfg.editKey)">
-                  <text>{{ isEditing(tabCfg.editKey) ? '完成编辑' : '修改配置' }}</text>
-                </view>
-              </view>
-
-              <!-- 开关控制（常规：单段 / 快捷：多段 v-for） -->
-              <template v-if="tabCfg.switchSections">
-                <view v-for="ss in tabCfg.switchSections" :key="ss.filterKey" class="settings-section">
-                  <view class="section-title"><text>{{ ss.title }}</text></view>
-                  <view v-for="p in getParams(tabCfg.dataKey).filter(item => item.key === ss.filterKey)" :key="p.key" class="param-row">
-                    <view class="param-info">
-                      <text class="param-label">{{ p.label }}</text>
-                      <text class="param-current">{{ getParamCurrentLabel(p) }}</text>
-                    </view>
-                    <view class="param-btns">
-                      <view
-                        v-for="opt in p.options"
-                        :key="opt.value"
-                        class="param-btn"
-                        :class="{
-                          'btn-danger': opt.dangerous,
-                          'btn-active': getParamCurrentValue(p) === opt.value
-                        }"
-                        @click="onSwitchParamClick(p, opt)"
-                      >{{ opt.label }}</view>
-                    </view>
-                  </view>
-                </view>
-              </template>
-              <template v-else>
-                <view class="settings-section">
-                  <view class="section-title"><text>{{ tabCfg.switchTitle }}</text></view>
-                  <view v-for="p in getParams(tabCfg.dataKey)" :key="p.key" class="param-row">
-                    <view class="param-info">
-                      <text class="param-label">{{ p.label }}</text>
-                      <text class="param-current">{{ getParamCurrentLabel(p) }}</text>
-                    </view>
-                    <view class="param-btns">
-                      <view
-                        v-for="opt in p.options"
-                        :key="opt.value"
-                        class="param-btn"
-                        :class="{
-                          'btn-danger': opt.dangerous,
-                          'btn-active': getParamCurrentValue(p) === opt.value
-                        }"
-                        @click="onSwitchParamClick(p, opt)"
-                      >{{ opt.label }}</view>
-                    </view>
-                  </view>
-                </view>
-                <!-- 额外开关控制（BMS 的"开关控制"段） -->
-                <view v-if="tabCfg.extraSwitchKey" class="settings-section">
-                  <view class="section-title"><text>{{ tabCfg.extraSwitchTitle }}</text></view>
-                  <view v-for="p in getParams(tabCfg.extraSwitchKey)" :key="p.key" class="param-row">
-                    <view class="param-info">
-                      <text class="param-label">{{ p.label }}</text>
-                      <text class="param-current">{{ getParamCurrentLabel(p) }}</text>
-                    </view>
-                    <view class="param-btns">
-                      <view
-                        v-for="opt in p.options"
-                        :key="opt.value"
-                        class="param-btn"
-                        :class="{
-                          'btn-danger': opt.dangerous,
-                          'btn-active': getParamCurrentValue(p) === opt.value
-                        }"
-                        @click="onSwitchParamClick(p, opt)"
-                      >{{ opt.label }}</view>
-                    </view>
-                  </view>
-                </view>
-              </template>
-
-              <!-- 数值参数 -->
-              <view class="settings-section">
-                <view class="section-title"><text>{{ tabCfg.numericTitle }}</text></view>
-                <view v-for="p in getParams(tabCfg.numericKey)" :key="p.key" class="param-row">
-                  <view class="param-info">
-                    <text class="param-label">{{ p.label }}</text>
-                    <text class="param-current">{{ getParamCurrentText(p) }}{{ p.unit ? ' ' + p.unit : '' }}</text>
-                  </view>
-                  <view class="param-edit" v-if="isEditing(tabCfg.editKey)" @click="onNumericParamEdit(p)">
-                    <uni-icons type="compose" size="16" color="#1890ff"></uni-icons>
-                  </view>
-                </view>
-              </view>
+              <SettingsPanel
+                :tabCfg="tabCfg"
+                :paramsMap="settingsParamsMap"
+                :isEditing="isEditing(tabCfg.editKey)"
+                :formatCurrentLabel="getParamCurrentLabel"
+                :formatCurrentValue="getParamCurrentValue"
+                :formatCurrentText="getParamCurrentText"
+                @toggle-edit="toggleEdit"
+                @switch-click="onSwitchParamClick"
+                @numeric-edit="onNumericParamEdit"
+              />
             </view>
           </scroll-view>
         </swiper-item>
@@ -737,21 +117,16 @@
     </view>
 
     <!-- 设置面板确认弹窗 -->
-    <view v-if="showConfirm" class="confirm-mask" @click="showConfirm = false">
-      <view class="confirm-dialog" @click.stop>
-        <view class="confirm-title"><text>{{ confirmTitle || '确认操作' }}</text></view>
-        <view class="confirm-content"><text>{{ confirmContent }}</text></view>
-        <view class="confirm-btns">
-          <view class="confirm-btn cancel" @click="showConfirm = false"><text>取消</text></view>
-          <view class="confirm-btn ok" @click="onConfirmOk"><text>确认</text></view>
-        </view>
-      </view>
-    </view>
+    <ConfirmDialog
+      :visible="showConfirm"
+      :title="confirmTitle"
+      :content="confirmContent"
+      @cancel="showConfirm = false"
+      @confirm="onConfirmOk"
+    />
 
     <!-- 操作反馈 Toast -->
-    <view v-if="showOpToast" class="op-toast" :class="{ success: opToast.indexOf('成功') >= 0 }">
-      <text>{{ opToast }}</text>
-    </view>
+    <OpToast :visible="showOpToast" :text="opToast" />
   </view>
 </template>
 
@@ -769,228 +144,45 @@ import {
   getRegisterMap
 } from '@/service/devices/modbus-register-map.js'
 import { realtimeDataProvider } from '@/service/websocket'
+// 常量集中定义
 import {
-  BMS_NUMERIC_PARAMS,
-  BMS_SWITCH_PARAMS,
-  BMS_POWER_PARAMS,
-  PCS_NUMERIC_PARAMS,
-  PCS_SWITCH_PARAMS,
-  PV_NUMERIC_PARAMS,
-  PV_SWITCH_PARAMS,
-  STORAGE_NUMERIC_PARAMS,
-  STORAGE_SWITCH_PARAMS,
-  QUICK_CONTROL_PARAMS,
-  QUICK_POWER_PARAMS
-} from '@/service/devices/control-params.js'
-
-const STORAGE_KEY = 'direct_device_config'
-
-const DEVICE_TYPES = [null, '171B', '171D', '171E', '171C', null, null, null, null, null]
-
-const TAB_LIST = ['概览', 'PCS', '储能DC', '光伏', 'BMS', 'PCS设置', 'BMS设置', '光伏设置', '储能设置', '快捷控制']
-const TAB_GROUP_MONITOR = [0, 1, 2, 3, 4]
-const TAB_GROUP_CONTROL = [5, 6, 7, 8, 9]
-const MONITOR_LAST_INDEX = 4
-
-const GROUP_TITLE = {
-  cluster: '电池簇核心',
-  temp: '温度信息',
-  cell: '单体电压与内阻',
-  soc: '单体 SOC / SOH',
-  box: '电池箱温度',
-  energy: '累计电量',
-  limit: '允许值',
-  system: '系统信息',
-  status: '运行状态',
-  battery: '电池参数',
-  power: '功率数据',
-  bus: '母线电压',
-  voltage: '相电压',
-  current: '相电流',
-  lineVoltage: '线电压',
-  acSide: '交流侧',
-  dcSide: '直流侧',
-  electrical: '电气参数',
-  info: '设备信息'
-}
-
-const DEVICE_GROUPS = {
-  '171B': ['status', 'voltage', 'current', 'lineVoltage', 'power', 'acSide', 'dcSide', 'system'],
-  '171C': ['cluster', 'temp', 'cell', 'soc', 'box', 'energy', 'limit', 'system'],
-  '171D': ['status', 'battery', 'power', 'bus', 'temp', 'system'],
-  '171E': ['status', 'electrical', 'info']
-}
-
-const DEVICE_NAME_MAP = {
-  '171B': 'PCS 功率变换系统',
-  '171C': 'BMS 电池管理系统',
-  '171D': '储能DC-DC变流器',
-  '171E': '光伏逆变器'
-}
-
-// ============ 状态位/告警位定义（模块级常量，避免每次 computed 重建） ============
-
-// PCS B64 状态位定义：[name, bitPos, isError?]
-const PCS_B64_BITS = [
-  ['工作模式', 12, false, true], // 特殊：modeMap
-  ['U1状态', 21, false, true],
-  ['U2状态', 22, false, true],
-  ['模块故障', 0, true], ['模块保护', 1, true], ['交流输入缺相', 2, true],
-  ['SCI通信故障', 3, true], ['交流侧接线错相', 4, true], ['孤岛告警', 5, true],
-  ['内部母线过欠压', 6, true], ['交流侧欠压', 7, true], ['交流侧过压', 8, true],
-  ['直流侧过压', 9, true], ['直流侧欠压', 10, true], ['锁相错误', 11, true],
-  ['U1过流保护', 14, true], ['风扇故障', 15, true], ['CAN通信故障', 16, true],
-  ['模块不均流', 17, true], ['地址重复', 18, true], ['泄放故障', 20, true],
-  ['模块限功率', 23, true], ['温度限功率', 24, true], ['交流限功率', 25, true],
-  ['交流侧欠频', 26, true], ['交流侧过频', 27, true], ['直流侧短路', 28, true],
-  ['堵风道过温', 29, true], ['模块过温', 30, true], ['环温过温', 31, true]
-]
-const PCS_B64_STATUS_MAP = {
-  '工作模式': '#1890FF', 'U1状态': '#52c41a', 'U2状态': '#52c41a',
-  '模块故障': '#FF4D4F', '模块保护': '#FAAD14', '交流输入缺相': '#FF4D4F',
-  'SCI通信故障': '#FF4D4F', '交流侧接线错相': '#FF4D4F', '孤岛告警': '#FAAD14',
-  '内部母线过欠压': '#FF4D4F', '交流侧欠压': '#FAAD14', '交流侧过压': '#FAAD14',
-  '直流侧过压': '#FF4D4F', '直流侧欠压': '#FAAD14', '锁相错误': '#FF4D4F',
-  'U1过流保护': '#FF4D4F', '风扇故障': '#FF4D4F', 'CAN通信故障': '#FF4D4F',
-  '模块不均流': '#FAAD14', '地址重复': '#FF4D4F', '泄放故障': '#FF4D4F',
-  '模块限功率': '#FAAD14', '温度限功率': '#FAAD14', '交流限功率': '#FAAD14',
-  '交流侧欠频': '#FAAD14', '交流侧过频': '#FAAD14', '直流侧短路': '#FF4D4F',
-  '堵风道过温': '#FF4D4F', '模块过温': '#FF4D4F', '环温过温': '#FF4D4F'
-}
-const PCS_MODE_MAP = { 0: '并网', 1: '离网', 2: '整流' }
-
-// 光伏 B56 状态位定义：[name, bitPos]
-const PV_B56_BITS = [
-  ['模块故障', 0], ['模块保护', 1], ['SCI通信故障', 3], ['输入模式检测错误', 4],
-  ['输入模式不匹配', 5], ['DCDC过压', 7], ['PFC电压异常', 8], ['光伏侧欠压', 9],
-  ['光伏侧欠压2', 14], ['CAN通信故障', 16], ['模块不均流', 17], ['模块限功率', 23],
-  ['温度限功率', 24], ['光伏侧限功率', 25], ['风扇故障', 27], ['DCDC短路', 28],
-  ['DCDC过温', 30], ['DCDC输出过压', 31], ['DCDC状态', 22, false, true] // 特殊：开机/关机
-]
-
-// 储能DC DCDC告警位定义
-const DCDC_ALARM_FIELDS = [
-  { key: 'B40b0', name: '电池过压告警' }, { key: 'B40b1', name: '电池过压关机' },
-  { key: 'B40b2', name: '电池快速过压' }, { key: 'B40b3', name: '电池欠压告警' },
-  { key: 'B40b4', name: '电池欠压关机' }, { key: 'B40b5', name: '电池快速欠压' },
-  { key: 'B40b6', name: '电池输入短路' }, { key: 'B40b7', name: '充放电过流' },
-  { key: 'B41b0', name: '充放电快速过流' }, { key: 'B41b1', name: '充放电硬件过流' },
-  { key: 'B41b2', name: '电池未接' }, { key: 'B41b3', name: '电池反接' },
-  { key: 'B41b4', name: 'BUS3过压' }, { key: 'B41b5', name: 'BUS3快速过压' },
-  { key: 'B41b6', name: 'BUS3欠压' }, { key: 'B41b7', name: 'BUS3快速欠压' },
-  { key: 'B42b0', name: 'BUS2过压' }, { key: 'B42b1', name: 'BUS2快速过压' },
-  { key: 'B42b5', name: 'BUS2欠压' }, { key: 'B42b7', name: 'BUS1+过压' },
-  { key: 'B43b0', name: 'BUS1+快速过压' }, { key: 'B43b1', name: 'BUS1-过压' },
-  { key: 'B43b2', name: 'BUS1-快速过压' }, { key: 'B43b3', name: 'BUS1电压不平衡' },
-  { key: 'B43b4', name: 'BUS1+快速欠压' }, { key: 'B43b5', name: 'BUS1-快速欠压' },
-  { key: 'B43b6', name: 'BUS+母线过压' }, { key: 'B43b7', name: 'BUS+母线快速过压' },
-  { key: 'B44b0', name: 'BUS-母线过压' }, { key: 'B44b1', name: 'BUS-母线快速过压' },
-  { key: 'B44b2', name: 'BUS母线电压不平衡' }, { key: 'B44b3', name: 'BUS母线未接' },
-  { key: 'B44b4', name: 'BUS母线反接' }, { key: 'B44b5', name: 'BUS母线短路' },
-  { key: 'B44b6', name: 'BUS母线欠压关机' }, { key: 'B44b7', name: 'BUS+母线快速欠压' },
-  { key: 'B45b0', name: 'BUS-母线快速欠压' }, { key: 'B45b1', name: 'DCDC1过流' },
-  { key: 'B45b2', name: 'DCDC1快速过流' }, { key: 'B45b3', name: 'DCDC1硬件过流' },
-  { key: 'B45b4', name: 'DCDC2过流' }, { key: 'B45b5', name: 'DCDC2快速过流' },
-  { key: 'B45b6', name: 'DCDC2硬件过流' }, { key: 'B45b7', name: 'DCDC3过流' },
-  { key: 'B46b0', name: 'DCDC3快速过流' }, { key: 'B46b1', name: 'DCDC3硬件过流' },
-  { key: 'B46b2', name: 'DCDC不均流' }, { key: 'B46b3', name: 'BUS1+硬件过压' },
-  { key: 'B46b4', name: '谐振电感A1硬件过流' }, { key: 'B46b5', name: 'BUS1-硬件过压' },
-  { key: 'B46b6', name: '谐振电感A2硬件过流' }, { key: 'B46b7', name: '过载110%' },
-  { key: 'B47b0', name: '过载125%' }, { key: 'B47b1', name: 'BuckBoost 软启故障' },
-  { key: 'B47b2', name: 'DCDC母线软启故障' }, { key: 'B47b3', name: 'DCDC电池软启故障' },
-  { key: 'B47b4', name: 'BAT散热器过温' }, { key: 'B47b5', name: 'DCDC原边过温' },
-  { key: 'B47b6', name: 'DCDC副边过温' }, { key: 'B47b7', name: 'DCDC环境过温' },
-  { key: 'B48b0', name: '辅助电源故障' }, { key: 'B48b1', name: 'DCDC功率降额' },
-  { key: 'B48b2', name: 'DCDC风扇A故障' }, { key: 'B48b3', name: 'DCDC风扇B故障' },
-  { key: 'B48b4', name: 'E2PROM读故障' }, { key: 'B48b5', name: 'E2PROM写故障' },
-  { key: 'B48b6', name: 'DCDC心跳检测异常' }, { key: 'B48b7', name: 'DCDC软件版本错误' },
-  { key: 'B49b0', name: '监控CANA通讯故障' }, { key: 'B49b1', name: '并机CANB通讯故障' },
-  { key: 'B49b2', name: 'SPI通讯故障' }, { key: 'B49b3', name: '485通讯故障' },
-  { key: 'B49b4', name: '母线侧主继电器故障' }, { key: 'B49b5', name: '电池侧主继电器故障' },
-  { key: 'B49b6', name: 'DC 机型配置错误' }, { key: 'B49b7', name: 'EPO故障' }
-]
-
-// BMS告警位定义
-const BMS_ALARM_FIELDS = [
-  { key: 'B0b0', name: '组端过压1级告警' }, { key: 'B0b1', name: '组端过压2级告警' },
-  { key: 'B0b2', name: '组端过压3级告警' }, { key: 'B0b3', name: '组端欠压1级告警' },
-  { key: 'B0b4', name: '组端欠压2级告警' }, { key: 'B0b5', name: '组端欠压3级告警' },
-  { key: 'B0b6', name: '组端放电过流1级告警' }, { key: 'B0b7', name: '组端放电过流2级告警' },
-  { key: 'B1b0', name: '组端放电过流3级告警' }, { key: 'B1b1', name: '组端充电过流1级告警' },
-  { key: 'B1b2', name: '组端充电过流2级告警' }, { key: 'B1b3', name: '组端充电过流3级告警' },
-  { key: 'B1b4', name: '组端温度1级告警' }, { key: 'B1b5', name: '组端温度2级告警' },
-  { key: 'B1b6', name: '组端温度3级告警' }, { key: 'B1b7', name: '单体电池充电过温1级告警' },
-  { key: 'B2b0', name: '单体电池充电过温2级告警' }, { key: 'B2b1', name: '单体电池充电过温3级告警' },
-  { key: 'B2b2', name: '单体电池充电欠温1级告警' }, { key: 'B2b3', name: '单体电池充电欠温2级告警' },
-  { key: 'B2b4', name: '单体电池充电欠温3级告警' }, { key: 'B2b5', name: '单体电压过压1级告警' },
-  { key: 'B2b6', name: '单体电压过压2级告警' }, { key: 'B2b7', name: '单体电压过压3级告警' },
-  { key: 'B3b0', name: '单体电压欠压1级告警' }, { key: 'B3b1', name: '单体电压欠压2级告警' },
-  { key: 'B3b2', name: '单体电压欠压3级告警' }, { key: 'B3b3', name: '单体压差过高1级告警' },
-  { key: 'B3b4', name: '单体压差过高2级告警' }, { key: 'B3b5', name: '单体压差过高3级告警' },
-  { key: 'B3b6', name: '单体温差过高1级告警' }, { key: 'B3b7', name: '单体温差过高2级告警' },
-  { key: 'B4b0', name: '单体温差过高3级告警' }, { key: 'B4b1', name: 'SOC过低1级告警' },
-  { key: 'B4b2', name: 'SOC过低2级告警' }, { key: 'B4b3', name: 'SOC过低3级告警' },
-  { key: 'B4b4', name: '动力母线温度过高1级告警' }, { key: 'B4b5', name: '动力母线温度过高2级告警' },
-  { key: 'B4b6', name: '动力母线温度过高3级告警' }, { key: 'B4b7', name: '电池模组过压1级告警' },
-  { key: 'B5b0', name: '电池模组过压2级告警' }, { key: 'B5b1', name: '电池模组过压3级告警' },
-  { key: 'B5b2', name: '电池模组欠压1级告警' }, { key: 'B5b3', name: '电池模组欠压2级告警' },
-  { key: 'B5b4', name: '电池模组欠压3级告警' }, { key: 'B5b5', name: 'DI1故障' },
-  { key: 'B5b6', name: 'DI2故障' }, { key: 'B5b7', name: 'DI3故障' },
-  { key: 'B6b0', name: 'DI4故障' }, { key: 'B6b1', name: 'DI5故障' },
-  { key: 'B6b2', name: 'DI6故障' }, { key: 'B6b3', name: 'DI7故障' },
-  { key: 'B6b4', name: 'DI8故障' }, { key: 'B6b5', name: '内网通信故障' },
-  { key: 'B6b6', name: '单体电压采集异常' }, { key: 'B6b7', name: '单体温度采集异常' },
-  { key: 'B7b0', name: '绝缘检测故障' }, { key: 'B7b1', name: '组内压差大' },
-  { key: 'B7b2', name: '组内线路故障' }, { key: 'B7b3', name: '电池熔断故障' },
-  { key: 'B7b4', name: '项目固件版本参数不一致' }, { key: 'B7b5', name: '非CAN通信故障' },
-  { key: 'B7b6', name: 'PC保护调试模式' }, { key: 'B7b7', name: 'CAN总线传感器故障' },
-  { key: 'B8b0', name: 'CAN总线传感器通信故障' }, { key: 'B8b1', name: '硬件自检异常' },
-  { key: 'B8b2', name: '单体电压断线故障' }, { key: 'B8b3', name: '校准故障' },
-  { key: 'B8b4', name: 'EMS通信故障' }, { key: 'B8b5', name: '与三级BMS通信故障' },
-  { key: 'B8b6', name: '单体电池放电过温1级告警' }, { key: 'B8b7', name: '单体电池放电过温2级告警' },
-  { key: 'B9b0', name: '单体电池放电过温3级告警' }, { key: 'B9b1', name: '单体电池放电欠温1级告警' },
-  { key: 'B9b2', name: '单体电池放电欠温2级告警' }, { key: 'B9b3', name: '单体电池放电欠温3级告警' },
-  { key: 'B9b4', name: 'SOC过高1级告警' }, { key: 'B9b5', name: 'SOC过高2级告警' },
-  { key: 'B9b6', name: 'SOC过高3级告警' }, { key: 'B9b7', name: '温升过快1级告警' },
-  { key: 'B10b0', name: '温升过快2级告警' }, { key: 'B10b1', name: '温升过快3级告警' }
-]
-
-// 设置面板配置：驱动 init/sync/toggle 的统一数据源
-const SETTINGS_PANELS = [
-  { dataKey: 'bmsNumericParams',   source: BMS_NUMERIC_PARAMS,   deviceType: '171C', editKey: 'isEditingBms' },
-  { dataKey: 'bmsSwitchParams',    source: BMS_SWITCH_PARAMS,    deviceType: '171C', editKey: 'isEditingBms' },
-  { dataKey: 'bmsPowerParams',     source: BMS_POWER_PARAMS,     deviceType: '171C', editKey: 'isEditingBms' },
-  { dataKey: 'pcsNumericParams',   source: PCS_NUMERIC_PARAMS,   deviceType: '171B', editKey: 'isEditingPcs' },
-  { dataKey: 'pcsSwitchParams',     source: PCS_SWITCH_PARAMS,    deviceType: '171B', editKey: 'isEditingPcs' },
-  { dataKey: 'pvNumericParams',     source: PV_NUMERIC_PARAMS,    deviceType: '171E', editKey: 'isEditingPv' },
-  { dataKey: 'pvSwitchParams',      source: PV_SWITCH_PARAMS,     deviceType: '171E', editKey: 'isEditingPv' },
-  { dataKey: 'storageNumericParams',source: STORAGE_NUMERIC_PARAMS,deviceType: '171D', editKey: 'isEditingStorage' },
-  { dataKey: 'storageSwitchParams', source: STORAGE_SWITCH_PARAMS,deviceType: '171D', editKey: 'isEditingStorage' },
-  { dataKey: 'quickControlParams',  source: QUICK_CONTROL_PARAMS, deviceType: '171F', editKey: 'isEditingQuickControl' },
-  { dataKey: 'quickPowerParams',    source: QUICK_POWER_PARAMS,   deviceType: '171F', editKey: 'isEditingQuickControl' }
-]
-
-// 设置标签页配置（模板 v-for 驱动）
-const SETTINGS_TABS = [
-  { tab: 5, dataKey: 'pcsSwitchParams', numericKey: 'pcsNumericParams', title: 'PCS 设置 (171B)', theme: 'pcs-theme', editKey: 'isEditingPcs', switchTitle: '开关控制', numericTitle: '数值参数' },
-  { tab: 6, dataKey: 'bmsPowerParams', numericKey: 'bmsNumericParams', title: 'BMS 设置 (171C)', theme: 'bms-theme', editKey: 'isEditingBms', switchTitle: '上下电 / 模式控制', numericTitle: '数值参数', extraSwitchKey: 'bmsSwitchParams', extraSwitchTitle: '开关控制' },
-  { tab: 7, dataKey: 'pvSwitchParams', numericKey: 'pvNumericParams', title: '光伏设置 (171E)', theme: 'pv-theme', editKey: 'isEditingPv', switchTitle: '开关控制', numericTitle: '数值参数' },
-  { tab: 8, dataKey: 'storageSwitchParams', numericKey: 'storageNumericParams', title: '储能设置 (171D)', theme: 'storage-theme', editKey: 'isEditingStorage', switchTitle: '开关控制', numericTitle: '数值参数' },
-  {
-    tab: 9, dataKey: 'quickControlParams', numericKey: 'quickPowerParams',
-    title: '快捷控制 (171F)', theme: 'quick-theme', editKey: 'isEditingQuickControl',
-    numericTitle: '功率设置', isQuick: true,
-    switchSections: [
-      { title: '储能DC一键控制', filterKey: 'qc_storage_dc' },
-      { title: '光伏DC控制', filterKey: 'qc_pv_dc' },
-      { title: 'PCS模式选择', filterKey: 'qc_pcs_mode' },
-      { title: 'PCS开关机', filterKey: 'qc_pcs_action' }
-    ]
-  }
-]
+  STORAGE_KEY,
+  DEVICE_TYPES,
+  TAB_LIST,
+  TAB_GROUP_MONITOR,
+  TAB_GROUP_CONTROL,
+  MONITOR_LAST_INDEX,
+  GROUP_TITLE,
+  DEVICE_GROUPS,
+  DEVICE_NAME_MAP,
+  BMS_ALARM_FIELDS,
+  SETTINGS_PANELS,
+  SETTINGS_TABS
+} from './direct-device-constants.js'
+// 可复用子组件
+import DeviceCard from './components/direct-device/DeviceCard.vue'
+import SettingsPanel from './components/direct-device/SettingsPanel.vue'
+import ConfirmDialog from './components/direct-device/ConfirmDialog.vue'
+import OpToast from './components/direct-device/OpToast.vue'
+import OverviewTab from './components/direct-device/tabs/OverviewTab.vue'
+import PcsTab from './components/direct-device/tabs/PcsTab.vue'
+import StorageDcTab from './components/direct-device/tabs/StorageDcTab.vue'
+import PvTab from './components/direct-device/tabs/PvTab.vue'
+import BmsTab from './components/direct-device/tabs/BmsTab.vue'
 
 export default {
-  components: { DyNavbar },
+  components: {
+    DyNavbar,
+    DeviceCard,
+    SettingsPanel,
+    ConfirmDialog,
+    OpToast,
+    OverviewTab,
+    PcsTab,
+    StorageDcTab,
+    PvTab,
+    BmsTab
+  },
   data() {
     return {
       currentTab: 0,
@@ -1097,6 +289,22 @@ export default {
     settingsTabs() {
       return SETTINGS_TABS
     },
+    /** 设置面板参数映射：供 SettingsPanel 子组件按 key 取参数数组 */
+    settingsParamsMap() {
+      return {
+        bmsNumericParams: this.bmsNumericParams,
+        bmsSwitchParams: this.bmsSwitchParams,
+        bmsPowerParams: this.bmsPowerParams,
+        pcsNumericParams: this.pcsNumericParams,
+        pcsSwitchParams: this.pcsSwitchParams,
+        pvNumericParams: this.pvNumericParams,
+        pvSwitchParams: this.pvSwitchParams,
+        storageNumericParams: this.storageNumericParams,
+        storageSwitchParams: this.storageSwitchParams,
+        quickControlParams: this.quickControlParams,
+        quickPowerParams: this.quickPowerParams
+      }
+    },
     // swiper 可用高度：窗口高度减去固定头部（设备卡片 + 标签栏 + 占位）
     // 架构图和卡片已移入标签页滚动内容内，不再占用固定高度
     swiperStyle() {
@@ -1193,62 +401,10 @@ export default {
         ? this.getVal('171F', 'B128', 1)
         : this.getVal('171F', 'B58', 1)
     },
-    parsedB64Status() {
-      const b64Value = this.rawValues['171B'] && this.rawValues['171B']['B64']
-      if (b64Value === undefined || b64Value === null || b64Value === '--') return []
-      // 字符串格式（带冒号分隔）：直接解析
-      if (typeof b64Value === 'string' && b64Value.includes(':')) {
-        return b64Value.split('; ').map(item => {
-          const [name, value] = item.split(':')
-          const isError = value === '发生'
-          return {
-            name: name || '', value: value || '',
-            color: isError ? '#FF4D4F' : (PCS_B64_STATUS_MAP[name] || '#666'),
-            bgColor: isError ? '#FFF1F0' : '#F6FFED',
-            borderColor: isError ? '#FFCCC7' : '#B7EB8F'
-          }
-        })
-      }
-      // 数值格式：按位解析
-      const b64 = Number(b64Value) || 0
-      return PCS_B64_BITS.map(([name, bitPos, isError, isMode]) => {
-        let value
-        if (isMode && name === '工作模式') {
-          value = PCS_MODE_MAP[(b64 >>> 12) & 0x03] || String((b64 >>> 12) & 0x03)
-        } else if (isMode) {
-          const v = (b64 >>> bitPos) & 1
-          value = name === 'U1状态' || name === 'U2状态' ? (v === 0 ? '开机' : '关机') : String(v)
-        } else {
-          value = (b64 >>> bitPos) & 1 ? '发生' : '正常'
-        }
-        const finalIsError = isError && value === '发生'
-        return {
-          name, value,
-          color: finalIsError ? '#FF4D4F' : (PCS_B64_STATUS_MAP[name] || '#666'),
-          bgColor: finalIsError ? '#FFF1F0' : '#F6FFED',
-          borderColor: finalIsError ? '#FFCCC7' : '#B7EB8F'
-        }
-      })
-    },
-    parsedB56Status() {
-      const b56 = this.rawValues['171E'] && this.rawValues['171E']['B56']
-      if (b56 === undefined || b56 === null || b56 === '--') return []
-      const v = Number(b56)
-      if (!Number.isFinite(v)) return []
-      return PV_B56_BITS.map(([name, bitPos, , isMode]) => {
-        if (isMode) {
-          return { name, value: (v >> bitPos) & 1 ? '关机' : '开机', isAlarm: 0 }
-        }
-        const alarmed = (v >> bitPos) & 1
-        return { name, value: alarmed ? '发生' : '正常', isAlarm: alarmed ? 1 : 0 }
-      })
-    },
-    dcdcAlarmStatus() {
-      const data = this.rawValues['171D'] || {}
-      return DCDC_ALARM_FIELDS.map(f => {
-        const value = data[f.key]
-        return { name: f.name, value: value || '--', isAlarm: value === '告警' || Number(value) === 1 }
-      })
+    /** 策略运行状态 (171F.B12, 对齐 architecture-diagram) */
+    archSystemRunning() {
+      const val = this.rawValues['171F'] && this.rawValues['171F']['B12']
+      return val === 1 || val === '1'
     },
     bmsAlarmStatus() {
       const data = this.rawValues['171C'] || {}
@@ -1299,13 +455,6 @@ export default {
   },
   onUnload() {
     this.stopArchRefreshTimer()
-    // 清理 onDataUpdate 钩子，避免内存泄漏
-    realtimeDataProvider.onDataUpdate = null
-    // 清除直连激活标记——离开直连监测页后不再视为直连模式
-    try {
-      uni.removeStorageSync('direct_device_activated')
-      console.log('[直连] 页面卸载，清除激活标记')
-    } catch (e) { }
     this.stop()
   },
   onHide() {
@@ -1317,6 +466,30 @@ export default {
     this.startArchRefreshTimer()
   },
   methods: {
+    /**
+     * 架构图启停按钮 handler — 下发 171F.B12 策略运行指令
+     * 对齐 architecture-diagram.vue handleStartStop 逻辑
+     */
+    onSystemStartStop() {
+      const running = this.archSystemRunning
+      const title = running ? '策略停止' : '策略启动'
+      const content = running ? '确定要停止策略吗？' : '确定要启动策略吗？'
+      uni.showModal({
+        title,
+        content,
+        success: async (res) => {
+          if (!res.confirm) return
+          try {
+            this.client.setDeviceType('171F')
+            await this.client.sendControl('B12', running ? 0 : 1)
+            uni.showToast({ title: '指令已下发', icon: 'none' })
+          } catch (e) {
+            uni.showModal({ title: '下发失败', content: e.message || '请重试', showCancel: false })
+          }
+        }
+      })
+    },
+
     /**
      * 从全局 realtimeDataProvider 同步 171F 能量控制器数据
      * 用于架构图展示：光伏、电网、储能、负荷等系统级功率数据
@@ -2045,7 +1218,7 @@ export default {
           for (const key of envelopeKeys) {
             const val = data[key]
             if (typeof val === 'string' && val.length >= 4) {
-              console.log('[MQTT] 从 JSON 信封提取 hex payload, key=' + key)
+              // console.log('[MQTT] 从 JSON 信封提取 hex payload, key=' + key)
               return val.trim()
             }
           }
@@ -2056,7 +1229,7 @@ export default {
         // 匹配冒号后面到 } 之前的所有内容
         const match = trimmed.match(/\{\s*[^:]+:\s*([0-9a-fA-F\s,]+)\s*\}/)
         if (match && match[1] && match[1].trim().length >= 4) {
-          console.log('[MQTT] 从非标准信封提取 hex payload (regex)')
+          // console.log('[MQTT] 从非标准信封提取 hex payload (regex)')
           return match[1].trim()
         }
       }
@@ -2328,260 +1501,6 @@ export default {
   overflow: hidden;
 }
 
-/* 设备卡片 */
-.device-card {
-  flex-shrink: 0;
-  margin: 20rpx;
-  border-radius: 28rpx;
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 12rpx 40rpx rgba(0, 122, 255, 0.25);
-
-  /* ========== 装饰光斑背景 ========== */
-  .device-card-bg {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, #007AFF 0%, #00C6FF 60%, #5AC8FA 100%);
-
-    .bg-orb {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.15);
-      filter: blur(2rpx);
-    }
-    .bg-orb-1 { width: 260rpx; height: 260rpx; top: -80rpx; right: -60rpx; background: rgba(255,255,255,0.18); }
-    .bg-orb-2 { width: 140rpx; height: 140rpx; bottom: -30rpx; right: 80rpx; background: rgba(255,255,255,0.1); }
-    .bg-orb-3 { width: 80rpx;  height: 80rpx;  top: 50rpx;  right: 200rpx; background: rgba(255,255,255,0.12); }
-  }
-
-  &.offline {
-    box-shadow: 0 12rpx 40rpx rgba(138, 148, 166, 0.25);
-    .device-card-bg { background: linear-gradient(135deg, #6b7280 0%, #9ca3af 60%, #d1d5db 100%); }
-  }
-
-  &.connecting {
-    box-shadow: 0 12rpx 40rpx rgba(240, 160, 32, 0.3);
-    .device-card-bg { background: linear-gradient(135deg, #d97706 0%, #f0a020 50%, #fbbf24 100%); }
-  }
-
-  /* ========== 内容 ========== */
-  .device-card-content {
-    position: relative;
-    padding: 28rpx 32rpx;
-    z-index: 1;
-  }
-
-  .device-header {
-    display: flex;
-    align-items: center;
-    gap: 20rpx;
-  }
-
-  /* 图标 + 呼吸光圈 */
-  .device-icon-wrap {
-    position: relative;
-    width: 72rpx;
-    height: 72rpx;
-    flex-shrink: 0;
-
-    .device-icon {
-      width: 72rpx;
-      height: 72rpx;
-      border-radius: 20rpx;
-      background: rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(6px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.12);
-    }
-
-    .icon-pulse {
-      position: absolute;
-      inset: -8rpx;
-      border-radius: 24rpx;
-      border: 4rpx solid rgba(76, 217, 100, 0.6);
-      animation: iconPulse 2s ease-out infinite;
-    }
-  }
-
-  .device-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6rpx;
-  }
-
-  .device-name-row {
-    display: flex;
-    align-items: center;
-    gap: 12rpx;
-  }
-
-  .device-name {
-    font-size: 32rpx;
-    color: #fff;
-    font-weight: 700;
-    letter-spacing: 0.5rpx;
-    text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
-  }
-
-  /* 状态徽章：带脉冲点 */
-  .status-badge {
-    display: flex;
-    align-items: center;
-    gap: 6rpx;
-    font-size: 22rpx;
-    padding: 4rpx 14rpx;
-    border-radius: 20rpx;
-    background: rgba(255, 255, 255, 0.22);
-    backdrop-filter: blur(4px);
-    flex-shrink: 0;
-
-    .status-dot {
-      width: 10rpx;
-      height: 10rpx;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.6);
-    }
-    .status-dot.online {
-      background: #4cd964;
-      box-shadow: 0 0 8rpx rgba(76, 217, 100, 0.8);
-      animation: dotPulse 1.5s ease-in-out infinite;
-    }
-    .status-dot.connecting {
-      background: #ffc960;
-      animation: dotPulse 1s ease-in-out infinite;
-    }
-
-    &.online { background: rgba(76, 217, 100, 0.25); }
-    &.offline { background: rgba(0, 0, 0, 0.18); }
-    &.connecting { background: rgba(255, 201, 96, 0.3); }
-
-    .status-text { color: #fff; font-weight: 500; }
-  }
-
-  /* 副标题 + 连接方式 */
-  .device-model {
-    display: flex;
-    align-items: center;
-    gap: 10rpx;
-
-    .model-label {
-      font-size: 22rpx;
-      color: rgba(255, 255, 255, 0.85);
-    }
-    .model-chip {
-      font-size: 20rpx;
-      color: rgba(255, 255, 255, 0.95);
-      background: rgba(255, 255, 255, 0.2);
-      padding: 2rpx 12rpx;
-      border-radius: 8rpx;
-      font-family: 'Menlo', 'Consolas', monospace;
-      letter-spacing: 1rpx;
-    }
-  }
-
-  /* 操作按钮 */
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8rpx;
-    flex-shrink: 0;
-  }
-
-  .action-btn {
-    width: 52rpx;
-    height: 52rpx;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s ease;
-    backdrop-filter: blur(4px);
-
-    &:active { background: rgba(255, 255, 255, 0.45); transform: scale(0.9); }
-    &.more { background: transparent; }
-    &.more:active { background: rgba(255, 255, 255, 0.15); }
-    &.disabled { opacity: 0.4; pointer-events: none; }
-  }
-
-  /* ========== 展开详情 ========== */
-  .device-meta {
-    margin-top: 24rpx;
-    padding: 20rpx 24rpx;
-    border-radius: 16rpx;
-    background: rgba(0, 0, 0, 0.12);
-    backdrop-filter: blur(10px);
-    display: flex;
-    flex-direction: column;
-    gap: 14rpx;
-  }
-
-  .meta-row {
-    display: flex;
-    align-items: center;
-    font-size: 24rpx;
-  }
-
-  .meta-icon {
-    width: 36rpx;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .meta-label {
-    color: rgba(255, 255, 255, 0.6);
-    width: 90rpx;
-    flex-shrink: 0;
-  }
-
-  .meta-value {
-    color: #fff;
-    flex: 1;
-    text-align: right;
-    word-break: break-all;
-    font-family: 'Menlo', 'Consolas', monospace;
-    font-size: 22rpx;
-  }
-
-  /* 断开连接：底部危险操作 */
-  .disconnect-row {
-    margin-top: 4rpx;
-    padding: 18rpx 20rpx;
-    border-top: 1rpx solid rgba(255, 255, 255, 0.12);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    .disconnect-text {
-      color: #ff7875;
-      font-size: 26rpx;
-      font-weight: 500;
-    }
-
-    &:active {
-      .disconnect-text { opacity: 0.6; }
-    }
-  }
-}
-
-/* ========== 动画 ========== */
-@keyframes iconPulse {
-  0% { transform: scale(1); opacity: 0.7; }
-  100% { transform: scale(1.6); opacity: 0; }
-}
-
-@keyframes dotPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.85); }
-}
-
-/* 已连接视图包装器 */
 .connected-view {
   flex: 1;
   display: flex;
@@ -2712,325 +1631,9 @@ export default {
   padding: 16rpx;
 }
 
-.module {
-  background-color: #fff;
-  border-radius: 16rpx;
-  padding: 20rpx 24rpx;
-}
-
-.module-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 16rpx;
-  padding-left: 16rpx;
-  padding-bottom: 12rpx;
-  border-bottom: 1rpx solid #f0f0f0;
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 4rpx;
-    bottom: 14rpx;
-    width: 6rpx;
-    border-radius: 3rpx;
-    background: #007aff;
-  }
-}
-
-.key-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
-  margin: 20rpx 0;
-  padding: 16rpx;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-  border-radius: 16rpx;
-
-  .key-card {
-    flex: 1 1 calc(50% - 8rpx);
-    background: #fff;
-    border-radius: 12rpx;
-    padding: 24rpx 20rpx;
-    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06), 0 1rpx 3rpx rgba(0, 0, 0, 0.04);
-
-    .kpi-name {
-      font-size: 24rpx;
-      color: #8a8a8a;
-      text-align: center;
-      display: block;
-      margin-bottom: 12rpx;
-      font-weight: 400;
-    }
-
-    .kpi-value-row {
-      display: flex;
-      align-items: baseline;
-      justify-content: center;
-      gap: 6rpx;
-    }
-
-    .kpi-value {
-      font-size: 40rpx;
-      color: #1a1a1a;
-      font-weight: 600;
-      letter-spacing: 0.5rpx;
-    }
-
-    .kpi-unit {
-      font-size: 22rpx;
-      color: #999;
-      font-weight: 400;
-    }
-  }
-}
 
 .swiper-item {
   height: 100%;
-}
-
-/* 数据分组 - 网格布局 */
-.data-group {
-  margin-bottom: 20rpx;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-
-.group-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8rpx 4rpx 8rpx 16rpx;
-  position: relative;
-  margin-bottom: 4rpx;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 6rpx;
-    height: 24rpx;
-    border-radius: 3rpx;
-    background: #4488fb;
-  }
-
-  text {
-    font-size: 28rpx;
-    font-weight: bold;
-    color: #555;
-  }
-
-  .group-count {
-    font-size: 22rpx;
-    color: #bbb;
-  }
-}
-
-.data-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12rpx;
-  padding: 12rpx;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-  border-radius: 16rpx;
-}
-
-.grid-item {
-  width: calc(33.333% - 8rpx);
-  background: #fff;
-  padding: 18rpx 10rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  border: none;
-
-  &:active {
-    transform: scale(0.96);
-    box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
-  }
-
-  &.grid-item--wide {
-    width: calc(50% - 6rpx);
-  }
-}
-
-.item-label {
-  font-size: 22rpx;
-  color: #8a8a8a;
-  display: block;
-  margin-bottom: 6rpx;
-  text-align: center;
-  font-weight: 400;
-}
-
-.item-value-row {
-  display: flex;
-  align-items: baseline;
-  gap: 4rpx;
-  justify-content: center;
-}
-
-.item-value {
-  font-size: 30rpx;
-  color: #1a1a1a;
-  font-weight: 600;
-  text-align: center;
-  letter-spacing: 0.5rpx;
-
-  &.alarm {
-    color: #e6434a;
-  }
-}
-
-.item-unit {
-  font-size: 20rpx;
-  color: #999;
-  font-weight: 400;
-}
-
-/* 状态/告警网格 */
-.status-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10rpx;
-}
-
-.status-item {
-  width: calc(33.333% - 8rpx);
-  padding: 12rpx 2rpx;
-  border-radius: 8rpx;
-  border: 1rpx solid;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.status-name {
-  font-size: 22rpx;
-  font-weight: 500;
-  margin-bottom: 4rpx;
-}
-
-.status-value {
-  font-size: 24rpx;
-  font-weight: 600;
-  color: #52c41a;
-
-  &.error {
-    color: #FF4D4F;
-  }
-}
-
-.fault-item {
-  width: calc(33.333% - 8rpx);
-  padding: 12rpx 2rpx;
-  border-radius: 8rpx;
-  background: #f5f5f5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.fault-name {
-  font-size: 22rpx;
-  color: #999;
-  text-align: center;
-
-  &.active {
-    color: #FF4D4F;
-    font-weight: 600;
-  }
-}
-
-.status-empty {
-  width: 100%;
-  text-align: center;
-  color: #999;
-  font-size: 28rpx;
-  padding: 40rpx 0;
-}
-
-/* 控制指令面板 */
-.control-card {
-  background: #fff;
-  border-radius: 16rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06), 0 1rpx 3rpx rgba(0, 0, 0, 0.04);
-  overflow: hidden;
-
-  .control-row {
-    padding: 24rpx 28rpx;
-    border-bottom: 2rpx solid #f0f2f5;
-
-    &:last-child { border-bottom: none; }
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20rpx;
-  }
-
-  .control-info {
-    display: flex;
-    flex-direction: column;
-    gap: 6rpx;
-    flex: 1;
-  }
-
-  .control-name {
-    font-size: 28rpx;
-    color: #333;
-  }
-
-  .control-current {
-    font-size: 22rpx;
-    color: #999;
-  }
-
-  .control-btns {
-    display: flex;
-    gap: 8rpx;
-    flex-shrink: 0;
-  }
-
-  .ctrl-btn {
-    min-width: 88rpx;
-    height: 56rpx;
-    line-height: 56rpx;
-    text-align: center;
-    padding: 0 18rpx;
-    font-size: 24rpx;
-    color: #666;
-    background: #f5f7fa;
-    border-radius: 10rpx;
-
-    &.btn-active {
-      background: #007AFF;
-      color: #fff;
-    }
-
-    &.btn-danger.btn-active {
-      background: #e6434a;
-    }
-
-    &.btn-clicked {
-      transform: scale(0.94);
-    }
-  }
-
-  .btn-disabled .ctrl-btn {
-    opacity: 0.5;
-  }
 }
 
 /* 按钮 */
@@ -3074,658 +1677,7 @@ export default {
   }
 }
 
-/* 系统架构图（参考 architecture-diagram.vue） */
-.system-img {
-  position: relative;
-  flex-shrink: 0;
-  height: 500rpx;
-  margin: 16rpx;
-  border-radius: 12rpx;
-  overflow: hidden;
-  background: #fff;
-}
-
-.device-label,
-.device-label-top-left,
-.device-label-top-right {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 2;
-  padding: 6rpx 12rpx;
-  border-radius: 10rpx;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
-}
-
-.device-label-top-left {
-  top: 7%;
-  left: 34%;
-}
-
-.device-label-top-right {
-  top: 19%;
-  left: 1%;
-}
-
-.device-name {
-  font-size: 22rpx;
-  color: #555;
-  margin-bottom: 2rpx;
-  font-weight: 500;
-}
-
-.device-power {
-  font-size: 26rpx;
-  color: #4488fb;
-  font-weight: bold;
-}
-
-.device-soc {
-  font-size: 22rpx;
-  color: #52c41a;
-  margin-top: 2rpx;
-  font-weight: bold;
-}
-
-.power-row {
-  display: flex;
-  align-items: baseline;
-}
-
-.power-unit {
-  font-size: 18rpx;
-  color: #999;
-  margin-left: 2rpx;
-}
-
-/* 数据卡片（参考 architecture-diagram.vue） */
-.card-section {
-  flex-shrink: 0;
-  margin: 16rpx;
-}
-
-.card-row {
-  display: flex;
-}
-
-.card-divider {
-  height: 1rpx;
-  background-color: #eee;
-  margin: 0 auto;
-  width: 90%;
-}
-
-.card {
-  flex: 1;
-  background: #fff;
-  padding: 24rpx 16rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-around;
-}
-
-.card-top-left {
-  border-radius: 12rpx 0 0 0;
-}
-
-.card-top-right {
-  border-radius: 0 12rpx 0 0;
-}
-
-.card-bottom-left {
-  border-radius: 0 0 0 12rpx;
-}
-
-.card-bottom-right {
-  border-radius: 0 0 12rpx 0;
-}
-
-.card-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4rpx;
-}
-
-.card-horizontal-divider {
-  width: 1rpx;
-  height: 60%;
-  background-color: #e8e8e8;
-  margin: auto 0;
-}
-
-.card-title {
-  font-size: 24rpx;
-  color: #888;
-}
-
-.card-value {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #4488FB;
-}
-
-.card-unit {
-  font-size: 22rpx;
-  color: #999;
-  margin-left: 2rpx;
-}
-
-/* ========== 储能SOC进度条模块（对齐 energy-storage.vue）========== */
-.arch-status-container {
-  background: linear-gradient(135deg, #ffffff 0%, #f7faff 100%);
-  border-radius: 16rpx;
-  padding: 20rpx 24rpx;
-  margin-bottom: 16rpx;
-  box-shadow: 0 2rpx 12rpx rgba(68, 136, 251, 0.08);
-}
-
-.arch-status-content {
-  width: 100%;
-}
-
-.arch-status-indicator {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-}
-
-.arch-battery-icon {
-  width: 80rpx;
-  height: 80rpx;
-  flex-shrink: 0;
-}
-
-.arch-soc-container {
-  flex: 1;
-  min-width: 0;
-}
-
-.arch-soc-progress {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  margin-bottom: 16rpx;
-}
-
-.arch-soc-icon {
-  width: 40rpx;
-  height: 40rpx;
-  flex-shrink: 0;
-}
-
-.arch-progress-track {
-  flex: 1;
-  height: 32rpx;
-  background-color: #f0f2f5;
-  border-radius: 16rpx;
-  overflow: hidden;
-  position: relative;
-}
-
-.arch-progress-fill {
-  height: 100%;
-  border-radius: 16rpx;
-  min-width: 0;
-  transition: width 0.5s ease;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding-right: 16rpx;
-  box-sizing: border-box;
-}
-
-.arch-progress-text {
-  font-size: 20rpx;
-  color: #fff;
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.arch-status-text {
-  font-size: 24rpx;
-  flex-shrink: 0;
-  font-weight: 500;
-}
-
-.arch-soc-remaining {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 26rpx;
-  color: #555;
-}
-
-.arch-soc-hours {
-  font-weight: bold;
-  color: #333;
-}
-
-/* ========== 公共区块标题（对齐所有组件 section-header）========== */
-.arch-section-title {
-  margin-bottom: 16rpx;
-  padding-bottom: 0;
-  padding-left: 20rpx;
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 6rpx;
-    height: 30rpx;
-    border-radius: 3rpx;
-    background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
-  }
-}
-
-.arch-title-text {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #333;
-}
-
-/* ========== 电网统计 / 光伏统计 模块通用（对齐 grid-management.vue / pv-management.vue）========== */
-.arch-stats-section,
-.arch-device-stats {
-  background: #ffffff;
-  border-radius: 16rpx;
-  padding: 28rpx 32rpx;
-  margin-bottom: 16rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
-}
-
-.arch-stats-container,
-.arch-stats-box {
-  width: 100%;
-  background: #f8f9fa;
-  border-radius: 12rpx;
-  padding: 4rpx 0;
-}
-
-.arch-stat-row {
-  display: flex;
-  align-items: stretch;
-  min-height: 120rpx;
-}
-
-.arch-stat-divider {
-  width: 1rpx;
-  background-color: #e8e8e8;
-  margin: 16rpx 0;
-}
-
-.arch-section-divider {
-  height: 1rpx;
-  background-color: #e8e8e8;
-  margin: 0;
-}
-
-.arch-stat-item {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  padding: 16rpx 0;
-
-  &.double {
-    display: flex;
-    flex-direction: row;
-  }
-
-  &.vertical {
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: center;
-    padding: 20rpx 24rpx;
-    gap: 16rpx;
-  }
-
-  &.arch-center {
-    justify-content: center;
-    align-items: center;
-  }
-}
-
-.arch-stat-item.double .arch-stat-subitem {
-  flex: 1;
-  padding: 0 24rpx;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.arch-stat-subitem {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: 6rpx;
-}
-
-.arch-stat-label {
-  font-size: 22rpx;
-  color: #888;
-  letter-spacing: 0;
-  white-space: nowrap;
-}
-
-.arch-stat-value {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #333;
-  line-height: 1.3;
-
-  &.small {
-    font-size: 26rpx;
-    font-weight: 400;
-    color: #666;
-  }
-}
-
-.arch-stat-unit {
-  font-size: 22rpx;
-  color: #999;
-  font-weight: 400;
-  margin-left: 4rpx;
-}
-
-/* ========== 负荷设备模块（对齐 load-management.vue）========== */
-.arch-device-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16rpx;
-}
-
-.arch-device-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #f5faff 0%, #eef3fb 100%);
-  border-radius: 12rpx;
-  padding: 18rpx 8rpx;
-  gap: 6rpx;
-}
-
-.arch-device-number {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #4488FB;
-}
-
-.arch-device-text {
-  font-size: 24rpx;
-  color: #666;
-}
-
 /* ========== 设置面板样式 ========== */
-.settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24rpx 32rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 20rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.25);
-
-  &.pv-theme {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    box-shadow: 0 8rpx 24rpx rgba(245, 87, 108, 0.25);
-  }
-
-  &.storage-theme {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    box-shadow: 0 8rpx 24rpx rgba(79, 172, 254, 0.25);
-  }
-
-  &.quick-theme {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    box-shadow: 0 8rpx 24rpx rgba(67, 233, 123, 0.25);
-  }
-
-  &.pcs-theme {
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-    box-shadow: 0 8rpx 24rpx rgba(250, 112, 154, 0.25);
-  }
-
-  &.bms-theme {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.25);
-  }
-}
-
-.settings-title {
-  font-size: 34rpx;
-  font-weight: bold;
-  color: #fff;
-  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
-}
-
-.edit-toggle {
-  padding: 12rpx 28rpx;
-  border-radius: 32rpx;
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
-  font-size: 26rpx;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(4px);
-
-  &.active {
-    background: rgba(255, 255, 255, 0.92);
-    color: #333;
-    font-weight: 600;
-  }
-
-  &:active {
-    transform: scale(0.94);
-  }
-}
-
-.settings-section {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 8rpx 28rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.05);
-}
-
-.section-title {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #1d2129;
-  margin-bottom: 8rpx;
-  padding: 16rpx 0 16rpx 20rpx;
-  position: relative;
-  border-bottom: 1rpx solid #f0f0f0;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 18rpx;
-    bottom: 18rpx;
-    width: 6rpx;
-    border-radius: 3rpx;
-    background: linear-gradient(180deg, #007aff, #00c6ff);
-  }
-}
-
-.param-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18rpx 0;
-  border-bottom: 1rpx solid #f5f6f8;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &:active {
-    background: #fafbfc;
-  }
-}
-
-.param-info {
-  display: flex;
-  // flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  gap: 4rpx;
-}
-
-.param-label {
-  font-size: 28rpx;
-  color: #1d2129;
-  font-weight: 500;
-  flex: 1;
-}
-
-.param-current {
-  font-size: 24rpx;
-  color: #86909c;
-  flex: 1;
-  text-align: center;
-}
-
-.param-btns {
-  display: flex;
-  gap: 12rpx;
-  flex-shrink: 0;
-}
-
-.param-btn {
-  padding: 10rpx 24rpx;
-  border-radius: 28rpx;
-  background: #f2f3f5;
-  color: #4e5969;
-  font-size: 24rpx;
-  font-weight: 500;
-  transition: all 0.15s ease;
-
-  &.btn-active {
-    background: linear-gradient(135deg, #007aff, #00a2ff);
-    color: #fff;
-    box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.3);
-  }
-
-  &.btn-danger {
-    background: #fff;
-    border: 1rpx solid #ff4d4f;
-    color: #ff4d4f;
-
-    &.btn-active {
-      background: linear-gradient(135deg, #ff4d4f, #ff7875);
-      border-color: transparent;
-      color: #fff;
-      box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.3);
-    }
-  }
-
-  &:active {
-    transform: scale(0.92);
-    opacity: 0.85;
-  }
-}
-
-.param-edit {
-  padding: 12rpx;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12rpx;
-  background: #f2f3f5;
-
-  &:active {
-    opacity: 0.6;
-    transform: scale(0.92);
-  }
-}
-
 /* ========== 确认弹窗 ========== */
-.confirm-mask {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.confirm-dialog {
-  width: 600rpx;
-  background: #fff;
-  border-radius: 20rpx;
-  overflow: hidden;
-}
-
-.confirm-title {
-  padding: 32rpx;
-  text-align: center;
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-  border-bottom: 1rpx solid #f0f0f0;
-}
-
-.confirm-content {
-  padding: 32rpx;
-  text-align: center;
-  font-size: 28rpx;
-  color: #666;
-}
-
-.confirm-btns {
-  display: flex;
-  border-top: 1rpx solid #f0f0f0;
-}
-
-.confirm-btn {
-  flex: 1;
-  padding: 28rpx;
-  text-align: center;
-  font-size: 30rpx;
-
-  &.cancel {
-    color: #999;
-    border-right: 1rpx solid #f0f0f0;
-  }
-
-  &.ok {
-    color: #1890ff;
-    font-weight: bold;
-  }
-
-  &:active {
-    background: #f5f5f5;
-  }
-}
-
 /* ========== 操作反馈 Toast ========== */
-.op-toast {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 24rpx 48rpx;
-  background: rgba(0, 0, 0, 0.75);
-  color: #fff;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-  z-index: 998;
-  pointer-events: none;
-
-  &.success {
-    background: rgba(82, 196, 26, 0.9);
-  }
-}
 </style>
