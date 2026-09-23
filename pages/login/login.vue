@@ -8,7 +8,9 @@
             <!-- 顶部品牌区域 -->
             <view class="brand-section">
                 <text class="welcome-title">欢迎登录</text>
+                <!-- #ifndef APP-PLUS -->
                 <image class="brand-logo" src="@/static/neiic.svg" mode="aspectFit"></image>
+                <!-- #endif -->
                 <text class="brand-title">国创微能站</text>
                 <text class="brand-subtitle">智慧园区，品质生活</text>
 
@@ -17,6 +19,7 @@
                     <image src="https://iems.neiic.com/wechatImage/images/slogan.png" mode="aspectFit"></image>
                 </view>
             </view>
+            <!-- #ifdef MP-WEIXIN -->
             <!-- 一键登录 -->
             <view class="login-tab" v-if="loginType === 'wechat' && !showWechatRegister">
                 <!-- 一键登录按钮 -->
@@ -50,7 +53,9 @@
                     </view>
                 </view>
             </view>
+            <!-- #endif -->
 
+            <!-- #ifdef MP-WEIXIN -->
             <!-- 新用户完善信息 -->
             <view class="register-tab" v-if="showWechatRegister">
                 <view class="form-header">
@@ -96,6 +101,7 @@
                     </view>
                 </view>
             </view>
+            <!-- #endif -->
 
             <!-- 短信登录 -->
             <view class="login-tab" v-if="loginType === 'sms'">
@@ -148,7 +154,9 @@
                     </button>
 
                     <view class="login-switch">
+                        <!-- #ifdef MP-WEIXIN -->
                         <text class="switch-item" @click="switchLoginType('wechat')">手机号快捷登录</text>
+                        <!-- #endif -->
                         <text class="switch-item" @click="switchLoginType('account')">账号密码登录</text>
                     </view>
                 </view>
@@ -196,7 +204,9 @@
                     </button>
 
                     <view class="login-switch">
+                        <!-- #ifdef MP-WEIXIN -->
                         <text class="switch-item" @click="switchLoginType('wechat')">手机号快捷登录</text>
+                        <!-- #endif -->
                         <text class="switch-item" @click="switchLoginType('sms')">短信登录</text>
                     </view>
                 </view>
@@ -235,7 +245,12 @@ export default {
         return {
             // 基础状态
             agreeAgreement: false,
+            // #ifdef MP-WEIXIN
             loginType: 'wechat',
+            // #endif
+            // #ifndef MP-WEIXIN
+            loginType: 'sms',
+            // #endif
             showWechatRegister: false,
 
             // 表单有效性标识
@@ -672,8 +687,8 @@ export default {
         // 展示协议详情
         showAgreement(type) {
             const url = type === 'service'
-                ? '/pages/agreement/serviceAgreement'
-                : '/pages/agreement/privacyPolicy';
+                ? '/pages-public/agreement/user-agreement'
+                : '/pages-public/agreement/privacy-policy';
             uni.navigateTo({ url });
         },
 
@@ -728,8 +743,17 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: #f8f8f8;
+    /* #ifdef APP-PLUS */
+    justify-content: center;
+    /* #endif */
+    /* background: #f8f8f8; */
+    /* #ifndef APP-PLUS */
     padding: 60rpx 0;
+    /* #endif */
+    /* #ifdef APP-PLUS */
+    padding: 30rpx 0;
+    padding-bottom:unset;
+    /* #endif */
     box-sizing: border-box;
     position: relative;
     overflow: hidden;
@@ -830,15 +854,25 @@ export default {
 .login-illustration {
     width: 100%;
     max-width: 480rpx;
+    /* #ifdef APP-PLUS */
+    margin: 8rpx 0;
+    /* #endif */
+    /* #ifndef APP-PLUS */
     margin: 20rpx 0;
+    /* #endif */
     border-radius: 20rpx;
     overflow: hidden;
-    box-shadow: 0 8rpx 24rpx rgba(0, 122, 255, 0.1);
+    /* box-shadow: 0 8rpx 24rpx rgba(0, 122, 255, 0.1); */
 }
 
 .login-illustration image {
     width: 100%;
+    /* #ifdef APP-PLUS */
+    height: 120rpx;
+    /* #endif */
+    /* #ifndef APP-PLUS */
     height: 200rpx;
+    /* #endif */
     object-fit: cover;
 }
 
@@ -1281,9 +1315,15 @@ input::placeholder {
     text-align: center;
     font-size: 24rpx;
     color: #c9cdd4;
+    /* #ifndef APP-PLUS */
     padding: 20rpx 30rpx;
-    z-index: 1;
     margin-top: auto;
+    /* #endif */
+    /* #ifdef APP-PLUS */
+    padding: 10rpx 30rpx;
+    margin-top: 20rpx;
+    /* #endif */
+    z-index: 1;
 }
 
 /* 设备直连入口 - 弱化样式 */

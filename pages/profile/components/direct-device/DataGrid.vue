@@ -37,15 +37,16 @@ export default {
 .data-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
-  padding: 12rpx;
+  padding: 6rpx;
   background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
   border-radius: 16rpx;
 }
 .grid-item {
-  width: calc(33.333% - 8rpx);
+  width: calc(33.333% - 12rpx);
+  margin: 6rpx;
   background: #fff;
   padding: 18rpx 10rpx;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -58,7 +59,7 @@ export default {
     transform: scale(0.96);
     box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
   }
-  &.grid-item--wide { width: calc(50% - 6rpx); }
+  &.grid-item--wide { width: calc(50% - 12rpx); }
 }
 .item-label {
   font-size: 22rpx;

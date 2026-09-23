@@ -264,18 +264,19 @@ export default {
       this.showChart = true;
       this.getPowerCurve();
     }, 300);
+    // 实时数据按节流频率推送，重新拉取新数组引用触发刷新
+    this._unsubRealtime = realtimeDataProvider.subscribe(() => this.updateDevice171F());
   },
 
   beforeDestroy() {
     this.showChart = false;
     if (this.updateTimer) clearTimeout(this.updateTimer);
+    this._unsubRealtime && this._unsubRealtime();
   },
   methods: {
     updateDevice171F() {
-      this.deviceList = realtimeDataProvider.getDeviceList()
-      console.log(this.deviceList, 'this.deviceList')
+      this.deviceList = [...realtimeDataProvider.getDeviceList()]
       this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
-      console.log(this.device171F, 'this.device171F')
     },
     init171FDevice() {
       this.deviceList = this.get171FDeviceList();

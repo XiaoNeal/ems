@@ -1,6 +1,6 @@
 <template>
   <view class="navbar-wrapper">
-    <!-- <view v-if="placeholder" class="navbar-placeholder" :style="{ backgroundColor: bgColor }"></view> -->
+    <!-- <view v-if="placeholder" class="navbar-placeholder" :class="platformClass" :style="{ backgroundColor: bgColor }"></view> -->
     <view class="header" :class="[platformClass, { 'navbar-fixed': fixed }]" :style="{ backgroundColor: bgColor }">
        <view class="header-safe-area"></view>
       <view class="header-content">

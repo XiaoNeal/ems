@@ -185,6 +185,20 @@
 						"navigationStyle": "custom",
 						"navigationBarTitleText": "微能站软件许可及用户服务协议"
 					}
+				},
+				{
+					"path": "app-update/app-update",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "",
+						"app-plus": {
+							"background": "transparent",
+							"popGesture": "none",
+							"animationType": "fade-in",
+							"animationDuration": 200,
+							"bounce": "none"
+						}
+					}
 				}
 			]
 		},

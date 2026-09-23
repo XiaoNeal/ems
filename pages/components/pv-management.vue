@@ -265,11 +265,16 @@ export default {
   },
   mounted() {
     this.init171FDevice();
+    // 实时数据按节流频率推送，重新拉取新数组引用触发刷新
+    this._unsubRealtime = realtimeDataProvider.subscribe(() => this.updateDevice171F());
+  },
+  beforeDestroy() {
+    this._unsubRealtime && this._unsubRealtime();
   },
 
   methods: {
     updateDevice171F() {
-      this.deviceList = realtimeDataProvider.getDeviceList()
+      this.deviceList = [...realtimeDataProvider.getDeviceList()]
       this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
     },
     init171FDevice() {

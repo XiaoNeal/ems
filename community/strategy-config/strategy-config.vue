@@ -382,6 +382,7 @@ export default {
       showStatus: true, // 是否显示状态模式（默认显示状态）
       statusGroups: [], // 状态参数分组数据
       deviceList: [], // 设备列表
+      dataVersion: 0, // 实时数据版本号（回调自增，驱动 computed 重算）
       // 策略参数
       strategyParams: {
         targetSOC: '', // 电池优先策略：目标SOC值
@@ -408,10 +409,16 @@ export default {
     this.loadStrategyConfig()
     this.initRealtimeData() // 初始化实时数据
     this.loadStatusData() // 默认加载状态数据
+    // 实时数据回调：自增版本号驱动 computed 重新读取（provider 内已 300ms 节流）
+    this._realtimeCb = () => { this.dataVersion++ }
+    realtimeDataProvider.onDataUpdate = this._realtimeCb
   },
   beforeUnmount() {
     // 页面卸载时取消注册
     realtimeDataProvider.unregister()
+    if (realtimeDataProvider.onDataUpdate === this._realtimeCb) {
+      realtimeDataProvider.onDataUpdate = null
+    }
   },
   computed: {
     selectedWeekDays() {
@@ -430,6 +437,7 @@ export default {
     },
     // 获取 171F 设备
     device171F() {
+      const _ = this.dataVersion
       const deviceList = realtimeDataProvider.getDeviceList()
       return deviceList.find(item => item && item.deviceType.includes('171F'))
     },
@@ -770,7 +778,7 @@ export default {
         name: 'DCDC设备171F'
       };
       realtimeDataProvider.initDeviceList([device171F])
-      this.deviceList = realtimeDataProvider.getDeviceList()
+      this.deviceList = [...realtimeDataProvider.getDeviceList()]
       console.log('deviceList---------------------------', this.deviceList)
     },
     // 加载状态数据

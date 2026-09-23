@@ -55,6 +55,16 @@
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
+
+      <!-- #ifdef APP-PLUS -->
+      <view class="list-item" @click="enterDirectDevice">
+        <view class="item-content">
+          <uni-icons type="scan" size="20" color="#007AFF"></uni-icons>
+          <text class="item-title">设备直连</text>
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
+        </view>
+      </view>
+      <!-- #endif -->
       <!-- <view class="list-item" @click="navigateToU('/pages/profile/notifications')">
         <view class="item-content">
           <uni-icons type="notification" size="20" color="#007AFF"></uni-icons>
@@ -283,6 +293,30 @@ export default {
       uni.setStorageSync('fromProfile', 'true')
       uni.navigateTo({
         url: '/pages/index/index'
+      })
+    },
+
+    // 设备直连：未配置时进入配置页；已配置时可选择进入监测页或修改配置
+    enterDirectDevice() {
+      let cfg = null
+      try {
+        cfg = uni.getStorageSync('direct_device_config')
+      } catch (e) {
+        cfg = null
+      }
+      if (!cfg || !cfg.enabled || !cfg.ip) {
+        uni.navigateTo({ url: '/pages/profile/direct-device-config' })
+        return
+      }
+      uni.showActionSheet({
+        itemList: ['进入监测页', '修改配置'],
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            uni.navigateTo({ url: '/pages/profile/direct-device' })
+          } else {
+            uni.navigateTo({ url: '/pages/profile/direct-device-config' })
+          }
+        }
       })
     },
 

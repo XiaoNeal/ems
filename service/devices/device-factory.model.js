@@ -156,6 +156,55 @@ export class DeviceFactory {
 			dev.barCode = gateway
 			dev.deviceId = jsonData.deviceId
 			dev.name = jsonData.name
+
+			// 性能关键：阻止 Vue2 深度 observe 高频实时数据容器
+			// （energyData/stateData/controlData/alarmData 等）。
+			//
+			// 做法：给容器挂 Symbol.toStringTag，使
+			// Object.prototype.toString.call(容器) 返回 '[object XxxData]'
+			// 而不是 '[object Object]'。Vue2 observe() 的创建条件要求 isPlainObject，
+			// 命中失败后直接跳过、不会 new Observer，于是：
+			//   - 容器及其内部上百个 { value } 字段都不会被 observe，
+			//     协议处理器逐帧写字段不再触发 dep.notify()（卡顿根因消除）；
+			//   - 容器和字段全部是「可枚举自有字符串属性」——这是小程序端的硬性要求：
+			//     uni-app mp 运行时 setData 前用 rfdc 深克隆（for-in 只拷可枚举键），
+			//     wxml 又直接绑定 device171F.energyData.B0 这类路径；
+			//   - 不能用 _isVue 让 observe 跳过：mp 运行时的 clearInstance reviver
+			//     会把任何带 _isVue 的对象克隆成 {}，视图层数据会被清空（踩过的坑）；
+			//   - Symbol 键不会被 for-in / JSON.stringify / setData 枚举传输；
+			//   - 容器仍可扩展可写，动态新增寄存器键（如 171E）不受影响。
+			//
+			// 页面侧改由 realtimeDataProvider.subscribe()/takeSnapshot()
+			// 按节流频率用「新数组引用」驱动重渲染。
+			Object.getOwnPropertyNames(dev).forEach(k => {
+				const desc = Object.getOwnPropertyDescriptor(dev, k)
+				if (!desc || !desc.configurable || 'get' in desc) return
+				if (k === 'lastUpdateTime') {
+					// 标量、每帧高频写入，但视图不绑定：非可枚举即可让 observe 跳过
+					if (desc.writable && desc.enumerable) {
+						Object.defineProperty(dev, k, {
+							value: desc.value,
+							enumerable: false,
+							writable: true,
+							configurable: true
+						})
+					}
+					return
+				}
+				const v = desc.value
+				if (v !== null && typeof v === 'object' && !Array.isArray(v) && v[Symbol.toStringTag] === undefined) {
+					// 注意：对象字面量容器的 constructor.name 是 'Object'，标签不能用它，
+					// 否则 toString 仍是 '[object Object]'，Vue2 isPlainObject 判定不会跳过
+					const ctorName = v.constructor && v.constructor.name
+					const tag = (ctorName && ctorName !== 'Object') ? ctorName : 'RealtimeData'
+					Object.defineProperty(v, Symbol.toStringTag, {
+						value: tag,
+						enumerable: false,
+						writable: false,
+						configurable: true
+					})
+				}
+			})
 		}
 		return dev;
 	}

@@ -1,6 +1,12 @@
 # Dependencies
 node_modules/
 
+
+.workbuddy/
+
+软著申请材料/*
+
+
 # Build outputs
 /unpackage/
 

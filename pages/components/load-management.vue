@@ -181,7 +181,7 @@ export default {
     this.loadDeviceList();
   },
   beforeDestroy() {
-    realtimeDataProvider.onDataUpdate = null;
+    this._unsubRealtime && this._unsubRealtime();
   },
   computed: {
     // 设备分类统计：从 deviceList 实时计算，保证与列表一致
@@ -326,11 +326,12 @@ export default {
             console.log(deviceConfigs,'deviceConfigs',allDevices)
 
             realtimeDataProvider.initDeviceList(deviceConfigs);
-            
-            realtimeDataProvider.onDataUpdate = () => {
+
+            this._unsubRealtime && this._unsubRealtime();
+            this._unsubRealtime = realtimeDataProvider.subscribe(() => {
               if (this._isUserInteracting) return;
               this.updateDeviceFromRealtime();
-            };
+            });
           }
 
           // 使用 load 数据初始化设备列表（作为基础数据，实时数据到达后会覆盖数值）

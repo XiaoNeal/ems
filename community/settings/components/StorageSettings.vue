@@ -299,15 +299,31 @@ export default {
       this.idCode = deviceControl.homeBarCode || deviceControl.barCode || '';
     }
     this.initDevice()
-    this.deviceList = [...realtimeDataProvider.getDeviceList()]
+    this.deviceList = this.takeDeviceSnapshot()
+    // 实时帧高频到达，节流合并刷新，避免整页频繁重渲染导致点击卡顿
     realtimeDataProvider.onDataUpdate = () => {
-      this.deviceList = [...realtimeDataProvider.getDeviceList()]
+      if (this._dataUpdateTimer) return
+      this._dataUpdateTimer = setTimeout(() => {
+        this._dataUpdateTimer = null
+        this.deviceList = this.takeDeviceSnapshot()
+      }, 500)
     }
   },
   beforeDestroy() {
     realtimeDataProvider.onDataUpdate = null
+    if (this._dataUpdateTimer) {
+      clearTimeout(this._dataUpdateTimer)
+      this._dataUpdateTimer = null
+    }
   },
   methods: {
+    /**
+     * 设备数据冻结快照（实现在 realtime-data-provider，统一维护）
+     * 快照不被 Vue observe，render 不订阅实时字段，仅引用替换时刷新
+     */
+    takeDeviceSnapshot() {
+      return realtimeDataProvider.takeSnapshot()
+    },
     initDevice() {
       const currentDevice = this.$store.state.currentSelectDevice || {}
       const deviceTypes = ['171D', '171F']

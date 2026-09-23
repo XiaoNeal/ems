@@ -52,7 +52,104 @@ export class RealtimeDataProviderService {
 	barCode = new Set()
 	realTimeWebSocketProtocolHandler = new RealTimeWebSokcetProtocolHandler()
 	registeredBarCodes = new Set()
-	onDataUpdate = null
+
+	// 设备去重映射（保持为普通 Map，绝不放进 Vuex/Vue 响应式容器，
+	// 否则实时模型会被深度 observe，每帧上百字段写入会拖垮所有页面）
+	modelKeyMap = new Map()
+
+	// —— 数据更新事件：多订阅者 + 全局节流 ——
+	// 实时帧每秒可达数十条，逐帧通知会让所有存活页面（含后台隐藏页）整页重渲染。
+	// 所有通知合并到最多 NOTIFY_INTERVAL_MS 一次。
+	static NOTIFY_INTERVAL_MS = 300
+	_dataListeners = new Set()
+	_notifyTimer = null
+	// 首页等宿主页面隐藏时暂停多订阅者通知（活动页的 legacy 单回调不受影响）
+	_subscribersPaused = false
+	// 兼容旧代码 realtimeDataProvider.onDataUpdate = fn / null 的单回调写法
+	_legacyListener = null
+
+	/** 暂停/恢复 subscribe() 多订阅者通知（宿主页面 onHide/onShow 调用） */
+	setSubscribersPaused(paused) {
+		this._subscribersPaused = !!paused
+	}
+
+	get onDataUpdate() {
+		return this._legacyListener
+	}
+	set onDataUpdate(cb) {
+		this._legacyListener = typeof cb === 'function' ? cb : null
+	}
+
+	/**
+	 * 订阅实时数据更新（已节流，最多约 3 次/秒）
+	 * @param {Function} cb 数据更新回调
+	 * @returns {Function} 取消订阅函数
+	 */
+	subscribe(cb) {
+		if (typeof cb === 'function') this._dataListeners.add(cb)
+		return () => this._dataListeners.delete(cb)
+	}
+
+	_notifyDataUpdate() {
+		if (this._notifyTimer) return
+		this._notifyTimer = setTimeout(() => {
+			this._notifyTimer = null
+			if (!this._subscribersPaused) {
+				this._dataListeners.forEach(cb => {
+					try { cb() } catch (e) { console.error('[RealtimeDataProvider] listener error', e) }
+				})
+			}
+			if (typeof this._legacyListener === 'function') {
+				try { this._legacyListener() } catch (e) { console.error('[RealtimeDataProvider] listener error', e) }
+			}
+		}, RealtimeDataProviderService.NOTIFY_INTERVAL_MS)
+	}
+
+	/**
+	 * 生成设备列表的冻结快照（浅拷贝高频数据容器）。
+	 * 快照不可被 Vue observe，组件渲染只读快照、不订阅实时字段，
+	 * 仅在拿到新快照引用时重渲染一次。
+	 * 注意：
+	 * 1) 模型高频容器在 device-factory 中被改为非可枚举属性，
+	 *    必须用 Object.getOwnPropertyNames 遍历，对象展开会漏掉它们；
+	 * 2) Vue2 会给被 observe 过的模型挂非可枚举内部标记 __ob__（Observer 实例），
+	 *    绝不能拷进快照——否则会生成一个被冻结的「假 __ob__」（dep 无 depend 方法），
+	 *    小程序端 dependArray/cloneWithData 遍历时会抛
+	 *    "e.__ob__.dep.depend is not a function" 并中断整页渲染。
+	 */
+	takeSnapshot() {
+		const OBSERVE_KEY = '__ob__'
+		// 浅拷贝一个普通对象（顺带剥离 __ob__），再冻结
+		const shallowCopy = (o) => {
+			const cc = {}
+			Object.keys(o).forEach(fk => {
+				if (fk === OBSERVE_KEY) return
+				cc[fk] = o[fk]
+			})
+			return Object.freeze(cc)
+		}
+		const copyContainer = (c) => {
+			if (Array.isArray(c)) return Object.freeze(c.slice())
+			const cc = {}
+			Object.keys(c).forEach(fk => {
+				if (fk === OBSERVE_KEY) return
+				const f = c[fk]
+				// 字段对象（{ value, unit... }）也走剥离+冻结，防止快照被深度 observe
+				cc[fk] = (f && typeof f === 'object') ? shallowCopy(f) : f
+			})
+			return Object.freeze(cc)
+		}
+		return this.deviceList.map(d => {
+			if (!d || typeof d !== 'object') return d
+			const snap = {}
+			Object.getOwnPropertyNames(d).forEach(k => {
+				if (k === OBSERVE_KEY) return
+				const v = d[k]
+				snap[k] = (v !== null && typeof v === 'object') ? copyContainer(v) : v
+			})
+			return Object.freeze(snap)
+		})
+	}
 
 	constructor() {
 		// 直连模式或未登录时不自动连接云端 WebSocket
@@ -97,8 +194,8 @@ export class RealtimeDataProviderService {
 			}
 		}
 		// 如果有数据超时被清空，触发UI更新
-		if (hasExpired && typeof this.onDataUpdate === 'function') {
-			this.onDataUpdate();
+		if (hasExpired) {
+			this._notifyDataUpdate();
 		}
 	}
 
@@ -133,11 +230,11 @@ export class RealtimeDataProviderService {
 	clearDeviceState() {
 		this.unregister()
 		this.deviceList = [];
+		this.modelKeyMap.clear()
 		this.barCode = new Set()
 		store.commit('CLEAR_DEVICE_STATE');
 	}
 	initDeviceList(deviceList) {
-		console.log(deviceList, 'deviceList-------------------------')
 		for (let i = 0; deviceList && i < deviceList.length; i++) {
 			let barCode = deviceList[i].barCode || deviceList[i].barcode
 			if (!barCode) continue
@@ -154,12 +251,9 @@ export class RealtimeDataProviderService {
 
 			// 使用barCode、address和deviceType组合作为唯一键
 			let deviceKey = `${barCode}_${address}_${deviceType}`
-			// console.log(deviceKey, 'deviceKey')
 
-			// 从store中获取deviceMap
-			const currentDeviceMap = store.state.deviceMap;
-			// 检查设备是否已存在
-			if (!currentDeviceMap.has(deviceKey)) {
+			// 用普通 Map 去重（不经过 Vuex，保证实时模型不被响应式化）
+			if (!this.modelKeyMap.has(deviceKey)) {
 				let device = {
 					deviceId: deviceList[i].deviceId,
 					name: deviceList[i].name != '' ? deviceList[i].name : '未命名',
@@ -185,22 +279,19 @@ export class RealtimeDataProviderService {
 					addedModel.rawDeviceType = originalDeviceType;
 				}
 
-				// 存储到store的deviceMap中
-				store.commit('ADD_DEVICE_TO_MAP', { key: deviceKey, device: addedModel });
-				// 存储到store的barCodes中
+				this.modelKeyMap.set(deviceKey, addedModel)
+				// barCode 仍写入 Vuex 供重连逻辑读取（Set 本身不会被 Vue2 深度 observe）
 				store.commit('ADD_BAR_CODE', barCode);
-				// console.log(addedModel, 'addedModel')
 			}
 		}
 		// 从store中获取barCodes
 		const storeBarCodes = store.state.barCodes;
-		console.log(storeBarCodes, 'storeBarCodes')
 		storeBarCodes.forEach((value) => {
 
 			this.bindDevicesRealtimeData(value)
 		})
 
-		console.log('初始化设备列表:', this.deviceList, store.state.deviceMap)
+		console.log('初始化设备列表完成, 设备数:', this.deviceList.length)
 		// 将this.deviceList值赋值给deviceLists
 		// deviceLists = this.deviceList;
 	}
@@ -254,9 +345,7 @@ export class RealtimeDataProviderService {
 					// console.log('[数据流] 收到 IEMS_' + barCode + ' 数据, deviceType:', jsonData.deviceType, 'gateway:', jsonData.gateway)
 					const actualGateway = jsonData.gateway || barCode;
 					this.realTimeWebSocketProtocolHandler.parseJsonData(jsonData, actualGateway, this.deviceList);
-					if (typeof this.onDataUpdate === 'function') {
-						this.onDataUpdate();
-					}
+					this._notifyDataUpdate();
 				} else if (jsonData instanceof ArrayBuffer || (jsonData && jsonData.buffer instanceof ArrayBuffer)) {
 					// 二进制帧：使用协议模块解析
 					const bytes = jsonData instanceof Uint8Array ? jsonData : new Uint8Array(jsonData)
@@ -275,9 +364,7 @@ export class RealtimeDataProviderService {
 						gateway: barCode,
 					}
 					this.realTimeWebSocketProtocolHandler.parseJsonData(parsedJson, barCode, this.deviceList)
-					if (typeof this.onDataUpdate === 'function') {
-						this.onDataUpdate();
-					}
+					this._notifyDataUpdate()
 				}
 			} catch (error) {
 				console.error('parseJsonData error', barCode, error)

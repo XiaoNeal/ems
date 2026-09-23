@@ -72,7 +72,7 @@ export default {
       // return;
       if (this.device171FRegistered) {
         console.log('171F设备已注册，跳过', this.device171FList);
-        this.device171FList = realtimeDataProvider.getDeviceList();
+        this.device171FList = [...realtimeDataProvider.getDeviceList()];
         return this.device171FList;
       }
 
@@ -103,7 +103,7 @@ export default {
       };
       console.log('注册171F设备:', deviceConfig);
       realtimeDataProvider.initDeviceList([deviceConfig]);
-      this.device171FList = realtimeDataProvider.getDeviceList();
+      this.device171FList = [...realtimeDataProvider.getDeviceList()];
       this.device171FRegistered = true;
       console.log('171F设备注册完成:', this.device171FList);
       return this.device171FList;
@@ -166,10 +166,25 @@ export default {
     this.register171FDevice();
     // 监听屏幕旋转事件
     uni.onWindowResize(this.onOrientationChange);
+    // 注册实时数据回调（provider 内已 300ms 节流）
+    this._realtimeCb = () => {
+      this.device171FList = [...realtimeDataProvider.getDeviceList()];
+    };
+    realtimeDataProvider.onDataUpdate = this._realtimeCb;
+  },
+  onShow() {
+    // 从子页面返回时重新持有回调并立即刷新
+    if (this._realtimeCb) {
+      realtimeDataProvider.onDataUpdate = this._realtimeCb;
+      this._realtimeCb();
+    }
   },
   beforeDestroy() {
     // 移除监听器
     uni.offWindowResize(this.onOrientationChange);
+    if (realtimeDataProvider.onDataUpdate === this._realtimeCb) {
+      realtimeDataProvider.onDataUpdate = null;
+    }
   }
 };
 </script>

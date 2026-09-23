@@ -162,6 +162,15 @@ export default {
       console.log('[mounted] 触发 fetchDeviceList')
       this.fetchDeviceList()
     }
+    // 注册实时数据回调（活动页持有 legacy 单回调槽，已在 provider 内 300ms 节流）
+    this._realtimeCb = () => {
+      this.device171FList = [...realtimeDataProvider.getDeviceList()]
+    }
+    realtimeDataProvider.onDataUpdate = this._realtimeCb
+  },
+  onHide() {
+    // 页面隐藏（进入子页面）时暂停首页子组件们的订阅通知，避免后台渲染抢主线程
+    realtimeDataProvider.setSubscribersPaused(true)
   },
   onLoad(options) {
     console.log('onLoad', options)
@@ -215,6 +224,12 @@ export default {
     // 所有 store 写入统一由 fetchDeviceList 完成，避免竞态
     if (!this.isDeviceListLoaded) {
       this._initEsIds()
+    }
+    // 回到前台：恢复首页子组件订阅、重新持有实时回调并立即刷新一次
+    realtimeDataProvider.setSubscribersPaused(false)
+    if (this._realtimeCb) {
+      realtimeDataProvider.onDataUpdate = this._realtimeCb
+      this._realtimeCb()
     }
   },
   onReady() {
@@ -384,7 +399,7 @@ export default {
 
       console.log('[数据流] 准备注册:', configs.length, '个设备')
       realtimeDataProvider.initDeviceList(configs)
-      const registeredList = realtimeDataProvider.getDeviceList();
+      const registeredList = [...realtimeDataProvider.getDeviceList()];
       console.log('[数据流] 注册完成, 设备列表:', registeredList.length, '个设备')
       this.device171FList = registeredList;
       this.device171FRegistered = true;
@@ -474,7 +489,7 @@ export default {
     register171FDevice() {
       if (this.device171FRegistered) {
         console.log('[数据流] 设备已注册，跳过', this.device171FList.length, '个设备');
-        this.device171FList = realtimeDataProvider.getDeviceList();
+        this.device171FList = [...realtimeDataProvider.getDeviceList()];
         return this.device171FList;
       }
 
@@ -519,7 +534,7 @@ export default {
 
       console.log('[数据流] 准备注册:', configs.length, '个设备');
       realtimeDataProvider.initDeviceList(configs);
-      this.device171FList = realtimeDataProvider.getDeviceList();
+      this.device171FList = [...realtimeDataProvider.getDeviceList()];
       this.device171FRegistered = true;
       console.log('[数据流] 注册完成, 设备列表:', this.device171FList.length, '个设备');
       return this.device171FList;

@@ -1314,11 +1314,11 @@ export default {
         deviceList.push(...defaultDevices);
       }
       realtimeDataProvider.initDeviceList(deviceList);
-      this.deviceList = realtimeDataProvider.getDeviceList();
+      this.deviceList = [...realtimeDataProvider.getDeviceList()];
       console.log(this.deviceList, 'deviceList111111111');
     },
     refreshDeviceData() {
-      this.deviceList = realtimeDataProvider.getDeviceList();
+      this.deviceList = [...realtimeDataProvider.getDeviceList()];
     }
   },
   onLoad() {

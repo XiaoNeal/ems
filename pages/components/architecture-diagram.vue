@@ -466,9 +466,12 @@ export default {
     if (currentDevice && currentDevice.id) {
       this.getPowerData();
     }
+    // 实时数据按节流频率推送，重新拉取新数组引用触发刷新
+    this._unsubRealtime = realtimeDataProvider.subscribe(() => this.updateDevice171F());
   },
   beforeDestroy() {
     this.dataInterval && clearInterval(this.dataInterval);
+    this._unsubRealtime && this._unsubRealtime();
     // realtimeDataProvider.unregister();
     // #ifdef APP-PLUS
     plus.navigator.setStatusBarStyle('default');
@@ -478,8 +481,7 @@ export default {
   },
   methods: {
     updateDevice171F() {
-      this.deviceList = realtimeDataProvider.getDeviceList()
-      console.log('deviceList架构图', this.deviceList)
+      this.deviceList = [...realtimeDataProvider.getDeviceList()]
       this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
       const b12Value = this.device171F && this.device171F.controlData && this.device171F.controlData.B12 && this.device171F.controlData.B12.value;
       if (b12Value !== undefined && b12Value !== null) {
