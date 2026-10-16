@@ -32,13 +32,6 @@
       </view>
     </view>
 
-    <!-- 配置摘要预览 -->
-    <view class="preview-bar" v-if="form.ip">
-      <view class="preview-item">
-        <text class="preview-label">Broker</text>
-        <text class="preview-value">tcp://{{ form.ip }}:{{ form.port }}</text>
-      </view>
-    </view>
 
     <!-- MQTT 参数 -->
     <view class="section">
@@ -181,6 +174,7 @@ const ACCESS_CODE = '123456'
 const DEFAULT_CONFIG = {
   enabled: true,
   deviceType: '20kW',
+  deviceName: '',
   protocol: 'mqtt',
   ip: '',
   port: '1883',
@@ -261,26 +255,65 @@ export default {
 
     /**
      * 解析二维码内容并连接 WiFi
-     * @param {string} raw 二维码原始内容
+     * 支持三种格式：
+     * 1. JSON 格式（扩展最丰富）：{"SSID":"xxx","P":"xxx","T":"WPA","deviceType":"20kW","ip":"192.168.1.100","port":"1883","realtimeTopic":"..."}
+     * 2. 标准 WIFI: 格式 + 扩展字段：WIFI:S:xxx;P:xxx;T:WPA;DT:20kW;IP:192.168.1.100;;
+     * 3. 纯 SSID 文本（兼容旧格式）
      */
     parseAndConnectWifi(raw) {
       let ssid = ''
       let password = ''
       let security = ''
+      let extra = {} // 扩展字段：deviceType / ip / port / realtimeTopic / controlSetTopic / controlRespTopic
 
-      // 尝试匹配标准 WIFI: 格式
-      const wifiMatch = raw.match(/^WIFI:(.*);;?$/i)
-      if (wifiMatch) {
-        const fields = wifiMatch[1]
-        const ssidMatch = fields.match(/S:([^;]*)/i)
-        const passMatch = fields.match(/P:([^;]*)/i)
-        const typeMatch = fields.match(/T:([^;]*)/i)
-        if (ssidMatch) ssid = ssidMatch[1]
-        if (passMatch) password = passMatch[1]
-        if (typeMatch) security = typeMatch[1]
-      } else {
-        // 非标准格式，把整行当 SSID
-        ssid = raw
+      // 1. 尝试 JSON 格式
+      if (raw.trim().startsWith('{')) {
+        try {
+          const json = JSON.parse(raw)
+          ssid = json.SSID || json.ssid || ''
+          password = json.P || json.password || ''
+          security = json.T || json.security || ''
+          // 扩展字段回填
+          if (json.deviceType) extra.deviceType = String(json.deviceType)
+          if (json.deviceName) extra.deviceName = String(json.deviceName)
+          if (json.ip) extra.ip = String(json.ip)
+          if (json.port) extra.port = String(json.port)
+          if (json.realtimeTopic) extra.realtimeTopic = String(json.realtimeTopic)
+          if (json.controlSetTopic) extra.controlSetTopic = String(json.controlSetTopic)
+          if (json.controlRespTopic) extra.controlRespTopic = String(json.controlRespTopic)
+        } catch (e) {
+          // 不是合法 JSON，继续尝试 WIFI: 格式
+        }
+      }
+
+      // 2. 尝试 WIFI: 格式
+      if (!ssid) {
+        const wifiMatch = raw.match(/^WIFI:(.*);;?$/i)
+        if (wifiMatch) {
+          const fields = wifiMatch[1]
+          const ssidMatch = fields.match(/S:([^;]*)/i)
+          const passMatch = fields.match(/P:([^;]*)/i)
+          const typeMatch = fields.match(/T:([^;]*)/i)
+          // 扩展字段
+          const dtMatch = fields.match(/DT:([^;]*)/i) || fields.match(/DEVICETYPE:([^;]*)/i)
+          const dnMatch = fields.match(/DN:([^;]*)/i) || fields.match(/DEVICENAME:([^;]*)/i)
+          const ipMatch = fields.match(/IP:([^;]*)/i)
+          const portMatch = fields.match(/PORT:([^;]*)/i)
+          const rtMatch = fields.match(/TOPIC:([^;]*)/i) || fields.match(/RT:([^;]*)/i)
+          if (ssidMatch) ssid = ssidMatch[1]
+          if (passMatch) password = passMatch[1]
+          if (typeMatch) security = typeMatch[1]
+          if (dtMatch) extra.deviceType = dtMatch[1]
+          if (dnMatch) extra.deviceName = dnMatch[1]
+          if (ipMatch) extra.ip = ipMatch[1]
+          if (portMatch) extra.port = portMatch[1]
+          if (rtMatch) extra.realtimeTopic = rtMatch[1]
+        }
+      }
+
+      // 3. 都不匹配，整行当 SSID
+      if (!ssid) {
+        ssid = raw.trim()
       }
 
       if (!ssid) {
@@ -288,16 +321,42 @@ export default {
         return
       }
 
-      // 无密码开放网络也要走 connectWifi
-      const params = { SSID: ssid }
-      if (password) params.password = password
-      // nopass 不传 password
-      if (security && security.toLowerCase() === 'nopass') {
-        delete params.password
+      // 回填扩展字段到表单
+      let filledExtra = []
+      if (extra.deviceType && this.deviceTypes.some(t => t.value === extra.deviceType)) {
+        this.form.deviceType = extra.deviceType
+        filledExtra.push('设备型号: ' + extra.deviceType)
       }
+      if (extra.deviceName) {
+        this.form.deviceName = extra.deviceName
+        filledExtra.push('设备名称: ' + extra.deviceName)
+      }
+      if (extra.ip) {
+        this.form.ip = extra.ip
+        // 同步 ipSeg
+        const segs = extra.ip.split('.')
+        if (segs.length === 4) {
+          this.ipSeg = segs.map(s => parseInt(s, 10) || 0)
+        }
+        filledExtra.push('IP: ' + extra.ip)
+      }
+      if (extra.port) {
+        this.form.port = extra.port
+        filledExtra.push('端口: ' + extra.port)
+      }
+      if (extra.realtimeTopic) {
+        this.form.realtimeTopic = extra.realtimeTopic
+        filledExtra.push('Topic: ' + extra.realtimeTopic)
+      }
+      if (extra.controlSetTopic) this.form.controlSetTopic = extra.controlSetTopic
+      if (extra.controlRespTopic) this.form.controlRespTopic = extra.controlRespTopic
 
+      // 构建确认弹窗内容
       const maskedPwd = password ? password.replace(/./g, '*') : ''
-      const content = `SSID: ${ssid}${password ? '\n密码: ' + maskedPwd : '\n(无密码)'}`
+      let content = `SSID: ${ssid}${password ? '\n密码: ' + maskedPwd : '\n(无密码)'}`
+      if (filledExtra.length) {
+        content += '\n\n已自动填充:\n' + filledExtra.join('\n')
+      }
 
       uni.showModal({
         title: '确认连接 WiFi',
@@ -305,6 +364,11 @@ export default {
         confirmText: '连接',
         success: (modalRes) => {
           if (!modalRes.confirm) return
+          const params = { SSID: ssid }
+          if (password) params.password = password
+          if (security && security.toLowerCase() === 'nopass') {
+            delete params.password
+          }
           this.doConnectWifi(params)
         }
       })
@@ -468,6 +532,7 @@ export default {
       const cfg = {
         enabled: this.form.enabled,
         deviceType: this.form.deviceType,
+        deviceName: (this.form.deviceName || '').trim(),
         protocol: 'mqtt',
         brokerUrl: this.buildBrokerUrl(),
         ip: (this.form.ip || '').trim(),
@@ -665,48 +730,6 @@ export default {
   font-size: 28rpx;
   font-weight: 500;
   color: #007AFF;
-}
-
-/* ========== 配置摘要预览 ========== */
-.preview-bar {
-  display: flex;
-  align-items: center;
-  margin: 0 20rpx 20rpx;
-  padding: 16rpx 24rpx;
-  background: rgba(0, 122, 255, 0.06);
-  border-radius: 12rpx;
-  gap: 16rpx;
-}
-
-.preview-item {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-}
-
-.preview-label {
-  font-size: 20rpx;
-  color: #86909c;
-  text-transform: uppercase;
-  letter-spacing: 1rpx;
-}
-
-.preview-value {
-  font-size: 24rpx;
-  color: #007AFF;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.preview-sep {
-  width: 1rpx;
-  height: 48rpx;
-  background: rgba(0, 122, 255, 0.15);
-  flex-shrink: 0;
 }
 
 /* ========== 通用 section ========== */

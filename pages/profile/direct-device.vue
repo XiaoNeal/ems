@@ -21,46 +21,29 @@
 
     <!-- 离线 / 未配置 提示 -->
     <view v-if="!config.enabled" class="empty-state">
-      <uni-icons type="wifi" size="56" color="#ccc"></uni-icons>
+      <view class="empty-icon">
+        <uni-icons type="wifi" size="52" color="#b9bfc9"></uni-icons>
+      </view>
       <text class="empty-text">直连模式未开启</text>
       <text class="empty-sub">请先在设置中配置 IP 与端口</text>
       <button class="btn primary" @click="goConfig">前往配置</button>
-    </view>
-
-    <view v-else-if="connectionState === 'offline' && !connecting" class="empty-state">
-      <uni-icons type="wifi-off" size="56" color="#ccc"></uni-icons>
-      <text class="empty-text">设备离线</text>
-      <text class="empty-sub">{{ errorMsg || '无法连接到设备，请检查网络与配置' }}</text>
-      <button class="btn primary" @click="reconnect">重新连接</button>
     </view>
 
     <view v-else class="connected-view">
     <!-- 标签页 + 数据区 -->
     <!-- 标签页 -->
     <view class="tab-container">
-        <scroll-view scroll-x="true" class="tab-scroll">
-          <view class="tab-list">
-            <!-- 监测数据胶囊组 -->
-            <view class="tab-pill tab-pill-monitor">
-              <view v-for="index in tabGroupMonitor" :key="index"
-                class="tab-item"
-                :class="{ active: currentTab === index }"
-                @click="switchTab(index)">
-                <text>{{ tabList[index] }}</text>
-              </view>
-            </view>
-            <!-- 控制数据胶囊组 -->
-            <view class="tab-pill tab-pill-control">
-              <view v-for="index in tabGroupControl" :key="index"
-                class="tab-item"
-                :class="{ active: currentTab === index }"
-                @click="switchTab(index)">
-                <text>{{ tabList[index] }}</text>
-              </view>
-            </view>
+      <scroll-view scroll-x="true" class="tab-scroll">
+        <view class="tab-list">
+          <view v-for="index in currentTabGroup" :key="index"
+            class="tab-item"
+            :class="{ active: currentTab === index, 'tab-monitor': bottomTab === 'monitor', 'tab-setting': bottomTab === 'setting' }"
+            @click="switchTab(index)">
+            <text>{{ tabList[index] }}</text>
           </view>
-        </scroll-view>
-      </view>
+        </view>
+      </scroll-view>
+    </view>
 
       <!-- 数据区 -->
       <swiper class="content-swiper" :style="swiperStyle" :current="currentTab" @change="onSwiperChange" :duration="300">
@@ -114,6 +97,22 @@
           </scroll-view>
         </swiper-item>
       </swiper>
+
+      <!-- 底部主导航 tab：监测 / 设置 -->
+      <view class="bottom-tabbar">
+        <view class="bottom-tab-item bottom-tab-monitor"
+          :class="{ active: bottomTab === 'monitor' }"
+          @click="switchBottomTab('monitor')">
+          <uni-icons type="list" size="22" :color="bottomTab === 'monitor' ? '#007aff' : '#b0b6c0'"></uni-icons>
+          <text class="bottom-tab-label">监测</text>
+        </view>
+        <view class="bottom-tab-item bottom-tab-setting"
+          :class="{ active: bottomTab === 'setting' }"
+          @click="switchBottomTab('setting')">
+          <uni-icons type="gear" size="22" :color="bottomTab === 'setting' ? '#fa8c16' : '#b0b6c0'"></uni-icons>
+          <text class="bottom-tab-label">设置</text>
+        </view>
+      </view>
     </view>
 
     <!-- 设置面板确认弹窗 -->
@@ -186,9 +185,12 @@ export default {
   data() {
     return {
       currentTab: 0,
+      bottomTab: 'monitor',
       config: {
         enabled: false,
         protocol: 'mqtt',
+        deviceType: '20kW',
+        deviceName: '',
         ip: '', port: '1883',
         brokerUrl: '', username: '', password: '',
         accessCode: '',
@@ -283,6 +285,9 @@ export default {
       // 没有操作码时隐藏设置面板，只显示概览和监测数据
       return this.hasAccessCode ? TAB_GROUP_CONTROL : []
     },
+    currentTabGroup() {
+      return this.bottomTab === 'monitor' ? this.tabGroupMonitor : this.tabGroupControl
+    },
     hasAccessCode() {
       return !!(this.config && this.config.accessCode === '123456')
     },
@@ -310,8 +315,8 @@ export default {
     swiperStyle() {
       const sysInfo = uni.getSystemInfoSync()
       const h = sysInfo.windowHeight || 667
-      // 固定头部占位：placeholder ~89px + device-card ~95px + tab-container ~50px
-      const fixed = 89 + 95 + 50
+      // 固定头部占位：placeholder ~89px + device-card ~95px + tab-container ~46px + bottom-tabbar ~44px
+      const fixed = 89 + 95 + 46 + 44
       return { height: `${Math.max(250, h - fixed)}px` }
     },
     currentDeviceType() {
@@ -339,7 +344,7 @@ export default {
       return '设备监测'
     },
     currentDeviceName() {
-      return 'IEMS 微能量站'
+      return this.config.deviceName || 'IEMS 微能量站'
     },
     lastUpdateText() {
       if (!this.lastUpdate) return '--'
@@ -435,6 +440,7 @@ export default {
     })
     this.loadConfig()
     this.initControlList()
+    this.initSettingsParams()
     this.updateDisplay()
     this.rebuildFormattedValues()
     // 从 realtimeDataProvider 获取 171F 架构数据
@@ -778,10 +784,24 @@ export default {
         }
       }
     },
+    /** 底部主导航切换：监测 / 设置 */
+    switchBottomTab(type) {
+      if (this.bottomTab === type) return
+      // 切到设置需要操作码
+      if (type === 'setting' && !this.hasAccessCode) {
+        uni.showToast({ title: '请先在配置页输入操作码', icon: 'none' })
+        return
+      }
+      this.bottomTab = type
+      // 跳到对应组的首个子 tab
+      this.switchTab(type === 'monitor' ? 0 : 5)
+    },
     onSwiperChange(e) {
       const newIndex = e.detail.current
       if (newIndex !== this.currentTab) {
         this.currentTab = newIndex
+        // 滑动跨组时同步底部 tab：0-4 监测，5-9 设置
+        this.bottomTab = newIndex >= 5 ? 'setting' : 'monitor'
         if (DEVICE_TYPES[newIndex] === '171C') {
           this.initControlList()
         }
@@ -808,6 +828,8 @@ export default {
           this.config = {
             enabled: !!cfg.enabled,
             protocol: 'mqtt',
+            deviceType: cfg.deviceType || '20kW',
+            deviceName: cfg.deviceName || '',
             ip: cfg.ip || '',
             port: cfg.port || '1883',
             brokerUrl,
@@ -859,8 +881,9 @@ export default {
     async startMqtt() {
       await this.connectMqtt()
       await this.subscribeMqttTopics()
-      this.initSettingsParams()
       // MQTT 推流模式：连接后无需主动拉取，等模拟器定时 publish
+      // initSettingsParams 已在 onLoad 执行，这里仅同步实时值
+      this.syncSettingsFromRealtime()
     },
     async connectMqtt() {
       if (!this.client) {
@@ -1494,7 +1517,8 @@ export default {
 
 <style lang="scss" scoped>
 .sub-page {
-  background: #f4f6fa;
+  /* 与「关于我们」等页面统一的浅灰蓝底色 */
+  background: #f4f6f9;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -1508,11 +1532,13 @@ export default {
   min-height: 0;
 }
 
-/* monitor-data.vue style tab container */
+/* ========== 标签栏（扁平下划线式） ==========
+   注意：本栏高度固定为 88rpx + 4rpx 指示条 = 92rpx，
+   swiperStyle 中 fixed 常量需同步（placeholder 89 + 卡片 95 + 标签栏 46 + 底部tab 44） */
 .tab-container {
   flex-shrink: 0;
   background-color: #fff;
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1rpx solid #eef0f4;
 }
 
 .tab-scroll {
@@ -1522,79 +1548,98 @@ export default {
 .tab-list {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  padding: 14rpx 16rpx;
-}
-
-.tab-pill {
-  display: flex;
-  align-items: center;
-  border-radius: 14rpx;
-  padding: 6rpx;
-  flex-shrink: 0;
-
-  &.tab-pill-monitor {
-    background: rgba(0, 122, 255, 0.08);
-  }
-
-  &.tab-pill-control {
-    background: rgba(250, 140, 22, 0.08);
-  }
+  padding: 0 24rpx;
 }
 
 .tab-item {
-  padding: 12rpx 22rpx;
-  border-radius: 10rpx;
-  flex-shrink: 0;
-  font-size: 26rpx;
-  color: #666;
-  white-space: nowrap;
-  transition: all 0.2s ease;
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+  color: #8a9099;
   position: relative;
+  transition: color 0.25s ease;
 
   &:active {
     opacity: 0.7;
   }
-}
 
-/* 监测胶囊内激活态 */
-.tab-pill-monitor .tab-item.active {
-  background: #fff;
-  color: #007aff;
-  font-weight: bold;
-  box-shadow: 0 2rpx 8rpx rgba(0, 122, 255, 0.18);
-}
+  /* 监测组：激活态蓝色 */
+  &.tab-monitor.active {
+    color: #007aff;
+    font-weight: 600;
 
-/* 控制胶囊内激活态 */
-.tab-pill-control .tab-item {
-  color: #7a6a55;
+    &::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 40rpx;
+      height: 6rpx;
+      border-radius: 3rpx;
+      background: #007aff;
+    }
+  }
 
-  &.active {
-    background: #fff;
+  /* 设置组：激活态橙色 */
+  &.tab-setting.active {
     color: #fa8c16;
-    font-weight: bold;
-    box-shadow: 0 2rpx 8rpx rgba(250, 140, 22, 0.2);
+    font-weight: 600;
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 40rpx;
+      height: 6rpx;
+      border-radius: 3rpx;
+      background: #fa8c16;
+    }
   }
 }
 
-/* 空状态 */
+/* 空状态：白色卡片承载，与全站卡片风格保持一致 */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16rpx;
-  padding: 100rpx 40rpx;
+  margin: 24rpx 20rpx;
+  padding: 80rpx 40rpx 88rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  border: 1rpx solid #eef0f4;
+  box-shadow: 0 4rpx 16rpx rgba(31, 51, 89, 0.04);
+
+  .empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 160rpx;
+    height: 160rpx;
+    border-radius: 50%;
+    background: #f4f6f9;
+    margin-bottom: 32rpx;
+  }
 
   .empty-text {
-    font-size: 30rpx;
-    color: #666;
-    margin-top: 12rpx;
+    font-size: 32rpx;
+    font-weight: 500;
+    color: #2b2f36;
   }
 
   .empty-sub {
+    margin-top: 14rpx;
     font-size: 24rpx;
-    color: #999;
+    line-height: 1.6;
+    color: #8a9099;
     text-align: center;
+  }
+
+  .btn {
+    margin-top: 48rpx;
   }
 }
 
@@ -1604,7 +1649,7 @@ export default {
   justify-content: center;
   align-items: center;
   padding: 80rpx 40rpx;
-  color: #999;
+  color: #8a9099;
   font-size: 26rpx;
 }
 
@@ -1614,6 +1659,60 @@ export default {
   min-height: 0;
   touch-action: pan-y;
   overflow: hidden;
+}
+
+/* ========== 底部主导航 tab：监测 / 设置 ========== */
+.bottom-tabbar {
+  flex-shrink: 0;
+  display: flex;
+  background-color: #ffffff;
+  border-top: 1rpx solid #eef0f4;
+  box-shadow: 0 -2rpx 10rpx rgba(31, 51, 89, 0.05);
+  /* iOS 安全区适配 */
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  gap: 4rpx;
+  transition: all 0.25s ease;
+
+  &:active {
+    opacity: 0.7;
+    transform: scale(0.96);
+  }
+
+  /* 监测组：激活态加粗 */
+  &.bottom-tab-monitor.active {
+    font-weight: 500;
+  }
+
+  /* 设置组：激活态加粗 */
+  &.bottom-tab-setting.active {
+    font-weight: 500;
+  }
+}
+
+.bottom-tab-label {
+  font-size: 22rpx;
+  line-height: 1;
+  color: #b0b6c0;
+}
+
+/* 监测组：激活态文字蓝色 */
+.bottom-tab-monitor.active .bottom-tab-label {
+  color: #007aff;
+}
+
+/* 设置组：激活态文字橙色 */
+.bottom-tab-setting.active .bottom-tab-label {
+  color: #fa8c16;
 }
 
 /* swiper-item 默认需要撑满父高度 */
@@ -1628,7 +1727,8 @@ export default {
 }
 
 .content {
-  padding: 16rpx;
+  /* 与 DeviceCard 的 20rpx 外边距对齐 */
+  padding: 20rpx;
 }
 
 
@@ -1638,27 +1738,34 @@ export default {
 
 /* 按钮 */
 .btn {
-  height: 76rpx;
-  line-height: 76rpx;
+  height: 80rpx;
+  line-height: 80rpx;
   font-size: 28rpx;
-  border-radius: 12rpx;
+  font-weight: 500;
+  border-radius: 14rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8rpx;
   margin: 0;
   border: none;
-  padding: 0 32rpx;
+  padding: 0 56rpx;
 
   &::after { border: none; }
 
   &.primary {
     background: #007AFF;
     color: #fff;
+    box-shadow: 0 6rpx 16rpx rgba(0, 122, 255, 0.22);
   }
 
   &[disabled] {
     opacity: 0.5;
+  }
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
   }
 }
 

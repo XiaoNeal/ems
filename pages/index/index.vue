@@ -324,7 +324,16 @@ export default {
         // console.log('[数据流] 设置 esIds:', this.esIds.length, '个')
 
         if (energyStations.length >= 1) {
-          const station = energyStations[0]
+          // 优先沿用已选中的设备（来自 device 参数或本地存储），避免切换设备后被重置为第一台
+          const prevDevice = this.$store.state.currentSelectDevice || {}
+          const selectedId = prevDevice.id || prevDevice.esId || this.selectedDeviceId
+          let station = energyStations[0]
+          if (selectedId) {
+            const matched = energyStations.find(item => (item.id || item.esId) === selectedId)
+            if (matched) {
+              station = { ...matched, list: matched.list || prevDevice.list }
+            }
+          }
           const stationId = station.id || station.esId
           this.selectedDeviceId = stationId
           this.updateCurrentEsRole(stationId)
@@ -335,20 +344,21 @@ export default {
             const list = deviceInfo?.data?.list || []
             // console.log('[数据流] 设备列表长度:', list.length)
 
-            // 把设备列表附加到能源站对象，一次性提交到 store
-            station.list = list
+            // 接口返回空列表时保留已缓存的设备列表，避免切换后无数据
+            if (list.length > 0 || !station.list) {
+              station.list = list
+            }
             // 附加额外信息
             station.areaId = station.areaId || areaId
-
-            // 一次性提交所有数据
-            this.$store.commit('changeCurrentSelectDevice', station)
-            uni.setStorageSync('currentSelectDevice', station)
-
-            // 直接传递设备列表，不再从 store 读取
-            this.registerDevices(list)
           } catch (err) {
             console.error('[数据流] 获取设备信息失败:', err)
           }
+
+          // 一次性提交所有数据
+          this.$store.commit('changeCurrentSelectDevice', station)
+          uni.setStorageSync('currentSelectDevice', station)
+          // 直接传递设备列表，不再从 store 读取
+          this.registerDevices(station.list)
         }
 
         this.isDeviceListLoaded = true

@@ -3,8 +3,6 @@ import DeviceBase from "./device-base.model"
 export class Model170C extends DeviceBase {
     constructor(number) {
         super();
-
-        const str = number ? `${number}# DCDC` : ''
         this.energyData = new EnergyData()
         this.stateData = new StatusData()
     }
@@ -68,6 +66,7 @@ class EnergyData{
     maxTemperature= { name: '模块最高温度(℃)', value: '--' }
     allowRunPower= { name: '允许运行功率(kW)', value: '--' }
     runPower= { name: '当前运行功率(kW)', value: '--' }
+
 }
 
 class StatusData{

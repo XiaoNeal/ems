@@ -10,7 +10,7 @@ var socket = undefined;
 function isLoggedIn() {
 	try {
 		const lifeData = uni.getStorageSync('lifeData') || {};
-		console.log(lifeData,'lifeData')
+		// console.log(lifeData,'lifeData')
 		return !!lifeData.hasLogin;
 	} catch (e) {
 		return false;

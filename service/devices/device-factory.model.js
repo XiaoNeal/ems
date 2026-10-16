@@ -6,7 +6,7 @@ import { Model1803 } from "./1803-model";
 import { Model1902 } from "./1902-model";
 import { Model1318 } from "./1318-model";
 import { Model1904 } from './1904-model.js'
-import { Model170Cv1 } from "./170Cv1-model.js";
+// import { Model170Cv1 } from "./170Cv1-model.js";
 import { Model0319 } from './0319-model.js'
 import { Model170C_V1_1Model } from './170C_V1_1-model.js'
 import { Model170F } from './170F-model.js'
@@ -18,6 +18,9 @@ import { Model171F } from './171F-model.js'
 import { Model1714 } from './1714-model.js'
 import { Model1712 } from './1712-model.js'
 import { Model1713 } from './1713-model.js'
+import { Model0318V2_3 } from './0318V2_3-model.js'
+import { Model171C_V2 } from './171C_V2-model.js'
+import { Model1707V3_5 } from './1707V3_5-model.js'
 
 export class DeviceFactory {
 	static create(jsonData, gateway) {
@@ -26,10 +29,10 @@ export class DeviceFactory {
 		
 		switch (jsonData.deviceType) {
 		
-			case '170C': {
-				dev = new Model170Cv1();
-				break;
-			}
+			// case '170C': {
+			// 	dev = new Model170Cv1();
+			// 	break;
+			// }
 			// case '170C_V1_1': {
 			// 	dev = new Model170C();
 			// 	break;
@@ -110,6 +113,10 @@ export class DeviceFactory {
 				dev = new Model171C()
 				break;
 			}
+			case '171C_V2':{
+				dev = new Model171C_V2()
+				break;
+			}
 			case '171D':{
 				dev = new Model171D()
 				break;
@@ -138,6 +145,14 @@ export class DeviceFactory {
 			}
 			case '1713':{
 				dev = new Model1713()
+				break;
+			}
+			case '0318V2_3':{
+				dev = new Model0318V2_3()
+				break;
+			}
+			case '1707V3_5':{
+				dev = new Model1707V3_5()
 				break;
 			}
 	
