@@ -28,15 +28,20 @@ export default {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  padding: 24rpx 48rpx;
-  background: rgba(0, 0, 0, 0.75);
+  max-width: 560rpx;
+  padding: 22rpx 44rpx;
+  background: rgba(24, 32, 44, 0.88);
   color: #fff;
-  border-radius: 12rpx;
-  font-size: 28rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  line-height: 1.4;
+  text-align: center;
+  box-shadow: 0 12rpx 32rpx rgba(15, 23, 42, 0.18);
   z-index: 998;
   pointer-events: none;
+
   &.success {
-    background: rgba(82, 196, 26, 0.9);
+    background: rgba(31, 146, 84, 0.94);
   }
 }
 </style>

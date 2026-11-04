@@ -2,17 +2,22 @@
   <view class="storage-settings">
     <view class="param-card">
       <view class="card-header">
-        <text class="card-title">储能 DC/DC 参数设置</text>
-        <view v-if="!isEditing" class="edit-btn primary" @click="handleEditConfig">
-          <text class="edit-text">修改配置</text>
+        <view class="card-title-wrap">
+          <text class="card-title">储能 DC/DC 参数设置</text>
+          <text class="card-subtitle">设备类型：{{ isHighCapacity ? '170C_V1_1（储能 1E）' : '171D' }}</text>
         </view>
-        <view v-else class="action-btns">
-          <view class="edit-btn close" @click="closeEdit">
+        <view class="action-btns">
+          <view v-if="!isEditing" class="edit-btn primary" @click="handleEditConfig">
+            <text class="edit-text">修改配置</text>
+          </view>
+          <view v-else class="edit-btn close" @click="closeEdit">
             <text class="edit-text">关闭编辑</text>
           </view>
         </view>
       </view>
 
+      <!-- 旧协议（20kW 微能站）：171D 参数 -->
+      <template v-if="!isHighCapacity">
       <!-- 开关型参数 -->
       <view class="switch-section">
         <view v-for="param in storageSwitchParams" :key="param.key" class="param-row">
@@ -42,7 +47,7 @@
           :class="{ 'editing-row': editingParam === param.key }">
           <view class="param-info">
             <text class="param-name">{{ param.label }}</text>
-            <text v-if="param.min !== undefined && param.max !== undefined" class="param-range">
+            <text v-if="param.min != null && param.max != null" class="param-range">
               范围: {{ param.min }}~{{ param.max }}{{ param.unit }}
             </text>
           </view>
@@ -74,6 +79,87 @@
           </view>
         </view>
       </view>
+      </template>
+
+      <!-- 新协议（50kW 微能站）：对齐网页 MonitoringData.vue 的参数设置结构 -->
+      <template v-if="isHighCapacity">
+        <view v-if="device170CStorage" class="hc-body">
+          <!-- 命令 / 模式（选择后下发） -->
+          <view v-if="storage170CChooseParams.length" class="hc-group">
+            <view class="hc-group-title">
+              <view class="hc-bar"></view>
+              <text class="hc-group-name">命令 / 模式（选择后下发）</text>
+              <text class="hc-group-count">{{ storage170CChooseParams.length }}</text>
+            </view>
+            <view class="param-list">
+              <view v-for="param in storage170CChooseParams" :key="param.key" class="param-row">
+                <view class="param-info">
+                  <text class="param-name">{{ param.name }}</text>
+                </view>
+                <view class="switch-btns-wrapper">
+                  <view class="switch-btns">
+                    <view v-for="option in param.options" :key="option.value"
+                      class="switch-btn"
+                      :class="[
+                        isHcOptionActive(param, option.value) ? 'btn-active' : '',
+                        !isEditing ? 'btn-disabled' : '',
+                        clickedButton === param.key + '-' + option.value ? 'btn-clicked' : ''
+                      ]"
+                      @click="handleHcSwitchClick(param, option)">
+                      {{ option.label }}
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+
+          <!-- 数值设定（输入后下发） -->
+          <view v-if="storage170CNumberParams.length" class="hc-group">
+            <view class="hc-group-title">
+              <view class="hc-bar"></view>
+              <text class="hc-group-name">数值设定（输入后下发）</text>
+              <text class="hc-group-count">{{ storage170CNumberParams.length }}</text>
+            </view>
+            <view class="param-list">
+              <view v-for="param in storage170CNumberParams" :key="param.key" class="param-row"
+                :class="{ 'editing-row': editingHcParam === param.key }">
+                <view class="param-info">
+                  <text class="param-name">{{ param.name }}</text>
+                </view>
+                <view class="param-right">
+                  <view class="param-value-box" :class="{ editing: editingHcParam === param.key }">
+                    <text v-if="editingHcParam !== param.key" class="val-text">{{ param.value }}</text>
+                    <input v-else class="val-input" type="digit" v-model="hcTempValue"
+                      placeholder="请输入" focus />
+                  </view>
+                  <text v-if="param.unit" class="unit-text">{{ param.unit }}</text>
+                </view>
+                <view class="btn-group">
+                  <view v-if="editingHcParam !== param.key" class="btn btn-edit"
+                    :class="{ 'btn-disabled': !isEditing }" @click="handleHcParamEdit(param)">
+                    <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
+                    <text>编辑</text>
+                  </view>
+                  <template v-else>
+                    <view class="btn btn-sure" :class="{ 'btn-loading': isSubmitting }" @click="submitHcParam(param)">
+                      <text v-if="!isSubmitting">下发</text>
+                      <view v-else class="loading-spinner"></view>
+                    </view>
+                    <view class="btn btn-cancel" @click="handleHcParamCancel()">
+                      <uni-icons type="closeempty" size="14" color="#999"></uni-icons>
+                    </view>
+                  </template>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view v-if="!device170CStorage" class="hc-empty">
+          <uni-icons type="info" size="36" color="#c0c4cc"></uni-icons>
+          <text class="hc-empty-text">未检测到储能 DC 设备（170C_V1_1 / 地址1E）</text>
+        </view>
+      </template>
     </view>
 
     <!-- 操作确认弹窗 -->
@@ -114,6 +200,11 @@
 <script>
 import { sendCommandFrame } from '@/api/control.js'
 import { realtimeDataProvider } from '@/service/websocket'
+import {
+  MOVED_170C_ENERGY_KEYS, MOVED_170C_STATE_KEYS, STORAGE_171D_MODE_OPTIONS,
+  STORAGE_171D_ADDRESS_MAP, PARAM_SCALE10_ADDRESS, PARAM_SCALE100_ADDRESS,
+  PARAM_OFFSET_SCALE_ADDRESS
+} from '../param-settings-constants.js'
 
 
 export default {
@@ -130,6 +221,9 @@ export default {
       editingParam: '',
       tempValue: '',
       isSubmitting: false,
+      // 50kW 单项编辑态（对齐 20kW 行内编辑风格）
+      editingHcParam: '',
+      hcTempValue: '',
       params: {
         storage: {}
       },
@@ -271,15 +365,70 @@ export default {
     }
   },
   computed: {
+    isHighCapacity() {
+      const station = this.$store.state.currentSelectDevice || {}
+      const cap = Number(station.totalInstalledCapacity)
+      if (Number.isFinite(cap) && cap > 0) return cap >= 50
+      const newTypes = ['1707_V3_5', '1707V3_5', '170C_V1_1', '171C_V2', '171C_V2_1', '171C_V2_2', '171C_V2_3', '171C_V2_4', '0318_V2_3', '0318V2_3']
+      return (station.list || []).some(item => newTypes.includes(String(item.typeCode || item.deviceType || '').trim()))
+    },
     userId() {
       return this.$store.state.userInfo?.userId
     },
     device171D() {
-      // console.log(this.deviceList, '171D')
       return this.deviceList.find(item => item && item.deviceType === '171D')
+    },
+    device170CStorage() {
+      const norm = v => (v === undefined || v === null ? '' : String(v).toUpperCase())
+      return this.deviceList.find(item => item && item.deviceType === '170C_V1_1' && norm(item.address) === '1E')
     },
     device171F() {
       return this.deviceList.find(item => item && item.deviceType === '171F')
+    },
+    storage170CDisplay() {
+      const toList = (obj) => obj
+        ? Object.keys(obj).map(key => ({ key, name: obj[key].name, value: obj[key].value, unit: obj[key].unit }))
+        : [];
+      const dev = this.device170CStorage
+      return {
+        energy: toList(dev && dev.energyData).filter(f => f.value !== undefined && f.value !== null && f.value !== ''),
+        state: toList(dev && dev.stateData).filter(f => f.value !== undefined && f.value !== null && f.value !== '')
+      }
+    },
+    // ========== 50kW 新协议（170C_V1_1 储能 DC / 地址1E）对齐网页 ==========
+    storage170CParams() {
+      const dev = this.device170CStorage
+      const list = [
+        ...this.__pickFromKeys(dev && dev.energyData, MOVED_170C_ENERGY_KEYS),
+        ...this.__pickFromKeys(dev && dev.stateData, MOVED_170C_STATE_KEYS)
+      ]
+      // 枚举项：按点表说明做「值 ↔ 文字」映射，编辑时以按钮组选择，选中值即下发值
+      const normalize = v => String(v === undefined || v === null ? '' : v).replace(/\s/g, '')
+      return list.map(item => {
+        const address = STORAGE_171D_ADDRESS_MAP[item.key]
+        const options = STORAGE_171D_MODE_OPTIONS[item.key]
+        if (options && options.length) {
+          const matched = options.find(opt =>
+            String(opt.value) === String(item.value) || normalize(opt.label) === normalize(item.value)
+          )
+          return { ...item, address, kind: 'select', options, value: matched ? matched.value : '' }
+        }
+        return { ...item, address, kind: 'number' }
+      })
+    },
+    storage170CChooseParams() {
+      return this.storage170CParams.filter(p => p.kind !== 'number')
+    },
+    storage170CNumberParams() {
+      return this.storage170CParams.filter(p => p.kind === 'number')
+    },
+    storage170CMonitorDisplay() {
+      const dev = this.device170CStorage
+      const energy = this.__toList(dev && dev.energyData)
+        .filter(f => !MOVED_170C_ENERGY_KEYS.includes(f.key) && f.value !== undefined && f.value !== null && f.value !== '')
+      const state = this.__toList(dev && dev.stateData)
+        .filter(f => !MOVED_170C_STATE_KEYS.includes(f.key) && f.value !== undefined && f.value !== null && f.value !== '')
+      return { energy, state }
     }
   },
   watch: {
@@ -317,6 +466,29 @@ export default {
     }
   },
   methods: {
+    // ========== 内部工具（必须是 methods 而不是 computed，Vue2 computed 不支持带参数调用） ==========
+    __toList(obj) {
+      if (!obj) return []
+      return Object.keys(obj)
+        .map(key => {
+          const f = obj[key] || {}
+          return { key, name: f.name, value: f.value, unit: f.unit }
+        })
+    },
+    __pickFromKeys(source, keys) {
+      const src = source || {}
+      return keys.map(key => {
+        const field = src[key] || {}
+        // 枚举类状态字段优先取后端原始码值(raw)，保证与下发值/按钮组选项一一对应
+        const val = field.raw !== undefined && field.raw !== null && field.raw !== '' ? field.raw : field.value
+        return {
+          key,
+          name: field.name || key,
+          value: val === undefined || val === null || val === '' ? '--' : val,
+          unit: field.unit || ''
+        }
+      })
+    },
     /**
      * 设备数据冻结快照（实现在 realtime-data-provider，统一维护）
      * 快照不被 Vue observe，render 不订阅实时字段，仅引用替换时刷新
@@ -326,25 +498,27 @@ export default {
     },
     initDevice() {
       const currentDevice = this.$store.state.currentSelectDevice || {}
-      const deviceTypes = ['171D', '171F']
+      const deviceTypes = this.isHighCapacity ? ['170C_V1_1', '171F'] : ['171D', '171F']
+      const defaultAddress = this.isHighCapacity ? '1E' : '1E'
       const deviceList = deviceTypes.map(deviceType => {
         const foundDevice = currentDevice.list?.find(item =>
           item.typeCode === deviceType || item.deviceType === deviceType || item.description?.includes(deviceType)
         )
-        const defaultAddress = deviceType === '171D' ? '1E' : '01'
+        const is171F = deviceType === '171F'
+        const addr = is171F ? '01' : (defaultAddress)
         return foundDevice ? {
           deviceType,
           typeCode: deviceType,
-          address: foundDevice.address || defaultAddress,
+          address: foundDevice.address || addr,
           barCode: foundDevice.barCode || foundDevice.homeBarCode || '',
-          deviceId: foundDevice.deviceId || `${deviceType}001`,
+          deviceId: foundDevice.deviceId || `${deviceType}${addr}`,
           name: foundDevice.name || `设备${deviceType}`
         } : {
           deviceType,
           typeCode: deviceType,
-          address: defaultAddress,
+          address: addr,
           barCode: '',
-          deviceId: `${deviceType}001`,
+          deviceId: `${deviceType}${addr}`,
           name: `设备${deviceType}`
         }
       })
@@ -702,8 +876,161 @@ export default {
     closeEdit() {
       this.isEditing = false
       this.editingParam = ''
+      this.editingHcParam = ''
+      this.hcTempValue = ''
       this.$emit('interaction-change', false)
       this.showToast('已退出编辑模式', 'success')
+    },
+
+    // ========== 50kW（170C_V1_1 储能DC）单项编辑 / 下发 —— 对齐 20kW 交互风格 ==========
+    // 按钮激活态：按当前值判定（枚举已换算为原始值）
+    isHcOptionActive(param, optionValue) {
+      const current = param.value
+      if (current === optionValue) return true
+      if (current === null || current === undefined || current === '' || current === '--') return false
+      return String(current) === String(optionValue)
+    },
+    // 命令/模式按钮点击：停机/复位等执行类先弹确认，其余直接下发
+    handleHcSwitchClick(param, option) {
+      if (!this.isEditing) {
+        this.showToast('请先点击修改配置', 'warning')
+        return
+      }
+      if (!param.address) {
+        this.showToast(`「${param.name}」缺少寄存器地址，无法下发`, 'warning')
+        return
+      }
+      const current = param.value
+      if (String(current) === String(option.value)) {
+        this.showToast('已经是当前设置', 'warning')
+        return
+      }
+      const isDangerous = param.key === 'startOrder' && (option.value === '2' || option.value === '3')
+      if (isDangerous) {
+        this.openConfirmPopup({
+          title: '危险操作确认',
+          content: `确定要执行"${param.name}"的"${option.label}"操作吗？此操作可能影响系统运行。`,
+          oldValue: (param.options.find(o => String(o.value) === String(current)) || {}).label || '--',
+          newValue: option.label,
+          isDangerous: true,
+          action: () => this.executeHcCommand(param, option)
+        })
+      } else {
+        this.executeHcCommand(param, option)
+      }
+    },
+    // 命令/模式下发（5 秒节流，与 20kW 一致）
+    async executeHcCommand(param, option) {
+      const now = Date.now()
+      const paramLastSendTime = this.lastSendTimes[param.key] || 0
+      if (now - paramLastSendTime < 5000) {
+        this.showToast('请间隔5秒后再下发', 'warning')
+        return
+      }
+      this.clickedButton = param.key + '-' + option.value
+      this.lastSendTimes[param.key] = now
+      setTimeout(() => { this.clickedButton = '' }, 5000)
+      try {
+        await this.sendHcCommand(param, String(option.value))
+        this.showToast(`${param.name}: ${option.label}成功`, 'success')
+      } catch (error) {
+        this.showToast(`${param.name}: ${option.label}失败`, 'error')
+      }
+    },
+    // 数值参数：进入行内编辑
+    handleHcParamEdit(param) {
+      if (!this.isEditing) {
+        this.showToast('请先点击修改配置', 'warning')
+        return
+      }
+      this.editingHcParam = param.key
+      this.hcTempValue = param.value === '--' ? '' : String(param.value)
+    },
+    handleHcParamCancel() {
+      this.editingHcParam = ''
+      this.hcTempValue = ''
+    },
+    // 数值参数：校验 → 确认弹窗 → 下发
+    submitHcParam(param) {
+      if (!param.address) {
+        this.showToast(`「${param.name}」缺少寄存器地址，无法下发`, 'warning')
+        return
+      }
+      const value = this.hcTempValue
+      if (!value && value !== '0') {
+        this.showToast('请输入参数值', 'warning')
+        return
+      }
+      if (isNaN(parseFloat(value))) {
+        this.showToast('请输入有效的数值', 'warning')
+        return
+      }
+      this.openConfirmPopup({
+        title: '参数下发确认',
+        content: `确定要下发"${param.name}"参数吗？`,
+        oldValue: (param.value === '--' ? '--' : param.value) + (param.unit || ''),
+        newValue: value + (param.unit || ''),
+        isDangerous: false,
+        param: param,
+        action: () => this.executeSubmitHcParam(param, value)
+      })
+    },
+    async executeSubmitHcParam(param, value) {
+      this.isSubmitting = true
+      try {
+        await this.sendHcCommand(param, this.applyHcScale(value, param.address))
+        this.showToast(`${param.name}下发成功`, 'success')
+        this.handleHcParamCancel()
+      } catch (error) {
+        this.showToast(`${param.name}下发失败`, 'error')
+      } finally {
+        this.isSubmitting = false
+      }
+    },
+    // 按地址映射文档的「传输值」说明换算下发值。
+    // 优先级：PARAM_OFFSET_SCALE_ADDRESS ((实际值+offset)×scale) → PARAM_SCALE100_ADDRESS (×100)
+    // → PARAM_SCALE10_ADDRESS (×10) → 原样返回。
+    applyHcScale(value, address) {
+      const deviceCategory = '171D'
+      const num = Number(value)
+      if (!Number.isFinite(num)) return String(value)
+      const addr = String(address)
+      const offsetScaleMap = PARAM_OFFSET_SCALE_ADDRESS[deviceCategory]
+      if (offsetScaleMap && offsetScaleMap[addr]) {
+        const { offset = 0, scale = 1 } = offsetScaleMap[addr]
+        return String(Math.round((num + offset) * scale))
+      }
+      const scale100List = PARAM_SCALE100_ADDRESS[deviceCategory]
+      if (scale100List && scale100List.indexOf(addr) >= 0) {
+        return String(Math.round(num * 100))
+      }
+      const list = PARAM_SCALE10_ADDRESS[deviceCategory]
+      if (list && list.indexOf(addr) >= 0) {
+        return String(Math.round(num * 10))
+      }
+      return String(value)
+    },
+    // 50kW 统一下发通道：multiControl，deviceCategory 171D / addr 01
+    sendHcCommand(param, registerValue) {
+      return sendCommandFrame({
+        apiSufix: 'multiControl',
+        idCode: this.idCode,
+        typeCode: '3401',
+        address: '01',
+        userId: this.userId,
+        commands: [{
+          deviceCategory: '171D',
+          addr: '01',
+          deviceId: '1',
+          registerAddress: param.address,
+          registerValue,
+          valueType: '01',
+          registerType: '03',
+          extra1: '00',
+          extra2: '00',
+          extra3: '00'
+        }]
+      })
     },
 
     handleParamEdit(param) {
@@ -735,38 +1062,37 @@ export default {
 
 .param-card {
   background: #ffffff;
-  border-radius: 16rpx;
+  border-radius: 20rpx;
   overflow: hidden;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+  margin-bottom: 24rpx;
 }
 
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx 32rpx;
+  padding: 32rpx;
   border-bottom: 1rpx solid #f0f0f0;
-  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+}
+
+.card-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
 }
 
 .card-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #333;
-  position: relative;
-  padding-left: 20rpx;
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #1a1a1a;
+  letter-spacing: 2rpx;
+}
 
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 6rpx;
-    height: 28rpx;
-    background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
-    border-radius: 3rpx;
-  }
+.card-subtitle {
+  font-size: 22rpx;
+  color: #999;
+  letter-spacing: 1rpx;
 }
 
 .action-btns {
@@ -775,9 +1101,9 @@ export default {
 }
 
 .edit-btn {
-  padding: 12rpx 28rpx;
-  border-radius: 8rpx;
-  font-size: 26rpx;
+  padding: 14rpx 28rpx;
+  border-radius: 40rpx;
+  font-size: 24rpx;
   transition: all 0.2s ease;
 
   &.primary {
@@ -803,7 +1129,7 @@ export default {
 }
 
 .edit-text {
-  font-size: 26rpx;
+  font-size: 24rpx;
 }
 
 .param-list {
@@ -1056,6 +1382,11 @@ export default {
   pointer-events: none;
 }
 
+// 50kW 编辑态可选按钮
+.btn-editable {
+  border-color: #6699ff;
+}
+
 // 确认弹窗样式
 .confirm-popup {
   background: #ffffff;
@@ -1217,5 +1548,95 @@ export default {
   to {
     transform: rotate(360deg);
   }
+}
+
+// ===== 50kW 新协议只读展示 =====
+.hc-body {
+  padding: 12rpx 24rpx 28rpx;
+}
+
+.hc-group {
+  margin-top: 16rpx;
+}
+
+.hc-group-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.hc-bar {
+  width: 6rpx;
+  height: 26rpx;
+  border-radius: 3rpx;
+  margin-right: 12rpx;
+  background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
+}
+
+.hc-group-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.hc-group-count {
+  margin-left: 12rpx;
+  padding: 2rpx 16rpx;
+  font-size: 20rpx;
+  color: #4488fb;
+  background: #eef4ff;
+  border-radius: 999rpx;
+}
+
+.hc-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.hc-tile {
+  width: 48.5%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16rpx;
+  padding: 24rpx 24rpx;
+  background: linear-gradient(135deg, #f8fafc 0%, #f2f6fc 100%);
+  border: 1rpx solid #e8eef6;
+  border-radius: 16rpx;
+}
+
+.hc-tile-name {
+  font-size: 22rpx;
+  color: #888;
+  margin-bottom: 10rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hc-tile-value {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.hc-tile-unit {
+  font-size: 22rpx;
+  color: #999;
+  font-weight: 400;
+}
+
+.hc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 0;
+}
+
+.hc-empty-text {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #999;
 }
 </style>

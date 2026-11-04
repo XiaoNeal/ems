@@ -1,9 +1,9 @@
 import DeviceBase from "./device-base.model"
-import { protocol_171F_000A } from '../protocols/171F'
+import { protocol_171F_000A, protocol_171F_V2 } from '../protocols/171F'
 
-function buildDataFields(structKey) {
+function buildDataFields(protocol, structKey) {
   const fields = {}
-  const def = protocol_171F_000A.structs[structKey]
+  const def = protocol && protocol.structs && protocol.structs[structKey]
   if (!def) return fields
   for (const f of def.fields) {
     if (!f.skip) {
@@ -18,11 +18,20 @@ export class Model171F extends DeviceBase {
   stateData
   controlData
 
-  constructor() {
+  constructor(protocol) {
     super()
-    this.energyData = new EnergyData()
+    const proto = protocol || protocol_171F_000A
+    // 协议定义体积很大且视图层不绑定，设为非枚举：
+    // 避免 Vue observe 与小程序 setData 深克隆把它一起搬到视图层
+    Object.defineProperty(this, 'protocol', {
+      value: proto,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    })
+    this.energyData = new EnergyData(proto)
     this.stateData = new StateData()
-    this.controlData = new ControlData()
+    this.controlData = new ControlData(proto)
     this.lastUpdateTime = null
   }
 
@@ -105,9 +114,19 @@ export class Model171F extends DeviceBase {
   }
 }
 
-class EnergyData {
+/**
+ * 50kW 微能站 EMS 网关（服务端 typeCode = 171F_V2）
+ * 字段比 V1 多储能/负荷累计电量与自发自用目标功率，帧布局前缀完全兼容
+ */
+export class Model171F_V2 extends Model171F {
   constructor() {
-    Object.assign(this, buildDataFields('energyData'))
+    super(protocol_171F_V2)
+  }
+}
+
+class EnergyData {
+  constructor(protocol) {
+    Object.assign(this, buildDataFields(protocol, 'energyData'))
   }
 }
 
@@ -115,7 +134,7 @@ class StateData {
 }
 
 class ControlData {
-  constructor() {
-    Object.assign(this, buildDataFields('energyControlData'))
+  constructor(protocol) {
+    Object.assign(this, buildDataFields(protocol, 'energyControlData'))
   }
 }

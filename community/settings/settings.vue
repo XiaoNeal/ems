@@ -19,12 +19,14 @@
 
     <!-- 标签页 -->
     <view class="tab-container">
-      <view class="tab-list">
-        <view v-for="(item, index) in tabs" :key="index" class="tab-item" :class="{ active: activeTab === index }"
-            @click="switchTab(index)">
-            <text>{{ item }}</text>
+      <scroll-view scroll-x="true" class="tab-scroll">
+        <view class="tab-list">
+          <view v-for="(item, index) in tabs" :key="index" class="tab-item" :class="{ active: activeTab === index }"
+              @click="switchTab(index)">
+              <text>{{ item }}</text>
+          </view>
         </view>
-      </view>
+      </scroll-view>
     </view>
 
     <swiper class="content-swiper" :current="activeTab" @change="onSwiperChange" :duration="400">
@@ -56,6 +58,13 @@
           </view>
         </scroll-view>
       </swiper-item>
+      <swiper-item v-if="isHighCapacity">
+        <scroll-view class="module-scroll" scroll-y="true">
+          <view class="content">
+            <LiquidSettings v-if="activeTab === 4" />
+          </view>
+        </scroll-view>
+      </swiper-item>
     </swiper>
   </view>
 
@@ -66,6 +75,7 @@ import PcsSettings from './components/PcsSettings.vue'
 import StorageSettings from './components/StorageSettings.vue'
 import PvSettings from './components/PvSettings.vue'
 import BmsSettings from './components/BmsSettings.vue'
+import LiquidSettings from './components/LiquidSettings.vue'
 
 export default {
   name: "SettingParams",
@@ -74,12 +84,27 @@ export default {
     PcsSettings,
     StorageSettings,
     PvSettings,
-    BmsSettings
+    BmsSettings,
+    LiquidSettings
+  },
+  computed: {
+    // 装机容量 >= 50 视为大容量（50kW 微能站），额外显示"液冷机"Tab
+    isHighCapacity() {
+      const station = this.$store.state.currentSelectDevice || {}
+      const cap = Number(station.totalInstalledCapacity)
+      if (Number.isFinite(cap) && cap > 0) return cap >= 50
+      const newTypes = ['1707_V3_5', '1707V3_5', '170C_V1_1', '171C_V2', '171C_V2_1', '171C_V2_2', '171C_V2_3', '171C_V2_4', '0318_V2_3', '0318V2_3']
+      return (station.list || []).some(item => newTypes.includes(String(item.typeCode || item.deviceType || '').trim()))
+    },
+    tabs() {
+      const base = ['PCS', '储能DC', '光伏', 'BMS']
+      if (this.isHighCapacity) return [...base, '液冷机']
+      return base
+    }
   },
   data() {
     return {
       activeTab: 0,
-      tabs: ['PCS', '储能DC', '光伏', 'BMS'],
       platformClass: ''
     }
   },
@@ -183,7 +208,8 @@ export default {
 
 .tab-container {
   background-color: #fff;
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid #f0f2f5;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
 }
 
 .tab-scroll {
@@ -192,23 +218,50 @@ export default {
 
 .tab-list {
   display: flex;
-  padding: 0 20rpx;
-  justify-content: space-around;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 16rpx;
 }
 
 .tab-item {
-  padding: 20rpx 60rpx;
-  border-bottom: 3px solid transparent;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx 10rpx;
+  position: relative;
+  font-size: 28rpx;
+  color: #666;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 56rpx;
+    height: 6rpx;
+    border-radius: 6rpx 6rpx 0 0;
+    background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
+    transform: translateX(-50%) scaleX(0);
+    transition: transform 0.25s ease;
+  }
 }
 
 .tab-item.active {
-  border-bottom: 3px solid #007aff;
+  color: #4488fb;
+  font-weight: 600;
+
+  &::after {
+    transform: translateX(-50%) scaleX(1);
+  }
 }
 
 .tab-item.active text {
-  color: #007aff;
-  font-weight: bold;
+  color: #4488fb;
+  font-weight: 600;
 }
 
 .content-swiper {

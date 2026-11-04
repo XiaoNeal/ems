@@ -114,37 +114,35 @@ export default {
   .device-card-bg {
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, #007AFF 0%, #0098FF 40%, #00C6FF 100%);
+    background: linear-gradient(135deg, #1f5fd0 0%, #2f7cf6 52%, #4f9bff 100%);
     .bg-orb {
       position: absolute;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.15);
       filter: blur(4rpx);
     }
+    /* 光斑保持静态：轻微氛围即可，动画会持续抢占注意力 */
     .bg-orb-1 {
-      width: 280rpx; height: 280rpx; top: -80rpx; right: -60rpx;
-      background: rgba(255, 255, 255, 0.2);
-      animation: orbFloat1 8s ease-in-out infinite alternate;
+      width: 280rpx; height: 280rpx; top: -90rpx; right: -70rpx;
+      background: rgba(255, 255, 255, 0.16);
     }
     .bg-orb-2 {
-      width: 160rpx; height: 160rpx; bottom: -40rpx; right: 60rpx;
-      background: rgba(255, 255, 255, 0.12);
-      animation: orbFloat2 10s ease-in-out infinite alternate;
+      width: 160rpx; height: 160rpx; bottom: -50rpx; right: 60rpx;
+      background: rgba(255, 255, 255, 0.10);
     }
     .bg-orb-3 {
       width: 100rpx; height: 100rpx; top: 60rpx; right: 220rpx;
-      background: rgba(255, 255, 255, 0.14);
-      animation: orbFloat3 6s ease-in-out infinite alternate;
+      background: rgba(255, 255, 255, 0.12);
     }
   }
 
   &.offline {
-    box-shadow: 0 16rpx 48rpx rgba(138, 148, 166, 0.22), 0 4rpx 12rpx rgba(138, 148, 166, 0.08);
-    .device-card-bg { background: linear-gradient(135deg, #6b7280 0%, #8b95a5 40%, #b0b6c0 100%); }
+    box-shadow: 0 16rpx 48rpx rgba(138, 148, 166, 0.20), 0 4rpx 12rpx rgba(138, 148, 166, 0.08);
+    .device-card-bg { background: linear-gradient(135deg, #5f6877 0%, #7c8798 52%, #a3acba 100%); }
   }
   &.connecting {
-    box-shadow: 0 16rpx 48rpx rgba(240, 160, 32, 0.28), 0 4rpx 12rpx rgba(240, 160, 32, 0.1);
-    .device-card-bg { background: linear-gradient(135deg, #d97706 0%, #e8960f 40%, #fbbf24 100%); }
+    box-shadow: 0 16rpx 48rpx rgba(232, 137, 12, 0.24), 0 4rpx 12rpx rgba(232, 137, 12, 0.10);
+    .device-card-bg { background: linear-gradient(135deg, #c47a08 0%, #e09012 52%, #f5b53c 100%); }
   }
 
   .device-card-content { position: relative; padding: 28rpx 32rpx; z-index: 1; }
@@ -159,10 +157,7 @@ export default {
       box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.15), inset 0 1rpx 0 rgba(255, 255, 255, 0.4);
       backdrop-filter: blur(10px);
     }
-    /* 在线时图标缓慢旋转，暗示连接活跃 */
-    &.is-online .device-icon {
-      animation: iconSpin 8s linear infinite;
-    }
+    /* 在线时用外圈脉冲提示连接活跃（图标本身不旋转，避免持续动效分散注意力） */
     .icon-pulse {
       position: absolute; inset: -10rpx; border-radius: 26rpx;
       border: 4rpx solid rgba(76, 217, 100, 0.55);
@@ -260,21 +255,5 @@ export default {
 @keyframes dotPulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.85); }
-}
-@keyframes iconSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-@keyframes orbFloat1 {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(-20rpx, 16rpx); }
-}
-@keyframes orbFloat2 {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(16rpx, -20rpx); }
-}
-@keyframes orbFloat3 {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(-12rpx, -10rpx); }
 }
 </style>

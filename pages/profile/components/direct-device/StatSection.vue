@@ -57,13 +57,13 @@ export default {
 <style lang="scss" scoped>
 .arch-stats-section {
   background: #ffffff;
-  border-radius: 16rpx;
-  padding: 28rpx 32rpx;
+  border: 1rpx solid #eef1f5;
+  border-radius: 18rpx;
+  padding: 26rpx 26rpx;
   margin-bottom: 16rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
 }
 .arch-section-title {
-  margin-bottom: 16rpx;
+  margin-bottom: 18rpx;
   padding-left: 20rpx;
   position: relative;
   &::before {
@@ -72,36 +72,38 @@ export default {
     left: 0;
     top: 50%;
     transform: translateY(-50%);
-    width: 6rpx;
-    height: 30rpx;
-    border-radius: 3rpx;
-    background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
+    width: 7rpx;
+    height: 28rpx;
+    border-radius: 4rpx;
+    background: linear-gradient(180deg, #63a4ff 0%, #2f7cf6 100%);
   }
 }
 .arch-title-text {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 600;
-  color: #333;
+  color: #1d2430;
+  letter-spacing: 0.5rpx;
 }
 .arch-stats-box {
   width: 100%;
-  background: #f8f9fa;
-  border-radius: 12rpx;
-  padding: 4rpx 0;
+  background: #f8fafc;
+  border: 1rpx solid #eef1f5;
+  border-radius: 14rpx;
+  overflow: hidden;
 }
 .arch-stat-row {
   display: flex;
   align-items: stretch;
-  min-height: 120rpx;
+  min-height: 112rpx;
 }
 .arch-stat-divider {
   width: 1rpx;
-  background-color: #e8e8e8;
-  margin: 16rpx 0;
+  background-color: #eef1f5;
+  margin: 20rpx 0;
 }
 .arch-section-divider {
   height: 1rpx;
-  background-color: #e8e8e8;
+  background-color: #eef1f5;
   margin: 0;
 }
 .arch-stat-item {
@@ -113,7 +115,7 @@ export default {
     flex-direction: column;
     align-items: stretch;
     justify-content: center;
-    padding: 20rpx 24rpx;
+    padding: 20rpx 22rpx;
     gap: 16rpx;
   }
   &.arch-center {
@@ -128,25 +130,28 @@ export default {
   gap: 6rpx;
 }
 .arch-stat-label {
-  font-size: 22rpx;
-  color: #888;
+  font-size: 21rpx;
+  color: #98a2ae;
   white-space: nowrap;
 }
 .arch-stat-value {
   font-size: 32rpx;
   font-weight: 700;
-  color: #333;
+  color: #1d2430;
+  font-family: 'Menlo', 'Consolas', monospace;
   line-height: 1.3;
   &.small {
-    font-size: 26rpx;
+    font-size: 25rpx;
     font-weight: 400;
-    color: #666;
+    color: #5c6673;
+    font-family: inherit;
   }
 }
 .arch-stat-unit {
-  font-size: 22rpx;
-  color: #999;
+  font-size: 21rpx;
+  color: #98a2ae;
   font-weight: 400;
   margin-left: 4rpx;
+  font-family: inherit;
 }
 </style>

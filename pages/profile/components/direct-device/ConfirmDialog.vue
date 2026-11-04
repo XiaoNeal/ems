@@ -39,40 +39,50 @@ export default {
 .confirm-dialog {
   width: 600rpx;
   background: #fff;
-  border-radius: 20rpx;
+  border-radius: 24rpx;
   overflow: hidden;
+  box-shadow: 0 24rpx 64rpx rgba(15, 23, 42, 0.24);
 }
 .confirm-title {
-  padding: 32rpx;
+  padding: 38rpx 32rpx 10rpx;
   text-align: center;
   font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-  border-bottom: 1rpx solid #f0f0f0;
+  font-weight: 600;
+  color: #1d2430;
 }
 .confirm-content {
-  padding: 32rpx;
+  padding: 10rpx 44rpx 38rpx;
   text-align: center;
-  font-size: 28rpx;
-  color: #666;
+  font-size: 27rpx;
+  line-height: 1.6;
+  color: #6b7480;
 }
 .confirm-btns {
   display: flex;
-  border-top: 1rpx solid #f0f0f0;
+  padding: 0 24rpx 24rpx;
+
+  .confirm-btn + .confirm-btn {
+    margin-left: 16rpx;
+  }
 }
 .confirm-btn {
   flex: 1;
-  padding: 28rpx;
+  padding: 24rpx 0;
   text-align: center;
-  font-size: 30rpx;
+  font-size: 29rpx;
+  border-radius: 14rpx;
+  transition: opacity 0.15s ease;
+
   &.cancel {
-    color: #999;
-    border-right: 1rpx solid #f0f0f0;
+    color: #6b7480;
+    background: #f2f4f8;
   }
   &.ok {
-    color: #1890ff;
-    font-weight: bold;
+    color: #ffffff;
+    font-weight: 600;
+    background: #2f7cf6;
+    box-shadow: 0 6rpx 16rpx rgba(47, 124, 246, 0.24);
   }
-  &:active { background: #f5f5f5; }
+  &:active { opacity: 0.82; }
 }
 </style>

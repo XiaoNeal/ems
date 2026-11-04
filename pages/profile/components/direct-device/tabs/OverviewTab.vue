@@ -48,7 +48,7 @@
           <text class="device-soc">{{ formattedValues['archSoc'] || '--' }}%</text>
         </view>
         <!-- 交流负荷 -->
-        <view class="device-label" style="left: 3%; top: 75%;">
+        <view class="device-label" style="left: 1%; top: 71%;">
           <text class="device-name">交流负荷</text>
           <view class="power-row">
             <text class="device-power">{{ formattedValues['archLoadPower'] || '--' }}</text>
@@ -57,49 +57,34 @@
         </view>
       </view>
 
-      <!-- 数据卡片 -->
+      <!-- 关键指标卡片：2×2，独立圆角卡 + 左侧色条区分口径 -->
       <view class="card-section">
-        <view class="card-row">
-          <view class="card card-top-left">
-            <view class="card-item">
-              <text class="card-title">今日发电</text>
-            </view>
-            <view class="card-item">
-              <text class="card-value">{{ formattedValues['archGenToday'] || '--' }}</text>
-              <text class="card-unit"> kWh</text>
-            </view>
-          </view>
-          <view class="card-horizontal-divider"></view>
-          <view class="card card-top-right">
-            <view class="card-item">
-              <text class="card-title">今日用电</text>
-            </view>
-            <view class="card-item">
-              <text class="card-value">{{ formattedValues['archUseToday'] || '--' }}</text>
-              <text class="card-unit"> kWh</text>
-            </view>
+        <view class="metric-card metric-card--left metric-blue">
+          <text class="metric-title">今日发电</text>
+          <view class="metric-value-row">
+            <text class="metric-value">{{ formattedValues['archGenToday'] || '--' }}</text>
+            <text class="metric-unit">kWh</text>
           </view>
         </view>
-        <view class="card-divider"></view>
-        <view class="card-row">
-          <view class="card card-bottom-left">
-            <view class="card-item">
-              <text class="card-title">储能剩余</text>
-            </view>
-            <view class="card-item">
-              <text class="card-value">{{ formattedValues['archStorageRemaining'] || '--' }}</text>
-              <text class="card-unit">%</text>
-            </view>
+        <view class="metric-card metric-green">
+          <text class="metric-title">今日用电</text>
+          <view class="metric-value-row">
+            <text class="metric-value">{{ formattedValues['archUseToday'] || '--' }}</text>
+            <text class="metric-unit">kWh</text>
           </view>
-          <view class="card-horizontal-divider"></view>
-          <view class="card card-bottom-right">
-            <view class="card-item">
-              <text class="card-title">电网供电</text>
-            </view>
-            <view class="card-item">
-              <text class="card-value">{{ formattedValues['archGridSupply'] || '--' }}</text>
-              <text class="card-unit"> kWh</text>
-            </view>
+        </view>
+        <view class="metric-card metric-card--left metric-cyan">
+          <text class="metric-title">储能剩余</text>
+          <view class="metric-value-row">
+            <text class="metric-value">{{ formattedValues['archStorageRemaining'] || '--' }}</text>
+            <text class="metric-unit">%</text>
+          </view>
+        </view>
+        <view class="metric-card metric-violet">
+          <text class="metric-title">电网供电</text>
+          <view class="metric-value-row">
+            <text class="metric-value">{{ formattedValues['archGridSupply'] || '--' }}</text>
+            <text class="metric-unit">kWh</text>
           </view>
         </view>
       </view>
@@ -238,7 +223,7 @@ export default {
   height: 100%;
 }
 .content {
-  padding: 0 16rpx 20rpx;
+  padding: 0 20rpx 32rpx;
 }
 
 /* 系统架构图 */
@@ -246,8 +231,9 @@ export default {
   position: relative;
   flex-shrink: 0;
   height: 500rpx;
-  margin: 16rpx 0;
-  border-radius: 12rpx;
+  margin: 20rpx 0 16rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid #eef1f5;
   overflow: hidden;
   background: #fff;
 }
@@ -296,8 +282,8 @@ export default {
   z-index: 2;
   padding: 6rpx 12rpx;
   border-radius: 10rpx;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+ // background: rgba(255, 255, 255, 0.88);
+ // box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
 .device-label-top-left {
@@ -341,88 +327,86 @@ export default {
   margin-left: 2rpx;
 }
 
-/* 数据卡片 */
+/* 关键指标卡片 */
 .card-section {
-  flex-shrink: 0;
-  margin: 16rpx 0;
-}
-
-.card-row {
   display: flex;
+  flex-wrap: wrap;
+  margin: 16rpx 0 4rpx;
 }
 
-.card-divider {
-  height: 1rpx;
-  background-color: #eee;
-  margin: 0 auto;
-  width: 90%;
+.metric-card {
+  position: relative;
+  width: calc(50% - 8rpx);
+  box-sizing: border-box;
+  padding: 22rpx 20rpx 20rpx 24rpx;
+  margin-bottom: 16rpx;
+  background: #ffffff;
+  border: 1rpx solid #eef1f5;
+  border-radius: 18rpx;
+  overflow: hidden;
+
+  /* 左列由模板加类控制间距，不依赖 nth-child */
+  &--left {
+    margin-right: 16rpx;
+  }
+
+  /* 左侧细色条：用颜色区分发电 / 用电 / 储能 / 电网四种口径 */
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 24rpx;
+    bottom: 24rpx;
+    width: 5rpx;
+    border-radius: 0 3rpx 3rpx 0;
+    background: #2f7cf6;
+  }
 }
 
-.card {
-  flex: 1;
-  background: #fff;
-  padding: 24rpx 16rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-around;
-}
+.metric-blue::before { background: #2f7cf6; }
+.metric-green::before { background: #1f9254; }
+.metric-cyan::before { background: #0f9b8e; }
+.metric-violet::before { background: #7c5cf5; }
 
-.card-top-left {
-  border-radius: 12rpx 0 0 0;
-}
-
-.card-top-right {
-  border-radius: 0 12rpx 0 0;
-}
-
-.card-bottom-left {
-  border-radius: 0 0 0 12rpx;
-}
-
-.card-bottom-right {
-  border-radius: 0 0 12rpx 0;
-}
-
-.card-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4rpx;
-}
-
-.card-horizontal-divider {
-  width: 1rpx;
-  height: 60%;
-  background-color: #e8e8e8;
-  margin: auto 0;
-}
-
-.card-title {
-  font-size: 24rpx;
-  color: #888;
-}
-
-.card-value {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #4488FB;
-}
-
-.card-unit {
+.metric-title {
+  display: block;
   font-size: 22rpx;
-  color: #999;
-  margin-left: 2rpx;
+  color: #98a2ae;
+}
+
+.metric-value-row {
+  display: flex;
+  align-items: baseline;
+  margin-top: 10rpx;
+  min-width: 0;
+}
+
+.metric-value {
+  max-width: 100%;
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1d2430;
+  font-family: 'Menlo', 'Consolas', monospace;
+  letter-spacing: -1rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metric-unit {
+  flex-shrink: 0;
+  margin-left: 6rpx;
+  font-size: 20rpx;
+  color: #98a2ae;
 }
 
 /* 储能SOC进度条模块 */
 .arch-status-container {
-  background: linear-gradient(135deg, #ffffff 0%, #f7faff 100%);
-  border-radius: 16rpx;
-  padding: 20rpx 24rpx;
+  background: #ffffff;
+  border: 1rpx solid #eef1f5;
+  border-radius: 18rpx;
+  padding: 22rpx 24rpx;
   margin-bottom: 16rpx;
-  box-shadow: 0 2rpx 12rpx rgba(68, 136, 251, 0.08);
 }
 
 .arch-status-content {
@@ -527,44 +511,49 @@ export default {
 }
 
 .arch-title-text {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 600;
-  color: #333;
+  color: #1d2430;
+  letter-spacing: 0.5rpx;
 }
 
 /* 负荷设备模块 */
 .arch-device-stats {
   background: #ffffff;
-  border-radius: 16rpx;
-  padding: 28rpx 32rpx;
+  border: 1rpx solid #eef1f5;
+  border-radius: 18rpx;
+  padding: 26rpx 26rpx;
   margin-bottom: 16rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
 }
 .arch-device-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
 }
 
 .arch-device-item {
+  width: calc((100% - 36rpx) / 4);
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f5faff 0%, #eef3fb 100%);
-  border-radius: 12rpx;
-  padding: 18rpx 8rpx;
+  background: #f8fafc;
+  border: 1rpx solid #eef1f5;
+  border-radius: 14rpx;
+  padding: 18rpx 6rpx;
   gap: 6rpx;
 }
 
 .arch-device-number {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #4488FB;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #2f7cf6;
+  font-family: 'Menlo', 'Consolas', monospace;
 }
 
 .arch-device-text {
-  font-size: 24rpx;
-  color: #666;
+  font-size: 22rpx;
+  color: #7a828c;
 }
 </style>

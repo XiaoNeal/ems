@@ -275,8 +275,8 @@ export default {
       return field 
     },
     getParamValue(deviceCategory, registerAddress, registerValue) {
-      if (!registerValue) {
-        return registerValue || '--'
+      if (registerValue === null || registerValue === undefined || registerValue === '') {
+        return registerValue === '' ? '--' : (registerValue || '--')
       }
       const field = registerAddress
       const paramInfo = getParamInfo(deviceCategory, field)
@@ -288,8 +288,21 @@ export default {
       
       // 如果有valueMap，优先使用映射值
       if (paramInfo && paramInfo.valueMap) {
-        const mappedValue = paramInfo.valueMap[registerValue]
-        if (mappedValue) {
+        // 先直接匹配原始值
+        let mappedValue = paramInfo.valueMap[registerValue]
+        // 再尝试转字符串匹配（数字→字符串）
+        if (mappedValue === undefined && typeof registerValue !== 'string') {
+          mappedValue = paramInfo.valueMap[String(registerValue)]
+        }
+        // 再尝试把十六进制转十进制字符串匹配（旧协议 PCS 171B 常见 registerValue 为 '0x00000001'）
+        if (mappedValue === undefined && typeof registerValue === 'string') {
+          const v = registerValue.trim().toLowerCase()
+          if (v.startsWith('0x')) {
+            const dec = String(parseInt(v, 16))
+            mappedValue = paramInfo.valueMap[dec]
+          }
+        }
+        if (mappedValue !== undefined) {
           return mappedValue
         }
       }

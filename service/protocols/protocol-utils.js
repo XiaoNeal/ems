@@ -16,7 +16,16 @@ export const C_TYPE_SIZE = {
   float: 4,
 }
 
+/**
+ * 从 DataView 读取指定位置的原始值
+ * 注意：如果 pos + cTypeSize 越界，返回 undefined 而不是抛 RangeError
+ * —— 真机 MQTT 帧经常是截断的（datacount 声明 194 但实际只有 169 字节），
+ *    必须让 parseStruct 在截断帧上仍能正常产出部分有效字段
+ */
 export function readValue(dv, pos, cType) {
+  const size = C_TYPE_SIZE[cType]
+  if (size === undefined) throw new Error(`Unknown cType: ${cType}`)
+  if (pos + size > dv.byteLength) return undefined
   switch (cType) {
     case 'uint8':   return dv.getUint8(pos)
     case 'uint16':  return dv.getUint16(pos, false)
@@ -24,7 +33,7 @@ export function readValue(dv, pos, cType) {
     case 'uint32':  return dv.getUint32(pos, false)
     case 'int32':   return dv.getInt32(pos, false)
     case 'float':   return dv.getFloat32(pos, false)
-    default: throw new Error(`Unknown cType: ${cType}`)
+    default: return undefined
   }
 }
 
@@ -39,6 +48,7 @@ export function parseStruct(bytes, structDef) {
       continue
     }
     if (field.bitfield) {
+      if (pos >= dv.byteLength) break
       const byteVal = dv.getUint8(pos)
       const bits = field.bitMask || [0, 1, 2, 3, 4, 5, 6, 7]
       for (const b of bits) {
@@ -48,13 +58,21 @@ export function parseStruct(bytes, structDef) {
       continue
     }
     if (field.read) {
-      const { value, bytesRead } = field.read(dv, pos)
+      if (pos >= dv.byteLength) break
+      let parsed
+      try {
+        parsed = field.read(dv, pos)
+      } catch (e) { break }
+      if (!parsed) break
+      const { value, bytesRead } = parsed
+      if (value === undefined) break
       let v = field.scale ? value / field.scale : value
       if (field.offset != null) v += field.offset
       result[field.name] = v
       pos += bytesRead
     } else {
       const raw = readValue(dv, pos, field.cType)
+      if (raw === undefined) break
       let v = field.scale ? raw / field.scale : raw
       if (field.offset != null) v += field.offset
       result[field.name] = v

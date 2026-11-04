@@ -18,8 +18,10 @@
         v-for="(status, index) in items"
         :key="index"
         class="fault-item"
+        :class="{ active: status.isAlarm || status.active }"
       >
-        <text class="fault-name" :class="{ active: status.isAlarm || status.active }">{{ status.name }}</text>
+        <view class="fault-dot"></view>
+        <text class="fault-name">{{ status.name }}</text>
       </view>
     </template>
     <text v-if="items.length === 0" class="status-empty">暂无数据</text>
@@ -47,50 +49,89 @@ export default {
   flex-wrap: wrap;
   gap: 10rpx;
 }
+
 .status-item {
-  width: calc(33.333% - 8rpx);
-  padding: 12rpx 2rpx;
-  border-radius: 8rpx;
+  width: calc((100% - 20rpx) / 3);
+  padding: 18rpx 6rpx 16rpx;
+  border-radius: 14rpx;
   border: 1rpx solid;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
 }
+
 .status-name {
-  font-size: 22rpx;
+  font-size: 21rpx;
   font-weight: 500;
-  margin-bottom: 4rpx;
-}
-.status-value {
-  font-size: 24rpx;
-  font-weight: 600;
-  color: #52c41a;
-  &.error { color: #FF4D4F; }
-}
-.fault-item {
-  width: calc(33.333% - 8rpx);
-  padding: 12rpx 2rpx;
-  border-radius: 8rpx;
-  background: #f5f5f5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.fault-name {
-  font-size: 22rpx;
-  color: #999;
+  line-height: 1.3;
+  margin-bottom: 6rpx;
   text-align: center;
-  &.active {
-    color: #FF4D4F;
-    font-weight: 600;
+}
+
+.status-value {
+  font-size: 25rpx;
+  font-weight: 600;
+  color: #1f9254;
+  font-family: 'Menlo', 'Consolas', monospace;
+
+  &.error {
+    color: #e5484d;
   }
 }
+
+/* 故障位：未命中保持中性灰，命中才转红，避免整片彩色噪音 */
+.fault-item {
+  display: flex;
+  align-items: center;
+  width: calc((100% - 20rpx) / 3);
+  box-sizing: border-box;
+  padding: 16rpx 14rpx;
+  border-radius: 12rpx;
+  background: #ffffff;
+  border: 1rpx solid #eef1f5;
+
+  &.active {
+    background: #fff2f0;
+    border-color: #ffd3cd;
+
+    .fault-dot {
+      background: #f2544c;
+    }
+
+    .fault-name {
+      color: #d93a32;
+      font-weight: 600;
+    }
+  }
+}
+
+.fault-dot {
+  flex-shrink: 0;
+  width: 10rpx;
+  height: 10rpx;
+  margin-right: 8rpx;
+  border-radius: 50%;
+  background: #d8dce2;
+}
+
+.fault-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 21rpx;
+  line-height: 1.3;
+  color: #8d949e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .status-empty {
   width: 100%;
-  text-align: center;
-  color: #999;
-  font-size: 28rpx;
   padding: 40rpx 0;
+  text-align: center;
+  color: #98a2ae;
+  font-size: 26rpx;
 }
 </style>

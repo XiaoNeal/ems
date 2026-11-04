@@ -181,8 +181,8 @@ const DEFAULT_CONFIG = {
   username: '',
   password: '',
   accessCode: '',
-  // realtimeTopic: 'neiic/microEnergyStation001',
-  realtimeTopic: 'neiic/microEnergyStationCtl002',
+  // 接收实时数据：001；控制下发与响应：Ctl002（按实际 topic 编号，后缀 3 位）
+  realtimeTopic: 'neiic/microEnergyStation001',
   controlSetTopic: 'neiic/microEnergyStationCtl002',
   controlRespTopic: 'neiic/microEnergyStationCtl002'
 }
@@ -416,6 +416,13 @@ export default {
         const cfg = uni.getStorageSync(STORAGE_KEY)
         if (cfg) {
           this.form = { ...DEFAULT_CONFIG, ...cfg, protocol: 'mqtt', accessCode: '' }
+          // 迁移：旧版错误地把 realtimeTopic 填成了 Ctl 主题，修正为实时数据主题 001
+          // （控制主题由 controlSetTopic/controlRespTopic 单独承载）
+          const rt = this.form.realtimeTopic || ''
+          if (/Ctl/i.test(rt)) {
+            console.warn('[直连配置] 迁移 realtimeTopic 从', rt, '→ neiic/microEnergyStation001')
+            this.form.realtimeTopic = 'neiic/microEnergyStation001'
+          }
         }
         // 只在 form.ip 有有效值时才覆盖 ipSeg，否则保留 data() 里的默认 [192,168,88,1]
         const ip = (this.form.ip || '').trim()
@@ -540,9 +547,10 @@ export default {
         username: '',
         password: '',
         accessCode,
-        realtimeTopic: 'neiic/microEnergyStationCtl002',
-        controlSetTopic: 'neiic/microEnergyStationCtl002',
-        controlRespTopic: 'neiic/microEnergyStationCtl002'
+        // 用用户填写/扫码/DEFAULT_CONFIG 注入的 topic，不再硬编码
+        realtimeTopic: (this.form.realtimeTopic || '').trim() || DEFAULT_CONFIG.realtimeTopic,
+        controlSetTopic: (this.form.controlSetTopic || '').trim() || DEFAULT_CONFIG.controlSetTopic,
+        controlRespTopic: (this.form.controlRespTopic || '').trim() || DEFAULT_CONFIG.controlRespTopic
       }
       return cfg
     },

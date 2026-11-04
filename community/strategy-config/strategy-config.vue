@@ -1016,9 +1016,10 @@ export default {
 /* 模式选择 */
 .mode-section {
   background-color: #fff;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 20rpx;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
 }
 
 .mode-header {
@@ -1051,23 +1052,25 @@ export default {
   display: flex;
   align-items: center;
   gap: 8rpx;
-  padding: 12rpx 24rpx;
-  background-color: #6699ff;
+  padding: 14rpx 28rpx;
+  background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
   color: #fff;
-  border-radius: 24rpx;
-  font-size: 26rpx;
-  transition: all 0.3s ease;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+  transition: all 0.2s ease;
   position: relative;
-  // z-index: 100;
+  box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
 
   &:active {
     transform: scale(0.95);
-    background-color: #4488fb;
+    box-shadow: 0 2rpx 6rpx rgba(102, 153, 255, 0.2);
   }
 
   &.disabled {
     background-color: #e8e8e8;
+    background: #e8e8e8;
     color: #999;
+    box-shadow: none;
     pointer-events: none;
   }
 }
@@ -1090,31 +1093,35 @@ export default {
   flex: 1;
   padding: 24rpx 12rpx;
   text-align: center;
-  border-radius: 12rpx;
+  border-radius: 16rpx;
   font-size: 26rpx;
   background-color: #f5f7fa;
   color: #333;
   transition: all 0.2s;
   max-width: 30%;
+  border: 1rpx solid transparent;
 }
 
 .mode-btn.active {
-  background-color: #1890ff;
+  background: linear-gradient(135deg, #6699ff 0%, #4488fb 100%);
   color: #fff;
+  border-color: #6699ff;
+  box-shadow: 0 4rpx 12rpx rgba(102, 153, 255, 0.3);
 }
 
 /* 星期选择 */
 .week-section {
   background-color: #fff;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 20rpx;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
 }
 
 .section-title {
   font-size: 30rpx;
-  font-weight: 500;
-  color: #333;
+  font-weight: 600;
+  color: #1a1a1a;
 }
 
 .week-selector {
@@ -1595,23 +1602,22 @@ export default {
 /* 状态分组显示 */
 .status-group {
   background-color: #fff;
-  border-radius: 16rpx;
+  border-radius: 20rpx;
   padding: 0;
   margin-bottom: 24rpx;
   overflow: hidden;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
-  border: 1rpx solid #f0f0f0;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+  border: none;
 }
 
 .status-group-header {
-  padding: 28rpx 32rpx;
+  padding: 32rpx;
   border-bottom: 1rpx solid #f0f0f0;
-  background: linear-gradient(135deg, #fafbfc 0%, #fff 100%);
 }
 
 .status-group-title {
   font-size: 30rpx;
-  color: #333;
+  color: #1a1a1a;
   font-weight: 600;
   position: relative;
   padding-left: 20rpx;
@@ -1623,8 +1629,8 @@ export default {
     top: 50%;
     transform: translateY(-50%);
     width: 6rpx;
-    height: 24rpx;
-    background: linear-gradient(180deg, #1890ff 0%, #6699ff 100%);
+    height: 26rpx;
+    background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
     border-radius: 3rpx;
   }
 }

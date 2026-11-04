@@ -17,7 +17,83 @@
       <swiper-item>
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
-            <view class="module">
+            <!-- 50kW 微能站：PCS 使用 1707_V3_5 模型 -->
+            <view v-if="isHighCapacity" class="module">
+              <view class="module-title">PCS</view>
+
+              <view v-if="device1707" class="data-group">
+                <view class="group-title">设备状态</view>
+                <view class="data-grid">
+                  <view v-for="field in pcs1707Fields.deviceStatus" :key="field.key" class="grid-item">
+                    <text class="item-label">{{ field.name }}</text>
+                    <text class="item-value">{{ field.value }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="device1707" class="data-group">
+                <view class="group-title">交流侧</view>
+                <view class="data-grid">
+                  <view v-for="field in pcs1707Fields.ac" :key="field.key" class="grid-item">
+                    <text class="item-label">{{ field.name }}</text>
+                    <text class="item-value">{{ field.value }}{{ field.unit ? ' ' + field.unit : '' }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="device1707" class="data-group">
+                <view class="group-title">直流侧</view>
+                <view class="data-grid">
+                  <view v-for="field in pcs1707Fields.dc" :key="field.key" class="grid-item">
+                    <text class="item-label">{{ field.name }}</text>
+                    <text class="item-value">{{ field.value }}{{ field.unit ? ' ' + field.unit : '' }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="device1707" class="data-group">
+                <view class="group-title">温度测点</view>
+                <view class="data-grid">
+                  <view v-for="field in pcs1707Fields.temperature" :key="field.key" class="grid-item">
+                    <text class="item-label">{{ field.name }}</text>
+                    <text class="item-value">{{ field.value }}{{ field.unit ? ' ' + field.unit : '' }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="device1707" class="data-group">
+                <view class="group-title">累计电量（电度统计）</view>
+                <view class="data-grid">
+                  <view v-for="field in pcs1707Fields.energyTotal" :key="field.key" class="grid-item">
+                    <text class="item-label">{{ field.name }}</text>
+                    <text class="item-value">{{ field.value }}{{ field.unit ? ' ' + field.unit : '' }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="device1707" class="data-group">
+                <view class="group-title">版本与通讯</view>
+                <view class="data-grid">
+                  <view v-for="field in pcs1707Fields.versionComm" :key="field.key" class="grid-item">
+                    <text class="item-label">{{ field.name }}</text>
+                    <text class="item-value">{{ field.value }}{{ field.unit ? ' ' + field.unit : '' }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="device1707" class="data-group">
+                <view class="group-title">故障信息</view>
+                <view class="status-grid">
+                  <view v-for="fault in pcs1707Fields.faults" :key="fault.key" class="fault-item">
+                    <text class="fault-name" :class="{ active: fault.isFault }">{{ fault.name }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <text v-if="!device1707" class="status-empty">未检测到PCS设备（1707_V3_5）</text>
+            </view>
+
+            <view v-if="!isHighCapacity" class="module">
               <view class="module-title">PCS</view>
 
               <view class="data-group">
@@ -217,7 +293,50 @@
       <swiper-item>
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
-            <view class="module">
+            <!-- 50kW 微能站：储能DC 使用 170C_V1_1 模型（地址1E） -->
+            <view v-if="isHighCapacity" class="module">
+              <view class="module-title">储能DC</view>
+
+              <view v-if="device170CStorage" class="data-group">
+                <view class="group-title">运行参数</view>
+                <view class="data-grid">
+                  <view v-for="field in storage170C.fields.energy" :key="field.key" class="grid-item">
+                    <text class="item-label">{{ field.name }}</text>
+                    <text class="item-value">{{ field.value }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="device170CStorage" class="data-group">
+                <view class="group-title">状态参数</view>
+                <view class="data-grid">
+                  <view v-for="field in storage170C.fields.state" :key="field.key"
+                    :class="['grid-item', { 'state-grid-item': field.states && field.states.length > 1 }]">
+                    <text class="item-label">{{ field.name }}</text>
+                    <view class="item-value">
+                      <template v-if="field.states && field.states.length > 1">
+                        <text v-for="(st, si) in field.states" :key="si"
+                          :class="['state-badge', stateBadgeClass(st)]">{{ st }}</text>
+                      </template>
+                      <template v-else>{{ field.value }}</template>
+                    </view>
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="device170CStorage" class="data-group">
+                <view class="group-title">储能DC故障信息</view>
+                <view class="status-grid">
+                  <view v-for="fault in storage170C.faults" :key="fault.code" class="fault-item">
+                    <text class="fault-name" :class="{ active: fault.isAlarm }">{{ fault.name }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <text v-if="!device170CStorage" class="status-empty">未检测到储能DC设备（170C_V1_1 / 地址1E）</text>
+            </view>
+
+            <view v-if="!isHighCapacity" class="module">
               <view class="module-title">储能DC</view>
 
               <view class="data-group">
@@ -310,7 +429,50 @@
       <swiper-item>
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
-            <view class="module">
+            <!-- 50kW 微能站：光伏DC 使用 170C_V1_1 模型（地址06） -->
+            <view v-if="isHighCapacity" class="module">
+              <view class="module-title">光伏</view>
+
+              <view v-if="device170CPv" class="data-group">
+                <view class="group-title">运行参数</view>
+                <view class="data-grid">
+                  <view v-for="field in pv170C.fields.energy" :key="field.key" class="grid-item">
+                    <text class="item-label">{{ field.name }}</text>
+                    <text class="item-value">{{ field.value }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="device170CPv" class="data-group">
+                <view class="group-title">状态参数</view>
+                <view class="data-grid">
+                  <view v-for="field in pv170C.fields.state" :key="field.key"
+                    :class="['grid-item', { 'state-grid-item': field.states && field.states.length > 1 }]">
+                    <text class="item-label">{{ field.name }}</text>
+                    <view class="item-value">
+                      <template v-if="field.states && field.states.length > 1">
+                        <text v-for="(st, si) in field.states" :key="si"
+                          :class="['state-badge', stateBadgeClass(st)]">{{ st }}</text>
+                      </template>
+                      <template v-else>{{ field.value }}</template>
+                    </view>
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="device170CPv" class="data-group">
+                <view class="group-title">光伏DC故障信息</view>
+                <view class="status-grid">
+                  <view v-for="fault in pv170C.faults" :key="fault.code" class="fault-item">
+                    <text class="fault-name" :class="{ active: fault.isAlarm }">{{ fault.name }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <text v-if="!device170CPv" class="status-empty">未检测到光伏DC设备（170C_V1_1 / 地址06）</text>
+            </view>
+
+            <view v-if="!isHighCapacity" class="module">
               <view class="module-title">光伏</view>
 
               <view class="data-group">
@@ -490,7 +652,34 @@
       <swiper-item>
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
-            <view class="module">
+            <!-- 50kW 微能站：BMS 使用 171C_V2 模型 -->
+            <view v-if="isHighCapacity" class="module">
+              <view class="module-title">BMS</view>
+
+              <view v-for="group in bmsInfoGroups" :key="group.key" class="data-group">
+                <view class="group-title">{{ group.title }}</view>
+                <view class="data-grid">
+                  <view v-for="item in group.items" :key="item.key" class="grid-item">
+                    <text class="item-label">{{ item.label }}</text>
+                    <text class="item-value">{{ item.value }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <view class="data-group">
+                <view class="group-title">故障信息</view>
+                <view v-for="group in bmsFaultFields" :key="group.key" class="fault-word">
+                  <view class="fault-word-title">{{ group.title }}</view>
+                  <view class="status-grid">
+                    <view v-for="item in group.items" :key="item.key" class="fault-item">
+                      <text class="fault-name" :class="{ active: item.active }">{{ item.name }}</text>
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </view>
+
+            <view v-if="!isHighCapacity" class="module">
               <view class="module-title">BMS</view>
 
 
@@ -548,13 +737,15 @@
                   </view>
                   <view class="grid-item">
                     <text class="item-label">绝缘电阻R+(MΩ)</text>
-                    <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B22 ?
-                      (device171C.energyData.B22.value / 1000).toFixed(2) : "--" }}</text>
+                    <text class="item-value">{{
+                      this.formatInsulationValue(device171C && device171C.energyData && device171C.energyData.B22 ?
+                        device171C.energyData.B22.value : null, 1000) }}</text>
                   </view>
                   <view class="grid-item">
                     <text class="item-label">绝缘电阻R-(MΩ)</text>
-                    <text class="item-value">{{ device171C && device171C.energyData && device171C.energyData.B24 ?
-                      (device171C.energyData.B24.value / 1000).toFixed(2) : "--" }}</text>
+                    <text class="item-value">{{
+                      this.formatInsulationValue(device171C && device171C.energyData && device171C.energyData.B24 ?
+                        device171C.energyData.B24.value : null, 1000) }}</text>
                   </view>
 
                   <!-- 
@@ -982,6 +1173,38 @@
           </view>
         </scroll-view>
       </swiper-item>
+
+      <!-- 液冷机 Tab（仅 50kW 微能站显示） -->
+      <swiper-item v-if="isHighCapacity">
+        <scroll-view class="module-scroll" scroll-y="true">
+          <view class="content">
+            <view class="module">
+              <view class="module-title">液冷机</view>
+
+              <view v-if="device0318" class="data-group">
+                <view class="group-title">运行参数</view>
+                <view class="data-grid">
+                  <view v-for="field in liquidCoolingFields.params" :key="field.key" class="grid-item">
+                    <text class="item-label">{{ field.name }}</text>
+                    <text class="item-value">{{ field.value }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="device0318" class="data-group">
+                <view class="group-title">故障报警</view>
+                <view class="status-grid">
+                  <view v-for="field in liquidCoolingFields.faults" :key="field.key" class="fault-item">
+                    <text class="fault-name" :class="{ active: field.value === '有故障' }">{{ field.name }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <text v-if="!device0318" class="status-empty">未检测到液冷机设备（0318_V2_3）</text>
+            </view>
+          </view>
+        </scroll-view>
+      </swiper-item>
     </swiper>
   </view>
 </template>
@@ -989,13 +1212,245 @@
 <script>
 import { realtimeDataProvider } from '@/service/websocket';
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+import { DeviceFactory } from '@/service/devices/device-factory.model';
+import { errorCodeEnum as storage170CFaultEnum } from '@/service/devices/170C_V1_1-model.js';
+
+// 50kW 下从 储能DC/光伏DC Tab 迁移到"参数设置"的 170C 字段（按数据来源分组）
+const MOVED_170C_ENERGY_KEYS = [
+  'BATSetVoltage', 'maxChargeCurrent', 'maxDischargeCurrent', 'BUSSetVoltage', 'BUSSetCurrent',
+  'sagVoltageCoefficient', 'maxPowerLimit',
+  'BATUndervoltagePoint', 'BATOvervoltagePoint', 'BUSUndervoltagePoint', 'BUSOvervoltagePoint',
+  'BATChargeCurrentPoint', 'BATDishargeCurrentPoint', 'BUSChargeCurrentPoint', 'BUSDishargeCurrentPoint',
+  // BATVoltage/BUSVoltage 为实时显示值，保留在监控页展示，不再移入参数设置
+  // 'BATVoltage', 'BUSVoltage'
+];
+const MOVED_170C_STATE_KEYS = ['startOrder', 'moduleMode', 'workMode', 'moduleShareCurrent'];
+
+// 50kW 下从 PCS 板块迁移到"参数设置-PCS"的 1707_V3_5 字段（按数据来源分组）
+const MOVED_PCS_ENERGY_KEYS = [
+  'Fault_reset', 'Device_Start', 'Device_Shutdown', 'Remote_E_Stop',
+  'Reset_Charge_Energy', 'Reset_Discharge_Energy', 'Remote_Local_Setting', 'Device_Standby',
+  'External_Switch'
+];
+const MOVED_PCS_STATE_KEYS = [
+  'operating_mode',
+  'Constant_Voltage_Charge_Voltage_Setpoint', 'Constant_Current_Charge_Current_Setpoint',
+  'Constant_Power_Active_Power_Target', 'Constant_Power_Reactive_Power_Target',
+  'Grid_Connected_Off_Grid_Setting', 'Off_Grid_Output_Voltage_Setpoint', 'Off_Grid_Output_Frequency_Setpoint',
+  'Phase_Controlled_A_Phase_Active_Power', 'Phase_Controlled_B_Phase_Active_Power', 'Phase_Controlled_C_Phase_Active_Power',
+  'Phase_Controlled_A_Phase_Reactive_Power', 'Phase_Controlled_B_Phase_Reactive_Power', 'Phase_Controlled_C_Phase_Reactive_Power',
+  'Off_Grid_Output_Voltage_Phase_A_Setpoint', 'Off_Grid_Output_Voltage_Phase_B_Setpoint', 'Off_Grid_Output_Voltage_Phase_C_Setpoint',
+  'Microgrid_DC_Voltage_Droop_Coefficient', 'Primary_Frequency_Regulation_Frequency_Deadband', 'Primary_Frequency_Regulation_K_Value',
+  'VSG_Frequency_Droop_Coefficient', 'VSG_Voltage_Droop_Coefficient', 'Switch_Operation_Mode',
+  'Battery_Overcapacity_Allowed_Charge_Voltage', 'Battery_Overcapacity_Allowed_Discharge_Voltage',
+  'Battery_Overcapacity_Allowed_Charge_Current', 'Battery_Overcapacity_Allowed_Discharge_Current',
+  'Second', 'Minute', 'Hour', 'Day', 'Month', 'Year',
+  'Enclosure_Fan_Start_Temperature', 'Enclosure_Fan_Start_Time', 'Enclosure_Fan_Stop_Temperature',
+  'Enclosure_Fan_Stop_Time', 'Enclosure_Fan_Forced_Start_Command'
+];
+
+// 50kW PCS 展示分组（依据《PCS数据页面调整》文档的数据分类）
+// 设备状态：按文档对 0/1 值做文案映射
+const PCS1707_STATUS_KEYS = [
+  'Shutdown_Status', 'Standby_Status', 'Operation_Status',
+  'Total_Fault_Status', 'Total_Alarm_Status', 'Remote_Local_Status',
+  'E_Stop_Input_Status', 'Grid_Connected_Status', 'VF_Off_Grid_Status',
+  'Overload_Derating', 'BMS_Dry_Contact_Input'
+];
+const PCS1707_STATUS_VALUE_MAP = {
+  Shutdown_Status: { '0': '--', '1': '停机' },
+  Standby_Status: { '0': '--', '1': '待机' },
+  Operation_Status: { '0': '--', '1': '运行' },
+  Total_Fault_Status: { '0': '--', '1': '故障' },
+  Total_Alarm_Status: { '0': '--', '1': '告警' },
+  Remote_Local_Status: { '0': '本地', '1': '远程' },
+  E_Stop_Input_Status: { '0': '--', '1': '有效' },
+  Grid_Connected_Status: { '0': '--', '1': '并网' },
+  VF_Off_Grid_Status: { '0': '--', '1': 'VF 离网' },
+  Overload_Derating: { '0': '--', '1': '过载发生' },
+  BMS_Dry_Contact_Input: { '0': '--', '1': '故障有效' }
+};
+// 交流侧：电压/电流/频率/有功/无功/视在功率/功率因数
+const PCS1707_AC_KEYS = [
+  'PCS_Port_A_Voltage', 'PCS_Port_B_Voltage', 'PCS_Port_C_Voltage',
+  'PCS_Output_A_Current', 'PCS_Output_B_Current', 'PCS_Output_C_Current',
+  'N_Phase_RMS_Current', 'Grid_Frequency',
+  'PCS_A_Active_Power', 'PCS_B_Active_Power', 'PCS_C_Active_Power', 'PCS_Total_Active_Power',
+  'PCS_A_Reactive_Power', 'PCS_B_Reactive_Power', 'PCS_C_Reactive_Power', 'PCS_Total_Reactive_Power',
+  'PCS_A_Apparent_Power', 'PCS_B_Apparent_Power', 'PCS_C_Apparent_Power', 'PCS_Total_Apparent_Power',
+  'PCS_A_Power_Factor', 'PCS_B_Power_Factor', 'PCS_C_Power_Factor', 'PCS_Total_Power_Factor'
+];
+// 直流侧：输入功率/电压/电流
+const PCS1707_DC_KEYS = ['PCS_Input_Power', 'PCS_Input_Voltage', 'PCS_Input_Current'];
+// 温度测点：散热器/SOC/IGBT 1-1 ~ 4-2
+const PCS1707_TEMP_KEYS = [
+  'PCS_Cooler_Temp', 'On_Chip_SOC_Temperature',
+  'IGBT_Temperature_1_1', 'IGBT_Temperature_1_2',
+  'IGBT_Temperature_2_1', 'IGBT_Temperature_2_2',
+  'IGBT_Temperature_3_1', 'IGBT_Temperature_3_2',
+  'IGBT_Temperature_4_1', 'IGBT_Temperature_4_2'
+];
+// 累计电量（电度统计）
+const PCS1707_ENERGY_KEYS = [
+  'PCS_AC_Charge_Energy', 'PCS_AC_Discharge_Energy',
+  'PCS_DC_Charge_Energy', 'PCS_DC_Discharge_Energy'
+];
+// 版本与通讯（系统时钟单独合并后追加在末尾）
+const PCS1707_VERSION_KEYS = [
+  'PCS_Communication_Status', 'PCS_Program_Version', 'FPGA_Program_Version',
+  'PCS_Status_Code_1', 'PCS_Status_Code_2', 'PCS_Status_Code_3', 'PCS_Status_Code_4',
+  'PCS_Status_Code_5', 'PCS_Status_Code_6', 'PCS_Status_Code_7', 'PCS_Status_Code_8'
+];
+const PCS1707_CLOCK_KEYS = [
+  'System_Clock_Year', 'System_Clock_Month', 'System_Clock_Day',
+  'System_Clock_Hour', 'System_Clock_Min', 'System_Clock_Sec'
+];
+
+// 171C_V2（V2.0）BMS 能源数据中的「故障字」字段地址（每字 16 位故障标志）
+const BMS_FAULT_WORD_KEYS = [
+  'B78', 'B80', 'B82', 'B84', 'B86', 'B88',
+  'B90', 'B92', 'B94', 'B96', 'B98', 'B100'
+];
+// 各故障字 bit0~bit15 的中文故障名（空串表示协议中该位预留）
+const BMS_FAULT_WORD_BITS = {
+  B78: ['单体过压1级', '单体欠压1级', '单体压差1级', '总压过压1级', '总压欠压1级', '总压压差1级', '放电过流1级', '充电过流1级', '放电高温1级', '充电高温1级', '放电低温1级', '充电低温1级', '温差1级', '绝缘阻值低1级', 'T1高温1级', 'T2高温1级'],
+  B80: ['T3高温1级', 'T4高温1级', 'T5高温1级', '极柱高温1级', '电流异常1级', '供电电压异常1级', '电压排线脱落1级', '温感排线脱落1级', 'soc低1级', 'T6高温1级', '', '', '', '', '', ''],
+  B82: ['单体过压2级', '单体欠压2级', '单体压差2级', '总压过压2级', '总压欠压2级', '总压压差2级', '放电过流2级', '充电过流2级', '放电高温2级', '充电高温2级', '放电低温2级', '充电低温2级', '温差2级', '绝缘阻值低2级', 'T1高温2级', 'T2高温2级'],
+  B84: ['T3高温2级', 'T4高温2级', 'T5高温2级', '极柱高温2级', '电流异常2级', '供电电压异常2级', '电压排线脱落2级', '温感排线脱落2级', 'soc低2级', 'T6高温2级', '', '', '', '', '', ''],
+  B86: ['单体过压3级', '单体欠压3级', '单体压差3级', '总压过压3级', '总压欠压3级', '总压压差3级', '放电过流3级', '充电过流3级', '放电高温3级', '充电高温3级', '放电低温3级', '充电低温3级', '温差3级', '绝缘阻值低3级', 'T1高温3级', 'T2高温3级'],
+  B88: ['T3高温3级', 'T4高温3级', 'T5高温3级', '极柱高温3级', '电流异常3级', '供电电压异常3级', '电压排线脱落3级', '温感排线脱落3级', 'soc低3级', 'T6高温3级', '', '', '', '', '', ''],
+  B90: ['单体过压4级', '单体欠压4级', '单体压差4级', '总压过压4级', '总压欠压4级', '总压压差4级', '放电过流4级', '充电过流4级', '放电高温4级', '充电高温4级', '放电低温4级', '充电低温4级', '温差4级', '绝缘阻值低4级', 'T1高温4级', 'T2高温4级'],
+  B92: ['T3高温4级', 'T4高温4级', 'T5高温4级', '极柱高温4级', '电流异常4级', '供电电压异常4级', '电压排线脱落4级', '温感排线脱落4级', 'soc低4级', 'T6高温4级', '', '', '', '', '', ''],
+  B94: ['BCU硬件故障', 'BMU硬件故障', 'EMS通信故障', '从机通信故障', '空调/TMS通信故障', 'PCS通信故障', '消防通信故障', '除湿机通信故障', '充电机通信故障', 'DCDC通信故障', '', '', '', '', '', ''],
+  B96: ['总断继电器故障标志位', '熔断器异常', '断路器异常', '预充故障', '热失控故障', '加热故障', '急停故障', '水浸故障', '门禁故障', '消防一级（火警）', '消防二级（消防故障）', '消防二级（消防触发）', '气溶胶故障', '', '', ''],
+  B98: ['总正继电器粘连', '总正继电器开路', '总负继电器粘连', '总负继电器开路', '充电继电器粘连', '充电继电器开路', '放电继电器粘连', '放电继电器开路', '充电负继电器粘连', '充电负继电器开路', '风扇继电器粘连', '风扇继电器开路', '加热继电器粘连', '加热继电器开路', '预留继电器粘连', '预留继电器开路'],
+  B100: ['总断继电器故障标志位', '总故障标志位（任意故障）', '', '', '', '', '', '', '', '', '', '本次重启原因-看门狗复位', '本次重启原因-软件复位', '本次重启原因-上电复位', '本次重启原因-时钟异常复位', '本次重启原因-未知复位']
+};
+
+// 50kW BMS《电池簇信息记录》栏目：PACK 展开字段与消防字段
+const BMS_PACK_KEYS = [
+  'B114', 'B170', 'B172',
+  'B176', 'B180', 'B178', 'B179', 'B182', 'B184', 'B188', 'B186', 'B190',
+  'B192', 'B196', 'B194', 'B195', 'B198', 'B200', 'B204', 'B202', 'B206',
+  'B208', 'B210', 'B212', 'B211', 'B214', 'B216', 'B220', 'B218', 'B222'
+];
+const BMS_FIRE_KEYS = ['B2b0'];
+// group/key 指向 171C_V2（V2.0）模型字段：device=deviceData、energy=energyData、state=stateData；
+// group 为 null 表示现有模型暂无可匹配字段，先占位展示 '--'；带 expand 的分组按 keys 顺序展开指定 store
+const BMS_INFO_GROUPS = [
+  {
+    key: 'environment', title: '环境数据', items: [
+      { label: '温度(℃)', group: 'env131', key: 'temperature' },
+      { label: '湿度(%RH)', group: 'env131', key: 'humidness' }
+    ]
+  },
+  {
+    key: 'deviceStatus', title: '设备状态', items: [
+      { label: '充放电状态', group: 'energy', key: 'B1b2' },
+      { label: '告警状态', group: 'energy', key: 'B1b0' }
+    ]
+  },
+  {
+    key: 'sysConfig', title: '系统配置', items: [
+      { label: '标称容量(Ah)', group: 'state', key: 'B72' },
+      { label: '额定电压(V)', group: 'state', key: 'B70' },
+      { label: '电池串数', group: 'state', key: 'B74' },
+      { label: '温感数量', group: 'state', key: 'B76' },
+      { label: '从机（pack）数量', group: 'state', key: 'B78' },
+      { label: '极柱温感数', group: 'state', key: 'B80' },
+      { label: '充电最大电压(V)', group: 'energy', key: 'B2' },
+      { label: '最大放电电流(A)', group: 'energy', key: 'B4' },
+      { label: '放电最小电压(V)', group: 'energy', key: 'B6' },
+      { label: '最大充电电流(A)', group: 'energy', key: 'B8' },
+      { label: '初始SOC', group: null, key: null }
+    ]
+  },
+  {
+    key: 'sysInfo', title: '系统信息', items: [
+      { label: 'SOC(%)', group: 'energy', key: 'B32' },
+      { label: 'SOH(%)', group: 'energy', key: 'B112' },
+      { label: '总电压(V)', group: 'energy', key: 'B10' },
+      { label: '总电流(A)', group: 'energy', key: 'B12' },
+      { label: '正极绝缘阻值(kΩ)', group: 'energy', key: 'B36' },
+      { label: '负极绝缘阻值(kΩ)', group: 'energy', key: 'B38' },
+      { label: '预充状态', group: 'energy', key: 'B47b0' },
+      { label: '均衡状态', group: 'energy', key: 'B47b2' },
+      { label: '高压低锁定状态', group: 'energy', key: 'B47b5' },
+      { label: '准备状态', group: 'energy', key: 'B47b6' },
+      { label: 'BMS模式', group: 'energy', key: 'B47b7' },
+      { label: '自检状态', group: 'energy', key: 'B50' },
+      { label: '累计使用时间(min)', group: 'energy', key: 'B130' },
+      { label: '累计循环次数', group: 'energy', key: 'B128' },
+      { label: '累计充电电量(kWh)', group: 'energy', key: 'B124' },
+      { label: '累积充电时间(min)', group: 'energy', key: 'B138' },
+      { label: '累计放电电量(kWh)', group: 'energy', key: 'B120' },
+      { label: '累积放电时间(min)', group: 'energy', key: 'B134' },
+      { label: '单次放电累计电量(kWh)', group: 'energy', key: 'B116' },
+      { label: '单次充电累计电量(kWh)', group: 'energy', key: 'B118' },
+      { label: 'BMS运行状态', group: 'energy', key: 'B1b4' },
+      { label: 'HV1电压(V)', group: 'energy', key: 'B40' },
+      { label: 'BAT+电压(V)', group: 'energy', key: 'B44' },
+      { label: '电池累计电压(V)', group: 'energy', key: 'B48' },
+      { label: '总正继电器状态', group: 'energy', key: 'B53b0' },
+      { label: '总负继电器状态', group: 'energy', key: 'B53b1' },
+      { label: '预充继电器状态', group: 'energy', key: 'B53b2' },
+      { label: '断路器状态', group: 'energy', key: 'B53b3' },
+      { label: '总正继电器故障状态', group: 'energy', key: 'B55b0' },
+      { label: '总负继电器故障状态', group: 'energy', key: 'B55b2' },
+      { label: '预充继电器故障状态', group: 'energy', key: 'B55b4' },
+      { label: '断路器故障状态', group: 'energy', key: 'B55b6' },
+      { label: '分流器电流(A)', group: 'energy', key: 'B56' },
+      { label: '电池连接失败原因', group: 'energy', key: 'B66' },
+      { label: '电池未成功连接原因', group: 'energy', key: 'B68' }
+    ]
+  },
+  {
+    key: 'chargeInfo', title: '充电信息', items: [
+      { label: '充电连接', group: 'energy', key: 'B0b0' }
+    ]
+  },
+  {
+    key: 'pack', title: 'PACK信息', expand: { store: 'energy', keys: BMS_PACK_KEYS }, items: []
+  },
+  {
+    key: 'extreme', title: '单体信息', items: [
+      { label: '电池平均电压(mV)', group: 'energy', key: 'B14' },
+      { label: '电池平均温度(℃)', group: 'energy', key: 'B27' },
+      { label: '本次上电累计最大单体位置', group: 'energy', key: 'B72' },
+      { label: '本次上电累计最大单体值(mV)', group: 'energy', key: 'B70' },
+      { label: '最大电压电池位置', group: 'energy', key: 'B20' },
+      { label: '最高单体电压(mV)', group: 'energy', key: 'B16' },
+      { label: '最小电压电池位置', group: 'energy', key: 'B22' },
+      { label: '最低单体电压(mV)', group: 'energy', key: 'B18' },
+      { label: '单体最大压差(mV)', group: 'energy', key: 'B74' },
+      { label: '最高电芯温度位置', group: 'energy', key: 'B28' },
+      { label: '最高电芯温度(℃)', group: 'energy', key: 'B24' },
+      { label: '最低电芯温度位置', group: 'energy', key: 'B30' },
+      { label: '最低电芯温度(℃)', group: 'energy', key: 'B25' },
+      { label: '单体最大温差(℃)', group: 'energy', key: 'B26' }
+    ]
+  },
+  {
+    key: 'gaoyaInfo', title: '高压盒信息', items: [
+      { label: 'PDU温度数量', group: 'energy', key: 'B156' },
+      { label: 'PDU1极柱温度(℃)', group: 'energy', key: 'B158' },
+      { label: 'PDU2极柱温度(℃)', group: 'energy', key: 'B159' },
+      { label: 'PDU3极柱温度(℃)', group: 'energy', key: 'B160' },
+      { label: 'PDU4极柱温度(℃)', group: 'energy', key: 'B161' },
+      { label: 'PDU5极柱温度(℃)', group: 'energy', key: 'B162' },
+      { label: 'PDU6极柱温度(℃)', group: 'energy', key: 'B163' }
+    ]
+  },
+  {
+    key: 'xiaofangInfo', title: '消防信息', expand: { store: 'state', keys: BMS_FIRE_KEYS }, items: []
+  }
+];
 
 export default {
   components: { DyNavbar },
   data() {
     return {
       activeTab: 0,
-      tabs: ['PCS', '储能DC', '光伏', 'BMS'],
       deviceList: [],
       dataRefreshTimer: null,
       platformClass: ''
@@ -1011,6 +1466,170 @@ export default {
     }
   },
   computed: {
+    // 装机容量 >= 50 视为大容量（50kW 微能站，使用新协议 1707/170C/171C_V2/0318）
+    isHighCapacity() {
+      const station = this.$store.state.currentSelectDevice || {};
+      const cap = Number(station.totalInstalledCapacity);
+      if (Number.isFinite(cap) && cap > 0) return cap >= 50;
+      // 无容量字段时回退：设备列表中出现新协议设备即视为大容量
+      const newTypes = ['1707_V3_5', '1707V3_5', '170C_V1_1', '171C_V2', '171C_V2_1', '171C_V2_2', '171C_V2_3', '171C_V2_4', '0318_V2_3', '0318V2_3'];
+      return (station.list || []).some(item => newTypes.includes(String(item.typeCode || item.deviceType || '').trim()));
+    },
+    tabs() {
+      const base = ['PCS', '储能DC', '光伏', 'BMS'];
+      if (this.isHighCapacity) return [...base, '液冷机'];
+      return base;
+    },
+    // 50kW 新协议设备
+    device1707() {
+      return this.deviceList.find(item => item.deviceType === '1707_V3_5');
+    },
+    device0318() {
+      return this.deviceList.find(item => item.deviceType === '0318_V2_3');
+    },
+    // 131C_V2 环境传感器（BMS 环境数据：温度/湿度）
+    device131C() {
+      return this.deviceList.find(item => item.deviceType === '131C_V2');
+    },
+    device170CStorage() {
+      return this.deviceList.find(item => item.deviceType === '170C_V1_1' && this.normalizeAddress(item.address) === '1E');
+    },
+    device170CPv() {
+      return this.deviceList.find(item => item.deviceType === '170C_V1_1' && this.normalizeAddress(item.address) === '06');
+    },
+    // 1707_V3_5 展示数据：按《PCS数据页面调整》文档分类整理
+    pcs1707Fields() {
+      const device = this.device1707;
+      const energy = (device && device.energyData) || {};
+      const buildField = key => {
+        const f = energy[key];
+        if (!f) return null;
+        return { key, name: f.name, value: f.value, unit: f.unit };
+      };
+      const pick = keys => keys.map(buildField).filter(Boolean);
+
+      // 设备状态：0/1 按文档映射为文案
+      const deviceStatus = PCS1707_STATUS_KEYS.map(key => {
+        const f = energy[key];
+        if (!f) return null;
+        const map = PCS1707_STATUS_VALUE_MAP[key] || {};
+        const raw = f.value;
+        let value;
+        if (map[String(raw)] !== undefined) {
+          value = map[String(raw)];
+        } else {
+          value = raw === undefined || raw === null || raw === '' ? '--' : raw;
+        }
+        return { key, name: f.name, value, unit: '' };
+      }).filter(Boolean);
+
+      // 版本与通讯：系统时钟按年-月-日 时:分:秒 合并为一项
+      const versionComm = pick(PCS1707_VERSION_KEYS);
+      const clockNums = PCS1707_CLOCK_KEYS.map(key => {
+        const f = energy[key];
+        if (!f || f.value === '--' || f.value === undefined || f.value === null || f.value === '') return NaN;
+        return Number(f.value);
+      });
+      let clockStr = '--';
+      if (clockNums.every(n => Number.isFinite(n))) {
+        const [y, mo, d, h, mi, s] = clockNums;
+        const p2 = n => String(n).padStart(2, '0');
+        clockStr = `${y}-${p2(mo)}-${p2(d)} ${p2(h)}:${p2(mi)}:${p2(s)}`;
+      }
+      versionComm.push({ key: 'System_Clock', name: '系统时钟', value: clockStr, unit: '' });
+
+      // 故障信息：FPGA硬件故障 / ARM软件故障 / ARM软件告警，按协议顺序排列
+      const isFaultField = name =>
+        name.startsWith('FPGA硬件故障-') || name.startsWith('ARM软件故障-') || name.startsWith('ARM软件告警-');
+      const faults = Object.keys(energy)
+        .map(key => ({ key, name: energy[key].name, value: energy[key].value }))
+        .filter(field => isFaultField(field.name))
+        .map(field => ({ key: field.key, name: field.name, isFault: Number(field.value) === 1 }));
+
+      return {
+        deviceStatus,
+        ac: pick(PCS1707_AC_KEYS),
+        dc: pick(PCS1707_DC_KEYS),
+        temperature: pick(PCS1707_TEMP_KEYS),
+        energyTotal: pick(PCS1707_ENERGY_KEYS),
+        versionComm,
+        faults
+      };
+    },
+    storage170C() {
+      return this.build170CData(this.device170CStorage);
+    },
+    pv170C() {
+      return this.build170CData(this.device170CPv);
+    },
+    // 液冷机(0318V2_3)数据：按位故障标志与运行参数分组
+    // 故障字从 byte 86 开始（B86~B130），byte 38/39 电平信号、byte 41 输出位归运行参数
+    liquidCoolingFields() {
+      const energyData = this.device0318 && this.device0318.energyData;
+      const params = [];
+      const faults = [];
+      if (energyData) {
+        Object.keys(energyData).forEach(key => {
+          const field = { key, name: energyData[key].name, value: energyData[key].value };
+          if (/^B(8[6-9]|9\d|1\d{2,})b\d+$/.test(key)) faults.push(field);
+          else params.push(field);
+        });
+      }
+      return { params, faults };
+    },
+    // 50kW BMS：按《电池簇信息记录》栏目分组展示，取 171C_V2 与 131C_V2 实时值
+    bmsInfoGroups() {
+      const dev = this._bmsDevice('171C_V2');
+      const env131 = this.device131C;
+      const stores = {
+        device: (dev && dev.deviceData) || {},
+        energy: (dev && dev.energyData) || {},
+        state: (dev && dev.stateData) || {},
+        env131: (env131 && env131.statusData) || {}
+      };
+      const toVal = v => (v !== undefined && v !== null && v !== '' ? v : '--');
+      return BMS_INFO_GROUPS.map(group => {
+        if (group.expand) {
+          const store = stores[group.expand.store] || {};
+          return {
+            key: group.key,
+            title: group.title,
+            items: group.expand.keys.map(key => {
+              const field = store[key];
+              return {
+                key: group.expand.store + ':' + key,
+                label: field ? field.name : key,
+                value: field ? toVal(field.value) : '--'
+              };
+            })
+          };
+        }
+        return {
+          key: group.key,
+          title: group.title,
+          items: group.items.map(item => {
+            const store = item.group ? stores[item.group] : {};
+            const field = item.key ? store[item.key] : null;
+            return { key: item.key || (group.key + ':' + item.label), label: item.label, value: field ? toVal(field.value) : '--' };
+          })
+        };
+      });
+    },
+    bmsFaultFields() {
+      const dev = this._bmsDevice('171C_V2');
+      const energy = (dev && dev.energyData) || {};
+      return BMS_FAULT_WORD_KEYS.map(key => {
+        const field = energy[key] || {};
+        const word = this._toWordValue(field.value);
+        return {
+          key,
+          title: field.name || key,
+          items: (BMS_FAULT_WORD_BITS[key] || [])
+            .map((name, bit) => ({ key: key + '-' + bit, bit, name, active: word !== null && ((word >> bit) & 1) === 1 }))
+            .filter(item => item.name)
+        };
+      });
+    },
     device171B() {
       return this.deviceList.find(item => item.deviceType === '171B');
     },
@@ -1283,36 +1902,168 @@ export default {
       if (value === null || value === undefined || value === '--') return '--';
       return Number(value).toFixed(decimals);
     },
+    // 绝缘阻值：无效或 0 表示无穷大，其余按换算系数换算后保留两位小数
+    formatInsulationValue(value, divisor = 1) {
+      if (value === null || value === undefined || value === '--') return '∞';
+      if (!(Number(value) > 0)) return '∞';
+      return (Number(value) / divisor).toFixed(2);
+    },
+    getDeviceValue(device, key) {
+      if (!device || !device.energyData || device.energyData[key] === undefined || device.energyData[key] === null) {
+        return '--';
+      }
+      return device.energyData[key].value;
+    },
+    // 设备地址统一转为大写字符串，便于与 '06' / '1E' 比较
+    normalizeAddress(value) {
+      return value === undefined || value === null ? '' : String(value).toUpperCase();
+    },
+    // 机器运行状态徽标配色：按状态名映射不同色调
+    stateBadgeClass(state) {
+      if (!state) return 'badge-default';
+      if (state.includes('故障')) return 'badge-danger';
+      if (state.includes('过载')) return 'badge-warn';
+      if (state.includes('停机')) return 'badge-muted';
+      if (state.includes('运行')) return 'badge-success';
+      if (state.includes('软起')) return 'badge-info';
+      if (state.includes('主接')) return 'badge-primary';
+      return 'badge-default';
+    },
+    // 170C 模型展示数据：状态参数不含故障码，故障码单独在故障信息中列出；已迁移到参数设置的字段从运行参数中排除
+    build170CData(device) {
+      const toList = (obj) => obj
+        ? Object.keys(obj).map(key => ({ key, name: obj[key].name, value: obj[key].value, states: obj[key].states || null }))
+        : [];
+      const errorCode = device && device.stateData ? device.stateData.errorCode : null;
+      const current = errorCode && errorCode.raw !== undefined ? String(errorCode.raw) : '';
+      return {
+        fields: {
+          energy: toList(device && device.energyData).filter(field => !MOVED_170C_ENERGY_KEYS.includes(field.key)),
+          state: toList(device && device.stateData)
+            .filter(field => field.key !== 'errorCode' && !MOVED_170C_STATE_KEYS.includes(field.key))
+        },
+        // 列出所有故障，当前故障码对应的故障标红
+        faults: Object.keys(storage170CFaultEnum)
+          .filter(code => storage170CFaultEnum[code] !== '无故障' && storage170CFaultEnum[code] !== '保留')
+          .map(code => ({
+            code,
+            name: storage170CFaultEnum[code],
+            isAlarm: code === current
+          }))
+      };
+    },
+    _toFieldList(obj, prefix = '') {
+      if (!obj) return [];
+      return Object.keys(obj).map(key => ({
+        key: prefix ? prefix + '-' + key : key,
+        name: obj[key].name,
+        value: obj[key].value !== undefined && obj[key].value !== null && obj[key].value !== '' ? obj[key].value : '--'
+      }));
+    },
+    // 故障字取值 → 低 16 位整数：兼容网关以十进制数或十六进制字符串上报
+    _toWordValue(value) {
+      if (value === undefined || value === null || value === '' || value === '--') return null;
+      let num;
+      if (typeof value === 'number') {
+        num = Math.trunc(value);
+      } else {
+        const text = String(value).trim();
+        num = /^0x/i.test(text) || /[a-fA-F]/.test(text) ? parseInt(text, 16) : parseInt(text, 10);
+      }
+      return Number.isFinite(num) ? num & 0xFFFF : null;
+    },
+    // BMS 辅助：按归一化 deviceType 从 deviceList 取（兼容 171C_V2 / 171CV2 等写法）
+    _bmsDevice(type) {
+      const norm = t => String(t == null ? '' : t).toUpperCase().replace(/_/g, '');
+      const target = norm(type);
+      const candidates = (this.deviceList || []).filter(item => item && (
+        norm(item.deviceType) === target ||
+        norm(item.typeCode) === target ||
+        norm(item.rawDeviceType) === target));
+      if (candidates.length) {
+        const hasData = dev => [dev.controlData, dev.energyData, dev.stateData, dev.deviceData]
+          .some(group => group && Object.keys(group).some(key => {
+            const v = group[key] && group[key].value;
+            return v !== undefined && v !== null && v !== '' && v !== '--';
+          }));
+        return candidates.find(hasData) || candidates[0];
+      }
+      // 未上报时用工厂创建空实例（保证字段定义始终可见）
+      return DeviceFactory.create({ deviceType: type });
+    },
     initDeviceList() {
       const currentDevice = this.$store.state.currentSelectDevice || {};
+      const rawList = Array.isArray(currentDevice.list) ? currentDevice.list : [];
+      const findDevice = (deviceType, address) => rawList.find(item => {
+        const code = String(item.typeCode || item.deviceType || '');
+        const typeOk = code === deviceType || (item.description || '').includes(deviceType);
+        if (!typeOk) return false;
+        if (address === undefined) return true;
+        return this.normalizeAddress(item.address) === this.normalizeAddress(address);
+      });
+      // barCode 提取辅助：homeBarCode/barCode/gateway/gateWay/serialCode/sn/serialNumber/deviceCode/code 任一可用
+      const extractBarCode = (found) => (
+        found.homeBarCode || found.barCode || found.gateway || found.gateWay ||
+        found.serialCode || found.sn || found.serialNumber || found.deviceCode || found.code || ''
+      );
       const deviceList = [];
-      if (currentDevice.list && Array.isArray(currentDevice.list)) {
+
+      if (this.isHighCapacity) {
+        // 50kW 微能站：新协议设备（1707_V3_5 / 170C_V1_1(06,1E) / 171C_V2 / 0318_V2_3）
+        const specs = [
+          { deviceType: '1707_V3_5' },
+          { deviceType: '170C_V1_1', address: '1E' },
+          { deviceType: '170C_V1_1', address: '06' },
+          { deviceType: '171C_V2' },
+          { deviceType: '131C_V2' },
+          { deviceType: '0318_V2_3' }
+        ];
+        specs.forEach(spec => {
+          const foundDevice = findDevice(spec.deviceType, spec.address);
+          if (foundDevice) {
+            deviceList.push({
+              deviceType: spec.deviceType,
+              typeCode: spec.deviceType,
+              address: foundDevice.address || spec.address || '',
+              barCode: extractBarCode(foundDevice),
+              deviceId: foundDevice.deviceId || foundDevice.id || `${spec.deviceType}${spec.address || ''}`,
+              name: foundDevice.name || foundDevice.deviceName || `设备${spec.deviceType}`
+            });
+          }
+        });
+      } else {
         const deviceTypes = ['171B', '171C', '171D', '171E'];
         deviceTypes.forEach(deviceType => {
-          const foundDevice = currentDevice.list.find(item =>
-            item.typeCode === deviceType || item.deviceType === deviceType || item.description?.includes(deviceType)
-          );
+          const foundDevice = findDevice(deviceType);
           if (foundDevice) {
             deviceList.push({
               deviceType: deviceType,
               typeCode: deviceType,
               address: foundDevice.address || '',
-              barCode: foundDevice.barCode || foundDevice.homeBarCode || '',
-              deviceId: foundDevice.deviceId || `${deviceType}001`,
-              name: foundDevice.name || `设备${deviceType}`
+              barCode: extractBarCode(foundDevice),
+              deviceId: foundDevice.deviceId || foundDevice.id || `${deviceType}001`,
+              name: foundDevice.name || foundDevice.deviceName || `设备${deviceType}`
             });
           }
         });
+        if (deviceList.length === 0) {
+          const defaultDevices = [
+            { deviceType: '171B', typeCode: '171B', address: '01', barCode: '', deviceId: '171B001', name: 'DCDC设备' },
+            { deviceType: '171C', typeCode: '171C', address: '01', barCode: '', deviceId: '171C001', name: '设备171C' },
+            { deviceType: '171D', typeCode: '171D', address: '1E', barCode: '', deviceId: '171D001', name: '设备171D' },
+            { deviceType: '171E', typeCode: '171E', address: '06', barCode: '', deviceId: '171E001', name: '设备171E' }
+          ];
+          deviceList.push(...defaultDevices);
+        }
       }
-      if (deviceList.length === 0) {
-        const defaultDevices = [
-          { deviceType: '171B', typeCode: '171B', address: '01', barCode: '', deviceId: '171B001', name: 'DCDC设备' },
-          { deviceType: '171C', typeCode: '171C', address: '01', barCode: '', deviceId: '171C001', name: '设备171C' },
-          { deviceType: '171D', typeCode: '171D', address: '1E', barCode: '', deviceId: '171D001', name: '设备171D' },
-          { deviceType: '171E', typeCode: '171E', address: '06', barCode: '', deviceId: '171E001', name: '设备171E' }
-        ];
-        deviceList.push(...defaultDevices);
+
+      // 兜底：如果全部设备 barCode 都为空，用 currentDevice.areaId 作为 fallback
+      const fallbackBarCode = currentDevice?.areaId ? String(currentDevice.areaId) : ''
+      if (fallbackBarCode && deviceList.every(c => !c.barCode)) {
+        console.warn('[社区监控] 所有设备 barCode 为空，使用 areaId=' + fallbackBarCode + ' 作为 fallback')
+        deviceList.forEach(c => { c.barCode = fallbackBarCode })
       }
+
       realtimeDataProvider.initDeviceList(deviceList);
       this.deviceList = [...realtimeDataProvider.getDeviceList()];
       console.log(this.deviceList, 'deviceList111111111');
@@ -1506,6 +2257,25 @@ export default {
   letter-spacing: 0.5rpx;
 }
 
+/* 机器运行状态多徽标：状态独立着色，多位命中时换行展示 */
+.state-badge {
+  display: inline-block;
+  margin: 2rpx 4rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 6rpx;
+  font-size: 22rpx;
+  font-weight: 500;
+  line-height: 1.5;
+
+  &.badge-success { color: #15803d; background: #dcfce7; }
+  &.badge-danger { color: #b91c1c; background: #fee2e2; }
+  &.badge-warn { color: #c2410c; background: #ffedd5; }
+  &.badge-info { color: #1d4ed8; background: #dbeafe; }
+  &.badge-primary { color: #0f766e; background: #ccfbf1; }
+  &.badge-muted { color: #64748b; background: #f1f5f9; }
+  &.badge-default { color: #475569; background: #e2e8f0; }
+}
+
 .status-grid {
   display: flex;
   flex-wrap: wrap;
@@ -1566,5 +2336,17 @@ export default {
   color: #999;
   font-size: 28rpx;
   padding: 40rpx 0;
+}
+
+.fault-word {
+  margin-bottom: 20rpx;
+  width: 100%;
+}
+
+.fault-word-title {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+  font-weight: 600;
 }
 </style>

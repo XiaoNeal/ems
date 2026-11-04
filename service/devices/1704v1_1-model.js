@@ -1,57 +1,104 @@
 import DeviceBase from "./device-base.model"
 
-export class Model1704v1_1 extends DeviceBase{
+export class Model1704v1_1 extends DeviceBase {
+    energyData
+    stateData
+    controlData
+
     constructor(number) {
-        super();
+        super()
         const str = number ? '簇' + number : ''
-        this.energyData = {
-            voltage: { name: str + '电压(V)', value: '--' },
-            current: { name: str + '电流(A)', value: '--' },
-            soc: { name: str + 'SOC', value: '--' },
-            soh: { name: str + 'SOH', value: '--' },
-            soe: { name: str + 'SOE', value: '--' },
-            maxCellVoltage: { name: str + '单体最高电压(V)', value: '--' },
-            maxCellVoltageId: { name: str + '单体最高电压ID', value: '--' },
-            minCellVoltage: { name: str + '单体最低电压(V)', value: '--' },
-            minCellVoltageId: { name: str + '单体最低电压ID', value: '--' },
-            maxCellTemperature: { name: str + '单体最高温度(℃)', value: '--' },
-            maxCellTemperatureId: { name: str + '单体最高温度ID', value: '--' },
-            minCellTemperature: { name: str + '单体最低温度(℃)', value: '--' },
-            minCellTemperatureId: { name: str + '单体最低温度ID', value: '--' },
-        }
-        this.stateData = {
-            runState: { name: str + '运行状态', value: '--' },
-            chargeState: { name: str + '充放电状态', value: '--' },
-            alarmLevel: { name: str + '告警等级', value: '--' },
-            chargerState: { name: str + '预充电器状态', value: '--' },
-            mainNegativeState: { name: str + '主负继电器状态', value: '--' },
-            mainPositiveState: { name: str + '主正继电器状态', value: '--' },
-        }
+        this.energyData = new EnergyData(str)
+        this.stateData = new StateData(str)
+        this.controlData = new ControlData()
     }
 
     getEnergyData(jsonData) {
-        this.energyData.voltage.value = jsonData.B38;
-        this.energyData.current.value = jsonData.B40;
-        this.energyData.soc.value = jsonData.B42;
-        this.energyData.soh.value = jsonData.B44;
-        this.energyData.soe.value = jsonData.B46;
-        this.energyData.maxCellVoltage.value = jsonData.B48;
-        this.energyData.maxCellVoltageId.value = jsonData.B50;
-        this.energyData.minCellVoltage.value = jsonData.B52;
-        this.energyData.minCellVoltageId.value = jsonData.B54;
-        this.energyData.maxCellTemperature.value = jsonData.B56;
-        this.energyData.maxCellTemperatureId.value = jsonData.B58;
-        this.energyData.minCellTemperature.value = jsonData.B60;
-        this.energyData.minCellTemperatureId.value = jsonData.B62;
+        const data = jsonData.data || jsonData
+        const fields = [
+            ['voltage', 'B38'], ['current', 'B40'], ['soc', 'B42'],
+            ['soh', 'B44'], ['soe', 'B46'],
+            ['maxCellVoltage', 'B48'], ['maxCellVoltageId', 'B50'],
+            ['minCellVoltage', 'B52'], ['minCellVoltageId', 'B54'],
+            ['maxCellTemperature', 'B56'], ['maxCellTemperatureId', 'B58'],
+            ['minCellTemperature', 'B60'], ['minCellTemperatureId', 'B62']
+        ]
+        for (const [field, key] of fields) {
+            if (data[key] != null && data[key] !== '' && data[key] !== '--') {
+                this.energyData[field].value = data[key]
+            }
+        }
     }
 
     getStatusData(jsonData) {
-        this.stateData.runState.value = jsonData.B6;
-        this.stateData.chargeState.value = jsonData.B8;
-        this.stateData.alarmLevel.value = jsonData.B10;
-        this.stateData.chargerState.value = jsonData.B12;
-        this.stateData.mainNegativeState.value = jsonData.B14;
-        this.stateData.mainPositiveState.value = jsonData.B16;
+        const data = jsonData.data || jsonData
+        const stateFields = [
+            ['runState', 'B6'], ['chargeState', 'B8'],
+            ['alarmLevel', 'B10'], ['chargerState', 'B12'],
+            ['mainNegativeState', 'B14'], ['mainPositiveState', 'B16']
+        ]
+        const enumMap = {
+            'runState': runStateEnum,
+            'chargeState': chargeStateEnum,
+            'alarmLevel': alarmLevelEnum,
+            'chargerState': circuitStateEnum,
+            'mainNegativeState': circuitStateEnum,
+            'mainPositiveState': circuitStateEnum
+        }
+        for (const [field, key] of stateFields) {
+            if (data[key] != null) {
+                const val = String(data[key])
+                this.stateData[field].value = enumMap[field][val] || val
+            }
+        }
     }
+}
 
+class EnergyData {
+    constructor(str) {
+        this.voltage = { name: str + '电压(V)', value: '--', unit: 'V' }
+        this.current = { name: str + '电流(A)', value: '--', unit: 'A' }
+        this.soc = { name: str + 'SOC', value: '--', unit: '%' }
+        this.soh = { name: str + 'SOH', value: '--', unit: '%' }
+        this.soe = { name: str + 'SOE', value: '--', unit: '%' }
+        this.maxCellVoltage = { name: str + '单体最高电压(V)', value: '--', unit: 'V' }
+        this.maxCellVoltageId = { name: str + '单体最高电压ID', value: '--' }
+        this.minCellVoltage = { name: str + '单体最低电压(V)', value: '--', unit: 'V' }
+        this.minCellVoltageId = { name: str + '单体最低电压ID', value: '--' }
+        this.maxCellTemperature = { name: str + '单体最高温度(℃)', value: '--', unit: '℃' }
+        this.maxCellTemperatureId = { name: str + '单体最高温度ID', value: '--' }
+        this.minCellTemperature = { name: str + '单体最低温度(℃)', value: '--', unit: '℃' }
+        this.minCellTemperatureId = { name: str + '单体最低温度ID', value: '--' }
+    }
+}
+
+class StateData {
+    constructor(str) {
+        this.runState = { name: str + '运行状态', value: '--' }
+        this.chargeState = { name: str + '充放电状态', value: '--' }
+        this.alarmLevel = { name: str + '告警等级', value: '--' }
+        this.chargerState = { name: str + '预充电器状态', value: '--' }
+        this.mainNegativeState = { name: str + '主负继电器状态', value: '--' }
+        this.mainPositiveState = { name: str + '主正继电器状态', value: '--' }
+    }
+}
+
+class ControlData {
+}
+
+const runStateEnum = {
+    '0': '初始化', '1': '开路静置', '2': '禁充放',
+    '3': '正常状态', '4': '禁充', '5': '禁放'
+}
+
+const chargeStateEnum = {
+    '0': '初始化', '1': '充电', '2': '放电', '3': '静置'
+}
+
+const alarmLevelEnum = {
+    '0': '无告警', '1': '一级告警', '2': '二级告警', '3': '三级告警'
+}
+
+const circuitStateEnum = {
+    '0': '断开', '1': '闭合'
 }

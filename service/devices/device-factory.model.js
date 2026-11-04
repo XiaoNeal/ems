@@ -14,13 +14,28 @@ import { Model171E } from './171E-model.js'
 import { Model171B } from './171B-model.js'
 import { Model171C } from './171C-model.js'
 import { Model171D } from './171D-model.js'
-import { Model171F } from './171F-model.js'
+import { Model171F, Model171F_V2 } from './171F-model.js'
 import { Model1714 } from './1714-model.js'
 import { Model1712 } from './1712-model.js'
 import { Model1713 } from './1713-model.js'
 import { Model0318V2_3 } from './0318V2_3-model.js'
 import { Model171C_V2 } from './171C_V2-model.js'
+import { Model172A } from './172A-model.js'
+import { Model3301 } from './3301-model.js'
+import { Model171C_V2_1 } from './171C_V2_1-model.js'
+import { Model171C_V2_2 } from './171C_V2_2-model.js'
+import { Model171C_V2_3 } from './171C_V2_3-model.js'
+import { Model171C_V2_4 } from './171C_V2_4-model.js'
+import { Model131C_V2 } from './131C_V2-model.js'
+import { Model1712_V3 } from './1712_V3-model.js'
 import { Model1707V3_5 } from './1707V3_5-model.js'
+
+// 带版本后缀的类型码 → 内部基础类型码
+// 只登记「App 内没有单独页面、统一按基础类型处理」的设备，
+// 171C_V2 / 171D 等仍需按后缀区分协议的不要放进来。
+const DEVICE_TYPE_ALIASES = {
+	'171F_V2': '171F',
+}
 
 export class DeviceFactory {
 	static create(jsonData, gateway) {
@@ -117,6 +132,22 @@ export class DeviceFactory {
 				dev = new Model171C_V2()
 				break;
 			}
+			case '171C_V2_1':{
+				dev = new Model171C_V2_1()
+				break;
+			}
+			case '171C_V2_2':{
+				dev = new Model171C_V2_2()
+				break;
+			}
+			case '171C_V2_3':{
+				dev = new Model171C_V2_3()
+				break;
+			}
+			case '171C_V2_4':{
+				dev = new Model171C_V2_4()
+				break;
+			}
 			case '171D':{
 				dev = new Model171D()
 				break;
@@ -128,6 +159,11 @@ export class DeviceFactory {
 			case '171F':{
 				console.log(jsonData,"----------171F-------------")
 				dev = new Model171F()
+				break;
+			}
+			// 50kW 微能站：EMS 网关 typeCode 带版本后缀（171F_V2），协议见 171F.js protocol_171F_V2
+			case '171F_V2':{
+				dev = new Model171F_V2()
 				break;
 			}
 			case '1714':{
@@ -147,27 +183,48 @@ export class DeviceFactory {
 				dev = new Model1713()
 				break;
 			}
-			case '0318V2_3':{
+			case '0318V2_3':
+			case '0318_V2_3':{
 				dev = new Model0318V2_3()
 				break;
 			}
-			case '1707V3_5':{
+			case '1707V3_5':
+			case '1707_V3_5':{
 				dev = new Model1707V3_5()
 				break;
 			}
-	
-			
-
+			case '131C_V2':{
+				dev = new Model131C_V2()
+				break;
+			}
+			case '1712_V3':{
+				dev = new Model1712_V3()
+				break;
+			}
+			case '172A':{
+				dev = new Model172A()
+				break;
+			}
+			case '3301':{
+				dev = new Model3301()
+				break;
+			}
 			default:
 			console.warn('未知 deviceType:', jsonData.deviceType)
 			break;
 		}
 
 		if (dev) {
-			dev.address = jsonData.address;
-			dev.deviceType = jsonData.deviceType
+			// 类型别名：50kW 服务端下发的 EMS 网关是 171F_V2（协议 V2.0），
+			// 但页面（架构图 / 储能 / 电网 / 负荷 / 直连页）统一按 deviceType === '171F'
+			// 取网关数据，帧头也只有 4 位类型码。这里把实例的 deviceType 归一化回基础类型，
+			// 原始类型码保留在 rawDeviceType，便于按需区分协议版本。
+			const rawType = jsonData.deviceType
+			dev.deviceType = DEVICE_TYPE_ALIASES[rawType] || rawType
+			dev.rawDeviceType = rawType
 			// 设置 typeCode：对于 0305 类型映射为 1714
-			dev.typeCode = jsonData.deviceType === '0305' ? '1714' : jsonData.deviceType
+			dev.typeCode = rawType === '0305' ? '1714' : rawType
+			dev.address = jsonData.address;
 			dev.barCode = gateway
 			dev.deviceId = jsonData.deviceId
 			dev.name = jsonData.name

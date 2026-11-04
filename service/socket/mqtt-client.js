@@ -12,7 +12,22 @@
  */
 
 import { LightMqttClient, testMqttConnection as _testMqttConnection } from './light-mqtt-client.js'
-import { buildIemsCommandFrame } from './iems-frame-parser.js'
+import { buildIemsCommandFrame, normalizeRegisterAddress } from './iems-frame-parser.js'
+import { resolveDeviceProfile } from './control-device-profile.js'
+
+/**
+ * 控制帧下行载荷格式（设备侧 MQTT 通道是文本协议，改这一行即可切换）
+ *   'hex'    —— 发 "16 34 01 00 ..." 空格分隔的 hex 文本（默认，与平台/设备一致）
+ *   'json'   —— 发 {"Send Data":"16 34 01 ..."}（网关要求 JSON 信封时）
+ *   'binary' —— 直接发原始 Uint8Array（仅当设备端按二进制帧解析时才可用）
+ *
+ * 注意：发原始二进制会被设备侧按 UTF-8 文本解码成乱码，判为「无法识别的消息格式」；
+ *      同时本机订阅同一个 control topic，回环消息也会在日志里显示成一串乱码。
+ */
+const CONTROL_PAYLOAD_MODE = 'hex'
+
+/** hex 文本的字节分隔符（' ' → "16 34 01"；'' → "163401"） */
+const CONTROL_HEX_SEPARATOR = ' '
 
 export class MqttDirectClient {
   constructor(config = {}) {
@@ -33,6 +48,7 @@ export class MqttDirectClient {
     this.client = null
     this.connected = false
     this.connecting = false
+    this._connectPromise = null
 
     this.onConnect = null
     this.onDisconnect = null
@@ -62,7 +78,26 @@ export class MqttDirectClient {
 
   async connect() {
     if (this.connected) return true
+    // 并发去重：页面 onShow / 手动重连可能同时触发
+    if (this._connectPromise) return this._connectPromise
     if (!this.brokerUrl) throw new Error('未配置 Broker URL')
+    this._connectPromise = this._doConnect()
+    try {
+      return await this._connectPromise
+    } finally {
+      this._connectPromise = null
+    }
+  }
+
+  async _doConnect() {
+    console.log('[MQTT-client] connect() brokerUrl=', this.brokerUrl, 'realtimeTopic=', this.realtimeTopic, 'controlSetTopic=', this.controlSetTopic, 'clientId=', this.clientId)
+
+    // 重建前必须先销毁旧实例：旧 LightMqttClient 自带重连定时器和 TCPSocket，
+    // 不销毁则每次重连都多一个“幽灵客户端”，很快耗尽微信 TCPSocket 的并发名额（5 个）
+    if (this.client) {
+      try { this.client.disconnect() } catch (e) {}
+      this.client = null
+    }
 
     this.connecting = true
 
@@ -123,6 +158,25 @@ export class MqttDirectClient {
 
   async publish(topic, message, opts = { qos: 1 }) {
     if (!this.client || !this.connected) throw new Error('未连接到 Broker')
+    // 报文日志：hex 字符串原样输出，二进制转 hex，方便与设备侧抓包比对
+    let payloadLog
+    let payloadLen
+    if (typeof message === 'string') {
+      payloadLog = message
+      payloadLen = message.length
+    } else if (message && message.length !== undefined) {
+      payloadLog = Array.from(message).map(b => b.toString(16).padStart(2, '0')).join(' ')
+      payloadLen = message.length
+    } else {
+      payloadLog = String(message)
+      payloadLen = payloadLog.length
+    }
+    console.log('---------- MQTT PUBLISH ----------')
+    console.log('[PUBLISH] topic  :', topic)
+    console.log('[PUBLISH] qos    :', (opts && opts.qos), '| retain:', (opts && opts.retain) || false)
+    console.log('[PUBLISH] length :', payloadLen)
+    console.log('[PUBLISH] payload:', payloadLog)
+    console.log('----------------------------------')
     return this.client.publish(topic, message, opts)
   }
 
@@ -160,51 +214,64 @@ export class MqttDirectClient {
       if (!Number.isInteger(regAddress)) throw new Error('sendControl: 字段 ' + field + ' 的寄存器地址不是偶数')
     }
 
-    // 按设备类型映射命令字段（参考各 Settings 组件）
-    const deviceCmdDefaults = {
-      // deviceCategory = 设备类型码本身
-      deviceCategory: dt,
-      registerType: '03',
-      // addr / deviceId 特殊映射：PV 和 Storage 有独立地址
-      ...({
-        '171E': { addr: 6,    deviceId: '6' },     // PV 逆变器
-        '171D': { addr: 30,   deviceId: '30' },    // 储能 DC-DC
-        '171B': { addr: '01', deviceId: '0001' },  // PCS
-        '171C': { addr: '01', deviceId: '0001' },  // BMS
-        '171F': { addr: '01', deviceId: '0001' },  // 能量控制器
-      })[dt] || { addr: '01', deviceId: '0001' },
+    // 0x3401 附件2 的地址列是十进制（331 就是 331，不是 0x331），统一按十进制规整后进帧
+    regAddress = normalizeRegisterAddress(regAddress)
+
+    // 值缺失时提前报错：直接进帧构造函数只会得到一句「字段不能为空」，
+    // 看不出是哪个字段、哪个参数，现场排查成本很高
+    if (value === undefined || value === null || String(value).trim() === '') {
+      throw new Error(
+        '下发值为空：字段 ' + (field === undefined || field === null ? '(未指定)' : field) +
+        '，寄存器地址 ' + regAddress + '（十进制）'
+      )
+    }
+
+    // 设备身份（大类小类 / 索引号 / 设备 ID）按 0x3401 附件1 取，
+    // 不再把 50kW 的模块级协议码（1707/170C）直接当控制类型码下发
+    const profile = resolveDeviceProfile(dt)
+    const command = {
+      deviceCategory: profile.category,
+      addr: profile.addr,
+      deviceId: profile.deviceId,
+      registerType: 3,          // 补充说明：3=保持寄存器，线圈类用 overrides.regType 覆盖
       extra1: '00',
       extra2: '0000',
       extra3: '0000',
-    }
-
-    // 合并 overrides（最高优先级）
-    const command = {
-      ...deviceCmdDefaults,
       ...overrides,
       registerAddress: regAddress,
       registerValue: value,
     }
+    if (overrides.regType !== undefined) command.registerType = overrides.regType
 
-    // 构建 IEMS 命令控制帧 —— 帧头 deviceType 固定 '3401'（控制帧类型码）
-    // 参考 Settings 组件 typeCode: '3401'
+    // 构建 IEMS 命令控制帧 —— 帧头 deviceType 固定 '3401'（远程控制协议类型码）
     const frame = buildIemsCommandFrame('3401', [command])
-    // 转为 hex 字符串（真实设备 MQTT 传输格式）
-    const frameHex = Array.from(frame).map(b => b.toString(16).padStart(2, '0')).join(' ')
+    // hex 文本（下发载荷 + 日志比对都用它，避免二进制在日志/设备侧显示为乱码）
+    const frameHex = Array.from(frame).map(b => b.toString(16).padStart(2, '0')).join(CONTROL_HEX_SEPARATOR)
+    // 记录最近一帧，供页面识别「本机回环消息」，避免自己发的帧被当成设备应答
+    this._lastControlHex = frameHex.replace(/[\s,]/g, '').toUpperCase()
+    this._lastControlAt = Date.now()
 
     console.log('========== MQTT 命令帧下发 (MqttDirectClient) ==========')
     console.log('[MQTT] topic        :', topic)
-    console.log('[MQTT] frameDeviceType (帧头) : 3401')
-    console.log('[MQTT] deviceCategory (命令)  :', command.deviceCategory)
+    console.log('[MQTT] frameDeviceType (帧头) : 3401  dataType=0xC2')
+    console.log('[MQTT] deviceCategory (命令)  :', command.deviceCategory,
+      ' 索引号:', command.addr, ' 设备ID:', command.deviceId)
     console.log('[MQTT] field        :', field)
-    console.log('[MQTT] registerAddr :', regAddress, '(0x' + Number(regAddress).toString(16).toUpperCase() + ')')
+    console.log('[MQTT] registerAddr :', regAddress, '(十进制) → 0x' + regAddress.toString(16).toUpperCase().padStart(8, '0'))
     console.log('[MQTT] registerValue:', value)
     console.log('[MQTT] registerType :', command.registerType)
-    console.log('[MQTT] addr/deviceId:', command.addr, '/' + command.deviceId)
+    console.log('[MQTT] frame length :', frame.length, 'bytes')
+    console.log('[MQTT] payload mode :', CONTROL_PAYLOAD_MODE)
     console.log('[MQTT] hex string   :', frameHex)
     console.log('=======================================================')
 
-    // 发 hex 字符串，不是二进制
+    // 按设备侧实际协议下发：默认 hex 文本
+    if (CONTROL_PAYLOAD_MODE === 'binary') {
+      return this.publish(topic, frame, { qos: 1 })
+    }
+    if (CONTROL_PAYLOAD_MODE === 'json') {
+      return this.publish(topic, JSON.stringify({ 'Send Data': frameHex }), { qos: 1 })
+    }
     return this.publish(topic, frameHex, { qos: 1 })
   }
 

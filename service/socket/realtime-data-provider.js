@@ -234,10 +234,29 @@ export class RealtimeDataProviderService {
 		this.barCode = new Set()
 		store.commit('CLEAR_DEVICE_STATE');
 	}
+	/**
+	 * 全量替换设备列表：unregister 旧监听 → 清旧实例 → 重新 push + bind 新设备。
+	 * 适合首页 fetchDeviceList 这种"整批换设备"的场景。
+	 */
+	replaceDeviceList(deviceList) {
+		this.ensureConnected();
+		this.unregister();
+		this.deviceList = []
+		this.modelKeyMap.clear()
+		store.commit('CLEAR_DEVICE_STATE')
+		this.initDeviceList(deviceList)
+	}
+
+	/**
+	 * 增量追加设备：保留旧设备，新设备通过 modelKeyMap 去重。
+	 * 适合 Monitor/社区等子组件的补充注册场景。
+	 */
 	initDeviceList(deviceList) {
+		// 先确保 socket 已创建（登录后延迟初始化、重连场景都需要）
+		this.ensureConnected();
+
 		for (let i = 0; deviceList && i < deviceList.length; i++) {
-			let barCode = deviceList[i].barCode || deviceList[i].barcode
-			if (!barCode) continue
+			let barCode = deviceList[i].barCode || deviceList[i].barcode || ''
 			let address = deviceList[i].address
 			// 使用原始 deviceType 用于 WebSocket 匹配
 			let deviceType = deviceList[i].deviceType || deviceList[i].typeCode
@@ -313,6 +332,9 @@ export class RealtimeDataProviderService {
 	}
 
 	bindDevicesRealtimeData(barCode) {
+		// barCode 为空则跳过——服务端不会把 IEMS 数据推给空 barCode
+		if (!barCode) return;
+
 		// 直连模式或未登录下跳过云端 WebSocket 绑定——数据由 MQTT/Modbus 提供或用户未登录
 		if (shouldSkipCloudSocket()) {
 			return;
@@ -392,7 +414,12 @@ export class RealtimeDataProviderService {
 		}
 		socket.on('connect', () => {
 			console.log("socket已连接上");
-
+			// 首次连接成功：重放已注册设备的 register。
+			// 登录后 fetchDeviceList/register 往往在 socket 尚未 connected 时执行，
+			// 此时 emit 依赖 socket.io 层 sendBuffer 隐式补发，uni 环境下该时机不可靠，
+			// 会导致服务端收不到 register、实时数据一直不来（刷新时 socket 已连上才正常）。
+			// 这里与 reconnect 分支一致地显式重放，保证首次连接后服务端一定能收到注册。
+			this.reRegisterAllDevices();
 		})
 		socket.on('connect_timeout', (timeout, error) => {
 			console.log("socket超时", timeout, error)
@@ -426,15 +453,22 @@ export class RealtimeDataProviderService {
 			// 从store中获取barCodes
 			const storeBarCodes = store.state.barCodes;
 			console.log('socket重新连接成功，尝试次数:', attemptNumber, storeBarCodes);
-			// this.initDeviceList(deviceLists)
 			// 重新注册设备
-			if (storeBarCodes && storeBarCodes.size > 0) {
-				console.log('重新注册设备:', storeBarCodes);
-				storeBarCodes.forEach((value) => {
-					if (socket) {
-						socket.emit('register', value);
-					}
-				});
+			this.reRegisterAllDevices();
+		});
+	}
+
+	/**
+	 * 重放注册当前 store 中已登记的全部 barCode（首次 connect 与 reconnect 共用）。
+	 * 只对 socket 已存在、barCode 非空的设备重发 register，
+	 * 避免空 barCode 被注册到服务端。
+	 */
+	reRegisterAllDevices() {
+		const storeBarCodes = store.state.barCodes;
+		if (!storeBarCodes || storeBarCodes.size === 0) return;
+		storeBarCodes.forEach((value) => {
+			if (socket && value) {
+				socket.emit('register', value);
 			}
 		});
 	}

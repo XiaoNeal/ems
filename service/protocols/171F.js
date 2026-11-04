@@ -234,3 +234,55 @@ export const protocol_171F_000A = {
     return parseStruct(bytes, energyControlDataFields)
   },
 }
+
+/* ------------------------------------------------------------------
+ * 50kW 微能站 171F V2.0
+ * 来源：(0x171F)源储网荷页面显示协议(TCP) EMSV2.0 表
+ * 与 000A(V1) 的差异：
+ *   能源数据：B46/B50 由「预留」改为 储能累计充电量/放电量（int32，×100，0.01kWh）
+ *             B70/B74 由「预留」改为 负荷累计用电量/馈电量（int32，×100，0.01kWh）
+ *             字节布局不变，仍为 192 字节（原连续预留字节被 4 字节字段覆盖）
+ *   控制数据：末尾新增 B224/B226 电网侧目标功率与波动幅度（自发自用），228 字节
+ * 其余字段名、类型、系数与 V1 一致 —— 页面绑定 device171F.energyData.B0 等不受影响
+ * ------------------------------------------------------------------ */
+const V2_REPLACED_FIELDS = {
+  B46: { name: 'B46', cType: INT32, scale: 100, desc: '储能累计充电量' },
+  B50: { name: 'B50', cType: INT32, scale: 100, desc: '储能累计放电量' },
+  B70: { name: 'B70', cType: INT32, scale: 100, desc: '负荷累计用电量' },
+  B74: { name: 'B74', cType: INT32, scale: 100, desc: '负荷累计馈电量' },
+}
+
+// 被 4 字节字段覆盖掉的后续预留字节，必须剔除，否则解析位置整体偏移
+const V2_DROPPED_FIELDS = [
+  'B47', 'B48', 'B49',
+  'B51', 'B52', 'B53',
+  'B71', 'B72', 'B73',
+  'B75', 'B76', 'B77',
+]
+
+const energyDataFieldsV2 = energyDataFields
+  .filter(f => V2_DROPPED_FIELDS.indexOf(f.name) === -1)
+  .map(f => V2_REPLACED_FIELDS[f.name] || f)
+
+const energyControlDataFieldsV2 = [
+  ...energyControlDataFields,
+  { name: 'B224', cType: INT16, scale: 10, desc: '电网侧目标功率（自发自用）' },
+  { name: 'B226', cType: INT16, scale: 10, desc: '电网侧目标功率上下边界波动幅度（自发自用）' },
+]
+
+export const protocol_171F_V2 = {
+  deviceType: '171F_V2',
+  version: 'V2.0',
+  structs: {
+    energyData: { fields: energyDataFieldsV2, bytes: 192 },
+    energyControlData: { fields: energyControlDataFieldsV2, bytes: 228 },
+  },
+
+  parseEnergyData(bytes) {
+    return parseStruct(bytes, energyDataFieldsV2)
+  },
+
+  parseEnergyControlData(bytes) {
+    return parseStruct(bytes, energyControlDataFieldsV2)
+  },
+}

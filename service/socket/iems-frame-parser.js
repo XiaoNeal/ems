@@ -94,9 +94,11 @@ export function isIemsBinaryFrame(bytes) {
 /**
  * 解析一整条 IEMS 帧
  * @param {Uint8Array} frame 完整帧
+ * @param {object} [options] 可选：{ protocolKey } 指定协议模块 key（如 '171C_V2'），
+ *        用于同一设备类型码下新旧协议并存的场景（50kW 微能站新协议）
  * @returns {object} 与 DataCenter GetParseStringWithTimeStamp 输出一致的 JSON
  */
-export function parseIemsFrame(frame) {
+export function parseIemsFrame(frame, options) {
   if (!frame || frame.length < FRAME_MIN_LEN) {
     throw new Error('IEMS 帧长度不足：' + (frame ? frame.length : 0))
   }
@@ -168,7 +170,7 @@ export function parseIemsFrame(frame) {
   // 解析 payload → B 字段
   // 优先使用协议模块（含缩放/偏移/位域），回退到通用 16 位解析
   const deviceTypeHex = padHex(deviceType, 4)
-  const data = parsePayloadWithProtocol(payload, deviceTypeHex, dataType)
+  const data = parsePayloadWithProtocol(payload, deviceTypeHex, dataType, options && options.protocolKey)
 
   // 打印解析后的数据
   const dataTypeName = dataType === 2 ? '能源' : dataType === 4 ? '控制' : dataType === 1 ? '设备信息' : '未知'
@@ -219,11 +221,12 @@ export function parseIemsFrame(frame) {
  * @param {number} dataType - 数据类型 (IEMS_DATA_TYPE 枚举值)
  * @returns {Object} 解析后的 B 字段对象
  */
-function parsePayloadWithProtocol(payload, deviceTypeHex, dataType) {
+function parsePayloadWithProtocol(payload, deviceTypeHex, dataType, protocolKey) {
   // 尝试匹配协议模块（含版本前缀匹配，如 '171C' 匹配 '171C_V1_1'）
   const registry = getProtocolRegistry()
-  let protocol = registry[deviceTypeHex]
-  if (!protocol) {
+  // 显式指定协议（50kW 微能站新协议与旧协议同类型码并存时使用）
+  let protocol = protocolKey ? registry[protocolKey] : registry[deviceTypeHex]
+  if (!protocol && !protocolKey) {
     // 尝试版本前缀匹配
     for (const key of Object.keys(registry)) {
       if (deviceTypeHex.startsWith(key) || key.startsWith(deviceTypeHex + '_')) {
@@ -497,14 +500,15 @@ function padHex(num, width) {
  *   address(1B) + dataLength(1B) + dataType(1B "C2") +
  *   startAddress(1B) + validData(NB) + CRCCode(2B 大端)
  *
- * validData 结构（参考 Java buildCommandFrameData）：
- *   命令个数(1B) + 控制类型(4B=0) + 预留(2B=0) + 预留(2B=0) + N条19B命令
+ * validData 结构（严格对齐 0x3401 协议「控制数据」列，总长 9 + 19N）：
+ *   命令个数(1B) + 控制类型(1B，预留) + 预留(7B) + N 条 19 字节命令
  *
- * 每条命令19字节（9个字段，注意：没有 valueType！）：
- *   deviceCategory(2B) + addr(1B) + deviceId(2B) + registerAddress(4B) +
- *   registerValue(4B) + registerType(1B) + extra1(1B) + extra2(2B) + extra3(2B)
+ * 每条命令 19 字节（对齐协议附件1「涉及设备」字节偏移 0~18）：
+ *   deviceCategory(2B：大类1B + 小类1B) + addr(1B 索引号) + deviceId(2B) +
+ *   registerAddress(4B) + registerValue(4B) + registerType(1B 补充说明：1线圈/2离散/3保持/4输入) +
+ *   extra1(1B) + extra2(2B) + extra3(2B)
  *
- * @param {string} deviceType 设备类型码（如 '171C'、'3401'）
+ * @param {string} deviceType 帧头设备类型码（控制帧固定 '3401'）
  * @param {Array} commands 命令列表 [{ registerAddress: number|string, registerValue: number|string, ... }]
  * @param {object} [opts] 可选参数 { address, startAddress, deviceCategory, addr, deviceId, registerType, extra1, extra2, extra3 }
  * @returns {Uint8Array} 完整帧字节数组
@@ -521,37 +525,38 @@ export function buildIemsCommandFrame(deviceType, commands, opts = {}) {
   const defaults = {
     address: '01',
     startAddress: '00',
-    deviceCategory: '0102',
+    deviceCategory: '171B',
     addr: '01',
     deviceId: '0001',
-    registerType: '01',
+    registerType: 3,
     extra1: '00',
     extra2: '0000',
     extra3: '0000',
     ...opts
   }
 
+  const pick = (v, fallback) => (v === undefined || v === null || String(v).trim() === '' ? fallback : v)
+
   // 1. 构建 validData
   let validData = ''
   // 命令个数 1字节
   validData += toHexStr(commands.length, 1)
-  // 控制类型 4字节=0
-  validData += toHexStr(0, 4)
-  // 预留 2字节=0
-  validData += toHexStr(0, 2)
-  // 预留 2字节=0
-  validData += toHexStr(0, 2)
+  // 控制类型 1字节（预留）+ 预留 7字节 = 8 字节
+  validData += toHexStr(0, 8)
 
+  const detail = []
   for (const cmd of commands) {
-    validData += formatTwoByteDeviceCategory(cmd.deviceCategory || defaults.deviceCategory)
-    validData += padHexStr(cmd.addr || defaults.addr, 2)
-    validData += padHexStr(cmd.deviceId || defaults.deviceId, 4)
-    validData += padHexStr(cmd.registerAddress, 8)
-    validData += padHexStr(cmd.registerValue, 8)
-    validData += padHexStr(cmd.registerType || defaults.registerType, 2)
-    validData += padHexStr(cmd.extra1 || defaults.extra1, 2)
-    validData += padHexStr(cmd.extra2 || defaults.extra2, 4)
-    validData += padHexStr(cmd.extra3 || defaults.extra3, 4)
+    const category = formatTwoByteDeviceCategory(pick(cmd.deviceCategory, defaults.deviceCategory))
+    const addr = padHexStr(pick(cmd.addr, defaults.addr), 2)
+    const deviceId = padHexStr(pick(cmd.deviceId, defaults.deviceId), 4)
+    const regAddr = padHexStr(normalizeRegisterAddress(cmd.registerAddress), 8)
+    const regVal = padHexStr(cmd.registerValue, 8)
+    const regType = padHexStr(pick(cmd.registerType, defaults.registerType), 2)
+    const e1 = padHexStr(pick(cmd.extra1, defaults.extra1), 2)
+    const e2 = padHexStr(pick(cmd.extra2, defaults.extra2), 4)
+    const e3 = padHexStr(pick(cmd.extra3, defaults.extra3), 4)
+    validData += category + addr + deviceId + regAddr + regVal + regType + e1 + e2 + e3
+    detail.push({ category, addr, deviceId, regAddr, regVal, regType })
   }
 
   // 2. 组装帧头
@@ -574,8 +579,15 @@ export function buildIemsCommandFrame(deviceType, commands, opts = {}) {
   const fullHex = frameHex + crcHigh + crcLow
   const result = hexStringToBytes(fullHex)
 
-  console.log('[命令帧构建] deviceType=' + deviceType + ' commands=' + commands.length +
-    ' frameLen=' + result.length + 'bytes')
+  console.log('[命令帧构建] 帧头 deviceType=0x' + deviceType + ' dataType=0xC2 commandCount=' +
+    commands.length + ' validData=' + (validData.length / 2) + 'B frameLen=' + result.length + 'bytes')
+  detail.forEach((d, i) => {
+    console.log('[命令帧构建] 命令' + (i + 1) + ' 大类小类=0x' + d.category + ' 索引号=0x' + d.addr +
+      '(' + parseInt(d.addr, 16) + ') 设备ID=0x' + d.deviceId + '(' + parseInt(d.deviceId, 16) + ')' +
+      ' 寄存器地址=0x' + d.regAddr + '(' + parseInt(d.regAddr, 16) + ')' +
+      ' 寄存器值=0x' + d.regVal + '(' + parseInt(d.regVal, 16) + ')' +
+      ' 寄存器类型=0x' + d.regType)
+  })
   console.log('[命令帧构建] hex: ' + fullHex.match(/.{2}/g).join(' '))
 
   return result
@@ -604,20 +616,41 @@ function formatTwoByteDeviceCategory(deviceCategory) {
   return formatted.toUpperCase()
 }
 
-/** Hex 字符串左补零（支持 hex 字符串和十进制数字） */
+/**
+ * Hex 字符串左补零
+ *
+ * 进制判定规则（避免 331 这类地址被误当十六进制）：
+ *   1. 带 0x / 0X 前缀        → 明确是十六进制字面量（'0x14B' → 0x0000014B）
+ *   2. 含 A~F 字母            → 十六进制字面量
+ *   3. 其余（纯数字 / 负数）  → **十进制数值**，转成十六进制写入
+ *      '331' → 0x0000014B、'-50' → 0xFFFFFFCE
+ *
+ * 注意：0x 前缀必须在剥离前记下来。旧实现先剥 0x 再判断，导致
+ * '0x00010000' 被当成十进制 10000 → 0x00002710，值完全错位。
+ */
 function padHexStr(value, targetLength) {
   if (value === undefined || value === null || String(value).trim() === '') {
     throw new Error('字段不能为空')
   }
-  let formatted = String(value).trim()
-  if (formatted.startsWith('0x') || formatted.startsWith('0X')) {
-    formatted = formatted.substring(2)
+  let raw = String(value).trim()
+  const isHexLiteral = /^0[xX]/.test(raw)
+  if (isHexLiteral) raw = raw.substring(2)
+
+  let formatted
+  if (isHexLiteral || /[A-Fa-f]/.test(raw)) {
+    if (!/^[0-9A-Fa-f]+$/.test(raw)) {
+      throw new Error('字段不是有效的十六进制：' + value)
+    }
+    formatted = raw.toUpperCase()
+  } else {
+    const num = Math.round(Number(raw))
+    if (!Number.isFinite(num)) {
+      throw new Error('字段不是有效数字：' + value)
+    }
+    // 负数按 32 位补码输出（PCS 恒流充电电流 / 有功功率等是有符号量，负值代表放电）
+    formatted = (num < 0 ? num >>> 0 : num).toString(16).toUpperCase()
   }
-  // 纯数字（不含 A-F）→ 当作十进制转 hex
-  if (!/[A-Fa-f]/.test(formatted)) {
-    formatted = Math.round(Number(formatted)).toString(16)
-  }
-  formatted = formatted.toUpperCase()
+
   if (formatted.length > targetLength) {
     throw new Error('字段长度超过限制：' + value)
   }
@@ -625,6 +658,31 @@ function padHexStr(value, targetLength) {
     formatted = '0' + formatted
   }
   return formatted
+}
+
+/**
+ * 寄存器地址规整：0x3401 附件2 里的地址列一律是**十进制**（331、1077 …），
+ * 这里统一转成 number 再进帧，杜绝 '331' 被按十六进制拼成 0x00000331 的可能。
+ * 只有显式写 0x 前缀时才按十六进制解析。
+ */
+export function normalizeRegisterAddress(value) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    throw new Error('寄存器地址不能为空')
+  }
+  const s = String(value).trim()
+  if (/^0[xX]/.test(s)) {
+    const hex = parseInt(s, 16)
+    if (!Number.isFinite(hex)) throw new Error('寄存器地址不是有效十六进制：' + value)
+    return hex
+  }
+  if (/[A-Fa-f]/.test(s)) {
+    throw new Error('寄存器地址必须写十进制（附件2 地址列为十进制），收到：' + value)
+  }
+  const num = Number(s)
+  if (!Number.isFinite(num) || !Number.isInteger(num) || num < 0) {
+    throw new Error('寄存器地址必须是十进制非负整数：' + value)
+  }
+  return num
 }
 
 /** 数字转指定字节数 hex 字符串 */

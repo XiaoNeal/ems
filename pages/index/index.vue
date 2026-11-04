@@ -162,15 +162,22 @@ export default {
       console.log('[mounted] 触发 fetchDeviceList')
       this.fetchDeviceList()
     }
-    // 注册实时数据回调（活动页持有 legacy 单回调槽，已在 provider 内 300ms 节流）
-    this._realtimeCb = () => {
+    // 注册实时数据回调：使用 subscribe 多订阅者模式（避免与 Monitor.vue 的 onDataUpdate 单槽互相覆盖）
+    this._unsubscribeRealtime = realtimeDataProvider.subscribe(() => {
       this.device171FList = [...realtimeDataProvider.getDeviceList()]
-    }
-    realtimeDataProvider.onDataUpdate = this._realtimeCb
+    })
+    // 立即刷一次，避免首次 render 前订阅回调没机会触发
+    this.device171FList = [...realtimeDataProvider.getDeviceList()]
   },
   onHide() {
     // 页面隐藏（进入子页面）时暂停首页子组件们的订阅通知，避免后台渲染抢主线程
     realtimeDataProvider.setSubscribersPaused(true)
+  },
+  onUnload() {
+    if (typeof this._unsubscribeRealtime === 'function') {
+      this._unsubscribeRealtime()
+      this._unsubscribeRealtime = null
+    }
   },
   onLoad(options) {
     console.log('onLoad', options)
@@ -225,12 +232,16 @@ export default {
     if (!this.isDeviceListLoaded) {
       this._initEsIds()
     }
-    // 回到前台：恢复首页子组件订阅、重新持有实时回调并立即刷新一次
+    // 回到前台：恢复订阅者通知、确保回调已注册并立即刷新一次
     realtimeDataProvider.setSubscribersPaused(false)
-    if (this._realtimeCb) {
-      realtimeDataProvider.onDataUpdate = this._realtimeCb
-      this._realtimeCb()
+    // 确保订阅者已注册（onShow 可能在 mounted 之前触发？uni-app 通常是 mounted → onShow，
+    // 但 reLaunch/redirectTo 后新页的 onShow 先于旧页销毁，做个兜底）
+    if (!this._unsubscribeRealtime) {
+      this._unsubscribeRealtime = realtimeDataProvider.subscribe(() => {
+        this.device171FList = [...realtimeDataProvider.getDeviceList()]
+      })
     }
+    this.device171FList = [...realtimeDataProvider.getDeviceList()]
   },
   onReady() {
     this.scrollToTop()
@@ -369,6 +380,11 @@ export default {
       }
     },
 
+    // EMS 网关类型判定：171F（V1 显示协议）与 171F_V2（50kW EMSV2.0）都算同一类网关
+    isEmsGatewayType(t) {
+      return /^171F(_V\d+)*$/i.test(String(t == null ? '' : t).trim())
+    },
+
     // 直接用设备列表注册 WebSocket，不依赖 store 状态
     registerDevices(list) {
       if (!list || list.length === 0) {
@@ -387,7 +403,11 @@ export default {
 
       const configs = validDevices.map(item => {
         const typeCode = (item.typeCode || '').trim() || String(item.deviceType || '');
-        const barCode = (item.homeBarCode || item.barCode || '').trim();
+        // barCode 可能存在于多种字段名下，逐一尝试
+        const barCode = (
+          item.homeBarCode || item.barCode || item.gateway || item.gateWay ||
+          item.serialCode || item.sn || item.serialNumber || item.deviceCode || item.code || ''
+        ).trim();
         return {
           deviceType: typeCode,
           typeCode: typeCode,
@@ -399,16 +419,27 @@ export default {
         };
       });
 
-      // 检查是否有 171F，没有则用第一个替代
-      const has171F = configs.some(c => c.typeCode === '171F');
+      // 兜底：如果全部设备 barCode 都为空，用 store.currentSelectDevice.areaId 作为 fallback
+      // （服务端通常按 areaId 聚合网关数据，areaId 是唯一的区域标识）
+      const fallbackBarCode = this.$store.state.currentSelectDevice?.areaId ? String(this.$store.state.currentSelectDevice.areaId) : ''
+      if (fallbackBarCode && configs.every(c => !c.barCode)) {
+        console.warn('[数据流] 所有设备 barCode 为空，使用 areaId=' + fallbackBarCode + ' 作为 fallback')
+        configs.forEach(c => { c.barCode = fallbackBarCode })
+      }
+
+      // 检查是否有 171F 设备（含 50kW 的 171F_V2 带版本后缀类型），没有则用第一个替代
+      const has171F = configs.some(c => this.isEmsGatewayType(c.typeCode) || this.isEmsGatewayType(c.rawDeviceType));
       if (!has171F && configs.length > 0) {
+        // 保留原类型码，避免把真实设备类型彻底覆盖掉（后续排查需要）
+        configs[0].rawDeviceType = configs[0].rawDeviceType || configs[0].typeCode;
         configs[0].deviceType = '171F';
         configs[0].typeCode = '171F';
         console.log('[数据流] 无171F设备，使用', configs[0].name, '作为汇总设备')
       }
 
       console.log('[数据流] 准备注册:', configs.length, '个设备')
-      realtimeDataProvider.initDeviceList(configs)
+      // 全量替换：unregister 旧监听 → 清旧实例 → 重新 push + bind 新设备
+      realtimeDataProvider.replaceDeviceList(configs)
       const registeredList = [...realtimeDataProvider.getDeviceList()];
       console.log('[数据流] 注册完成, 设备列表:', registeredList.length, '个设备')
       this.device171FList = registeredList;
@@ -441,9 +472,10 @@ export default {
       this.fromProfile = false
       console.log('选择设备:', device)
       
-      // 清空之前设备的数据
-      realtimeDataProvider.clearDeviceState()
-      
+      // 清空设备状态改为由新页面的 initDeviceList 全量替换时处理，
+      // 避免接口调用期间旧页面 deviceList 被提前清空导致 UI 空白。
+      // realtimeDataProvider.clearDeviceState() // 已移至 initDeviceList
+
       this.$store.commit('changeCurrentSelectDevice', device)
       // 保存设备选择到本地存储，防止刷新丢失
       uni.setStorageSync('currentSelectDevice', device)
@@ -520,7 +552,11 @@ export default {
       // 构建注册配置列表
       const configs = validDevices.map(item => {
         const typeCode = (item.typeCode || '').trim() || String(item.deviceType || '');
-        const barCode = (item.homeBarCode || item.barCode || '').trim();
+        // barCode 可能存在于多种字段名下，逐一尝试
+        const barCode = (
+          item.homeBarCode || item.barCode || item.gateway || item.gateWay ||
+          item.serialCode || item.sn || item.serialNumber || item.deviceCode || item.code || ''
+        ).trim();
         return {
           deviceType: typeCode,
           typeCode: typeCode,
@@ -532,10 +568,18 @@ export default {
         };
       });
 
-      // 检查是否有 171F 设备，没有则用第一个有效设备作为替代
-      const has171F = configs.some(c => c.typeCode === '171F');
+      // 兜底：如果全部设备 barCode 都为空，用 currentDevice.areaId 作为 fallback
+      const fallbackBarCode = currentDevice?.areaId ? String(currentDevice.areaId) : ''
+      if (fallbackBarCode && configs.every(c => !c.barCode)) {
+        console.warn('[数据流] register171FDevice 所有设备 barCode 为空，使用 areaId=' + fallbackBarCode + ' 作为 fallback')
+        configs.forEach(c => { c.barCode = fallbackBarCode })
+      }
+
+      // 检查是否有 171F 设备（含 50kW 的 171F_V2 带版本后缀类型），没有则用第一个有效设备作为替代
+      const has171F = configs.some(c => this.isEmsGatewayType(c.typeCode) || this.isEmsGatewayType(c.rawDeviceType));
       if (!has171F && configs.length > 0) {
-        // 用第一个有效设备作为汇总设备
+        // 用第一个有效设备作为汇总设备；原类型码留在 rawDeviceType 便于排查
+        configs[0].rawDeviceType = configs[0].rawDeviceType || configs[0].typeCode;
         configs[0].deviceType = '171F';
         configs[0].typeCode = '171F';
         configs[0].name = configs[0].name + '(汇总)';

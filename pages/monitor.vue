@@ -81,21 +81,25 @@ export default {
 
       let address = '';
       let barCode = '';
+      // 50kW 站的 EMS 网关 typeCode 是 171F_V2，注册时按实际类型创建（模型内部会归一为 171F）
+      let gatewayType = '171F';
 
       if (currentDevice.list && Array.isArray(currentDevice.list)) {
+        const isEmsType = t => /^171F(_V\d+)*$/i.test(String(t == null ? '' : t).trim());
         const foundDevice = currentDevice.list.find(item =>
-          item.typeCode === '171F' || item.deviceType === '171F' || item.description?.includes('171F')
+          isEmsType(item.typeCode) || isEmsType(item.deviceType) || item.description?.includes('171F')
         );
         if (foundDevice) {
           address = foundDevice.address || address;
           barCode = foundDevice.barCode || foundDevice.homeBarCode || barCode;
+          gatewayType = (foundDevice.typeCode || foundDevice.deviceType || '171F').trim() || '171F';
           console.log('找到171F设备:', foundDevice);
         }
       }
 
       const deviceConfig = {
-        deviceType: '171F',
-        typeCode: '171F',
+        deviceType: gatewayType,
+        typeCode: gatewayType,
         address: address,
         barCode: barCode,
         deviceId: '171F001',
@@ -166,24 +170,28 @@ export default {
     this.register171FDevice();
     // 监听屏幕旋转事件
     uni.onWindowResize(this.onOrientationChange);
-    // 注册实时数据回调（provider 内已 300ms 节流）
-    this._realtimeCb = () => {
+    // 使用 subscribe 多订阅者模式（避免与 index.vue 的 onDataUpdate 单槽互相覆盖）
+    this._unsubscribeRealtime = realtimeDataProvider.subscribe(() => {
       this.device171FList = [...realtimeDataProvider.getDeviceList()];
-    };
-    realtimeDataProvider.onDataUpdate = this._realtimeCb;
+    });
+    // 立即刷一次
+    this.device171FList = [...realtimeDataProvider.getDeviceList()];
   },
   onShow() {
-    // 从子页面返回时重新持有回调并立即刷新
-    if (this._realtimeCb) {
-      realtimeDataProvider.onDataUpdate = this._realtimeCb;
-      this._realtimeCb();
+    // 确保订阅者已注册（兜底）
+    if (!this._unsubscribeRealtime) {
+      this._unsubscribeRealtime = realtimeDataProvider.subscribe(() => {
+        this.device171FList = [...realtimeDataProvider.getDeviceList()];
+      });
     }
+    this.device171FList = [...realtimeDataProvider.getDeviceList()];
   },
   beforeDestroy() {
     // 移除监听器
     uni.offWindowResize(this.onOrientationChange);
-    if (realtimeDataProvider.onDataUpdate === this._realtimeCb) {
-      realtimeDataProvider.onDataUpdate = null;
+    if (typeof this._unsubscribeRealtime === 'function') {
+      this._unsubscribeRealtime();
+      this._unsubscribeRealtime = null;
     }
   }
 };

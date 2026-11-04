@@ -1,47 +1,56 @@
 import DeviceBase from "./device-base.model"
 
-class Model2502 extends DeviceBase {
+export class Model2502 extends DeviceBase {
+    energyData
+    stateData
+    controlData
 
-	energyData;
-	stateData;
+    constructor() {
+        super()
+        this.energyData = new EnergyData()
+        this.stateData = new StateData()
+        this.controlData = new ControlData()
+    }
 
-	constructor() {
-		super();
-		this.energyData = new EnergyData();
-		this.stateData = new StateData();
-		// var energyData = ref(EnergyData)
-	}
+    getEnergyData(jsonData) {
+        const data = jsonData.data || jsonData
+        if (data.B0 != null && data.B0 !== '' && data.B0 !== '--') {
+            this.energyData.waterFlow.value = Number(data.B0)
+        }
+        if (data.B4 != null && data.B4 !== '' && data.B4 !== '--') {
+            this.energyData.speed.value = Number(data.B4)
+        }
+        if (data.B8 != null && data.B8 !== '' && data.B8 !== '--' && data.B12 != null) {
+            this.energyData.positiveCum.value = parseFloat(data.B8 + "." + data.B12).toFixed(2)
+        }
+        if (data.B16 != null && data.B16 !== '' && data.B16 !== '--' && data.B20 != null) {
+            this.energyData.reverseCum.value = parseFloat(data.B16 + "." + data.B20).toFixed(2)
+        }
+    }
 
-	getEnergyData(jsonData, jsonData2,barCode) {
-		// this.energyData.dateTime = jsonData2.dateTime
-		// console.log(jsonData)
-		this.energyData.waterFlow = (jsonData.B0);
-		this.energyData.speed = (jsonData.B4);
-		this.energyData.positiveCum = parseFloat(jsonData.B8 + "." + (jsonData.B12)).toFixed(2);
-		this.energyData.reverseCum = parseFloat(jsonData.B16 + "." + jsonData.B20).toFixed(2);
-	}
-
-
-
-	getStatusData(jsonData) {
-
-	}
-
+    getStatusData(jsonData) {
+        const data = jsonData.data || jsonData
+        for (const key in data) {
+            if (this.stateData.hasOwnProperty(key) && this.stateData[key]) {
+                this.stateData[key].value = data[key]
+            }
+        }
+    }
 }
+
 class EnergyData {
-	waterConsumption = "--"; //用量
-	waterFlow = "--";
-	temperature = "--";
-	pressure = "--";
-	speed = '--';
-	positiveCum = '--' //正向累计流量
-	reverseCum = '--' //反向累计流量'
-	dateTime = '--'
-
+    waterFlow = { name: '水流量', value: '--', unit: 'm³/h' }
+    speed = { name: '流速', value: '--', unit: 'm/s' }
+    positiveCum = { name: '正向累计流量', value: '--', unit: 'm³' }
+    reverseCum = { name: '反向累计流量', value: '--', unit: 'm³' }
+    temperature = { name: '温度', value: '--', unit: '℃' }
+    pressure = { name: '压力', value: '--', unit: 'MPa' }
+    waterConsumption = { name: '用水量', value: '--', unit: 'm³' }
+    dateTime = { name: '时间', value: '--' }
 }
 
-class StateData {}
+class StateData {
+}
 
-export {
-	Model2502
-};
+class ControlData {
+}

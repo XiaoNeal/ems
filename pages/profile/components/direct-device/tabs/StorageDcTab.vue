@@ -1,7 +1,14 @@
 <template>
   <scroll-view class="module-scroll" scroll-y="true">
     <view class="content">
-      <view class="module">
+      <!-- 50kW：170C V1.1 协议面板 -->
+      <view v-if="is50KwMode" class="module">
+        <view class="module-title">储能DCDC模块</view>
+        <Dc170cPanel :bucket="bucket50" faultTitle="储能DC故障信息" />
+      </view>
+
+      <!-- 20kW：171D 旧协议 -->
+      <view v-else class="module">
         <view class="module-title">储能DC</view>
         <DataGroup title="DCDC状态">
           <DataGrid :items="[
@@ -36,15 +43,16 @@ import { DCDC_ALARM_FIELDS } from '../../../direct-device-constants.js'
 import DataGroup from '../DataGroup.vue'
 import DataGrid from '../DataGrid.vue'
 import StatusGrid from '../StatusGrid.vue'
+import Dc170cPanel from './Dc170cPanel.vue'
 
 /**
  * 储能DC tab 组件
- * 展示 DCDC 状态、电气参数、报警状态
- * dcdcAlarmStatus 计算属性内聚于此组件
+ * 20kW：旧协议 171D（DCDC 状态 + 报警位）
+ * 50kW：新协议 170C V1.1（bucket 170C_STORAGE）
  */
 export default {
   name: 'StorageDcTab',
-  components: { DataGroup, DataGrid, StatusGrid },
+  components: { DataGroup, DataGrid, StatusGrid, Dc170cPanel },
   props: {
     formattedValues: {
       type: Object,
@@ -53,9 +61,16 @@ export default {
     rawValues: {
       type: Object,
       default: () => ({})
+    },
+    is50KwMode: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
+    bucket50() {
+      return this.rawValues['170C_STORAGE'] || {}
+    },
     dcdcAlarmStatus() {
       const data = this.rawValues['171D'] || {}
       return DCDC_ALARM_FIELDS.map(f => {
@@ -72,30 +87,33 @@ export default {
   height: 100%;
 }
 .content {
-  padding: 0 16rpx 20rpx;
+  padding: 0 20rpx 32rpx;
 }
 .module {
-  padding: 20rpx 0;
+  padding: 0;
 }
 .module-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 16rpx;
-  padding-left: 16rpx;
-  padding-bottom: 12rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  margin: 0 0 18rpx;
+  padding-left: 18rpx;
   position: relative;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1d2430;
+  letter-spacing: 0.5rpx;
+  line-height: 1.3;
 
   &::before {
     content: '';
     position: absolute;
     left: 0;
-    top: 4rpx;
-    bottom: 14rpx;
-    width: 6rpx;
-    border-radius: 3rpx;
-    background: #007aff;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8rpx;
+    height: 30rpx;
+    border-radius: 4rpx;
+    background: linear-gradient(180deg, #63a4ff 0%, #2f7cf6 100%);
   }
 }
 </style>

@@ -290,17 +290,120 @@ export const MONITOR_REGISTER_MAP_171E = [
   { reg: 44, field: 'B88', name: 'PFC版本号',     unit: '',     scale: 1, decimals: 0, group: 'info' }
 ]
 
+// 1707 V3.5 PCS 储能变流器能源数据映射（实际协议）
+// 字段对齐 1707V3_5-model.js EnergyData，模型层已完成缩放（÷10/÷100/÷1000），此处 scale=1
+export const MONITOR_REGISTER_MAP_1707 = [
+  // === 端口电压 / 输出电流 ===
+  { reg: 0,  field: 'B0',  name: 'A相电压',       unit: 'V',    scale: 1, decimals: 1, group: 'voltage' },
+  { reg: 1,  field: 'B2',  name: 'B相电压',       unit: 'V',    scale: 1, decimals: 1, group: 'voltage' },
+  { reg: 2,  field: 'B4',  name: 'C相电压',       unit: 'V',    scale: 1, decimals: 1, group: 'voltage' },
+  { reg: 3,  field: 'B6',  name: 'A相电流',       unit: 'A',    scale: 1, decimals: 1, group: 'current' },
+  { reg: 4,  field: 'B8',  name: 'B相电流',       unit: 'A',    scale: 1, decimals: 1, group: 'current' },
+  { reg: 5,  field: 'B10', name: 'C相电流',       unit: 'A',    scale: 1, decimals: 1, group: 'current' },
+  // === 频率 / 温度 ===
+  { reg: 6,  field: 'B12', name: '电网频率',      unit: 'Hz',   scale: 1, decimals: 2, group: 'acSide' },
+  { reg: 26, field: 'B52', name: '散热器温度',    unit: '℃',    scale: 1, decimals: 0, group: 'acSide' },
+  // === 有功功率 A/B/C/总 ===
+  { reg: 7,  field: 'B14', name: 'A相有功功率',   unit: 'kW',   scale: 1, decimals: 1, group: 'power' },
+  { reg: 8,  field: 'B16', name: 'B相有功功率',   unit: 'kW',   scale: 1, decimals: 1, group: 'power' },
+  { reg: 9,  field: 'B18', name: 'C相有功功率',   unit: 'kW',   scale: 1, decimals: 1, group: 'power' },
+  { reg: 10, field: 'B20', name: '总有功功率',    unit: 'kW',   scale: 1, decimals: 1, group: 'power' },
+  // === 无功功率 A/B/C/总 ===
+  { reg: 11, field: 'B22', name: 'A相无功功率',   unit: 'kVar', scale: 1, decimals: 1, group: 'power' },
+  { reg: 12, field: 'B24', name: 'B相无功功率',   unit: 'kVar', scale: 1, decimals: 1, group: 'power' },
+  { reg: 13, field: 'B26', name: 'C相无功功率',   unit: 'kVar', scale: 1, decimals: 1, group: 'power' },
+  { reg: 14, field: 'B28', name: '总无功功率',    unit: 'kVar', scale: 1, decimals: 1, group: 'power' },
+  // === 视在功率 A/B/C/总 ===
+  { reg: 15, field: 'B30', name: 'A相视在功率',   unit: 'kVA',  scale: 1, decimals: 1, group: 'power' },
+  { reg: 16, field: 'B32', name: 'B相视在功率',   unit: 'kVA',  scale: 1, decimals: 1, group: 'power' },
+  { reg: 17, field: 'B34', name: 'C相视在功率',   unit: 'kVA',  scale: 1, decimals: 1, group: 'power' },
+  { reg: 18, field: 'B36', name: '总视在功率',    unit: 'kVA',  scale: 1, decimals: 1, group: 'power' },
+  // === 功率因数 A/B/C/总 ===
+  { reg: 19, field: 'B38', name: 'A相功率因数',   unit: '',     scale: 1, decimals: 3, group: 'power' },
+  { reg: 20, field: 'B40', name: 'B相功率因数',   unit: '',     scale: 1, decimals: 3, group: 'power' },
+  { reg: 21, field: 'B42', name: 'C相功率因数',   unit: '',     scale: 1, decimals: 3, group: 'power' },
+  { reg: 22, field: 'B44', name: '总功率因数',    unit: '',     scale: 1, decimals: 3, group: 'power' },
+  // === 直流（输入）侧 ===
+  { reg: 23, field: 'B46', name: '输入功率',      unit: 'kW',   scale: 1, decimals: 1, group: 'dcSide' },
+  { reg: 24, field: 'B48', name: '输入电压',      unit: 'V',    scale: 1, decimals: 1, group: 'dcSide' },
+  { reg: 25, field: 'B50', name: '输入电流',      unit: 'A',    scale: 1, decimals: 1, group: 'dcSide' },
+  // === BMS/CMS 数据（PCS 帧内转发）===
+  { reg: 74, field: 'B148', name: 'BMS工作指令',  unit: '',     scale: 1, decimals: 0, group: 'bms' },
+  { reg: 75, field: 'B150', name: '允许充电电流', unit: 'A',    scale: 1, decimals: 1, group: 'bms' },
+  { reg: 76, field: 'B152', name: '允许放电电流', unit: 'A',    scale: 1, decimals: 1, group: 'bms' },
+  { reg: 77, field: 'B154', name: 'SOC',          unit: '%',    scale: 1, decimals: 1, group: 'bms' },
+  { reg: 78, field: 'B156', name: '可充电电量',   unit: 'kWh',  scale: 1, decimals: 1, group: 'bms' },
+  { reg: 79, field: 'B158', name: '可放电电量',   unit: 'kWh',  scale: 1, decimals: 1, group: 'bms' },
+  { reg: 80, field: 'B160', name: '总电压',       unit: 'V',    scale: 1, decimals: 1, group: 'bms' },
+  { reg: 81, field: 'B162', name: '总电流',       unit: 'A',    scale: 1, decimals: 1, group: 'bms' },
+  { reg: 82, field: 'B164', name: '单体最高SOC',  unit: '%',    scale: 1, decimals: 1, group: 'bms' },
+  { reg: 83, field: 'B166', name: '单体最低SOC',  unit: '%',    scale: 1, decimals: 1, group: 'bms' },
+  { reg: 84, field: 'B168', name: '单体最高电压', unit: 'V',    scale: 1, decimals: 1, group: 'bms' },
+  { reg: 85, field: 'B170', name: '单体最低电压', unit: 'V',    scale: 1, decimals: 1, group: 'bms' },
+  { reg: 86, field: 'B172', name: '单体最高温度', unit: '℃',    scale: 1, decimals: 1, group: 'bms' },
+  { reg: 87, field: 'B174', name: '单体最低温度', unit: '℃',    scale: 1, decimals: 1, group: 'bms' },
+  { reg: 88, field: 'B176', name: '允许充电功率', unit: 'kW',   scale: 1, decimals: 1, group: 'bms' },
+  { reg: 89, field: 'B178', name: '允许放电功率', unit: 'kW',   scale: 1, decimals: 1, group: 'bms' },
+  // === 系统信息 ===
+  { reg: 35, field: 'B70', name: '通讯状态字',    unit: '',     scale: 1, decimals: 0, group: 'system' },
+  { reg: 42, field: 'B84', name: 'PCS程序版本',   unit: '',     scale: 1, decimals: 1, group: 'system' },
+  { reg: 43, field: 'B86', name: 'FPGA程序版本',  unit: '',     scale: 1, decimals: 0, group: 'system' }
+]
+
+// 170C V1.1 储能 DC-DC 变流器能源数据映射（实际协议）
+// 字段对齐 170C_V1_1-model.js EnergyData，云端数据已为工程值，此处 scale=1
+export const MONITOR_REGISTER_MAP_170C = [
+  // === 参数给定 / 限制 ===
+  { reg: 0,  field: 'B0',  name: 'BAT侧电压给定', unit: 'V',    scale: 1, decimals: 1, group: 'set' },
+  { reg: 1,  field: 'B2',  name: '最大充电电流限制', unit: 'A', scale: 1, decimals: 1, group: 'set' },
+  { reg: 2,  field: 'B4',  name: '最大放电电流限制', unit: 'A', scale: 1, decimals: 1, group: 'set' },
+  { reg: 3,  field: 'B6',  name: 'BUS侧电压给定', unit: 'V',    scale: 1, decimals: 1, group: 'set' },
+  { reg: 4,  field: 'B8',  name: 'BUS侧电流给定', unit: 'A',    scale: 1, decimals: 1, group: 'set' },
+  { reg: 5,  field: 'B10', name: '下垂电压系数',  unit: 'V',    scale: 1, decimals: 1, group: 'set' },
+  // === 电池侧实时量 ===
+  { reg: 15, field: 'B30', name: 'BAT侧电压',     unit: 'V',    scale: 1, decimals: 1, group: 'battery' },
+  { reg: 18, field: 'B36', name: 'BAT侧电流',     unit: 'A',    scale: 1, decimals: 1, group: 'battery' },
+  // === BUS 侧实时量 ===
+  { reg: 16, field: 'B32', name: 'BUS侧电压',     unit: 'V',    scale: 1, decimals: 1, group: 'bus' },
+  { reg: 17, field: 'B34', name: 'BUS侧电流',     unit: 'A',    scale: 1, decimals: 1, group: 'bus' },
+  // === 功率 / 温度 / 电量 ===
+  { reg: 6,  field: 'B12', name: '最大功率限制',  unit: 'kW',   scale: 1, decimals: 1, group: 'power' },
+  { reg: 20, field: 'B40', name: '允许运行功率',  unit: 'kW',   scale: 1, decimals: 1, group: 'power' },
+  { reg: 21, field: 'B42', name: '当前运行功率',  unit: 'kW',   scale: 1, decimals: 1, group: 'power' },
+  { reg: 19, field: 'B38', name: '模块最高温度',  unit: '℃',    scale: 1, decimals: 0, group: 'temp' },
+  { reg: 22, field: 'B44', name: '累积电量',      unit: 'kWh',  scale: 1, decimals: 1, group: 'power' },
+  // === 保护参数 ===
+  { reg: 7,  field: 'B14', name: 'BAT侧欠压保护点', unit: 'V',  scale: 1, decimals: 1, group: 'protect' },
+  { reg: 8,  field: 'B16', name: 'BAT侧过压保护点', unit: 'V',  scale: 1, decimals: 1, group: 'protect' },
+  { reg: 9,  field: 'B18', name: 'BUS侧欠压保护点', unit: 'V',  scale: 1, decimals: 1, group: 'protect' },
+  { reg: 10, field: 'B20', name: 'BUS侧过压保护点', unit: 'V',  scale: 1, decimals: 1, group: 'protect' },
+  { reg: 11, field: 'B22', name: 'BAT侧充电过流保护点', unit: 'A', scale: 1, decimals: 1, group: 'protect' },
+  { reg: 12, field: 'B24', name: 'BAT侧放电过流保护点', unit: 'A', scale: 1, decimals: 1, group: 'protect' },
+  { reg: 13, field: 'B26', name: 'BUS侧充电过流保护点', unit: 'A', scale: 1, decimals: 1, group: 'protect' },
+  { reg: 14, field: 'B28', name: 'BUS侧放电过流保护点', unit: 'A', scale: 1, decimals: 1, group: 'protect' }
+]
+
 /**
  * 设备类型 → 寄存器映射注册表
  * key: 设备类型十六进制字符串 (如 '171C', '171D', '171F')
  * value: { monitor: [...], control: [...] }
  */
 export const DEVICE_REGISTER_MAP = {
+  '1707': { monitor: MONITOR_REGISTER_MAP_1707, control: [] },
+  '170C': { monitor: MONITOR_REGISTER_MAP_170C, control: [] },
+  // 50kW bucket key 别名（与 _normalizeDeviceType 输出一致）——复用基类映射，前缀匹配自动处理
+  '170C_STORAGE': { monitor: MONITOR_REGISTER_MAP_170C, control: [] },
+  '170C_PV': { monitor: MONITOR_REGISTER_MAP_170C, control: [] },
   '171B': { monitor: MONITOR_REGISTER_MAP_171B, control: [] },
   '171C': { monitor: MONITOR_REGISTER_MAP, control: CONTROL_REGISTER_MAP },
+  // 50kW BMS V2：目前复用 171C 旧协议寄存器（直连 50kW 监控面板仍显示旧协议字段，
+  // 设置面板走 SETTINGS_PANELS_50KW 的独立定义）
+  '171C_V2': { monitor: MONITOR_REGISTER_MAP, control: CONTROL_REGISTER_MAP },
   '171D': { monitor: MONITOR_REGISTER_MAP_171D, control: CONTROL_REGISTER_MAP_171D },
   '171E': { monitor: MONITOR_REGISTER_MAP_171E, control: [] },
   '171F': { monitor: MONITOR_REGISTER_MAP, control: CONTROL_REGISTER_MAP }, // 171F 复用 171C 映射
+  // 液冷机 0318_V2_3：目前无专用监控寄存器映射，回退时不会再误落到 171C 旧协议
+  '0318': { monitor: [], control: [] },
 }
 
 /**

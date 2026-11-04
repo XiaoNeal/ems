@@ -15,7 +15,16 @@
 
 import { UniappWebSocketAdapter } from './uniapp-websocket-shim.js'
 import { UniappTcpAdapter } from './uniapp-tcp-adapter.js'
-import { buildIemsCommandFrame } from './iems-frame-parser.js'
+import { buildIemsCommandFrame, normalizeRegisterAddress } from './iems-frame-parser.js'
+import { resolveDeviceProfile } from './control-device-profile.js'
+
+/**
+ * 控制帧下行载荷格式（与 mqtt-client.js 保持一致）
+ *   'hex' | 'json' | 'binary'
+ * 设备侧 MQTT 通道按文本解析，发原始二进制会被当成乱码拒绝。
+ */
+const CONTROL_PAYLOAD_MODE = 'hex'
+const CONTROL_HEX_SEPARATOR = ' '
 
 /**
  * 根据 brokerUrl 协议自动选择传输适配器
@@ -38,8 +47,11 @@ function createTransport(brokerUrl) {
       console.log('[MQTT] 使用 UniappTcpAdapter')
       return adapter
     } catch (e) {
-      console.warn('[MQTT] TCP 适配器创建失败:', e.message)
-      if (/不支持原生 TCP|TCPSocket/i.test(e.message)) {
+      const msg = String((e && e.message) || e)
+      console.warn('[MQTT] TCP 适配器创建失败:', msg)
+      // 仅「平台不支持原生 TCP」才降级 ws://；
+      // 像「并发数超限」这类是资源问题，降级到 ws 打 tcp 端口必然握手失败，只会制造更多无效连接
+      if (/不支持原生 TCP/.test(msg)) {
         const wsUrl = url.replace(/^tcp:\/\//i, 'ws://')
         console.warn('[MQTT] 降级为 WebSocket:', wsUrl)
         return new UniappWebSocketAdapter(wsUrl, null)
@@ -177,6 +189,7 @@ export class LightMqttClient {
     this._maxReconnectAttempts = parseInt(config.maxReconnectAttempts) || 10
     this._reconnectAttempts = 0
     this._manualDisconnect = false
+    this._connectPromise = null   // 连接进行中的 Promise，用于并发去重
     // 当前默认设备类型（sendControl 未传 deviceType 时用这个）
     this._deviceType = null
 
@@ -194,18 +207,57 @@ export class LightMqttClient {
     if (config.password !== undefined) this.password = config.password
   }
 
-  async connect() {
+  /**
+   * 释放当前传输层（幂等）
+   * 关键：先解绑回调再关闭，避免 close 触发的 onclose 又排一次重连；
+   * 同时把适配器置空，防止旧 socket 残留占用微信 TCPSocket 的并发名额。
+   */
+  _disposeTransport() {
+    const t = this.ws
+    this.ws = null
+    if (!t) return
+    try {
+      t.onopen = null
+      t.onmessage = null
+      t.onerror = null
+      t.onclose = null
+    } catch (e) {}
+    try {
+      if (typeof t.destroy === 'function') t.destroy()
+      else if (typeof t.close === 'function') t.close()
+    } catch (e) {}
+  }
+
+  async connect(isRetry = false) {
     if (this.connected) return true
+    // 并发去重：页面 onShow/重连定时器可能同时触发，避免一次准备期创建多个 socket
+    if (this._connectPromise) return this._connectPromise
     if (!this.brokerUrl) throw new Error('未配置 Broker URL')
 
     this._manualDisconnect = false
+    // 主动连接时重置重连计数；自动重连（isRetry）不得清零，否则永远到不了上限，会无限重建 socket
+    if (!isRetry) this._reconnectAttempts = 0
+    if (this._reconnectTimer) {
+      clearTimeout(this._reconnectTimer)
+      this._reconnectTimer = null
+    }
     this.connecting = true
-    return new Promise((resolve, reject) => {
+    const p = new Promise((resolve, reject) => {
+      // 关闭旧传输层（如果还活着），避免 TCPSocket 泄漏
+      this._disposeTransport()
       // 保存 resolve/reject，供 _handleConnack 异步回调
       this._connectResolve = resolve
       this._connectReject = reject
 
-      this.ws = createTransport(this.brokerUrl)
+      try {
+        this.ws = createTransport(this.brokerUrl)
+      } catch (e) {
+        this.connecting = false
+        this._connectResolve = null
+        this._connectReject = null
+        reject(e)
+        return
+      }
       // console.log('[MQTT] ws created, type=', this.ws.constructor.name, 'readyState=', this.ws.readyState)
 
       this.ws.onopen = () => {
@@ -223,7 +275,7 @@ export class LightMqttClient {
         if (!this.connected) {
           this.connecting = false
           if (this._connectReject) {
-            const err = new Error('WebSocket 连接失败: ' + msg)
+            const err = new Error('连接失败: ' + msg)
             this._connectReject(err)
             this._connectReject = null
             this._connectResolve = null
@@ -248,7 +300,7 @@ export class LightMqttClient {
       setTimeout(() => {
         if (!this.connected && this.connecting) {
           this.connecting = false
-          try { this.ws && this.ws.close() } catch (e) {}
+          this._disposeTransport()
           if (this._connectReject) {
             this._connectReject(new Error(`连接超时（${this.connectTimeout}ms），请检查 Broker URL 与 WiFi`))
             this._connectReject = null
@@ -257,14 +309,21 @@ export class LightMqttClient {
         }
       }, this.connectTimeout)
     })
+
+    this._connectPromise = p
+    // 无论成功失败都释放并发锁，避免后续 connect 永远复用已结束的 Promise
+    p.then(() => { this._connectPromise = null }, () => { this._connectPromise = null })
+    return p
   }
 
   /**
-   * 自动重连调度
+   * 自动重连调度（去重 + 指数退避）
    */
   _scheduleReconnect() {
     if (!this.autoReconnect) return
     if (this._manualDisconnect) return
+    // 已经有排程就不再叠加：onclose 与 connect().catch 会同时触发，不去重会导致重连次数翻倍
+    if (this._reconnectTimer) return
     if (this._reconnectAttempts >= this._maxReconnectAttempts) {
       console.warn('[mqtt] 达到最大重连次数，停止重连')
       if (typeof this.onError === 'function') {
@@ -273,15 +332,20 @@ export class LightMqttClient {
       return
     }
     this._reconnectAttempts++
-    if (this._reconnectTimer) clearTimeout(this._reconnectTimer)
+    // 指数退避，最长 30s：避免连接层异常时每 3s 建一个 socket，把微信 TCPSocket 名额耗尽
+    const delay = Math.min(
+      Math.round(this.reconnectInterval * Math.pow(1.5, this._reconnectAttempts - 1)),
+      30000
+    )
+    console.log(`[mqtt] ${delay}ms 后重连（第 ${this._reconnectAttempts}/${this._maxReconnectAttempts} 次）`)
     this._reconnectTimer = setTimeout(() => {
       // 重新订阅需保留的 handler 由调用方在 onConnect 中处理
       this._reconnectTimer = null
-      this.connect().catch((e) => {
+      this.connect(true).catch((e) => {
         console.warn('[mqtt] 重连失败:', e.message)
         this._scheduleReconnect()
       })
-    }, this.reconnectInterval)
+    }, delay)
   }
 
   disconnect() {
@@ -299,9 +363,9 @@ export class LightMqttClient {
         const disconnectPacket = this._encodeControlPacket(T.DISCONNECT, null)
         this.ws.send(disconnectPacket)
       } catch (e) {}
-      try { this.ws.close() } catch (e) {}
-      this.ws = null
+      this._disposeTransport()
     }
+    this._connectPromise = null
   }
 
   /**
@@ -350,10 +414,11 @@ export class LightMqttClient {
     } else {
       payloadBytes = encodeUtf8(JSON.stringify(message))
     }
-    const flags = (opts.retain ? 0x01 : 0) | ((opts.qos || 0) << 1)
-    this._sendPublishRaw(topic, payloadBytes, flags)
+    const qos = (opts && opts.qos) || 0
+    const flags = (opts.retain ? 0x01 : 0) | ((qos & 0x03) << 1)
+    this._sendPublishRaw(topic, payloadBytes, flags, qos)
     const hex = Array.from(payloadBytes).map(b => b.toString(16).padStart(2, '0')).join(' ')
-    // console.log('[MQTT] PUBLISH → topic=' + topic + ' bytes=' + payloadBytes.length + ' hex=' + hex)
+    console.log('[MQTT] PUBLISH → topic=' + topic + ' qos=' + qos + ' payload=' + payloadBytes.length + 'B hex=' + hex)
     return true
   }
 
@@ -391,49 +456,62 @@ export class LightMqttClient {
       }
     }
 
-    // 按设备类型映射命令字段（参考各 Settings 组件的 commandData）
-    const deviceCmdDefaults = {
-      deviceCategory: dt,
-      registerType: '03',
-      ...({
-        '171E': { addr: 6,    deviceId: '6' },
-        '171D': { addr: 30,   deviceId: '30' },
-        '171B': { addr: '01', deviceId: '0001' },
-        '171C': { addr: '01', deviceId: '0001' },
-        '171F': { addr: '01', deviceId: '0001' },
-      })[dt] || { addr: '01', deviceId: '0001' },
+    // 0x3401 附件2 的地址列是十进制（331 就是 331，不是 0x331），统一按十进制规整后进帧
+    regAddress = normalizeRegisterAddress(regAddress)
+
+    // 值缺失时提前报错：否则只会得到帧构造函数里一句「字段不能为空」，看不出字段来源
+    if (value === undefined || value === null || String(value).trim() === '') {
+      throw new Error(
+        '下发值为空：字段 ' + (field === undefined || field === null ? '(未指定)' : field) +
+        '，寄存器地址 ' + regAddress + '（十进制）'
+      )
+    }
+
+    // 设备身份（大类小类 / 索引号 / 设备 ID）按 0x3401 附件1 取，
+    // 不再把 50kW 的模块级协议码（1707/170C）直接当控制类型码下发
+    const profile = resolveDeviceProfile(dt)
+    const command = {
+      deviceCategory: profile.category,
+      addr: profile.addr,
+      deviceId: profile.deviceId,
+      registerType: 3,          // 补充说明：3=保持寄存器，线圈类由调用方用 overrides.regType 覆盖
       extra1: '00',
       extra2: '0000',
       extra3: '0000',
-    }
-
-    // 合并 overrides（最高优先级）
-    const command = {
-      ...deviceCmdDefaults,
       ...overrides,
       registerAddress: regAddress,
       registerValue: value,
     }
+    if (overrides.regType !== undefined) command.registerType = overrides.regType
 
-    // 构建 IEMS 命令控制帧 —— 帧头 deviceType 固定 '3401'（控制帧类型码）
-    // 参考 Settings 组件 typeCode: '3401'
+    // 构建 IEMS 命令控制帧 —— 帧头 deviceType 固定 '3401'（远程控制协议类型码）
     const frame = buildIemsCommandFrame('3401', [command])
 
-    // 转 hex 字符串方便查看
-    const frameHex = Array.from(frame).map(b => b.toString(16).padStart(2, '0')).join(' ')
+    // 转 hex 文本（下发载荷 + 日志比对共用，避免二进制在设备侧显示乱码）
+    const frameHex = Array.from(frame).map(b => b.toString(16).padStart(2, '0')).join(CONTROL_HEX_SEPARATOR)
+    this._lastControlHex = frameHex.replace(/[\s,]/g, '').toUpperCase()
+    this._lastControlAt = Date.now()
     const dtHex = typeof dt === 'string' ? dt : dt.toString(16).toUpperCase().padStart(4, '0')
 
     console.log('========== MQTT 命令帧下发 ==========')
     console.log('[MQTT] topic    :', this._controlSetTopic || 'neiic/microEnergyStationCtl002')
     console.log('[MQTT] deviceType:', dt, '(0x' + dtHex + ')')
-    console.log('[MQTT] field    :', field, '→ registerAddress=', regAddress)
-    console.log('[MQTT] value    :', value)
+    console.log('[MQTT] 设备大类小类:', command.deviceCategory, ' 索引号:', command.addr, ' 设备ID:', command.deviceId)
+    console.log('[MQTT] field    :', field, '→ registerAddress=', regAddress, '(十进制) → 0x' + regAddress.toString(16).toUpperCase().padStart(8, '0'))
+    console.log('[MQTT] value    :', value, ' 寄存器类型:', command.registerType)
     console.log('[MQTT] frame length:', frame.length, 'bytes')
+    console.log('[MQTT] payload mode:', CONTROL_PAYLOAD_MODE)
     console.log('[MQTT] frame hex :', frameHex)
     console.log('====================================')
 
-    // 发送二进制帧
-    return this.publish(this._controlSetTopic || 'neiic/microEnergyStationCtl002', frame, { retain: false })
+    const topic = this._controlSetTopic || 'neiic/microEnergyStationCtl002'
+    if (CONTROL_PAYLOAD_MODE === 'binary') {
+      return this.publish(topic, frame, { retain: false })
+    }
+    if (CONTROL_PAYLOAD_MODE === 'json') {
+      return this.publish(topic, JSON.stringify({ 'Send Data': frameHex }), { retain: false })
+    }
+    return this.publish(topic, frameHex, { retain: false })
   }
 
   /**
@@ -508,12 +586,33 @@ export class LightMqttClient {
     this.ws.send(packet)
   }
 
-  _sendPublishRaw(topic, payloadBytes, flags = 0) {
+  /**
+   * 发送 PUBLISH 报文
+   *
+   * ⚠️ MQTT 3.1.1 规定：QoS > 0 时，可变头里必须紧跟 **2 字节报文标识符**（Packet Identifier），
+   * 然后才是 payload。旧实现漏了这 2 字节，broker 就会把 payload 的前 2 字节当成 Packet ID 吃掉：
+   *   payload "16 34 01…"（ASCII 31 36 20 33…）→ 吃走 31 36（"16"）→ 剩 " 34 01…"，
+   *   服务端再 trim 掉前导空格 → 日志里就变成 "34 01 00 01 …"，看着像丢了首字节 0x16。
+   */
+  _sendPublishRaw(topic, payloadBytes, flags = 0, qos = 0) {
     const topicBytes = encodeUtf8String(topic)
-    const varHeader = this._concat(topicBytes, payloadBytes)
+    const parts = [topicBytes]
+    if (qos > 0) {
+      const id = this._nextPacketId()
+      parts.push(new Uint8Array([(id >> 8) & 0xFF, id & 0xFF]))
+    }
+    parts.push(payloadBytes)
+    const varHeader = this._concat(...parts)
     const fixedHeader = this._encodeFixedHeader(T.PUBLISH, flags, varHeader.length)
     const packet = this._concat(fixedHeader, varHeader)
     this.ws.send(packet)
+  }
+
+  /** 报文标识符：1~65535 循环，0 保留不用 */
+  _nextPacketId() {
+    const id = this.nextPacketId
+    this.nextPacketId = (id >= 65535 ? 1 : id + 1)
+    return id
   }
 
   _encodeFixedHeader(type, flags, remainingLength) {

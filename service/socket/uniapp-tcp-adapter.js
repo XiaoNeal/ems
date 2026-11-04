@@ -66,6 +66,8 @@ export class UniappTcpAdapter {
     this.onmessage = null
     this.onclose = null
     this.onerror = null
+    this._tcpSocket = null
+    this._javaSocket = null
     this._listeners = { open: [], message: [], close: [], error: [] }
 
     try {
@@ -77,10 +79,31 @@ export class UniappTcpAdapter {
           : null
 
       if (tcpFactory) {
-        this._tcpSocket = tcpFactory()
+        let sock = null
+        try {
+          sock = tcpFactory()
+        } catch (e) {
+          // 微信在并发数超限时抛 "[TCPSocket] created too much."
+          this.readyState = CLOSED
+          throw new Error('TCPSocket 创建失败：' + ((e && (e.message || e.errMsg)) || e))
+        }
+        // 配额耗尽时 createTCPSocket 可能返回 undefined，必须先校验再绑定事件，
+        // 否则会变成 "Cannot read property 'onConnect' of undefined"
+        if (!sock || typeof sock.onConnect !== 'function') {
+          try { sock && typeof sock.close === 'function' && sock.close() } catch (e) {}
+          this.readyState = CLOSED
+          throw new Error('TCPSocket 创建失败：未返回有效实例（并发连接数已达上限 5 个），请关闭其他页面或重启小程序')
+        }
+        this._tcpSocket = sock
         console.log('[TCP] Socket 创建成功(wx/uni), 连接', this.host + ':' + this.port)
         this._bindWxTcpEvents()
-        this._tcpSocket.connect({ address: this.host, port: this.port })
+        try {
+          sock.connect({ address: this.host, port: this.port })
+        } catch (e) {
+          this._closeUnderlying()
+          this.readyState = CLOSED
+          throw new Error('TCPSocket connect 失败：' + ((e && (e.message || e.errMsg)) || e))
+        }
       } else if (typeof plus !== 'undefined' && plus.android) {
         // App 端降级：用 Java Socket
         console.log('[TCP] 使用 plus.android Java Socket, 连接', this.host + ':' + this.port)
@@ -94,7 +117,14 @@ export class UniappTcpAdapter {
       }
     } catch (e) {
       this.readyState = CLOSED
-      setTimeout(() => this._fire('error', { type: 'error', message: String(e.message || e) }), 0)
+      const msg = String((e && (e.message || e.errMsg)) || e)
+      // 传输层创建失败属于致命错误：向上抛，交由 createTransport 决定是否降级 / 上报
+      // （不能吞掉后异步 fire error，否则调用方会拿到一个永远连不上的“空壳”适配器）
+      if (/^TCPSocket 创建失败|^TCPSocket connect 失败|当前平台无可用 TCP API/.test(msg)) {
+        this._closeUnderlying()
+        throw new Error(msg)
+      }
+      setTimeout(() => this._fire('error', { type: 'error', message: msg }), 0)
     }
   }
 
@@ -292,19 +322,51 @@ export class UniappTcpAdapter {
     }
   }
 
-  close(code, reason) {
-    if (this.readyState !== OPEN && this.readyState !== CONNECTING) return
-    this.readyState = CLOSING
-    try {
-      if (this._tcpSocket) this._tcpSocket.close()
-      if (this._javaSocket) {
-        this._javaInput && this._javaInput.close()
-        this._javaOutput && this._javaOutput.close()
-        this._javaSocket.close()
-      }
-    } catch (e) {
-      // 忽略关闭异常
+  /**
+   * 释放底层 socket（幂等）
+   * 微信 TCPSocket 有并发上限（5 个），只要有一个没 close 就会挡住后续所有连接，
+   * 所以无论是正常关闭、连接失败还是被上层丢弃，都必须走到这里。
+   */
+  _closeUnderlying() {
+    const sock = this._tcpSocket
+    this._tcpSocket = null
+    if (sock) {
+      // 先解绑回调，避免 close 触发的 onClose 再次进入上层重连逻辑
+      try { typeof sock.offConnect === 'function' && sock.offConnect() } catch (e) {}
+      try { typeof sock.offMessage === 'function' && sock.offMessage() } catch (e) {}
+      try { typeof sock.offClose === 'function' && sock.offClose() } catch (e) {}
+      try { typeof sock.offError === 'function' && sock.offError() } catch (e) {}
+      try { typeof sock.close === 'function' && sock.close() } catch (e) {}
     }
+    if (this._javaSocket) {
+      try { this._javaInput && this._javaInput.close() } catch (e) {}
+      try { this._javaOutput && this._javaOutput.close() } catch (e) {}
+      try { this._javaSocket.close() } catch (e) {}
+      this._javaInput = null
+      this._javaOutput = null
+      this._javaSocket = null
+    }
+  }
+
+  close(code, reason) {
+    const alreadyClosed = (this.readyState === CLOSED || this.readyState === CLOSING)
+    this.readyState = CLOSING
+    this._closeUnderlying()
+    this.readyState = CLOSED
+    // 已关闭过的不再重复抛 close 事件，避免上层重复排程重连
+    if (alreadyClosed) return
+    this._fire('close', { type: 'close', code, reason, wasClean: true })
+  }
+
+  /** 静默销毁：只释放资源，不触发 close/error 事件（供客户端重建传输层时调用） */
+  destroy() {
+    this.onopen = null
+    this.onmessage = null
+    this.onerror = null
+    this.onclose = null
+    this._listeners = { open: [], message: [], close: [], error: [] }
+    this.readyState = CLOSED
+    this._closeUnderlying()
   }
 
   // ---------- 事件分发 ----------

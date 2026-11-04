@@ -1,918 +1,1029 @@
 import DeviceBase from "./device-base.model"
 
-// 171C V2.0 BMS电池管理系统设备Model
+// (0x171C) BMS 设备协议(TCP) V2.0 —— 依据协议文档生成（与网页版 171Cv2-model.js 对齐）
 export class Model171C_V2 extends DeviceBase {
-    energyData;
-    stateData;
-    controlData;
-
     constructor() {
-        super();
-        this.energyData = new EnergyData();
-        this.stateData = new StateData();
-        this.controlData = new ControlData();
+        super()
+        this.deviceData = new DeviceData()
+        this.energyData = new EnergyData()
+        this.stateData = new StateData()
+        this.controlData = new ControlData()
     }
 
-    getEnergyData(jsonData, jsonData2) {
-        if (!jsonData) return
-        const data = jsonData.data || jsonData
-        for (const key in data) {
-            if (this.energyData.hasOwnProperty(key) && this.energyData[key]) {
-                let value = data[key]
-                const fn = fieldTransforms[key]
-                if (fn && value != null && value !== '' && value !== '--') {
-                    value = fn(value)
-                }
-                this.energyData[key].value = value
-            }
-        }
+    // 设备信息
+    getBaseData(jsonData) {
+        const data = jsonData.data || jsonData || {};
+        this.deviceData.B0.value = data.B0;
+        this.deviceData.B1.value = data.B1;
+        this.deviceData.B12.value = data.B12;
+        this.deviceData.B13.value = data.B13;
+        this.deviceData.B14.value = data.B14;
+        this.deviceData.B15.value = data.B15;
+        this.deviceData.B16.value = data.B16;
+        this.deviceData.B17.value = data.B17;
+        this.deviceData.B18.value = data.B18;
+        this.deviceData.B19.value = data.B19;
+        this.deviceData.B20.value = data.B20;
+        this.deviceData.B21b0.value = deviceEnums.B21b0[data.B21b0] || data.B21b0;
+        this.deviceData.B22.value = data.B22;
+        this.deviceData.B23.value = data.B23;
+        this.deviceData.B24.value = data.B24;
+        this.deviceData.B25.value = data.B25;
+        this.deviceData.B26.value = data.B26;
+        this.deviceData.B27.value = data.B27;
+        this.deviceData.B28.value = data.B28;
+        this.deviceData.B29.value = data.B29;
+        this.deviceData.B30.value = data.B30;
+        this.deviceData.B31.value = data.B31;
+        this.deviceData.B32.value = data.B32;
+        this.deviceData.B33.value = data.B33;
+        this.deviceData.B34.value = data.B34;
+        this.deviceData.B35.value = data.B35;
+        this.deviceData.B36.value = data.B36;
+        this.deviceData.B37.value = data.B37;
+        this.deviceData.B38.value = data.B38;
+        this.deviceData.B39.value = data.B39;
+        this.deviceData.B40.value = data.B40;
+        this.deviceData.B41.value = data.B41;
+        this.deviceData.B42.value = data.B42;
     }
 
+    // 能源数据
+    getEnergyData(jsonData) {
+        const data = jsonData || {};
+        this.energyData.B0b0.value = energyEnums.B0b0[data.B0b0] || data.B0b0;
+        this.energyData.B1b0.value = energyEnums.B1b0[data.B1b0] || data.B1b0;
+        this.energyData.B1b2.value = energyEnums.B1b2[data.B1b2] || data.B1b2;
+        this.energyData.B1b4.value = energyEnums.B1b4[data.B1b4] || data.B1b4;
+        this.energyData.B2.value = data.B2;
+        this.energyData.B4.value = data.B4;
+        this.energyData.B6.value = data.B6;
+        this.energyData.B8.value = data.B8;
+        this.energyData.B10.value = data.B10;
+        this.energyData.B12.value = data.B12;
+        this.energyData.B14.value = data.B14;
+        this.energyData.B16.value = data.B16;
+        this.energyData.B18.value = data.B18;
+        this.energyData.B20.value = data.B20;
+        this.energyData.B22.value = data.B22;
+        this.energyData.B24.value = data.B24;
+        this.energyData.B25.value = data.B25;
+        this.energyData.B26.value = data.B26;
+        this.energyData.B27.value = data.B27;
+        this.energyData.B28.value = data.B28;
+        this.energyData.B30.value = data.B30;
+        this.energyData.B32.value = data.B32;
+        this.energyData.B34.value = data.B34;
+        this.energyData.B36.value = data.B36;
+        this.energyData.B38.value = data.B38;
+        this.energyData.B40.value = data.B40;
+        this.energyData.B42.value = data.B42;
+        this.energyData.B44.value = data.B44;
+        this.energyData.B47b0.value = energyEnums.B47b0[data.B47b0] || data.B47b0;
+        this.energyData.B47b2.value = energyEnums.B47b2[data.B47b2] || data.B47b2;
+        this.energyData.B47b3.value = energyEnums.B47b3[data.B47b3] || data.B47b3;
+        this.energyData.B47b4.value = energyEnums.B47b4[data.B47b4] || data.B47b4;
+        this.energyData.B47b5.value = energyEnums.B47b5[data.B47b5] || data.B47b5;
+        this.energyData.B47b6.value = energyEnums.B47b6[data.B47b6] || data.B47b6;
+        this.energyData.B47b7.value = energyEnums.B47b7[data.B47b7] || data.B47b7;
+        this.energyData.B48.value = data.B48;
+        this.energyData.B50.value = energyEnums.B50[data.B50] || data.B50;
+        this.energyData.B53b0.value = energyEnums.B53b0[data.B53b0] || data.B53b0;
+        this.energyData.B53b1.value = energyEnums.B53b1[data.B53b1] || data.B53b1;
+        this.energyData.B53b2.value = energyEnums.B53b2[data.B53b2] || data.B53b2;
+        this.energyData.B53b3.value = energyEnums.B53b3[data.B53b3] || data.B53b3;
+        this.energyData.B55b0.value = energyEnums.B55b0[data.B55b0] || data.B55b0;
+        this.energyData.B55b2.value = energyEnums.B55b2[data.B55b2] || data.B55b2;
+        this.energyData.B55b4.value = energyEnums.B55b4[data.B55b4] || data.B55b4;
+        this.energyData.B55b6.value = energyEnums.B55b6[data.B55b6] || data.B55b6;
+        this.energyData.B56.value = data.B56;
+        this.energyData.B58.value = data.B58;
+        this.energyData.B60.value = data.B60;
+        this.energyData.B62.value = data.B62;
+        this.energyData.B66.value = energyEnums.B66[data.B66] || data.B66;
+        this.energyData.B68.value = data.B68;
+        this.energyData.B70.value = data.B70;
+        this.energyData.B72.value = data.B72;
+        this.energyData.B74.value = data.B74;
+        this.energyData.B78.value = data.B78;
+        this.energyData.B80.value = data.B80;
+        this.energyData.B82.value = data.B82;
+        this.energyData.B84.value = data.B84;
+        this.energyData.B86.value = data.B86;
+        this.energyData.B88.value = data.B88;
+        this.energyData.B90.value = data.B90;
+        this.energyData.B92.value = data.B92;
+        this.energyData.B94.value = data.B94;
+        this.energyData.B96.value = data.B96;
+        this.energyData.B98.value = data.B98;
+        this.energyData.B100.value = data.B100;
+        this.energyData.B102.value = data.B102;
+        this.energyData.B104.value = data.B104;
+        this.energyData.B106.value = data.B106;
+        this.energyData.B108.value = data.B108;
+        this.energyData.B112.value = data.B112;
+        this.energyData.B114.value = data.B114;
+        this.energyData.B116.value = data.B116;
+        this.energyData.B118.value = data.B118;
+        this.energyData.B120.value = data.B120;
+        this.energyData.B124.value = data.B124;
+        this.energyData.B128.value = data.B128;
+        this.energyData.B130.value = data.B130;
+        this.energyData.B134.value = data.B134;
+        this.energyData.B138.value = data.B138;
+        this.energyData.B142.value = data.B142;
+        this.energyData.B144.value = data.B144;
+        this.energyData.B148.value = data.B148;
+        this.energyData.B149.value = data.B149;
+        this.energyData.B150.value = data.B150;
+        this.energyData.B152.value = data.B152;
+        this.energyData.B156.value = data.B156;
+        this.energyData.B158.value = data.B158;
+        this.energyData.B159.value = data.B159;
+        this.energyData.B160.value = data.B160;
+        this.energyData.B161.value = data.B161;
+        this.energyData.B162.value = data.B162;
+        this.energyData.B163.value = data.B163;
+        this.energyData.B164.value = data.B164;
+        this.energyData.B165.value = data.B165;
+        this.energyData.B170.value = data.B170;
+        this.energyData.B172.value = data.B172;
+        this.energyData.B176.value = data.B176;
+        this.energyData.B178.value = data.B178;
+        this.energyData.B179.value = data.B179;
+        this.energyData.B180.value = data.B180;
+        this.energyData.B182.value = data.B182;
+        this.energyData.B184.value = data.B184;
+        this.energyData.B186.value = data.B186;
+        this.energyData.B188.value = data.B188;
+        this.energyData.B190.value = data.B190;
+        this.energyData.B192.value = data.B192;
+        this.energyData.B194.value = data.B194;
+        this.energyData.B195.value = data.B195;
+        this.energyData.B196.value = data.B196;
+        this.energyData.B198.value = data.B198;
+        this.energyData.B200.value = data.B200;
+        this.energyData.B202.value = data.B202;
+        this.energyData.B204.value = data.B204;
+        this.energyData.B206.value = data.B206;
+        this.energyData.B208.value = data.B208;
+        this.energyData.B210.value = data.B210;
+        this.energyData.B211.value = data.B211;
+        this.energyData.B212.value = data.B212;
+        this.energyData.B214.value = data.B214;
+        this.energyData.B216.value = data.B216;
+        this.energyData.B218.value = data.B218;
+        this.energyData.B220.value = data.B220;
+        this.energyData.B222.value = data.B222;
+    }
+
+    // 状态数据
     getStatusData(jsonData) {
-        if (!jsonData) return
-        const data = jsonData.data || jsonData
-        for (const key in data) {
-            if (this.stateData.hasOwnProperty(key) && this.stateData[key]) {
-                let value = data[key]
-                const fn = stateFieldTransforms[key]
-                if (fn && value != null && value !== '' && value !== '--') {
-                    value = fn(value)
-                }
-                this.stateData[key].value = value
-            }
-        }
+        const data = jsonData.data || jsonData || {};
+        this.stateData.B0b0.value = statusEnums.B0b0[data.B0b0] || data.B0b0;
+        this.stateData.B0b1.value = statusEnums.B0b1[data.B0b1] || data.B0b1;
+        this.stateData.B0b2.value = statusEnums.B0b2[data.B0b2] || data.B0b2;
+        this.stateData.B0b3.value = statusEnums.B0b3[data.B0b3] || data.B0b3;
+        this.stateData.B0b4.value = statusEnums.B0b4[data.B0b4] || data.B0b4;
+        this.stateData.B0b5.value = statusEnums.B0b5[data.B0b5] || data.B0b5;
+        this.stateData.B0b6.value = statusEnums.B0b6[data.B0b6] || data.B0b6;
+        this.stateData.B0b7.value = statusEnums.B0b7[data.B0b7] || data.B0b7;
+        // this.stateData.B1b0.value = statusEnums.B1b0[data.B1b0] || data.B1b0;
+        // this.stateData.B1b1.value = statusEnums.B1b1[data.B1b1] || data.B1b1;
+        // this.stateData.B1b2.value = statusEnums.B1b2[data.B1b2] || data.B1b2;
+        // this.stateData.B1b3.value = statusEnums.B1b3[data.B1b3] || data.B1b3;
+        this.stateData.B1b4.value = statusEnums.B1b4[data.B1b4] || data.B1b4;
+        // this.stateData.B1b5.value = statusEnums.B1b5[data.B1b5] || data.B1b5;
+        // this.stateData.B1b6.value = statusEnums.B1b6[data.B1b6] || data.B1b6;
+        // this.stateData.B1b7.value = statusEnums.B1b7[data.B1b7] || data.B1b7;
+        this.stateData.B2b0.value = statusEnums.B2b0[data.B2b0] || data.B2b0;
+        this.stateData.B2b1.value = statusEnums.B2b1[data.B2b1] || data.B2b1;
+        // this.stateData.B2b2.value = statusEnums.B2b2[data.B2b2] || data.B2b2;
+        // this.stateData.B2b3.value = statusEnums.B2b3[data.B2b3] || data.B2b3;
+        // this.stateData.B2b4.value = statusEnums.B2b4[data.B2b4] || data.B2b4;
+        // this.stateData.B2b5.value = statusEnums.B2b5[data.B2b5] || data.B2b5;
+        // this.stateData.B2b6.value = statusEnums.B2b6[data.B2b6] || data.B2b6;
+        // this.stateData.B2b7.value = statusEnums.B2b7[data.B2b7] || data.B2b7;
+        // this.stateData.B3b0.value = statusEnums.B3b0[data.B3b0] || data.B3b0;
+        // this.stateData.B3b1.value = statusEnums.B3b1[data.B3b1] || data.B3b1;
+        // this.stateData.B3b2.value = statusEnums.B3b2[data.B3b2] || data.B3b2;
+        // this.stateData.B3b3.value = statusEnums.B3b3[data.B3b3] || data.B3b3;
+        // this.stateData.B3b4.value = statusEnums.B3b4[data.B3b4] || data.B3b4;
+        this.stateData.B3b5.value = statusEnums.B3b5[data.B3b5] || data.B3b5;
+        this.stateData.B3b6.value = statusEnums.B3b6[data.B3b6] || data.B3b6;
+        this.stateData.B3b7.value = statusEnums.B3b7[data.B3b7] || data.B3b7;
+        // this.stateData.B4b0.value = statusEnums.B4b0[data.B4b0] || data.B4b0;
+        // this.stateData.B4b1.value = statusEnums.B4b1[data.B4b1] || data.B4b1;
+        // this.stateData.B4b2.value = statusEnums.B4b2[data.B4b2] || data.B4b2;
+        // this.stateData.B4b3.value = statusEnums.B4b3[data.B4b3] || data.B4b3;
+        // this.stateData.B4b4.value = statusEnums.B4b4[data.B4b4] || data.B4b4;
+        // this.stateData.B6b0.value = statusEnums.B6b0[data.B6b0] || data.B6b0;
+        // this.stateData.B6b1.value = statusEnums.B6b1[data.B6b1] || data.B6b1;
+        // this.stateData.B6b2.value = statusEnums.B6b2[data.B6b2] || data.B6b2;
+        // this.stateData.B6b3.value = statusEnums.B6b3[data.B6b3] || data.B6b3;
+        // this.stateData.B6b4.value = statusEnums.B6b4[data.B6b4] || data.B6b4;
+        // this.stateData.B6b5.value = statusEnums.B6b5[data.B6b5] || data.B6b5;
+        // this.stateData.B6b6.value = statusEnums.B6b6[data.B6b6] || data.B6b6;
+        // this.stateData.B6b7.value = statusEnums.B6b7[data.B6b7] || data.B6b7;
+        // this.stateData.B7b0.value = statusEnums.B7b0[data.B7b0] || data.B7b0;
+        // this.stateData.B7b1.value = statusEnums.B7b1[data.B7b1] || data.B7b1;
+        // this.stateData.B7b2.value = statusEnums.B7b2[data.B7b2] || data.B7b2;
+        // this.stateData.B7b3.value = statusEnums.B7b3[data.B7b3] || data.B7b3;
+        // this.stateData.B7b4.value = statusEnums.B7b4[data.B7b4] || data.B7b4;
+        // this.stateData.B7b5.value = statusEnums.B7b5[data.B7b5] || data.B7b5;
+        // this.stateData.B7b6.value = statusEnums.B7b6[data.B7b6] || data.B7b6;
+        // this.stateData.B7b7.value = statusEnums.B7b7[data.B7b7] || data.B7b7;
+        // this.stateData.B8b0.value = statusEnums.B8b0[data.B8b0] || data.B8b0;
+        // this.stateData.B8b1.value = statusEnums.B8b1[data.B8b1] || data.B8b1;
+        // this.stateData.B8b2.value = statusEnums.B8b2[data.B8b2] || data.B8b2;
+        // this.stateData.B8b3.value = statusEnums.B8b3[data.B8b3] || data.B8b3;
+        // this.stateData.B8b4.value = statusEnums.B8b4[data.B8b4] || data.B8b4;
+        // this.stateData.B8b5.value = statusEnums.B8b5[data.B8b5] || data.B8b5;
+        // this.stateData.B8b6.value = statusEnums.B8b6[data.B8b6] || data.B8b6;
+        // this.stateData.B8b7.value = statusEnums.B8b7[data.B8b7] || data.B8b7;
+        // this.stateData.B9b0.value = statusEnums.B9b0[data.B9b0] || data.B9b0;
+        // this.stateData.B9b1.value = statusEnums.B9b1[data.B9b1] || data.B9b1;
+        // this.stateData.B9b2.value = statusEnums.B9b2[data.B9b2] || data.B9b2;
+        // this.stateData.B9b3.value = statusEnums.B9b3[data.B9b3] || data.B9b3;
+        // this.stateData.B9b4.value = statusEnums.B9b4[data.B9b4] || data.B9b4;
+        // this.stateData.B9b5.value = statusEnums.B9b5[data.B9b5] || data.B9b5;
+        // this.stateData.B9b6.value = statusEnums.B9b6[data.B9b6] || data.B9b6;
+        // this.stateData.B9b7.value = statusEnums.B9b7[data.B9b7] || data.B9b7;
+        // this.stateData.B10b0.value = statusEnums.B10b0[data.B10b0] || data.B10b0;
+        // this.stateData.B10b1.value = statusEnums.B10b1[data.B10b1] || data.B10b1;
+        // this.stateData.B10b2.value = statusEnums.B10b2[data.B10b2] || data.B10b2;
+        // this.stateData.B10b3.value = statusEnums.B10b3[data.B10b3] || data.B10b3;
+        // this.stateData.B10b4.value = statusEnums.B10b4[data.B10b4] || data.B10b4;
+        // this.stateData.B10b5.value = statusEnums.B10b5[data.B10b5] || data.B10b5;
+        // this.stateData.B10b6.value = statusEnums.B10b6[data.B10b6] || data.B10b6;
+        // this.stateData.B10b7.value = statusEnums.B10b7[data.B10b7] || data.B10b7;
+        // this.stateData.B11b0.value = statusEnums.B11b0[data.B11b0] || data.B11b0;
+        // this.stateData.B11b1.value = statusEnums.B11b1[data.B11b1] || data.B11b1;
+        // this.stateData.B11b2.value = statusEnums.B11b2[data.B11b2] || data.B11b2;
+        // this.stateData.B11b3.value = statusEnums.B11b3[data.B11b3] || data.B11b3;
+        // this.stateData.B11b4.value = statusEnums.B11b4[data.B11b4] || data.B11b4;
+        // this.stateData.B11b5.value = statusEnums.B11b5[data.B11b5] || data.B11b5;
+        // this.stateData.B11b6.value = statusEnums.B11b6[data.B11b6] || data.B11b6;
+        // this.stateData.B11b7.value = statusEnums.B11b7[data.B11b7] || data.B11b7;
+        // this.stateData.B12b0.value = statusEnums.B12b0[data.B12b0] || data.B12b0;
+        // this.stateData.B12b1.value = statusEnums.B12b1[data.B12b1] || data.B12b1;
+        // this.stateData.B12b2.value = statusEnums.B12b2[data.B12b2] || data.B12b2;
+        // this.stateData.B12b3.value = statusEnums.B12b3[data.B12b3] || data.B12b3;
+        // this.stateData.B12b4.value = statusEnums.B12b4[data.B12b4] || data.B12b4;
+        // this.stateData.B12b5.value = statusEnums.B12b5[data.B12b5] || data.B12b5;
+        // this.stateData.B12b6.value = statusEnums.B12b6[data.B12b6] || data.B12b6;
+        // this.stateData.B12b7.value = statusEnums.B12b7[data.B12b7] || data.B12b7;
+        // this.stateData.B13b0.value = statusEnums.B13b0[data.B13b0] || data.B13b0;
+        // this.stateData.B13b1.value = statusEnums.B13b1[data.B13b1] || data.B13b1;
+        // this.stateData.B13b2.value = statusEnums.B13b2[data.B13b2] || data.B13b2;
+        // this.stateData.B13b3.value = statusEnums.B13b3[data.B13b3] || data.B13b3;
+        // this.stateData.B13b4.value = statusEnums.B13b4[data.B13b4] || data.B13b4;
+        // this.stateData.B13b5.value = statusEnums.B13b5[data.B13b5] || data.B13b5;
+        // this.stateData.B13b6.value = statusEnums.B13b6[data.B13b6] || data.B13b6;
+        // this.stateData.B13b7.value = statusEnums.B13b7[data.B13b7] || data.B13b7;
+        // this.stateData.B16.value = statusEnums.B16[data.B16] || data.B16;
+        // this.stateData.B18.value = statusEnums.B18[data.B18] || data.B18;
+        // this.stateData.B20.value = statusEnums.B20[data.B20] || data.B20;
+        // this.stateData.B22.value = statusEnums.B22[data.B22] || data.B22;
+        // this.stateData.B24.value = statusEnums.B24[data.B24] || data.B24;
+        // this.stateData.B26.value = statusEnums.B26[data.B26] || data.B26;
+        // this.stateData.B28.value = statusEnums.B28[data.B28] || data.B28;
+        // this.stateData.B30.value = statusEnums.B30[data.B30] || data.B30;
+        // this.stateData.B32.value = statusEnums.B32[data.B32] || data.B32;
+        // this.stateData.B34.value = data.B34;
+        // this.stateData.B36.value = data.B36;
+        // this.stateData.B38.value = data.B38;
+        // this.stateData.B40.value = data.B40;
+        // this.stateData.B42.value = data.B42;
+        // this.stateData.B44.value = data.B44;
+        // this.stateData.B48.value = data.B48;
+        // this.stateData.B50.value = data.B50;
+        // this.stateData.B52.value = data.B52;
+        // this.stateData.B54.value = data.B54;
+        // this.stateData.B56.value = data.B56;
+        // this.stateData.B58.value = data.B58;
+        // this.stateData.B60.value = data.B60;
+        // this.stateData.B62.value = data.B62;
+        // this.stateData.B64.value = data.B64;
+        // this.stateData.B66.value = data.B66;
+        // this.stateData.B70.value = data.B70;
+        // this.stateData.B72.value = data.B72;
+        // this.stateData.B74.value = data.B74;
+        // this.stateData.B76.value = data.B76;
+        this.stateData.B78.value = data.B78;
+        this.stateData.B80.value = data.B80;
+        // this.stateData.B85.value = data.B85;
+        // this.stateData.B87.value = data.B87;
+        // this.stateData.B89.value = data.B89;
+        // this.stateData.B91.value = data.B91;
+        // this.stateData.B93.value = data.B93;
+        // this.stateData.B95.value = data.B95;
+        // this.stateData.B97.value = data.B97;
+        // this.stateData.B99.value = data.B99;
+        // this.stateData.B102.value = data.B102;
+        // this.stateData.B104.value = data.B104;
+        // this.stateData.B106.value = data.B106;
+        // this.stateData.B108.value = data.B108;
+        // this.stateData.B111b0.value = statusEnums.B111b0[data.B111b0] || data.B111b0;
+        // this.stateData.B111b4.value = statusEnums.B111b4[data.B111b4] || data.B111b4;
+        // this.stateData.B112.value = data.B112;
+        // this.stateData.B114.value = data.B114;
+        // this.stateData.B116.value = data.B116;
+        // this.stateData.B118.value = statusEnums.B118[data.B118] || data.B118;
+        // this.stateData.B120.value = data.B120;
+        // this.stateData.B122.value = data.B122;
+        // this.stateData.B124.value = data.B124;
+        // this.stateData.B126.value = data.B126;
+        // this.stateData.B128.value = data.B128;
+        // this.stateData.B130.value = data.B130;
+        // this.stateData.B131.value = data.B131;
+        // this.stateData.B131b1.value = data.B131b1;
+        // this.stateData.B131b2.value = data.B131b2;
+        // this.stateData.B131b3.value = data.B131b3;
+        // this.stateData.B131b4.value = data.B131b4;
+        // this.stateData.B131b5.value = data.B131b5;
+        // this.stateData.B131b6.value = data.B131b6;
+        // this.stateData.B131b7.value = data.B131b7;
+        // this.stateData.B132.value = data.B132;
+        // this.stateData.B134.value = data.B134;
+        // this.stateData.B136.value = data.B136;
+        // this.stateData.B138.value = data.B138;
+        // this.stateData.B140.value = data.B140;
+        // this.stateData.B142.value = data.B142;
+        // this.stateData.B144.value = data.B144;
+        // this.stateData.B146.value = data.B146;
+        // this.stateData.B148.value = data.B148;
+        // this.stateData.B150.value = data.B150;
+        // this.stateData.B152.value = data.B152;
+        // this.stateData.B154.value = data.B154;
+        // this.stateData.B156.value = data.B156;
+        // this.stateData.B158.value = data.B158;
+        // this.stateData.B160.value = data.B160;
+        // this.stateData.B162.value = data.B162;
+        // this.stateData.B166.value = data.B166;
+        // this.stateData.B168.value = data.B168;
+        // this.stateData.B170.value = data.B170;
+        // this.stateData.B172.value = data.B172;
+        // this.stateData.B174.value = data.B174;
+        // this.stateData.B176.value = data.B176;
+        // this.stateData.B178.value = data.B178;
+        // this.stateData.B180.value = data.B180;
+        // this.stateData.B182.value = data.B182;
+        // this.stateData.B184.value = data.B184;
+        // this.stateData.B186.value = data.B186;
+        // this.stateData.B188.value = data.B188;
+        // this.stateData.B190.value = data.B190;
+        // this.stateData.B192.value = data.B192;
+        // this.stateData.B194.value = data.B194;
+        // this.stateData.B196.value = data.B196;
+        // this.stateData.B198.value = data.B198;
+        // this.stateData.B200.value = data.B200;
+        // this.stateData.B202.value = data.B202;
+        // this.stateData.B204.value = data.B204;
+        // this.stateData.B206.value = data.B206;
+        // this.stateData.B208.value = data.B208;
+        // this.stateData.B210.value = data.B210;
+        // this.stateData.B212.value = data.B212;
+        // this.stateData.B216.value = data.B216;
+        // this.stateData.B218.value = data.B218;
+        // this.stateData.B220.value = data.B220;
+        // this.stateData.B222.value = data.B222;
+        // this.stateData.B224.value = data.B224;
+        // this.stateData.B226.value = data.B226;
+        // this.stateData.B228.value = data.B228;
+        // this.stateData.B231.value = data.B231;
+        // this.stateData.B231b1.value = data.B231b1;
+        // this.stateData.B231b2.value = data.B231b2;
+        // this.stateData.B231b3.value = data.B231b3;
+        // this.stateData.B231b4.value = data.B231b4;
     }
 
+    // 控制数据
     getControlData(jsonData) {
-        if (!jsonData) return
-        const data = jsonData.data || jsonData
-        for (const key in data) {
-            if (this.controlData.hasOwnProperty(key) && this.controlData[key]) {
-                let value = data[key]
-                const fn = controlFieldTransforms[key]
-                if (fn && value != null && value !== '' && value !== '--') {
-                    value = fn(value)
-                }
-                this.controlData[key].value = value
-            }
-        }
+        const data = jsonData.data || jsonData || {};
+        this.controlData.B0.value = data.B0;
+        this.controlData.B3b0.value = controlEnums.B3b0[data.B3b0] || data.B3b0;
+        this.controlData.B3b1.value = controlEnums.B3b1[data.B3b1] || data.B3b1;
+        this.controlData.B3b2.value = controlEnums.B3b2[data.B3b2] || data.B3b2;
+        this.controlData.B3b3.value = controlEnums.B3b3[data.B3b3] || data.B3b3;
+        this.controlData.B3b4.value = controlEnums.B3b4[data.B3b4] || data.B3b4;
+        this.controlData.B5b0.value = controlEnums.B5b0[data.B5b0] || data.B5b0;
+        this.controlData.B5b1.value = controlEnums.B5b1[data.B5b1] || data.B5b1;
+        this.controlData.B5b2.value = controlEnums.B5b2[data.B5b2] || data.B5b2;
+        this.controlData.B5b3.value = data.B5b3;
+        this.controlData.B6.value = data.B6;
+        this.controlData.B6b1.value = data.B6b1;
+        this.controlData.B6b2.value = data.B6b2;
+        this.controlData.B6b3.value = data.B6b3;
+        this.controlData.B6b4.value = data.B6b4;
+        this.controlData.B6b5.value = data.B6b5;
+        this.controlData.B7.value = data.B7;
+        this.controlData.B7b1.value = data.B7b1;
+        this.controlData.B7b2.value = data.B7b2;
+        this.controlData.B7b3.value = data.B7b3;
+        this.controlData.B7b4.value = data.B7b4;
+        this.controlData.B7b5.value = data.B7b5;
+        this.controlData.B7b6.value = data.B7b6;
+        this.controlData.B7b7.value = data.B7b7;
+        this.controlData.B8.value = controlEnums.B8[data.B8] || data.B8;
+        this.controlData.B12.value = data.B12;
+        this.controlData.B14.value = data.B14;
+        this.controlData.B16.value = data.B16;
+        this.controlData.B18.value = data.B18;
+        this.controlData.B20.value = data.B20;
+        this.controlData.B22.value = data.B22;
+        this.controlData.B24.value = data.B24;
+        this.controlData.B26.value = data.B26;
+        this.controlData.B30.value = data.B30;
+        this.controlData.B32.value = data.B32;
+        this.controlData.B34.value = data.B34;
+        this.controlData.B36.value = data.B36;
+        this.controlData.B38.value = data.B38;
+        this.controlData.B40.value = data.B40;
     }
+
 }
 
-// ============ 枚举映射 ============
-
-// BMS接触器状态
-const contactorStatusEnum = {
-    0: '已断开',
-    1: '正在连接_1',
-    2: '正在连接_2',
-    3: '已连接',
-    4: '连接失败'
+class DeviceData {
+    B0 = { name: '设备大类', value: '--' }
+    B1 = { name: '设备小类', value: '--' }
+    B12 = { name: '协议版本V2.0 （高五位大版本， 第三位小版本）', value: '--' }
+    B13 = { name: '设备地址', value: '--' }
+    B14 = { name: '南北', value: '--' }
+    B15 = { name: '纬度（整数部分）', value: '--' }
+    B16 = { name: '纬度（小数部分）', value: '--' }
+    B17 = { name: '东西', value: '--' }
+    B18 = { name: '经度（整数部分）', value: '--' }
+    B19 = { name: '经度（小数部分）', value: '--' }
+    B20 = { name: '软件版本 （高四位大版本， 第四位小版本）', value: '--' }
+    B21b0 = { name: '通信状态', value: '--' }
+    B22 = { name: 'MAC地址（40~47）', value: '--' }
+    B23 = { name: 'MAC地址（32~39）', value: '--' }
+    B24 = { name: 'MAC地址（24~31）', value: '--' }
+    B25 = { name: 'MAC地址（16~23）', value: '--' }
+    B26 = { name: 'MAC地址（8~15）', value: '--' }
+    B27 = { name: 'MAC地址（0~7）', value: '--' }
+    B28 = { name: '条形码（第13位）', value: '--' }
+    B29 = { name: '条形码（第12位）', value: '--' }
+    B30 = { name: '条形码（第11位）', value: '--' }
+    B31 = { name: '条形码（第10位）', value: '--' }
+    B32 = { name: '条形码（第9位）', value: '--' }
+    B33 = { name: '条形码（第8位）', value: '--' }
+    B34 = { name: '条形码（第7位）', value: '--' }
+    B35 = { name: '条形码（第6位）', value: '--' }
+    B36 = { name: '条形码（第5位）', value: '--' }
+    B37 = { name: '条形码（第4位）', value: '--' }
+    B38 = { name: '条形码（第3位）', value: '--' }
+    B39 = { name: '条形码（第2位）', value: '--' }
+    B40 = { name: '条形码（第1位）', value: '--' }
+    B41 = { name: '设备名称有效字节个数', value: '--' }
+    B42 = { name: '设备名称', value: '--' }
 }
 
-// 故障告警等级
-const faultLevelEnum = {
-    0: '无故障',
-    1: '1级',
-    2: '2级',
-    3: '3级'
+class EnergyData {
+    B0b0 = { name: 'BMS接触器状态', value: '--' }
+    B1b0 = { name: '故障告警等级', value: '--' }
+    B1b2 = { name: '电池充放电状态', value: '--' }
+    B1b4 = { name: 'BMS运行状态', value: '--' }
+    B2 = { name: '充电最大电压(V)', value: '--' }
+    B4 = { name: '最大放电电流(A)', value: '--' }
+    B6 = { name: '放电最小电压(V)', value: '--' }
+    B8 = { name: '最大充电电流(A)', value: '--' }
+    B10 = { name: '电池电压(V)', value: '--' }
+    B12 = { name: '电池电流(A)', value: '--' }
+    B14 = { name: '电池平均电压(mV)', value: '--' }
+    B16 = { name: '最大电池电压(mV)', value: '--' }
+    B18 = { name: '最小电池电压(mV)', value: '--' }
+    B20 = { name: '最大电压电池位置', value: '--' }
+    B22 = { name: '最小电压电池位置', value: '--' }
+    B24 = { name: '最高单体温度(℃)', value: '--' }
+    B25 = { name: '最低单体温度(℃)', value: '--' }
+    B26 = { name: '最大温差(℃)', value: '--' }
+    B27 = { name: '电池平均温度(℃)', value: '--' }
+    B28 = { name: '最大温度电池位置', value: '--' }
+    B30 = { name: '最小温度电池位置', value: '--' }
+    B32 = { name: 'SOC(%)', value: '--' }
+    B34 = { name: '实际电池剩余容量(%)', value: '--' }
+    B36 = { name: '正绝缘电阻(kΩ)', value: '--' }
+    B38 = { name: '负绝缘电阻(kΩ)', value: '--' }
+    B40 = { name: 'HV1电压(V)', value: '--' }
+    B42 = { name: 'HV2电压(V)', value: '--' }
+    B44 = { name: 'BAT+电压(V)', value: '--' }
+    B47b0 = { name: '预充状态', value: '--' }
+    B47b2 = { name: '均衡状态', value: '--' }
+    B47b3 = { name: '加热状态', value: '--' }
+    B47b4 = { name: '制冷状态', value: '--' }
+    B47b5 = { name: '高压低锁定状态', value: '--' }
+    B47b6 = { name: '准备状态', value: '--' }
+    B47b7 = { name: 'BMS模式', value: '--' }
+    B48 = { name: '电池累计电压(V)', value: '--' }
+    B50 = { name: '自检状态', value: '--' }
+    B53b0 = { name: '总正继电器', value: '--' }
+    B53b1 = { name: '总负继电器', value: '--' }
+    B53b2 = { name: '预充继电器', value: '--' }
+    B53b3 = { name: '断路器', value: '--' }
+    B55b0 = { name: '总正继电器', value: '--' }
+    B55b2 = { name: '总负继电器', value: '--' }
+    B55b4 = { name: '预充继电器', value: '--' }
+    B55b6 = { name: '断路器', value: '--' }
+    B56 = { name: '分流器电流(A)', value: '--' }
+    B58 = { name: '霍尔电流1(A)', value: '--' }
+    B60 = { name: '霍尔电流2(A)', value: '--' }
+    B62 = { name: 'CAN霍尔电流(A)', value: '--' }
+    B66 = { name: '电池连接失败原因', value: '--' }
+    B68 = { name: '电池未成功连接原因', value: '--' }
+    B70 = { name: 'BMS最大单体值(mV)', value: '--' }
+    B72 = { name: '最大单体值位置', value: '--' }
+    B74 = { name: '单体压差(mV)', value: '--' }
+    B78 = { name: '故障字1', value: '--' }
+    B80 = { name: '故障字2', value: '--' }
+    B82 = { name: '故障字3', value: '--' }
+    B84 = { name: '故障字4', value: '--' }
+    B86 = { name: '故障字5', value: '--' }
+    B88 = { name: '故障字6', value: '--' }
+    B90 = { name: '故障字7', value: '--' }
+    B92 = { name: '故障字8', value: '--' }
+    B94 = { name: '故障字9', value: '--' }
+    B96 = { name: '故障字10', value: '--' }
+    B98 = { name: '故障字11', value: '--' }
+    B100 = { name: '故障字12', value: '--' }
+    B102 = { name: '故障字13', value: '--' }
+    B104 = { name: '故障字14', value: '--' }
+    B106 = { name: '故障字15', value: '--' }
+    B108 = { name: '故障字16', value: '--' }
+    B112 = { name: 'SOH(%)', value: '--' }
+    B114 = { name: 'pack总容量(AH)', value: '--' }
+    B116 = { name: '单次放电累计电量(KWH)', value: '--' }
+    B118 = { name: '单次充电累计电量(KWH)', value: '--' }
+    B120 = { name: '放电累计电量(kWh)', value: '--' }
+    B124 = { name: '充电累计电量(kWh)', value: '--' }
+    B128 = { name: '累计充电次数', value: '--' }
+    B130 = { name: '总使用时间(min)', value: '--' }
+    B134 = { name: '总放电时间(min)', value: '--' }
+    B138 = { name: '总充电时间(min)', value: '--' }
+    B142 = { name: '当日累计充电量(kWh)', value: '--' }
+    B144 = { name: '当日累计放电量(kWh)', value: '--' }
+    B148 = { name: '极柱最大温度(℃)', value: '--' }
+    B149 = { name: '极柱最小温度(℃)', value: '--' }
+    B150 = { name: '极柱最大温度位置', value: '--' }
+    B152 = { name: '极柱最小温度位置', value: '--' }
+    B156 = { name: 'PDU温度数量', value: '--' }
+    B158 = { name: 'PDU1极柱温度(℃)', value: '--' }
+    B159 = { name: 'PDU2极柱温度(℃)', value: '--' }
+    B160 = { name: 'PDU3极柱温度(℃)', value: '--' }
+    B161 = { name: 'PDU4极柱温度(℃)', value: '--' }
+    B162 = { name: 'PDU5极柱温度(℃)', value: '--' }
+    B163 = { name: 'PDU6极柱温度(℃)', value: '--' }
+    B164 = { name: 'PDU7极柱温度(℃)', value: '--' }
+    B165 = { name: 'PDU8极柱温度(℃)', value: '--' }
+    B170 = { name: 'PACK温感采集数量', value: '--' }
+    B172 = { name: 'PACK电压采集数量', value: '--' }
+    B176 = { name: 'PACK1总压(V)', value: '--' }
+    B178 = { name: 'PACK1最高单体温度(℃)', value: '--' }
+    B179 = { name: 'PACK1最低单体温度(℃)', value: '--' }
+    B180 = { name: 'PACK1最高温度位置', value: '--' }
+    B182 = { name: 'PACK1最低温度位置', value: '--' }
+    B184 = { name: 'PACK1最高电压位置', value: '--' }
+    B186 = { name: 'PACK1最低电压位置', value: '--' }
+    B188 = { name: 'PACK1最高单体电压(mV)', value: '--' }
+    B190 = { name: 'PACK1最低单体电压(mV)', value: '--' }
+    B192 = { name: 'PACK2总压(V)', value: '--' }
+    B194 = { name: 'PACK2最高单体温度(℃)', value: '--' }
+    B195 = { name: 'PACK最低单体温度(℃)', value: '--' }
+    B196 = { name: 'PACK2最高温度位置', value: '--' }
+    B198 = { name: 'PACK2最低温度位置', value: '--' }
+    B200 = { name: 'PACK2最高电压位置', value: '--' }
+    B202 = { name: 'PACK2最低电压位置', value: '--' }
+    B204 = { name: 'PACK2最高单体电压(mV)', value: '--' }
+    B206 = { name: 'PACK2最低单体电压(mV)', value: '--' }
+    B208 = { name: 'PACK3总压(V)', value: '--' }
+    B210 = { name: 'PACK3最高单体温度(℃)', value: '--' }
+    B211 = { name: 'PACK3最低单体温度(℃)', value: '--' }
+    B212 = { name: 'PACK3最高温度位置', value: '--' }
+    B214 = { name: 'PACK3最低温度位置', value: '--' }
+    B216 = { name: 'PACK3最高电压位置', value: '--' }
+    B218 = { name: 'PACK3最低电压位置', value: '--' }
+    B220 = { name: 'PACK3最高单体电压(mV)', value: '--' }
+    B222 = { name: 'PACK3最低单体电压(mV)', value: '--' }
 }
 
-// 电池充放电状态
-const chargeDischargeStatusEnum = {
-    0: '空闲',
-    1: '充电中',
-    2: '放电中'
+class StateData {
+    B0b0 = { name: '总正继电器', value: '--' }
+    B0b1 = { name: '总负继电器', value: '--' }
+    B0b2 = { name: '断路器脱扣控制', value: '--' }
+    B0b3 = { name: '预充继电器控制', value: '--' }
+    B0b4 = { name: '绿灯', value: '--' }
+    B0b5 = { name: '红灯', value: '--' }
+    B0b6 = { name: '预留', value: '--' }
+    B0b7 = { name: '从机唤醒', value: '--' }
+    // B1b0 = { name: 'LSS1', value: '--' }
+    // B1b1 = { name: 'LSS2', value: '--' }
+    // B1b2 = { name: 'LSS3', value: '--' }
+    // B1b3 = { name: 'LSS4', value: '--' }
+    B1b4 = { name: '三级故障输出', value: '--' }
+    // B1b5 = { name: 'SW_OUT2', value: '--' }
+    // B1b6 = { name: 'SW_OUT3', value: '--' }
+    // B1b7 = { name: 'SW_OUT4', value: '--' }
+    B2b0 = { name: '消防泄放', value: '--' }
+    B2b1 = { name: '水浸（常开）', value: '--' }
+    // B2b2 = { name: 'DIH3', value: '--' }
+    // B2b3 = { name: 'DIH4', value: '--' }
+    // B2b4 = { name: 'DIH5', value: '--' }
+    // B2b5 = { name: 'DIH6', value: '--' }
+    // B2b6 = { name: 'DIH7', value: '--' }
+    // B2b7 = { name: 'DIH8', value: '--' }
+    // B3b0 = { name: 'DIL1', value: '--' }
+    // B3b1 = { name: 'DIL2', value: '--' }
+    // B3b2 = { name: 'DIL3', value: '--' }
+    // B3b3 = { name: 'DIL4', value: '--' }
+    // B3b4 = { name: 'DIL5', value: '--' }
+    B3b5 = { name: 'DIS1 (SWDi1)', value: '--' }
+    B3b6 = { name: 'DIS2 (SWDi2)', value: '--' }
+    B3b7 = { name: 'DIS3 (SWDi3)', value: '--' }
+    // B4b0 = { name: 'DIS4 (SWDi4)', value: '--' }
+    // B4b1 = { name: 'DIS5 (SWDi5)', value: '--' }
+    // B4b2 = { name: 'SW_IN1', value: '--' }
+    // B4b3 = { name: 'SW_IN2', value: '--' }
+    // B4b4 = { name: 'SW_IN3', value: '--' }
+    // B6b0 = { name: 'S1HSS1', value: '--' }
+    // B6b1 = { name: 'S2HSS1', value: '--' }
+    // B6b2 = { name: 'S3HSS1', value: '--' }
+    // B6b3 = { name: 'S4HSS1', value: '--' }
+    // B6b4 = { name: 'S5HSS1', value: '--' }
+    // B6b5 = { name: 'S6HSS1', value: '--' }
+    // B6b6 = { name: 'S7HSS1', value: '--' }
+    // B6b7 = { name: 'S8HSS1', value: '--' }
+    // B7b0 = { name: 'S9HSS1', value: '--' }
+    // B7b1 = { name: 'S10HSS1', value: '--' }
+    // B7b2 = { name: 'S11HSS1', value: '--' }
+    // B7b3 = { name: 'S12HSS1', value: '--' }
+    // B7b4 = { name: 'S13HSS1', value: '--' }
+    // B7b5 = { name: 'S14HSS1', value: '--' }
+    // B7b6 = { name: 'S15HSS1', value: '--' }
+    // B7b7 = { name: 'S16HSS1', value: '--' }
+    // B8b0 = { name: 'S1HSS2', value: '--' }
+    // B8b1 = { name: 'S2HSS2', value: '--' }
+    // B8b2 = { name: 'S3HSS2', value: '--' }
+    // B8b3 = { name: 'S4HSS2', value: '--' }
+    // B8b4 = { name: 'S5HSS2', value: '--' }
+    // B8b5 = { name: 'S6HSS2', value: '--' }
+    // B8b6 = { name: 'S7HSS2', value: '--' }
+    // B8b7 = { name: 'S8HSS2', value: '--' }
+    // B9b0 = { name: 'S9HSS2', value: '--' }
+    // B9b1 = { name: 'S10HSS2', value: '--' }
+    // B9b2 = { name: 'S11HSS2', value: '--' }
+    // B9b3 = { name: 'S12HSS2', value: '--' }
+    // B9b4 = { name: 'S13HSS2', value: '--' }
+    // B9b5 = { name: 'S14HSS2', value: '--' }
+    // B9b6 = { name: 'S15HSS2', value: '--' }
+    // B9b7 = { name: 'S16HSS2', value: '--' }
+    // B10b0 = { name: 'S1DL1', value: '--' }
+    // B10b1 = { name: 'S2DL1', value: '--' }
+    // B10b2 = { name: 'S3DL1', value: '--' }
+    // B10b3 = { name: 'S4DL1', value: '--' }
+    // B10b4 = { name: 'S5DL1', value: '--' }
+    // B10b5 = { name: 'S6DL1', value: '--' }
+    // B10b6 = { name: 'S7DL1', value: '--' }
+    // B10b7 = { name: 'S8DL1', value: '--' }
+    // B11b0 = { name: 'S9DL1', value: '--' }
+    // B11b1 = { name: 'S10DL1', value: '--' }
+    // B11b2 = { name: 'S11DL1', value: '--' }
+    // B11b3 = { name: 'S12DL1', value: '--' }
+    // B11b4 = { name: 'S13DL1', value: '--' }
+    // B11b5 = { name: 'S14DL1', value: '--' }
+    // B11b6 = { name: 'S15DL1', value: '--' }
+    // B11b7 = { name: 'S16DL1', value: '--' }
+    // B12b0 = { name: 'S1DL2', value: '--' }
+    // B12b1 = { name: 'S2DL2', value: '--' }
+    // B12b2 = { name: 'S3DL2', value: '--' }
+    // B12b3 = { name: 'S4DL2', value: '--' }
+    // B12b4 = { name: 'S5DL2', value: '--' }
+    // B12b5 = { name: 'S6DL2', value: '--' }
+    // B12b6 = { name: 'S7DL2', value: '--' }
+    // B12b7 = { name: 'S8DL2', value: '--' }
+    // B13b0 = { name: 'S9DL2', value: '--' }
+    // B13b1 = { name: 'S10DL2', value: '--' }
+    // B13b2 = { name: 'S11DL2', value: '--' }
+    // B13b3 = { name: 'S12DL2', value: '--' }
+    // B13b4 = { name: 'S13DL2', value: '--' }
+    // B13b5 = { name: 'S14DL2', value: '--' }
+    // B13b6 = { name: 'S15DL2', value: '--' }
+    // B13b7 = { name: 'S16DL2', value: '--' }
+    // B16 = { name: '放电自检故障', value: '--' }
+    // B18 = { name: '放电诊断故障标志', value: '--' }
+    // B20 = { name: '放电诊断故障动作', value: '--' }
+    // B22 = { name: '充电自检故障', value: '--' }
+    // B24 = { name: '充电诊断故障标志', value: '--' }
+    // B26 = { name: '充电诊断故障动作', value: '--' }
+    // B28 = { name: '其他放电故障1', value: '--' }
+    // B30 = { name: '其他充电故障2', value: '--' }
+    // B32 = { name: '国标充电通信故障', value: '--' }
+    // B34 = { name: 'CC阻值(Ω)', value: '--' }
+    // B36 = { name: 'CC电压值(V)', value: '--' }
+    // B38 = { name: 'CC2阻值(Ω)', value: '--' }
+    // B40 = { name: 'CC2电压值(V)', value: '--' }
+    // B42 = { name: 'CP PWM 频率(Hz)', value: '--' }
+    // B44 = { name: 'CP PWM 占空比(%)', value: '--' }
+    // B48 = { name: 'BCU供电电压(mV)', value: '--' }
+    // B50 = { name: '霍尔12V供电电压(mV)', value: '--' }
+    // B52 = { name: '霍尔5V供电电压(mV)', value: '--' }
+    // B54 = { name: '霍尔基准电压(mV)', value: '--' }
+    // B56 = { name: '系统5V电压(mV)', value: '--' }
+    // B58 = { name: '系统3V电压(mV)', value: '--' }
+    // B60 = { name: '高压ADC12V电压(mV)', value: '--' }
+    // B62 = { name: '板载NTC温度(℃)', value: '--' }
+    // B64 = { name: 'RTC片内温度(℃)', value: '--' }
+    // B66 = { name: '分流器ADC片内温度(℃)', value: '--' }
+    // B70 = { name: '额定电压(V)', value: '--' }
+    // B72 = { name: '额定容量(Ah)', value: '--' }
+    // B74 = { name: '单体数量', value: '--' }
+    // B76 = { name: '电池温感数', value: '--' }
+    B78 = { name: '从机（pack）数量', value: '--' }
+    B80 = { name: '极柱温感数', value: '--' }
+    // B85 = { name: '风机T1温度(℃)', value: '--' }
+    // B87 = { name: '风机T2温度(℃)', value: '--' }
+    // B89 = { name: '风机T3温度(℃)', value: '--' }
+    // B91 = { name: '风机T4温度(℃)', value: '--' }
+    // B93 = { name: '风机1转速', value: '--' }
+    // B95 = { name: '风机2转速', value: '--' }
+    // B97 = { name: '风机3转速', value: '--' }
+    // B99 = { name: '风机4转速', value: '--' }
+    // B102 = { name: '回液压力(0.001bar)', value: '--' }
+    // B104 = { name: '供液压力(0.001bar)', value: '--' }
+    // B106 = { name: '环境温度(℃)', value: '--' }
+    // B108 = { name: 'TMS温度设置(℃)', value: '--' }
+    // B111b0 = { name: 'TMS运行模式', value: '--' }
+    // B111b4 = { name: 'TMS运行状态', value: '--' }
+    // B112 = { name: 'TMS入口温度(℃)', value: '--' }
+    // B114 = { name: 'TMS出口温度(℃)', value: '--' }
+    // B116 = { name: 'TMS供应商代码', value: '--' }
+    // B118 = { name: '产品机型', value: '--' }
+    // B120 = { name: '软件版本', value: '--' }
+    // B122 = { name: '控制模式', value: '--' }
+    // B124 = { name: '进出水压差值(0.001bar)', value: '--' }
+    // B126 = { name: '压缩机转速(1rpm)', value: '--' }
+    // B128 = { name: '交流供电电压(1V)', value: '--' }
+    // B130 = { name: '通信状态', value: '--' }
+    // B131 = { name: '机组运行状态', value: '--' }
+    // B131b1 = { name: '自检状态', value: '--' }
+    // B131b2 = { name: '制冷运行状态', value: '--' }
+    // B131b3 = { name: '制热运行状态', value: '--' }
+    // B131b4 = { name: '水泵运行状态', value: '--' }
+    // B131b5 = { name: '外风机运行状态', value: '--' }
+    // B131b6 = { name: '报警状态', value: '--' }
+    // B131b7 = { name: '补水泵运行状态', value: '--' }
+    // B132 = { name: '电子膨胀阀开度', value: '--' }
+    // B134 = { name: '低压侧压力值(0.001bar)', value: '--' }
+    // B136 = { name: '高压侧压力值(0.001bar)', value: '--' }
+    // B138 = { name: '冷凝盘管温度(℃)', value: '--' }
+    // B140 = { name: '板换温度(℃)', value: '--' }
+    // B142 = { name: '吸气温度(℃)', value: '--' }
+    // B144 = { name: '排气温度(℃)', value: '--' }
+    // B146 = { name: '环境温度(℃)', value: '--' }
+    // B148 = { name: '系统流量', value: '--' }
+    // B150 = { name: '水泵转速', value: '--' }
+    // B152 = { name: '2#电子膨胀阀开度', value: '--' }
+    // B154 = { name: '2#低压侧压力值(0.001bar)', value: '--' }
+    // B156 = { name: '2#高压侧压力值(0.001bar)', value: '--' }
+    // B158 = { name: '2#吸气温度(℃)', value: '--' }
+    // B160 = { name: '2#排气温度(℃)', value: '--' }
+    // B162 = { name: '2#水泵转速', value: '--' }
+    // B166 = { name: 'TMS故障字1透传', value: '--' }
+    // B168 = { name: 'TMS故障字2透传', value: '--' }
+    // B170 = { name: 'TMS故障字3透传', value: '--' }
+    // B172 = { name: 'TMS故障字4透传', value: '--' }
+    // B174 = { name: 'TMS故障字5透传', value: '--' }
+    // B176 = { name: 'TMS故障字6透传', value: '--' }
+    // B178 = { name: 'TMS故障字7透传', value: '--' }
+    // B180 = { name: 'TMS故障字8透传', value: '--' }
+    // B182 = { name: 'TMS故障字9透传', value: '--' }
+    // B184 = { name: 'TMS故障字10透传', value: '--' }
+    // B186 = { name: 'TMS故障字11透传', value: '--' }
+    // B188 = { name: 'TMS故障字12透传', value: '--' }
+    // B190 = { name: 'TMS故障字13透传', value: '--' }
+    // B192 = { name: 'TMS故障字14透传', value: '--' }
+    // B194 = { name: 'TMS故障字15透传', value: '--' }
+    // B196 = { name: 'TMS故障字16透传', value: '--' }
+    // B198 = { name: 'TMS开关机故障复位', value: '--' }
+    // B200 = { name: 'TMS模式设置', value: '--' }
+    // B202 = { name: '制冷设定点(℃)', value: '--' }
+    // B204 = { name: '制冷回差', value: '--' }
+    // B206 = { name: '制热设定点(℃)', value: '--' }
+    // B208 = { name: '制热回差', value: '--' }
+    // B210 = { name: '制冷目标参数设置(℃)', value: '--' }
+    // B212 = { name: '制热目标参数设置(℃)', value: '--' }
+    // B216 = { name: '通信状态', value: '--' }
+    // B218 = { name: '（单设备/主机）CO浓度(ppm)', value: '--' }
+    // B220 = { name: '（单设备/主机）氢气浓度(ppm)', value: '--' }
+    // B222 = { name: '（单设备/主机）烟雾数值(ppm)', value: '--' }
+    // B224 = { name: '（单设备/主机）VOC数值(ppm)', value: '--' }
+    // B226 = { name: '（单设备/主机）温度数值(℃)', value: '--' }
+    // B228 = { name: '（单设备/主机）报警等级', value: '--' }
+    // B231 = { name: 'CO浓度报警', value: '--' }
+    // B231b1 = { name: '氢气浓度报警', value: '--' }
+    // B231b2 = { name: 'VOC浓度报警', value: '--' }
+    // B231b3 = { name: '烟雾浓度报警', value: '--' }
+    // B231b4 = { name: '温度报警', value: '--' }
 }
 
-// BMS运行状态
-const bmsRunStatusEnum = {
-    0: '正常',
-    1: '禁止充电',
-    2: '禁止放电',
-    3: '待机',
-    4: '停止'
+class ControlData {
+    B0 = { name: '心跳', value: '--' }
+    B3b0 = { name: '上高压请求', value: '--' }
+    B3b1 = { name: '下高压请求', value: '--' }
+    B3b2 = { name: '紧急下电请求', value: '--' }
+    B3b3 = { name: '预充请求', value: '--' }
+    B3b4 = { name: '绝缘检测开关', value: '--' }
+    B5b0 = { name: '请求BMS重启', value: '--' }
+    B5b1 = { name: '交流断路器切断请求', value: '--' }
+    B5b2 = { name: '系统锁', value: '--' }
+    B5b3 = { name: '故障复位', value: '--' }
+    B6 = { name: '强控HSS8', value: '--' }
+    B6b1 = { name: '强控LSS1', value: '--' }
+    B6b2 = { name: '强控LSS2', value: '--' }
+    B6b3 = { name: '强控DO1', value: '--' }
+    B6b4 = { name: '强控DO2', value: '--' }
+    B6b5 = { name: '强控DO3', value: '--' }
+    B7 = { name: '强控使能位', value: '--' }
+    B7b1 = { name: '强控HSS1', value: '--' }
+    B7b2 = { name: '强控HSS2', value: '--' }
+    B7b3 = { name: '强控HSS3', value: '--' }
+    B7b4 = { name: '强控HSS4', value: '--' }
+    B7b5 = { name: '强控HSS5', value: '--' }
+    B7b6 = { name: '强控HSS6', value: '--' }
+    B7b7 = { name: '强控HSS7', value: '--' }
+    B8 = { name: '绝缘检测控制', value: '--' }
+    B12 = { name: 'TMS开关机故障复位', value: '--' }
+    B14 = { name: 'TMS模式设置', value: '--' }
+    B16 = { name: '制冷设定点(℃)', value: '--' }
+    B18 = { name: '制冷回差(℃)', value: '--' }
+    B20 = { name: '制热设定点(℃)', value: '--' }
+    B22 = { name: '制热回差(℃)', value: '--' }
+    B24 = { name: '制冷目标参数设置(℃)', value: '--' }
+    B26 = { name: '制热目标参数设置(℃)', value: '--' }
+    B30 = { name: '控温开启值(℃)', value: '--' }
+    B32 = { name: '控温关闭值(℃)', value: '--' }
+    B34 = { name: '控湿度开启值(%)', value: '--' }
+    B36 = { name: '控湿度关闭值(%)', value: '--' }
+    B38 = { name: '温度报警上限值(℃)', value: '--' }
+    B40 = { name: '温度报警下限值(℃)', value: '--' }
 }
 
-// 预充状态
-const prechargeStatusEnum = {
-    0: '无',
-    1: '预充电',
-    2: '已预充电',
-    3: '预充电失败'
+// 设备信息 枚举值
+const deviceEnums = {
+    B21b0: { 0: '通信正常', 1: '通信故障' },
 }
 
-// 0/1 状态
-const onOffEnum = { 0: '无效', 1: '有效' }
-const balanceEnum = { 0: '未在均衡', 1: '在均衡' }
-const relayEnum = { 0: '断开', 1: '闭合' }
-
-// 自检状态
-const selfCheckEnum = {
-    0: '检查中',
-    1: '完成',
-    2: '失败',
-    3: '预留'
+// 能源数据 枚举值
+const energyEnums = {
+    B0b0: { 0: '已断开', 1: '正在连接_1', 2: '正在连接_2', 3: '已连接', 4: '连接失败' },
+    B1b0: { 0: '无故障', 1: '1级', 2: '2级', 3: '3级' },
+    B1b2: { 0: '空闲', 1: '充电中', 2: '放电中' },
+    B1b4: { 0: '正常', 1: '禁止充电', 2: '禁止放电', 3: '待机', 4: '停止' },
+    B47b0: { 0: '无', 1: '预充电', 2: '已预充电', 3: '预充电失败' },
+    B47b2: { 0: '未在均衡', 1: '在均衡' },
+    B47b3: { 0: '无效', 1: '有效' },
+    B47b4: { 0: '无效', 1: '有效' },
+    B47b5: { 0: '无效', 1: '有效' },
+    B47b6: { 0: '无效', 1: '有效' },
+    B47b7: { 0: '无效', 1: '有效' },
+    B50: { 0: '检查中', 1: '完成', 2: '失败' },
+    B53b0: { 0: '断开', 1: '闭合' },
+    B53b1: { 0: '断开', 1: '闭合' },
+    B53b2: { 0: '断开', 1: '闭合' },
+    B53b3: { 0: '断开', 1: '闭合' },
+    B55b0: { 0: '无故障', 1: '粘连故障', 2: '开路故障', 3: '诊断电路故障' },
+    B55b2: { 0: '无故障', 1: '粘连故障', 2: '开路故障', 3: '诊断电路故障' },
+    B55b4: { 0: '无故障', 1: '粘连故障', 2: '开路故障', 3: '诊断电路故障' },
+    B55b6: { 0: '无故障', 1: '粘连故障', 2: '开路故障', 3: '诊断电路故障' },
+    B66: { 0: '成功', 1: '通信失败', 2: '数据错误', 3: '其他错误' },
 }
 
-// 继电器故障
-const relayFaultEnum = {
-    0: '无故障',
-    1: '粘连故障',
-    2: '开路故障',
-    3: '诊断电路故障'
+// 状态数据 枚举值
+const statusEnums = {
+    B0b0: { 0: '无效', 1: '有效' },
+    B0b1: { 0: '无效', 1: '有效' },
+    B0b2: { 0: '无效', 1: '有效' },
+    B0b3: { 0: '无效', 1: '有效' },
+    B0b4: { 0: '无效', 1: '有效' },
+    B0b5: { 0: '无效', 1: '有效' },
+    B0b6: { 0: '无效', 1: '有效' },
+    B0b7: { 0: '无效', 1: '有效' },
+    B1b0: { 0: '无效', 1: '有效' },
+    B1b1: { 0: '无效', 1: '有效' },
+    B1b2: { 0: '无效', 1: '有效' },
+    B1b3: { 0: '无效', 1: '有效' },
+    B1b4: { 0: '无效', 1: '有效' },
+    B1b5: { 0: '无效', 1: '有效' },
+    B1b6: { 0: '无效', 1: '有效' },
+    B1b7: { 0: '无效', 1: '有效' },
+    B2b0: { 0: '无效', 1: '有效' },
+    B2b1: { 0: '无效', 1: '有效' },
+    B2b2: { 0: '无效', 1: '有效' },
+    B2b3: { 0: '无效', 1: '有效' },
+    B2b4: { 0: '无效', 1: '有效' },
+    B2b5: { 0: '无效', 1: '有效' },
+    B2b6: { 0: '无效', 1: '有效' },
+    B2b7: { 0: '无效', 1: '有效' },
+    B3b0: { 0: '无效', 1: '有效' },
+    B3b1: { 0: '无效', 1: '有效' },
+    B3b2: { 0: '无效', 1: '有效' },
+    B3b3: { 0: '无效', 1: '有效' },
+    B3b4: { 0: '无效', 1: '有效' },
+    B3b5: { 0: '无效', 1: '有效' },
+    B3b6: { 0: '无效', 1: '有效' },
+    B3b7: { 0: '无效', 1: '有效' },
+    B4b0: { 0: '无效', 1: '有效' },
+    B4b1: { 0: '无效', 1: '有效' },
+    B4b2: { 0: '无效', 1: '有效' },
+    B4b3: { 0: '无效', 1: '有效' },
+    B4b4: { 0: '无效', 1: '有效' },
+    B6b0: { 0: '无效', 1: '有效' },
+    B6b1: { 0: '无效', 1: '有效' },
+    B6b2: { 0: '无效', 1: '有效' },
+    B6b3: { 0: '无效', 1: '有效' },
+    B6b4: { 0: '无效', 1: '有效' },
+    B6b5: { 0: '无效', 1: '有效' },
+    B6b6: { 0: '无效', 1: '有效' },
+    B6b7: { 0: '无效', 1: '有效' },
+    B7b0: { 0: '无效', 1: '有效' },
+    B7b1: { 0: '无效', 1: '有效' },
+    B7b2: { 0: '无效', 1: '有效' },
+    B7b3: { 0: '无效', 1: '有效' },
+    B7b4: { 0: '无效', 1: '有效' },
+    B7b5: { 0: '无效', 1: '有效' },
+    B7b6: { 0: '无效', 1: '有效' },
+    B7b7: { 0: '无效', 1: '有效' },
+    B8b0: { 0: '无效', 1: '有效' },
+    B8b1: { 0: '无效', 1: '有效' },
+    B8b2: { 0: '无效', 1: '有效' },
+    B8b3: { 0: '无效', 1: '有效' },
+    B8b4: { 0: '无效', 1: '有效' },
+    B8b5: { 0: '无效', 1: '有效' },
+    B8b6: { 0: '无效', 1: '有效' },
+    B8b7: { 0: '无效', 1: '有效' },
+    B9b0: { 0: '无效', 1: '有效' },
+    B9b1: { 0: '无效', 1: '有效' },
+    B9b2: { 0: '无效', 1: '有效' },
+    B9b3: { 0: '无效', 1: '有效' },
+    B9b4: { 0: '无效', 1: '有效' },
+    B9b5: { 0: '无效', 1: '有效' },
+    B9b6: { 0: '无效', 1: '有效' },
+    B9b7: { 0: '无效', 1: '有效' },
+    B10b0: { 0: '无效', 1: '有效' },
+    B10b1: { 0: '无效', 1: '有效' },
+    B10b2: { 0: '无效', 1: '有效' },
+    B10b3: { 0: '无效', 1: '有效' },
+    B10b4: { 0: '无效', 1: '有效' },
+    B10b5: { 0: '无效', 1: '有效' },
+    B10b6: { 0: '无效', 1: '有效' },
+    B10b7: { 0: '无效', 1: '有效' },
+    B11b0: { 0: '无效', 1: '有效' },
+    B11b1: { 0: '无效', 1: '有效' },
+    B11b2: { 0: '无效', 1: '有效' },
+    B11b3: { 0: '无效', 1: '有效' },
+    B11b4: { 0: '无效', 1: '有效' },
+    B11b5: { 0: '无效', 1: '有效' },
+    B11b6: { 0: '无效', 1: '有效' },
+    B11b7: { 0: '无效', 1: '有效' },
+    B12b0: { 0: '无效', 1: '有效' },
+    B12b1: { 0: '无效', 1: '有效' },
+    B12b2: { 0: '无效', 1: '有效' },
+    B12b3: { 0: '无效', 1: '有效' },
+    B12b4: { 0: '无效', 1: '有效' },
+    B12b5: { 0: '无效', 1: '有效' },
+    B12b6: { 0: '无效', 1: '有效' },
+    B12b7: { 0: '无效', 1: '有效' },
+    B13b0: { 0: '无效', 1: '有效' },
+    B13b1: { 0: '无效', 1: '有效' },
+    B13b2: { 0: '无效', 1: '有效' },
+    B13b3: { 0: '无效', 1: '有效' },
+    B13b4: { 0: '无效', 1: '有效' },
+    B13b5: { 0: '无效', 1: '有效' },
+    B13b6: { 0: '无效', 1: '有效' },
+    B13b7: { 0: '无效', 1: '有效' },
+    B16: { 0: '无故障', 1: '有故障' },
+    B18: { 0: '无故障', 1: '有故障' },
+    B20: { 0: '无故障', 1: '有故障' },
+    B22: { 0: '无故障', 1: '有故障' },
+    B24: { 0: '无故障', 1: '有故障' },
+    B26: { 0: '无故障', 1: '有故障' },
+    B28: { 0: '无故障', 1: '有故障' },
+    B30: { 0: '无故障', 1: '有故障' },
+    B32: { 0: '无故障', 1: '有故障' },
+    B111b0: { 1: '制冷', 2: '加热', 3: '自循环', 4: '自动', 5: '停机' },
+    B111b4: { 0: '空闲', 1: '准备启动', 2: '运行中', 3: '延迟关机', 4: '故障', 5: '通信失败' },
+    B118: { 1: '8Kw单相' },
 }
 
-// 电池连接失败原因
-const connectFailReasonEnum = {
-    0: '成功',
-    1: '通信失败',
-    2: '数据错误',
-    3: '其他错误'
-}
-
-// ============ 字段转换规则 ============
-// 传输值 → 显示值
-//  val/10      : 传输值=实际值*10
-//  val/10-1000 : 传输值=(实际值+1000)*10
-//  val-50      : 传输值=实际值+50 (温度)
-//  val*5       : 传输值=实际值*5 (时间,单位5min)
-//  enum        : 枚举映射
-
-const v10 = v => v / 10
-const v10_1000 = v => v / 10 - 1000
-const vSub50 = v => v - 50
-const vMul5 = v => v * 5
-
-const fieldTransforms = {
-    // 枚举状态
-    'B0':  v => contactorStatusEnum[v] ?? v,
-    'B2':  v => faultLevelEnum[v] ?? v,
-    'B4':  v => chargeDischargeStatusEnum[v] ?? v,
-    'B6':  v => bmsRunStatusEnum[v] ?? v,
-    'B56': v => prechargeStatusEnum[v] ?? v,
-    'B58': v => balanceEnum[v] ?? v,
-    'B60': v => onOffEnum[v] ?? v,
-    'B62': v => onOffEnum[v] ?? v,
-    'B64': v => onOffEnum[v] ?? v,
-    'B66': v => onOffEnum[v] ?? v,
-    'B68': v => onOffEnum[v] ?? v,
-    'B72': v => selfCheckEnum[v] ?? v,
-    'B74': v => relayEnum[v] ?? v,
-    'B76': v => relayEnum[v] ?? v,
-    'B78': v => relayEnum[v] ?? v,
-    'B80': v => relayEnum[v] ?? v,
-    'B82': v => relayFaultEnum[v] ?? v,
-    'B84': v => relayFaultEnum[v] ?? v,
-    'B86': v => relayFaultEnum[v] ?? v,
-    'B88': v => relayFaultEnum[v] ?? v,
-    'B98': v => connectFailReasonEnum[v] ?? v,
-
-    // 电压/电流/SOC/电量 (val/10)
-    'B8':  v10,   // 充电最大电压
-    'B10': v10,   // 最大放电电流
-    'B12': v10,   // 放电最小电压
-    'B14': v10,   // 最大充电电流
-    'B16': v10,   // 电池电压
-    'B42': v10,   // SOC
-    'B44': v10,   // 实际电池剩余容量
-    'B50': v10,   // HV1电压
-    'B52': v10,   // HV2电压
-    'B54': v10,   // BAT+电压
-    'B70': v10,   // 电池累计电压
-    'B140': v10,  // SOH
-    'B142': v10,  // pack总容量
-    'B144': v10,  // 单次放电累计电量
-    'B146': v10,  // 单次充电累计电量
-    'B148': v10,  // 放电累计电量
-    'B150': v10,  // 充电累计电量
-    'B160': v10,  // 当日累计充电量
-    'B162': v10,  // 当日累计放电量
-    'B194': v10,  // PACK1总压
-    'B212': v10,  // PACK2总压
-    'B230': v10,  // PACK3总压
-
-    // 电流 (val/10 - 1000)
-    'B18': v10_1000,  // 电池电流
-    'B90': v10_1000,  // 分流器电流
-    'B92': v10_1000,  // 霍尔电流1
-    'B94': v10_1000,  // 霍尔电流2
-    'B96': v10_1000,  // CAN霍尔电流
-
-    // 温度 (val - 50)
-    'B30': vSub50,  // 最高单体温度
-    'B32': vSub50,  // 最低单体温度
-    'B34': vSub50,  // 最大温差
-    'B36': vSub50,  // 电池平均温度
-    'B164': vSub50, // 极柱最大温度
-    'B166': vSub50, // 极柱最小温度
-    'B174': vSub50, // PDU1极柱温度
-    'B176': vSub50, // PDU2极柱温度
-    'B178': vSub50, // PDU3极柱温度
-    'B180': vSub50, // PDU4极柱温度
-    'B182': vSub50, // PDU5极柱温度
-    'B184': vSub50, // PDU6极柱温度
-    'B186': vSub50, // PDU7极柱温度
-    'B188': vSub50, // PDU8极柱温度
-    'B196': vSub50, // PACK1最高单体温度
-    'B198': vSub50, // PACK1最低单体温度
-    'B214': vSub50, // PACK2最高单体温度
-    'B216': vSub50, // PACK2最低单体温度
-    'B232': vSub50, // PACK3最高单体温度
-    'B234': vSub50, // PACK3最低单体温度
-
-    // 时间 (val * 5, 单位5min → 分钟)
-    'B154': vMul5,  // 总使用时间
-    'B156': vMul5,  // 总放电时间
-    'B158': vMul5,  // 总充电时间
-}
-
-// ============ 状态数据转换规则 ============
-
-// 0:无效/异常/关闭  1:有效/正常/开启
-const stateOnOff = v => onOffEnum[v] ?? v
-// 0:正常  1:异常
-const normalAbnormal = v => (v === 0 ? '正常' : v === 1 ? '异常' : v)
-// 0:无故障  1:有故障
-const hasFault = v => (v === 0 ? '无故障' : v === 1 ? '有故障' : v)
-// 0:关闭  1:开启
-const closeOpen = v => (v === 0 ? '关闭' : v === 1 ? '开启' : v)
-// 温度 (实际值+50)*10 → val/10 - 50
-const v10Sub50 = v => v / 10 - 50
-// 压力 实际值*1000 → val/1000
-const v1000 = v => v / 1000
-
-// TMS运行模式
-const tmsRunModeEnum = { 1: '制冷', 2: '加热', 3: '自循环', 4: '自动', 5: '停机' }
-// TMS运行状态
-const tmsRunStatusEnum = { 0: '空闲', 1: '准备启动', 2: '运行中', 3: '延迟关机', 4: '故障', 5: '通信失败' }
-// TMS供应商代码
-const tmsSupplierEnum = { 0: '未知', 1: '泰铂', 2: '英维克', 3: '黑盾', 4: '同飞', 5: '零熵' }
-// 产品机型
-const productModelEnum = { 1: '8Kw单相', 2: '8KW三相', 3: '20KW三相', 4: '40KW三相', 5: '50KW三相', 6: '60KW三相' }
-// TMS开关机故障复位
-const tmsPowerEnum = { 0: '无效', 1: '开机', 2: '关机', 3: '故障复位' }
-// TMS模式设置
-const tmsModeSetEnum = { 0: '无效', 1: '制冷', 2: '制热', 3: '自循环' }
-// 控制模式
-const controlModeEnum = { 0: '出水温度控制模式', 1: '进水温度控制模式' }
-// 报警等级
-const alarmLevelEnum2 = { 0: '正常', 1: '1级', 2: '2级', 3: '3级' }
-// 通信状态(0无效 1正常 2异常)
-const commStatusEnum2 = { 0: '无效', 1: '通信正常', 2: '通信异常' }
-// 通信状态(0异常 1正常)
-const commStatusEnum3 = { 0: '异常', 1: '正常' }
-
-const stateFieldTransforms = {
-    // IO 状态 (0无效/1有效)
-    'B0': stateOnOff, 'B2': stateOnOff, 'B4': stateOnOff, 'B6': stateOnOff,
-    'B8': stateOnOff, 'B10': stateOnOff, 'B12': stateOnOff, 'B14': stateOnOff,
-    'B16': stateOnOff, 'B18': stateOnOff, 'B20': stateOnOff, 'B22': stateOnOff, 'B24': stateOnOff,
-    'B26': stateOnOff, 'B28': stateOnOff, 'B30': stateOnOff, 'B32': stateOnOff,
-    'B34': stateOnOff, 'B36': stateOnOff, 'B38': stateOnOff, 'B40': stateOnOff,
-    'B42': stateOnOff, 'B44': stateOnOff, 'B46': stateOnOff, 'B48': stateOnOff,
-    'B50': stateOnOff, 'B52': stateOnOff, 'B54': stateOnOff, 'B56': stateOnOff, 'B58': stateOnOff,
-    'B60': stateOnOff, 'B62': stateOnOff, 'B64': stateOnOff, 'B66': stateOnOff, 'B68': stateOnOff,
-    'B70': stateOnOff, 'B72': stateOnOff, 'B74': stateOnOff,
-    // 从机 HSS1/HSS2/DIL1/DIL2 (B76~B202)
-    'B76': stateOnOff, 'B78': stateOnOff, 'B80': stateOnOff, 'B82': stateOnOff,
-    'B84': stateOnOff, 'B86': stateOnOff, 'B88': stateOnOff, 'B90': stateOnOff,
-    'B92': stateOnOff, 'B94': stateOnOff, 'B96': stateOnOff, 'B98': stateOnOff,
-    'B100': stateOnOff, 'B102': stateOnOff, 'B104': stateOnOff, 'B106': stateOnOff,
-    'B108': stateOnOff, 'B110': stateOnOff, 'B112': stateOnOff, 'B114': stateOnOff,
-    'B116': stateOnOff, 'B118': stateOnOff, 'B120': stateOnOff, 'B122': stateOnOff,
-    'B124': stateOnOff, 'B126': stateOnOff, 'B128': stateOnOff, 'B130': stateOnOff,
-    'B132': stateOnOff, 'B134': stateOnOff, 'B136': stateOnOff, 'B138': stateOnOff,
-    'B140': stateOnOff, 'B142': stateOnOff, 'B144': stateOnOff, 'B146': stateOnOff,
-    'B148': stateOnOff, 'B150': stateOnOff, 'B152': stateOnOff, 'B154': stateOnOff,
-    'B156': stateOnOff, 'B158': stateOnOff, 'B160': stateOnOff, 'B162': stateOnOff,
-    'B164': stateOnOff, 'B166': stateOnOff, 'B168': stateOnOff, 'B170': stateOnOff,
-    'B172': stateOnOff, 'B174': stateOnOff, 'B176': stateOnOff, 'B178': stateOnOff,
-    'B180': stateOnOff, 'B182': stateOnOff, 'B184': stateOnOff, 'B186': stateOnOff,
-    'B188': stateOnOff, 'B190': stateOnOff, 'B192': stateOnOff, 'B194': stateOnOff,
-    'B196': stateOnOff, 'B198': stateOnOff, 'B200': stateOnOff, 'B202': stateOnOff,
-
-    // 充放电故障 (0无故障/1有故障)
-    'B204': hasFault, 'B206': hasFault, 'B208': hasFault,
-    'B210': hasFault, 'B212': hasFault, 'B214': hasFault,
-    'B216': hasFault, 'B218': hasFault, 'B220': hasFault,
-
-    // CC电压 / CP占空比
-    'B224': v1000,   // CC电压值 (实际值*1000)
-    'B232': v10,     // CP PWM占空比 (实际值*10)
-
-    // 温度 (实际值+50, int16)
-    'B248': vSub50,  // 板载NTC温度
-    'B250': vSub50,  // RTC片内温度
-    'B252': vSub50,  // 分流器ADC片内温度
-
-    // 额定电压/容量 (实际值*10)
-    'B254': v10,     // 额定电压
-    'B256': v10,     // 额定容量
-
-    // 风机温度 (实际值+50, int8)
-    'B266': vSub50, 'B268': vSub50, 'B270': vSub50, 'B272': vSub50,
-
-    // 液冷压力/温度
-    'B282': v1000,   // 回液压力
-    'B284': v1000,   // 供液压力
-    'B286': v10Sub50, // 环境温度
-    'B288': v10Sub50, // TMS温度设置
-
-    // TMS 枚举
-    'B290': v => tmsRunModeEnum[v] ?? v,
-    'B292': v => tmsRunStatusEnum[v] ?? v,
-    'B294': v10Sub50, // TMS入口温度
-    'B296': v10Sub50, // TMS出口温度
-    'B298': v => tmsSupplierEnum[v] ?? v,
-    'B300': v => productModelEnum[v] ?? v,
-    'B304': v => controlModeEnum[v] ?? v,
-    'B306': v1000,    // 进出水压差值
-    'B312': v => commStatusEnum3[v] ?? v,
-
-    // 机组状态 (0异常/1正常 或 0关闭/1开启)
-    'B314': v => commStatusEnum3[v] ?? v,  // 机组运行状态
-    'B316': v => commStatusEnum3[v] ?? v,  // 自检状态
-    'B318': closeOpen,  // 制冷运行状态
-    'B320': closeOpen,  // 制热运行状态
-    'B322': closeOpen,  // 水泵运行状态
-    'B324': closeOpen,  // 外风机运行状态
-    'B326': v => commStatusEnum3[v] ?? v,  // 报警状态
-    'B328': closeOpen,  // 补水泵运行状态
-
-    // 压力/温度
-    'B332': v1000,    // 低压侧压力值
-    'B334': v1000,    // 高压侧压力值
-    'B336': v10Sub50, // 冷凝盘管温度
-    'B338': v10Sub50, // 板换温度
-    'B340': v10Sub50, // 吸气温度
-    'B342': v10Sub50, // 排气温度
-    'B344': v10Sub50, // 环境温度
-    'B352': v1000,    // 2#低压侧压力值
-    'B354': v1000,    // 2#高压侧压力值
-    'B356': v10Sub50, // 2#吸气温度
-    'B358': v10Sub50, // 2#排气温度
-
-    // TMS控制
-    'B394': v => tmsPowerEnum[v] ?? v,
-    'B396': v => tmsModeSetEnum[v] ?? v,
-    'B398': v10Sub50, // 制冷设定点
-    'B400': v10,      // 制冷回差
-    'B402': v10Sub50, // 制热设定点
-    'B404': v10,      // 制热回差
-    'B406': v10Sub50, // 制冷目标参数设置
-    'B408': v10Sub50, // 制热目标参数设置
-
-    // 传感器
-    'B410': v => commStatusEnum2[v] ?? v,
-    'B420': v10Sub50, // 温度数值
-    'B422': v => alarmLevelEnum2[v] ?? v,
-
-    // 浓度报警 (0正常/1异常)
-    'B424': normalAbnormal, 'B426': normalAbnormal,
-    'B428': normalAbnormal, 'B430': normalAbnormal, 'B432': normalAbnormal,
-}
-
-// ============ 控制数据枚举映射 ============
-
-// 请求类 (0无请求/1请求)
-const reqNoReqEnum = { 0: '无请求', 1: '请求' }
-const reqNoReq = v => reqNoReqEnum[v] ?? v
-
-// 强控 (0不强控/1强控)
-const forceCtlEnum = { 0: '不强控', 1: '强控' }
-const forceCtl = v => forceCtlEnum[v] ?? v
-
-// 绝缘检测控制 (0开启/1关闭/2上电只检测一次)
-const insulationCtlEnum = { 0: '开启绝缘检测', 1: '关闭绝缘检测', 2: '上电只检测一次' }
-
-// 系统锁 (0无请求/1释放)
-const sysLockEnum = { 0: '无请求', 1: '系统锁释放' }
-
-// ============ 控制数据字段转换 ============
-const controlFieldTransforms = {
-    // 心跳 - 直传
-    // B0: 心跳 (无转换)
-
-    // 上下电/预充请求 (0无请求/1请求)
-    'B2': reqNoReq,   // 上高压请求
-    'B4': reqNoReq,   // 下高压请求
-    'B6': reqNoReq,   // 紧急下电请求
-    'B8': reqNoReq,   // 预充请求
-
-    // 绝缘检测开关 (0开启/1关闭)
-    'B10': v => insulationCtlEnum[v] ?? v,
-
-    // 重启/断路器/系统锁/故障复位
-    'B12': reqNoReq,                    // 请求BMS重启
-    'B14': reqNoReq,                    // 交流断路器切断请求
-    'B16': v => sysLockEnum[v] ?? v,    // 系统锁
-    'B18': reqNoReq,                    // 故障复位
-
-    // 强控 (0不强控/1强控)
-    'B20': forceCtl, 'B22': forceCtl, 'B24': forceCtl,  // HSS8, LSS1, LSS2
-    'B26': forceCtl, 'B28': forceCtl, 'B30': forceCtl,  // DO1, DO2, DO3
-    'B32': forceCtl, 'B34': forceCtl,                   // 强控预留 x2
-    'B36': forceCtl,                                    // 强控使能位
-    'B38': forceCtl, 'B40': forceCtl, 'B42': forceCtl,  // HSS1, HSS2, HSS3
-    'B44': forceCtl, 'B46': forceCtl, 'B48': forceCtl,  // HSS4, HSS5, HSS6
-    'B50': forceCtl,                                    // HSS7
-
-    // 绝缘检测控制
-    'B52': v => insulationCtlEnum[v] ?? v,
-
-    // TMS开关机故障复位 / 模式设置 - 直传 (枚举同 state)
-    'B54': v => tmsPowerEnum[v] ?? v,
-    'B56': v => tmsModeSetEnum[v] ?? v,
-
-    // TMS设定点/回差/目标参数
-    'B58': v10Sub50,  // 制冷设定点
-    'B60': v10,       // 制冷回差
-    'B62': v10Sub50,  // 制热设定点
-    'B64': v10,       // 制热回差
-    'B66': v10Sub50,  // 制冷目标参数设置
-    'B68': v10Sub50,  // 制热目标参数设置
-
-    // 控温控湿
-    'B70': v10Sub50,  // 控温开启值
-    'B72': v10Sub50,  // 控温关闭值
-    'B74': v10,       // 控湿度开启值
-    'B76': v10,       // 控湿度关闭值
-
-    // 温度报警上下限
-    'B78': v10Sub50,  // 温度报警上限值
-    'B80': v10Sub50,  // 温度报警下限值
-}
-
-// ============ 数据容器 ============
-
-export class EnergyData {
-    // 状态枚举
-    B0  = { name: 'BMS接触器状态', value: "--" };
-    B2  = { name: '故障告警等级', value: "--" };
-    B4  = { name: '电池充放电状态', value: "--" };
-    B6  = { name: 'BMS运行状态', value: "--" };
-
-    // 电压电流
-    B8  = { name: '充电最大电压(V)', value: "--" };
-    B10 = { name: '最大放电电流(A)', value: "--" };
-    B12 = { name: '放电最小电压(V)', value: "--" };
-    B14 = { name: '最大充电电流(A)', value: "--" };
-    B16 = { name: '电池电压(V)', value: "--" };
-    B18 = { name: '电池电流(A)', value: "--" };
-    B20 = { name: '电池平均电压(mV)', value: "--" };
-    B22 = { name: '最大电池电压(mV)', value: "--" };
-    B24 = { name: '最小电池电压(mV)', value: "--" };
-    B26 = { name: '最大电压电池位置', value: "--" };
-    B28 = { name: '最小电压电池位置', value: "--" };
-
-    // 温度
-    B30 = { name: '最高单体温度(℃)', value: "--" };
-    B32 = { name: '最低单体温度(℃)', value: "--" };
-    B34 = { name: '最大温差(℃)', value: "--" };
-    B36 = { name: '电池平均温度(℃)', value: "--" };
-    B38 = { name: '最大温度电池位置', value: "--" };
-    B40 = { name: '最小温度电池位置', value: "--" };
-
-    // SOC / 绝缘
-    B42 = { name: 'SOC(%)', value: "--" };
-    B44 = { name: '实际电池剩余容量(%)', value: "--" };
-    B46 = { name: '正绝缘电阻(kΩ)', value: "--" };
-    B48 = { name: '负绝缘电阻(kΩ)', value: "--" };
-
-    // HV电压
-    B50 = { name: 'HV1电压(V)', value: "--" };
-    B52 = { name: 'HV2电压(V)', value: "--" };
-    B54 = { name: 'BAT+电压(V)', value: "--" };
-
-    // 状态位
-    B56 = { name: '预充状态', value: "--" };
-    B58 = { name: '均衡状态', value: "--" };
-    B60 = { name: '加热状态', value: "--" };
-    B62 = { name: '制冷状态', value: "--" };
-    B64 = { name: '高压低锁定状态', value: "--" };
-    B66 = { name: '准备状态', value: "--" };
-    B68 = { name: 'BMS模式', value: "--" };
-    B70 = { name: '电池累计电压(V)', value: "--" };
-    B72 = { name: '自检状态', value: "--" };
-
-    // 继电器状态
-    B74 = { name: '总正继电器', value: "--" };
-    B76 = { name: '总负继电器', value: "--" };
-    B78 = { name: '预充继电器', value: "--" };
-    B80 = { name: '断路器', value: "--" };
-
-    // 继电器故障
-    B82 = { name: '总正继电器故障', value: "--" };
-    B84 = { name: '总负继电器故障', value: "--" };
-    B86 = { name: '预充继电器故障', value: "--" };
-    B88 = { name: '断路器故障', value: "--" };
-
-    // 电流
-    B90 = { name: '分流器电流(A)', value: "--" };
-    B92 = { name: '霍尔电流1(A)', value: "--" };
-    B94 = { name: '霍尔电流2(A)', value: "--" };
-    B96 = { name: 'CAN霍尔电流(A)', value: "--" };
-
-    // 连接 / 单体
-    B98  = { name: '电池连接失败原因', value: "--" };
-    B100 = { name: '电池未成功连接原因', value: "--" };
-    B102 = { name: 'BMS最大单体值(mV)', value: "--" };
-    B104 = { name: '最大单体值位置', value: "--" };
-    B106 = { name: '单体压差(mV)', value: "--" };
-
-    // 故障字
-    B108 = { name: '故障字1', value: "--" };
-    B110 = { name: '故障字2', value: "--" };
-    B112 = { name: '故障字3', value: "--" };
-    B114 = { name: '故障字4', value: "--" };
-    B116 = { name: '故障字5', value: "--" };
-    B118 = { name: '故障字6', value: "--" };
-    B120 = { name: '故障字7', value: "--" };
-    B122 = { name: '故障字8', value: "--" };
-    B124 = { name: '故障字9', value: "--" };
-    B126 = { name: '故障字10', value: "--" };
-    B128 = { name: '故障字11', value: "--" };
-    B130 = { name: '故障字12', value: "--" };
-    B132 = { name: '故障字13', value: "--" };
-    B134 = { name: '故障字14', value: "--" };
-    B136 = { name: '故障字15', value: "--" };
-    B138 = { name: '故障字16', value: "--" };
-
-    // SOH / 容量 / 电量
-    B140 = { name: 'SOH(%)', value: "--" };
-    B142 = { name: 'pack总容量(AH)', value: "--" };
-    B144 = { name: '单次放电累计电量(KWH)', value: "--" };
-    B146 = { name: '单次充电累计电量(KWH)', value: "--" };
-    B148 = { name: '放电累计电量(kWh)', value: "--" };
-    B150 = { name: '充电累计电量(kWh)', value: "--" };
-    B152 = { name: '累计充电次数', value: "--" };
-    B154 = { name: '总使用时间(min)', value: "--" };
-    B156 = { name: '总放电时间(min)', value: "--" };
-    B158 = { name: '总充电时间(min)', value: "--" };
-    B160 = { name: '当日累计充电量(kWh)', value: "--" };
-    B162 = { name: '当日累计放电量(kWh)', value: "--" };
-
-    // 极柱温度
-    B164 = { name: '极柱最大温度(℃)', value: "--" };
-    B166 = { name: '极柱最小温度(℃)', value: "--" };
-    B168 = { name: '极柱最大温度位置', value: "--" };
-    B170 = { name: '极柱最小温度位置', value: "--" };
-
-    // PDU
-    B172 = { name: 'PDU温度数量', value: "--" };
-    B174 = { name: 'PDU1极柱温度(℃)', value: "--" };
-    B176 = { name: 'PDU2极柱温度(℃)', value: "--" };
-    B178 = { name: 'PDU3极柱温度(℃)', value: "--" };
-    B180 = { name: 'PDU4极柱温度(℃)', value: "--" };
-    B182 = { name: 'PDU5极柱温度(℃)', value: "--" };
-    B184 = { name: 'PDU6极柱温度(℃)', value: "--" };
-    B186 = { name: 'PDU7极柱温度(℃)', value: "--" };
-    B188 = { name: 'PDU8极柱温度(℃)', value: "--" };
-
-    // PACK 采集数量
-    B190 = { name: 'PACK温感采集数量', value: "--" };
-    B192 = { name: 'PACK电压采集数量', value: "--" };
-
-    // PACK1
-    B194 = { name: 'PACK1总压(V)', value: "--" };
-    B196 = { name: 'PACK1最高单体温度(℃)', value: "--" };
-    B198 = { name: 'PACK1最低单体温度(℃)', value: "--" };
-    B200 = { name: 'PACK1最高温度位置', value: "--" };
-    B202 = { name: 'PACK1最低温度位置', value: "--" };
-    B204 = { name: 'PACK1最高电压位置', value: "--" };
-    B206 = { name: 'PACK1最低电压位置', value: "--" };
-    B208 = { name: 'PACK1最高单体电压(mV)', value: "--" };
-    B210 = { name: 'PACK1最低单体电压(mV)', value: "--" };
-
-    // PACK2
-    B212 = { name: 'PACK2总压(V)', value: "--" };
-    B214 = { name: 'PACK2最高单体温度(℃)', value: "--" };
-    B216 = { name: 'PACK2最低单体温度(℃)', value: "--" };
-    B218 = { name: 'PACK2最高温度位置', value: "--" };
-    B220 = { name: 'PACK2最低温度位置', value: "--" };
-    B222 = { name: 'PACK2最高电压位置', value: "--" };
-    B224 = { name: 'PACK2最低电压位置', value: "--" };
-    B226 = { name: 'PACK2最高单体电压(mV)', value: "--" };
-    B228 = { name: 'PACK2最低单体电压(mV)', value: "--" };
-
-    // PACK3
-    B230 = { name: 'PACK3总压(V)', value: "--" };
-    B232 = { name: 'PACK3最高单体温度(℃)', value: "--" };
-    B234 = { name: 'PACK3最低单体温度(℃)', value: "--" };
-    B236 = { name: 'PACK3最高温度位置', value: "--" };
-    B238 = { name: 'PACK3最低温度位置', value: "--" };
-    B240 = { name: 'PACK3最高电压位置', value: "--" };
-    B242 = { name: 'PACK3最低电压位置', value: "--" };
-    B244 = { name: 'PACK3最高单体电压(mV)', value: "--" };
-    B246 = { name: 'PACK3最低单体电压(mV)', value: "--" };
-}
-
-export class StateData {
-    // IO 状态
-    B0  = { name: 'HSS1', value: "--" };
-    B2  = { name: 'HSS2', value: "--" };
-    B4  = { name: 'HSS3', value: "--" };
-    B6  = { name: 'HSS4', value: "--" };
-    B8  = { name: 'HSS5', value: "--" };
-    B10 = { name: 'HSS6', value: "--" };
-    B12 = { name: 'HSS7', value: "--" };
-    B14 = { name: 'HSS8', value: "--" };
-    B16 = { name: 'LSS1', value: "--" };
-    B18 = { name: 'LSS2', value: "--" };
-    B20 = { name: 'LSS3', value: "--" };
-    B22 = { name: 'LSS4', value: "--" };
-    B24 = { name: 'LSS5', value: "--" };
-    B26 = { name: 'SW_OUT1', value: "--" };
-    B28 = { name: 'SW_OUT2', value: "--" };
-    B30 = { name: 'SW_OUT3', value: "--" };
-    B32 = { name: 'SW_OUT4', value: "--" };
-    B34 = { name: 'DIH1', value: "--" };
-    B36 = { name: 'DIH2', value: "--" };
-    B38 = { name: 'DIH3', value: "--" };
-    B40 = { name: 'DIH4', value: "--" };
-    B42 = { name: 'DIH5', value: "--" };
-    B44 = { name: 'DIH6', value: "--" };
-    B46 = { name: 'DIH7', value: "--" };
-    B48 = { name: 'DIH8', value: "--" };
-    B50 = { name: 'DIL1', value: "--" };
-    B52 = { name: 'DIL2', value: "--" };
-    B54 = { name: 'DIL3', value: "--" };
-    B56 = { name: 'DIL4', value: "--" };
-    B58 = { name: 'DIL5', value: "--" };
-    B60 = { name: 'DIS1(SWDi1)', value: "--" };
-    B62 = { name: 'DIS2(SWDi2)', value: "--" };
-    B64 = { name: 'DIS3(SWDi3)', value: "--" };
-    B66 = { name: 'DIS4(SWDi4)', value: "--" };
-    B68 = { name: 'DIS5(SWDi5)', value: "--" };
-    B70 = { name: 'SW_IN1', value: "--" };
-    B72 = { name: 'SW_IN2', value: "--" };
-    B74 = { name: 'SW_IN3', value: "--" };
-
-    // 从机 HSS1 (1~16号从机)
-    B76 = { name: '1号从机HSS1', value: "--" };
-    B78 = { name: '2号从机HSS1', value: "--" };
-    B80 = { name: '3号从机HSS1', value: "--" };
-    B82 = { name: '4号从机HSS1', value: "--" };
-    B84 = { name: '5号从机HSS1', value: "--" };
-    B86 = { name: '6号从机HSS1', value: "--" };
-    B88 = { name: '7号从机HSS1', value: "--" };
-    B90 = { name: '8号从机HSS1', value: "--" };
-    B92 = { name: '9号从机HSS1', value: "--" };
-    B94 = { name: '10号从机HSS1', value: "--" };
-    B96 = { name: '11号从机HSS1', value: "--" };
-    B98 = { name: '12号从机HSS1', value: "--" };
-    B100 = { name: '13号从机HSS1', value: "--" };
-    B102 = { name: '14号从机HSS1', value: "--" };
-    B104 = { name: '15号从机HSS1', value: "--" };
-    B106 = { name: '16号从机HSS1', value: "--" };
-
-    // 从机 HSS2 (1~16号从机)
-    B108 = { name: '1号从机HSS2', value: "--" };
-    B110 = { name: '2号从机HSS2', value: "--" };
-    B112 = { name: '3号从机HSS2', value: "--" };
-    B114 = { name: '4号从机HSS2', value: "--" };
-    B116 = { name: '5号从机HSS2', value: "--" };
-    B118 = { name: '6号从机HSS2', value: "--" };
-    B120 = { name: '7号从机HSS2', value: "--" };
-    B122 = { name: '8号从机HSS2', value: "--" };
-    B124 = { name: '9号从机HSS2', value: "--" };
-    B126 = { name: '10号从机HSS2', value: "--" };
-    B128 = { name: '11号从机HSS2', value: "--" };
-    B130 = { name: '12号从机HSS2', value: "--" };
-    B132 = { name: '13号从机HSS2', value: "--" };
-    B134 = { name: '14号从机HSS2', value: "--" };
-    B136 = { name: '15号从机HSS2', value: "--" };
-    B138 = { name: '16号从机HSS2', value: "--" };
-
-    // 从机 DIL1 (1~16号从机)
-    B140 = { name: '1号从机DIL1', value: "--" };
-    B142 = { name: '2号从机DIL1', value: "--" };
-    B144 = { name: '3号从机DIL1', value: "--" };
-    B146 = { name: '4号从机DIL1', value: "--" };
-    B148 = { name: '5号从机DIL1', value: "--" };
-    B150 = { name: '6号从机DIL1', value: "--" };
-    B152 = { name: '7号从机DIL1', value: "--" };
-    B154 = { name: '8号从机DIL1', value: "--" };
-    B156 = { name: '9号从机DIL1', value: "--" };
-    B158 = { name: '10号从机DIL1', value: "--" };
-    B160 = { name: '11号从机DIL1', value: "--" };
-    B162 = { name: '12号从机DIL1', value: "--" };
-    B164 = { name: '13号从机DIL1', value: "--" };
-    B166 = { name: '14号从机DIL1', value: "--" };
-    B168 = { name: '15号从机DIL1', value: "--" };
-    B170 = { name: '16号从机DIL1', value: "--" };
-
-    // 从机 DIL2 (1~16号从机)
-    B172 = { name: '1号从机DIL2', value: "--" };
-    B174 = { name: '2号从机DIL2', value: "--" };
-    B176 = { name: '3号从机DIL2', value: "--" };
-    B178 = { name: '4号从机DIL2', value: "--" };
-    B180 = { name: '5号从机DIL2', value: "--" };
-    B182 = { name: '6号从机DIL2', value: "--" };
-    B184 = { name: '7号从机DIL2', value: "--" };
-    B186 = { name: '8号从机DIL2', value: "--" };
-    B188 = { name: '9号从机DIL2', value: "--" };
-    B190 = { name: '10号从机DIL2', value: "--" };
-    B192 = { name: '11号从机DIL2', value: "--" };
-    B194 = { name: '12号从机DIL2', value: "--" };
-    B196 = { name: '13号从机DIL2', value: "--" };
-    B198 = { name: '14号从机DIL2', value: "--" };
-    B200 = { name: '15号从机DIL2', value: "--" };
-    B202 = { name: '16号从机DIL2', value: "--" };
-
-    // 充放电故障
-    B204 = { name: '放电自检故障', value: "--" };
-    B206 = { name: '放电诊断故障标志', value: "--" };
-    B208 = { name: '放电诊断故障动作', value: "--" };
-    B210 = { name: '充电自检故障', value: "--" };
-    B212 = { name: '充电诊断故障标志', value: "--" };
-    B214 = { name: '充电诊断故障动作', value: "--" };
-    B216 = { name: '其他放电故障1', value: "--" };
-    B218 = { name: '其他充电故障2', value: "--" };
-    B220 = { name: '国标充电通信故障', value: "--" };
-
-    // CC / CP
-    B222 = { name: 'CC阻值(Ω)', value: "--" };
-    B224 = { name: 'CC电压值(V)', value: "--" };
-    B226 = { name: 'CC2阻值(Ω)', value: "--" };
-    B228 = { name: 'CC2电压值(V)', value: "--" };
-    B230 = { name: 'CP PWM频率(Hz)', value: "--" };
-    B232 = { name: 'CP PWM占空比(%)', value: "--" };
-
-    // 供电电压 (mV)
-    B234 = { name: 'BCU供电电压(mV)', value: "--" };
-    B236 = { name: '霍尔12V供电电压(mV)', value: "--" };
-    B238 = { name: '霍尔5V供电电压(mV)', value: "--" };
-    B240 = { name: '霍尔基准电压(mV)', value: "--" };
-    B242 = { name: '系统5V电压(mV)', value: "--" };
-    B244 = { name: '系统3V电压(mV)', value: "--" };
-    B246 = { name: '高压ADC12V电压(mV)', value: "--" };
-
-    // 板载温度
-    B248 = { name: '板载NTC温度(℃)', value: "--" };
-    B250 = { name: 'RTC片内温度(℃)', value: "--" };
-    B252 = { name: '分流器ADC片内温度(℃)', value: "--" };
-
-    // 额定参数
-    B254 = { name: '额定电压(V)', value: "--" };
-    B256 = { name: '额定容量(Ah)', value: "--" };
-    B258 = { name: '单体数量', value: "--" };
-    B260 = { name: '电池温感数', value: "--" };
-    B262 = { name: '从机(pack)数量', value: "--" };
-    B264 = { name: '极柱温感数', value: "--" };
-
-    // 风机
-    B266 = { name: '风机T1温度(℃)', value: "--" };
-    B268 = { name: '风机T2温度(℃)', value: "--" };
-    B270 = { name: '风机T3温度(℃)', value: "--" };
-    B272 = { name: '风机T4温度(℃)', value: "--" };
-    B274 = { name: '风机1转速', value: "--" };
-    B276 = { name: '风机2转速', value: "--" };
-    B278 = { name: '风机3转速', value: "--" };
-    B280 = { name: '风机4转速', value: "--" };
-
-    // 液冷
-    B282 = { name: '回液压力(bar)', value: "--" };
-    B284 = { name: '供液压力(bar)', value: "--" };
-    B286 = { name: '环境温度(℃)', value: "--" };
-    B288 = { name: 'TMS温度设置(℃)', value: "--" };
-
-    // TMS
-    B290 = { name: 'TMS运行模式', value: "--" };
-    B292 = { name: 'TMS运行状态', value: "--" };
-    B294 = { name: 'TMS入口温度(℃)', value: "--" };
-    B296 = { name: 'TMS出口温度(℃)', value: "--" };
-    B298 = { name: 'TMS供应商代码', value: "--" };
-    B300 = { name: '产品机型', value: "--" };
-    B302 = { name: '软件版本', value: "--" };
-    B304 = { name: '控制模式', value: "--" };
-    B306 = { name: '进出水压差值(bar)', value: "--" };
-    B308 = { name: '压缩机转速(rpm)', value: "--" };
-    B310 = { name: '交流供电电压(V)', value: "--" };
-    B312 = { name: '通信状态', value: "--" };
-
-    // 机组运行状态
-    B314 = { name: '机组运行状态', value: "--" };
-    B316 = { name: '自检状态', value: "--" };
-    B318 = { name: '制冷运行状态', value: "--" };
-    B320 = { name: '制热运行状态', value: "--" };
-    B322 = { name: '水泵运行状态', value: "--" };
-    B324 = { name: '外风机运行状态', value: "--" };
-    B326 = { name: '报警状态', value: "--" };
-    B328 = { name: '补水泵运行状态', value: "--" };
-    B330 = { name: '电子膨胀阀开度', value: "--" };
-    B332 = { name: '低压侧压力值(bar)', value: "--" };
-    B334 = { name: '高压侧压力值(bar)', value: "--" };
-    B336 = { name: '冷凝盘管温度(℃)', value: "--" };
-    B338 = { name: '板换温度(℃)', value: "--" };
-    B340 = { name: '吸气温度(℃)', value: "--" };
-    B342 = { name: '排气温度(℃)', value: "--" };
-    B344 = { name: '环境温度(℃)', value: "--" };
-    B346 = { name: '系统流量', value: "--" };
-    B348 = { name: '水泵转速', value: "--" };
-    B350 = { name: '2#电子膨胀阀开度', value: "--" };
-    B352 = { name: '2#低压侧压力值(bar)', value: "--" };
-    B354 = { name: '2#高压侧压力值(bar)', value: "--" };
-    B356 = { name: '2#吸气温度(℃)', value: "--" };
-    B358 = { name: '2#排气温度(℃)', value: "--" };
-    B360 = { name: '2#水泵转速', value: "--" };
-
-    // TMS故障字透传
-    B362 = { name: 'TMS故障字1透传', value: "--" };
-    B364 = { name: 'TMS故障字2透传', value: "--" };
-    B366 = { name: 'TMS故障字3透传', value: "--" };
-    B368 = { name: 'TMS故障字4透传', value: "--" };
-    B370 = { name: 'TMS故障字5透传', value: "--" };
-    B372 = { name: 'TMS故障字6透传', value: "--" };
-    B374 = { name: 'TMS故障字7透传', value: "--" };
-    B376 = { name: 'TMS故障字8透传', value: "--" };
-    B378 = { name: 'TMS故障字9透传', value: "--" };
-    B380 = { name: 'TMS故障字10透传', value: "--" };
-    B382 = { name: 'TMS故障字11透传', value: "--" };
-    B384 = { name: 'TMS故障字12透传', value: "--" };
-    B386 = { name: 'TMS故障字13透传', value: "--" };
-    B388 = { name: 'TMS故障字14透传', value: "--" };
-    B390 = { name: 'TMS故障字15透传', value: "--" };
-    B392 = { name: 'TMS故障字16透传', value: "--" };
-
-    // TMS控制
-    B394 = { name: 'TMS开关机故障复位', value: "--" };
-    B396 = { name: 'TMS模式设置', value: "--" };
-    B398 = { name: '制冷设定点(℃)', value: "--" };
-    B400 = { name: '制冷回差', value: "--" };
-    B402 = { name: '制热设定点(℃)', value: "--" };
-    B404 = { name: '制热回差', value: "--" };
-    B406 = { name: '制冷目标参数设置(℃)', value: "--" };
-    B408 = { name: '制热目标参数设置(℃)', value: "--" };
-
-    // 传感器 / 浓度
-    B410 = { name: '通信状态', value: "--" };
-    B412 = { name: 'CO浓度(ppm)', value: "--" };
-    B414 = { name: '氢气浓度(ppm)', value: "--" };
-    B416 = { name: '烟雾数值(ppm)', value: "--" };
-    B418 = { name: 'VOC数值(ppm)', value: "--" };
-    B420 = { name: '温度数值(℃)', value: "--" };
-    B422 = { name: '报警等级', value: "--" };
-
-    // 浓度报警
-    B424 = { name: 'CO浓度报警', value: "--" };
-    B426 = { name: '氢气浓度报警', value: "--" };
-    B428 = { name: 'VOC浓度报警', value: "--" };
-    B430 = { name: '烟雾浓度报警', value: "--" };
-    B432 = { name: '温度报警', value: "--" };
-}
-
-export class ControlData {
-    B0  = { name: '心跳', value: "--" };
-
-    // 上下电 / 预充请求
-    B2  = { name: '上高压请求', value: "--" };
-    B4  = { name: '下高压请求', value: "--" };
-    B6  = { name: '紧急下电请求', value: "--" };
-    B8  = { name: '预充请求', value: "--" };
-    B10 = { name: '绝缘检测开关', value: "--" };
-
-    // 系统控制
-    B12 = { name: '请求BMS重启', value: "--" };
-    B14 = { name: '交流断路器切断请求', value: "--" };
-    B16 = { name: '系统锁', value: "--" };
-    B18 = { name: '故障复位', value: "--" };
-
-    // 强控
-    B20 = { name: '强控HSS8', value: "--" };
-    B22 = { name: '强控LSS1', value: "--" };
-    B24 = { name: '强控LSS2', value: "--" };
-    B26 = { name: '强控DO1', value: "--" };
-    B28 = { name: '强控DO2', value: "--" };
-    B30 = { name: '强控DO3', value: "--" };
-    B32 = { name: '强控预留1', value: "--" };
-    B34 = { name: '强控预留2', value: "--" };
-    B36 = { name: '强控使能位', value: "--" };
-    B38 = { name: '强控HSS1', value: "--" };
-    B40 = { name: '强控HSS2', value: "--" };
-    B42 = { name: '强控HSS3', value: "--" };
-    B44 = { name: '强控HSS4', value: "--" };
-    B46 = { name: '强控HSS5', value: "--" };
-    B48 = { name: '强控HSS6', value: "--" };
-    B50 = { name: '强控HSS7', value: "--" };
-    B52 = { name: '绝缘检测控制', value: "--" };
-
-    // TMS控制
-    B54 = { name: 'TMS开关机故障复位', value: "--" };
-    B56 = { name: 'TMS模式设置', value: "--" };
-    B58 = { name: '制冷设定点(℃)', value: "--" };
-    B60 = { name: '制冷回差', value: "--" };
-    B62 = { name: '制热设定点(℃)', value: "--" };
-    B64 = { name: '制热回差', value: "--" };
-    B66 = { name: '制冷目标参数设置(℃)', value: "--" };
-    B68 = { name: '制热目标参数设置(℃)', value: "--" };
-
-    // 控温控湿 / 报警阈值
-    B70 = { name: '控温开启值(℃)', value: "--" };
-    B72 = { name: '控温关闭值(℃)', value: "--" };
-    B74 = { name: '控湿度开启值(%)', value: "--" };
-    B76 = { name: '控湿度关闭值(%)', value: "--" };
-    B78 = { name: '温度报警上限值(℃)', value: "--" };
-    B80 = { name: '温度报警下限值(℃)', value: "--" };
+// 控制数据 枚举值
+const controlEnums = {
+    B3b0: { 0: '无请求', 1: '请求上电' },
+    B3b1: { 0: '无请求', 1: '请求下电' },
+    B3b2: { 0: '无请求', 1: '请求紧急下电' },
+    B3b3: { 0: '无请求', 1: '请求预充' },
+    B3b4: { 0: '开启绝缘检测', 1: '关闭绝缘检测' },
+    B5b0: { 0: '无请求', 1: '请求重启' },
+    B5b1: { 0: '无请求', 1: '请求切断' },
+    B5b2: { 0: '无请求', 1: '系统锁释放' },
+    B8: { 0: '开启绝缘检测', 1: '关闭绝缘检测' },
 }

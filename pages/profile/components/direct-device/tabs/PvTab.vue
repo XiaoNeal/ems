@@ -1,7 +1,14 @@
 <template>
   <scroll-view class="module-scroll" scroll-y="true">
     <view class="content">
-      <view class="module">
+      <!-- 50kW：170C V1.1 协议面板（bucket 170C_PV） -->
+      <view v-if="is50KwMode" class="module">
+        <view class="module-title">光伏DCDC设备</view>
+        <Dc170cPanel :bucket="bucket50" faultTitle="光伏DC故障信息" />
+      </view>
+
+      <!-- 20kW：171E 旧协议 -->
+      <view v-else class="module">
         <view class="module-title">光伏</view>
         <DataGroup title="运行状态">
           <DataGrid :items="pvRunStatusItems" />
@@ -33,15 +40,16 @@ import { PV_B56_BITS } from '../../../direct-device-constants.js'
 import DataGroup from '../DataGroup.vue'
 import DataGrid from '../DataGrid.vue'
 import StatusGrid from '../StatusGrid.vue'
+import Dc170cPanel from './Dc170cPanel.vue'
 
 /**
  * 光伏 tab 组件
- * 展示光伏运行状态、电气参数、告警状态
- * parsedB56Status / pvRunStatusItems / pvAlarmStatus 计算属性内聚于此组件
+ * 20kW：旧协议 171E（B56 状态位 + 电气参数）
+ * 50kW：新协议 170C V1.1（bucket 170C_PV，与储能 DC 同一张点表）
  */
 export default {
   name: 'PvTab',
-  components: { DataGroup, DataGrid, StatusGrid },
+  components: { DataGroup, DataGrid, StatusGrid, Dc170cPanel },
   props: {
     formattedValues: {
       type: Object,
@@ -50,9 +58,16 @@ export default {
     rawValues: {
       type: Object,
       default: () => ({})
+    },
+    is50KwMode: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
+    bucket50() {
+      return this.rawValues['170C_PV'] || {}
+    },
     parsedB56Status() {
       const b56 = this.rawValues['171E'] && this.rawValues['171E']['B56']
       if (b56 === undefined || b56 === null || b56 === '--') return []
@@ -66,7 +81,6 @@ export default {
         return { name, value: alarmed ? '发生' : '正常', isAlarm: alarmed ? 1 : 0 }
       })
     },
-    /** 运行状态项：合并 B56 的 DCDC状态 + 171E.B72 工作模式 */
     pvRunStatusItems() {
       const items = this.parsedB56Status
         .filter(s => ['DCDC状态'].includes(s.name))
@@ -76,7 +90,6 @@ export default {
       }
       return items
     },
-    /** 告警状态项：排除 DCDC状态 */
     pvAlarmStatus() {
       return this.parsedB56Status.filter(s => s.name !== 'DCDC状态')
     }
@@ -89,30 +102,33 @@ export default {
   height: 100%;
 }
 .content {
-  padding: 0 16rpx 20rpx;
+  padding: 0 20rpx 32rpx;
 }
 .module {
-  padding: 20rpx 0;
+  padding: 0;
 }
 .module-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 16rpx;
-  padding-left: 16rpx;
-  padding-bottom: 12rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  margin: 0 0 18rpx;
+  padding-left: 18rpx;
   position: relative;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1d2430;
+  letter-spacing: 0.5rpx;
+  line-height: 1.3;
 
   &::before {
     content: '';
     position: absolute;
     left: 0;
-    top: 4rpx;
-    bottom: 14rpx;
-    width: 6rpx;
-    border-radius: 3rpx;
-    background: #007aff;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8rpx;
+    height: 30rpx;
+    border-radius: 4rpx;
+    background: linear-gradient(180deg, #63a4ff 0%, #2f7cf6 100%);
   }
 }
 </style>

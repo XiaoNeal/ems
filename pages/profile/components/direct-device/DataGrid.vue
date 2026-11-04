@@ -1,16 +1,16 @@
 <template>
-  <view class="data-grid">
+  <view class="data-grid" :class="{ 'data-grid--bare': bare }">
     <view
       v-for="(item, index) in items"
       :key="index"
       class="grid-item"
-      :class="{ 'grid-item--wide': item.wide }"
+      :class="{ 'grid-item--wide': item.wide, 'grid-item--alarm': item.danger }"
     >
       <text class="item-label">{{ item.label }}</text>
-      <text class="item-value" :class="{ alarm: item.danger }">
-        {{ item.value !== undefined && item.value !== null && item.value !== '' ? item.value : '--' }}
+      <view class="item-value-row">
+        <text class="item-value">{{ cell(item) }}</text>
         <text v-if="item.unit" class="item-unit">{{ item.unit }}</text>
-      </text>
+      </view>
     </view>
     <text v-if="items.length === 0" class="grid-empty">暂无数据</text>
   </view>
@@ -18,8 +18,11 @@
 
 <script>
 /**
- * 数据网格组件（标签/值 卡片网格）
+ * 数据网格组件（标签/值 栅格）
  * 用法：<DataGrid :items="[{label:'A相(V)', value:'220.5'}, ...]" />
+ *
+ * 视觉约定：白底卡片 + 细横线分行，单元格不加底色和阴影，
+ * 数值统一等宽字体，长数字右对齐不跳动。
  */
 export default {
   name: 'DataGrid',
@@ -28,6 +31,18 @@ export default {
       type: Array,
       default: () => []
       // item: { label, value, unit?, danger?, wide? }
+    },
+    /** 去掉外层白卡（外层已有卡片容器时使用） */
+    bare: {
+      type: Boolean,
+      default: false
+    }
+  },
+  methods: {
+    cell(item) {
+      const v = item.value
+      if (v === undefined || v === null || v === '') return '--'
+      return v
     }
   }
 }
@@ -37,56 +52,92 @@ export default {
 .data-grid {
   display: flex;
   flex-wrap: wrap;
-  padding: 6rpx;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-  border-radius: 16rpx;
+  background: #ffffff;
+  border: 1rpx solid #eef1f5;
+  border-radius: 18rpx;
+  overflow: hidden;
+
+  &--bare {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+  }
 }
+
 .grid-item {
-  width: calc(33.333% - 12rpx);
-  margin: 6rpx;
-  background: #fff;
-  padding: 18rpx 10rpx;
+  width: 33.3333%;
   box-sizing: border-box;
+  padding: 20rpx 10rpx 18rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 12rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  border: none;
+  border-bottom: 1rpx solid #f3f5f8;
+  transition: background-color 0.15s ease;
+
   &:active {
-    transform: scale(0.96);
-    box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+    background: #f8fafc;
   }
-  &.grid-item--wide { width: calc(50% - 12rpx); }
+
+  &.grid-item--wide {
+    width: 66.6666%;
+  }
 }
+
 .item-label {
-  font-size: 22rpx;
-  color: #8a8a8a;
-  display: block;
-  margin-bottom: 6rpx;
+  max-width: 100%;
+  font-size: 21rpx;
+  line-height: 1.3;
+  color: #98a2ae;
   text-align: center;
-  font-weight: 400;
+  margin-bottom: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+.item-value-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  max-width: 100%;
+  min-width: 0;
+}
+
 .item-value {
+  max-width: 100%;
   font-size: 30rpx;
-  color: #1a1a1a;
   font-weight: 600;
-  text-align: center;
-  letter-spacing: 0.5rpx;
-  &.alarm { color: #e6434a; }
+  color: #1d2430;
+  /* 等宽字体：数值刷新时宽度不跳动 */
+  font-family: 'Menlo', 'Consolas', 'Roboto Mono', monospace;
+  letter-spacing: -0.5rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
 .item-unit {
+  flex-shrink: 0;
+  margin-left: 4rpx;
   font-size: 20rpx;
-  color: #999;
   font-weight: 400;
+  color: #98a2ae;
 }
+
+.grid-item--alarm {
+  background: #fff6f6;
+
+  .item-value {
+    color: #e5484d;
+  }
+}
+
 .grid-empty {
   width: 100%;
+  padding: 36rpx 0;
   text-align: center;
-  color: #999;
-  font-size: 26rpx;
-  padding: 30rpx 0;
+  font-size: 24rpx;
+  color: #98a2ae;
 }
 </style>

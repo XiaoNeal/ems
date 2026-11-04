@@ -2,17 +2,22 @@
   <view class="bms-settings">
     <view class="param-card">
       <view class="card-header">
-        <text class="card-title">BMS参数设置</text>
-        <view v-if="!isEditing" class="edit-btn primary" @click="handleEditConfig">
-          <text class="edit-text">修改配置</text>
+        <view class="card-title-wrap">
+          <text class="card-title">BMS 参数设置</text>
+          <text class="card-subtitle">设备类型：{{ isHighCapacity ? '171C_V2 系列' : '171C' }}</text>
         </view>
-        <view v-else class="action-btns">
-          <view class="edit-btn close" @click="closeEdit">
+        <view class="action-btns">
+          <view v-if="!isEditing" class="edit-btn primary" @click="handleEditConfig">
+            <text class="edit-text">修改配置</text>
+          </view>
+          <view v-else class="edit-btn close" @click="closeEdit">
             <text class="edit-text">关闭编辑</text>
           </view>
         </view>
       </view>
 
+      <!-- 旧协议（20kW 微能站）：171C 参数 -->
+      <template v-if="!isHighCapacity">
       <!-- 开关型参数 -->
       <view class="switch-section">
         <view v-for="param in bmsSwitchParams" :key="param.key" class="param-row">
@@ -86,7 +91,7 @@
                         focus />
                     </view>
                     <text class="unit-text">{{ param.unit || '' }}</text>
-                    <text class="range-text" v-if="param.min !== undefined && param.max !== undefined">{{ param.min
+                    <text class="range-text" v-if="param.min != null && param.max != null">{{ param.min
                       }}~{{ param.max
                       }}</text>
                   </view>
@@ -128,7 +133,7 @@
           <template v-else>
             <view class="param-info">
               <text class="param-name">{{ param.label }}</text>
-              <text v-if="param.min !== undefined && param.max !== undefined" class="param-range">
+              <text v-if="param.min != null && param.max != null" class="param-range">
                 范围: {{ param.min }}~{{ param.max }}{{ param.unit }}
               </text>
             </view>
@@ -161,6 +166,87 @@
           </template>
         </view>
       </view>
+      </template>
+
+      <!-- 新协议（50kW 微能站）：171C_V2 系列 —— 参数设置只保留控制数据，20kW 行内编辑风格 -->
+      <template v-if="isHighCapacity">
+        <view v-if="bmsV2ControlFields.length" class="hc-body">
+          <!-- 命令 / 模式（选择后下发） -->
+          <view v-if="bmsV2ControlChooseParams.length" class="hc-group">
+            <view class="hc-group-title">
+              <view class="hc-bar"></view>
+              <text class="hc-group-name">命令 / 模式（选择后下发）</text>
+              <text class="hc-group-count">{{ bmsV2ControlChooseParams.length }}</text>
+            </view>
+            <view class="param-list">
+              <view v-for="param in bmsV2ControlChooseParams" :key="param.key" class="param-row">
+                <view class="param-info">
+                  <text class="param-name">{{ param.name }}</text>
+                </view>
+                <view class="switch-btns-wrapper">
+                  <view class="switch-btns">
+                    <view v-for="option in param.options" :key="option.value"
+                      class="switch-btn"
+                      :class="[
+                        isHcOptionActive(param, option.value) ? 'btn-active' : '',
+                        !isEditing ? 'btn-disabled' : '',
+                        clickedButton === param.key + '-' + option.value ? 'btn-clicked' : ''
+                      ]"
+                      @click="handleHcSwitchClick(param, option)">
+                      {{ option.label }}
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+
+          <!-- 数值设定（输入后下发） -->
+          <view v-if="bmsV2ControlNumberParams.length" class="hc-group">
+            <view class="hc-group-title">
+              <view class="hc-bar"></view>
+              <text class="hc-group-name">数值设定（输入后下发）</text>
+              <text class="hc-group-count">{{ bmsV2ControlNumberParams.length }}</text>
+            </view>
+            <view class="param-list">
+              <view v-for="param in bmsV2ControlNumberParams" :key="param.key" class="param-row"
+                :class="{ 'editing-row': editingHcParam === param.key }">
+                <view class="param-info">
+                  <text class="param-name">{{ param.name }}</text>
+                </view>
+                <view class="param-right">
+                  <view class="param-value-box" :class="{ editing: editingHcParam === param.key }">
+                    <text v-if="editingHcParam !== param.key" class="val-text">{{ param.value }}</text>
+                    <input v-else class="val-input" type="digit" v-model="hcTempValue"
+                      placeholder="请输入" focus />
+                  </view>
+                  <text v-if="param.unit" class="unit-text">{{ param.unit }}</text>
+                </view>
+                <view class="btn-group">
+                  <view v-if="editingHcParam !== param.key" class="btn btn-edit"
+                    :class="{ 'btn-disabled': !isEditing }" @click="handleHcParamEdit(param)">
+                    <uni-icons type="compose" size="14" color="#6699ff"></uni-icons>
+                    <text>编辑</text>
+                  </view>
+                  <template v-else>
+                    <view class="btn btn-sure" :class="{ 'btn-loading': isSubmitting }" @click="submitHcParam(param)">
+                      <text v-if="!isSubmitting">下发</text>
+                      <view v-else class="loading-spinner"></view>
+                    </view>
+                    <view class="btn btn-cancel" @click="handleHcParamCancel()">
+                      <uni-icons type="closeempty" size="14" color="#999"></uni-icons>
+                    </view>
+                  </template>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view v-if="!bmsV2ControlFields.length" class="hc-empty">
+          <uni-icons type="info" size="36" color="#c0c4cc"></uni-icons>
+          <text class="hc-empty-text">未检测到 BMS 设备（171C_V2 系列）</text>
+        </view>
+      </template>
     </view>
 
     <!-- 操作确认弹窗 -->
@@ -201,6 +287,12 @@
 <script>
 import { sendCommandFrame } from '@/api/control.js'
 import { realtimeDataProvider } from '@/service/websocket'
+import { DeviceFactory } from '@/service/devices/device-factory.model'
+import {
+  BMS_CONTROL_ADDRESS_MAP, BMS_CONTROL_MODE_OPTIONS, PARAM_SCALE10_ADDRESS,
+  PARAM_SCALE100_ADDRESS, PARAM_OFFSET_SCALE_ADDRESS,
+  BMS_ALARM_THRESHOLD_BASE, BMS_ALARM_THRESHOLD_OFFSETS
+} from '../param-settings-constants.js'
 
 export default {
   name: 'BmsSettings',
@@ -216,6 +308,9 @@ export default {
       isSubmitting: false,
       clickedButton: '',
       lastSendTimes: {},
+      // 50kW 单项编辑态（对齐 20kW 行内编辑风格）
+      editingHcParam: '',
+      hcTempValue: '',
       combinedParams: {},
       tempSelectedMode: '',
       params: {
@@ -416,14 +511,92 @@ export default {
     }
   },
   computed: {
+    isHighCapacity() {
+      const station = this.$store.state.currentSelectDevice || {}
+      const cap = Number(station.totalInstalledCapacity)
+      if (Number.isFinite(cap) && cap > 0) return cap >= 50
+      const newTypes = ['1707_V3_5', '1707V3_5', '170C_V1_1', '171C_V2', '171C_V2_1', '171C_V2_2', '171C_V2_3', '171C_V2_4', '0318_V2_3', '0318V2_3']
+      return (station.list || []).some(item => newTypes.includes(String(item.typeCode || item.deviceType || '').trim()))
+    },
     userId() {
       return this.$store.state.userInfo?.userId 
     },
     bmsDevice() {
       return this.deviceList.find(item => item && item.deviceType === '171C')
     },
+    bmsDeviceV2() {
+      return this.deviceList.find(item => item && item.deviceType === '171C_V2')
+    },
     device171F() {
       return this.deviceList.find(item => item && item.deviceType === '171F')
+    },
+    // 50kW BMS 控制字段（171C_V2 ~ V2_4 controlData，按地址表过滤并分类，对齐网页 bmsControlFields）
+    bmsV2ControlFields() {
+      const result = []
+      const defs = [
+        { type: '171C_V2', addr: '01' },
+        { type: '171C_V2_1', addr: '02' },
+        { type: '171C_V2_2', addr: '03' },
+        { type: '171C_V2_3', addr: '04' },
+        { type: '171C_V2_4', addr: '05' }
+      ]
+      defs.forEach(def => {
+        const dev = this._bmsDevice(def.type)
+        const ctl = (dev && dev.controlData) || {}
+        const alarmBase = BMS_ALARM_THRESHOLD_BASE[def.type]
+        Object.keys(ctl).forEach(rawKey => {
+          let meta = null
+          if (alarmBase !== undefined) {
+            // V2.1~V2.4 告警阈值设备：用段首 + 偏移量
+            const off = BMS_ALARM_THRESHOLD_OFFSETS[rawKey]
+            if (off !== undefined) {
+              meta = { address: String(alarmBase + off), bit: null }
+            }
+          } else {
+            // V2.0 运行控制设备：用 BMS_CONTROL_ADDRESS_MAP
+            meta = BMS_CONTROL_ADDRESS_MAP[rawKey]
+          }
+          if (!meta) return // 不在地址表中 → 不进入参数设置板块
+          // 只有 V2.0 运行控制字段（171C_V2）才使用 BMS_CONTROL_MODE_OPTIONS 枚举做模式选择；
+          // V2.1~V2.4 的告警阈值字段全部是数值设定
+          const options = def.type === '171C_V2' ? (BMS_CONTROL_MODE_OPTIONS[rawKey] || null) : null
+          const field = ctl[rawKey] || {}
+          const matched = options
+            ? options.find(opt => String(opt.value) === String(field.value) || opt.label === field.value)
+            : null
+          // 后端返回的 field.value 已经是实际值（协议层完成了传输值→实际值的转换），前端展示直接用
+          result.push({
+            key: def.type + '-' + rawKey,
+            name: field.name || rawKey,
+            value: matched ? matched.value : (field.value !== undefined && field.value !== null && field.value !== '' ? field.value : ''),
+            unit: field.unit || '',
+            deviceAddr: def.addr,
+            address: meta.address,
+            bit: meta.bit,
+            kind: options ? 'select' : 'number',
+            options
+          })
+        })
+      })
+      return result
+    },
+    // 枚举/模式类（按钮组选择）
+    bmsV2ControlChooseParams() {
+      return this.bmsV2ControlFields.filter(p => p.kind === 'select')
+    },
+    // 数值类（输入框）
+    bmsV2ControlNumberParams() {
+      return this.bmsV2ControlFields.filter(p => p.kind !== 'select')
+    },
+    // 50kW BMS：运行数据（171C_V2 energyData）
+    bmsV2EnergyDisplay() {
+      const dev = this.bmsDeviceV2
+      return this.__toList(dev && dev.energyData)
+    },
+    // 50kW BMS：状态数据（171C_V2 stateData）
+    bmsV2StateDisplay() {
+      const dev = this.bmsDeviceV2
+      return this.__toList(dev && dev.stateData)
     },
     bmsValues() {
       const device = this.bmsDevice
@@ -490,6 +663,12 @@ export default {
     }
   },
   methods: {
+    __toList(obj) {
+      if (!obj) return []
+      return Object.keys(obj)
+        .map(key => ({ key, name: obj[key].name, value: obj[key].value, unit: obj[key].unit }))
+        .filter(f => f.value !== undefined && f.value !== null && f.value !== '')
+    },
     /**
      * 设备数据冻结快照（实现在 realtime-data-provider，统一维护）
      * 快照不被 Vue observe，render 不订阅实时字段，仅引用替换时刷新
@@ -497,25 +676,45 @@ export default {
     takeDeviceSnapshot() {
       return realtimeDataProvider.takeSnapshot()
     },
+    _bmsDevice(type) {
+      const norm = t => (t || '').toUpperCase().replace(/_/g, '')
+      const target = norm(type)
+      const candidates = (this.deviceList || []).filter(item => item && (
+        norm(item.deviceType) === target ||
+        norm(item.typeCode) === target ||
+        norm(item.rawDeviceType) === target))
+      if (candidates.length) {
+        // 同一协议可能存在多个实例：优先返回收到过数据的实例，避免取到排在前面的配置态实例恒显示 '--'
+        const hasData = dev => [dev.controlData, dev.energyData, dev.stateData, dev.deviceData]
+          .some(group => group && Object.keys(group).some(key => {
+            const v = group[key] && group[key].value
+            return v !== undefined && v !== null && v !== '' && v !== '--'
+          }))
+        return candidates.find(hasData) || candidates[0]
+      }
+      // 未上报时用工厂创建空实例（保证字段定义始终可见）
+      return DeviceFactory.create({ deviceType: type })
+    },
     initDevice() {
       const currentDevice = this.$store.state.currentSelectDevice || {}
-      const deviceTypes = ['171C', '171F']
+      const deviceTypes = this.isHighCapacity
+        ? ['171C_V2', '171C_V2_1', '171C_V2_2', '171C_V2_3', '171C_V2_4', '171F']
+        : ['171C', '171F']
       const deviceList = deviceTypes.map(deviceType => {
         const foundDevice = currentDevice.list?.find(item =>
           item.typeCode === deviceType || item.deviceType === deviceType || item.description?.includes(deviceType)
         )
-        const defaultAddress = deviceType === '171C' ? '01' : '01'
         return foundDevice ? {
           deviceType,
           typeCode: deviceType,
-          address: foundDevice.address || defaultAddress,
+          address: foundDevice.address || (deviceType === '171F' ? '01' : '01'),
           barCode: foundDevice.barCode || foundDevice.homeBarCode || '',
           deviceId: foundDevice.deviceId || `${deviceType}001`,
           name: foundDevice.name || `设备${deviceType}`
         } : {
           deviceType,
           typeCode: deviceType,
-          address: defaultAddress,
+          address: deviceType === '171F' ? '01' : '01',
           barCode: '',
           deviceId: `${deviceType}001`,
           name: `设备${deviceType}`
@@ -1002,7 +1201,166 @@ export default {
     closeEdit() {
       this.isEditing = false
       this.editingParam = ''
+      this.editingHcParam = ''
+      this.hcTempValue = ''
       this.showToast('已退出编辑模式', 'success')
+    },
+
+    // ========== 50kW（171C_V2 BMS）单项编辑 / 下发 —— 对齐 20kW 交互风格 ==========
+    // 按钮激活态：按当前值判定（枚举已换算为原始值）
+    isHcOptionActive(param, optionValue) {
+      const current = param.value
+      if (current === optionValue) return true
+      if (current === null || current === undefined || current === '' || current === '--') return false
+      return String(current) === String(optionValue)
+    },
+    // 命令/模式按钮点击：请求/强控/关闭绝缘检测类（值 1）先弹确认，其余直接下发
+    handleHcSwitchClick(param, option) {
+      if (!this.isEditing) {
+        this.showToast('请先点击修改配置', 'warning')
+        return
+      }
+      const current = param.value
+      if (String(current) === String(option.value)) {
+        this.showToast('已经是当前设置', 'warning')
+        return
+      }
+      if (String(option.value) === '1') {
+        this.openConfirmPopup({
+          title: '危险操作确认',
+          content: `确定要执行"${param.name}"的"${option.label}"操作吗？此操作可能影响系统运行。`,
+          oldValue: (param.options.find(o => String(o.value) === String(current)) || {}).label || '--',
+          newValue: option.label,
+          isDangerous: true,
+          action: () => this.executeHcCommand(param, option)
+        })
+      } else {
+        this.executeHcCommand(param, option)
+      }
+    },
+    // 命令/模式下发（5 秒节流，与 20kW 一致）
+    async executeHcCommand(param, option) {
+      const now = Date.now()
+      const paramLastSendTime = this.lastSendTimes[param.key] || 0
+      if (now - paramLastSendTime < 5000) {
+        this.showToast('请间隔5秒后再下发', 'warning')
+        return
+      }
+      this.clickedButton = param.key + '-' + option.value
+      this.lastSendTimes[param.key] = now
+      setTimeout(() => { this.clickedButton = '' }, 5000)
+      try {
+        // 位字段需与同地址的其他 bit 打包成一个字节下发；整字节字段直写
+        const registerValue = param.bit === null || param.bit === undefined
+          ? String(option.value)
+          : this.packHcByte(param, option.value)
+        await this.sendHcCommand(param, registerValue)
+        this.showToast(`${param.name}: ${option.label}成功`, 'success')
+      } catch (error) {
+        this.showToast(`${param.name}: ${option.label}失败`, 'error')
+      }
+    },
+    // 同地址位字段打包：取各 bit 当前值，覆盖被编辑的 bit 后合成一个字节（按设备地址分组）
+    packHcByte(changedParam, newValue) {
+      let packed = 0
+      this.bmsV2ControlChooseParams.forEach(p => {
+        if (p.deviceAddr !== changedParam.deviceAddr) return
+        if (p.address !== changedParam.address || p.bit === null || p.bit === undefined) return
+        const raw = p.key === changedParam.key ? newValue : p.value
+        if (Number(raw) & 1) packed |= (1 << p.bit)
+      })
+      return String(packed)
+    },
+    // 数值参数：进入行内编辑
+    handleHcParamEdit(param) {
+      if (!this.isEditing) {
+        this.showToast('请先点击修改配置', 'warning')
+        return
+      }
+      this.editingHcParam = param.key
+      this.hcTempValue = param.value === '--' ? '' : String(param.value)
+    },
+    handleHcParamCancel() {
+      this.editingHcParam = ''
+      this.hcTempValue = ''
+    },
+    // 数值参数：校验 → 确认弹窗 → 下发
+    submitHcParam(param) {
+      const value = this.hcTempValue
+      if (!value && value !== '0') {
+        this.showToast('请输入参数值', 'warning')
+        return
+      }
+      if (isNaN(parseFloat(value))) {
+        this.showToast('请输入有效的数值', 'warning')
+        return
+      }
+      this.openConfirmPopup({
+        title: '参数下发确认',
+        content: `确定要下发"${param.name}"参数吗？`,
+        oldValue: (param.value === '--' ? '--' : param.value) + (param.unit || ''),
+        newValue: value + (param.unit || ''),
+        isDangerous: false,
+        param: param,
+        action: () => this.executeSubmitHcParam(param, value)
+      })
+    },
+    async executeSubmitHcParam(param, value) {
+      this.isSubmitting = true
+      try {
+        await this.sendHcCommand(param, this.applyHcScale(value, param.address))
+        this.showToast(`${param.name}下发成功`, 'success')
+        this.handleHcParamCancel()
+      } catch (error) {
+        this.showToast(`${param.name}下发失败`, 'error')
+      } finally {
+        this.isSubmitting = false
+      }
+    },
+    // 按地址映射文档的「传输值」说明换算下发值。
+    // 优先级：PARAM_OFFSET_SCALE_ADDRESS ((实际值+offset)×scale) → PARAM_SCALE100_ADDRESS (×100)
+    // → PARAM_SCALE10_ADDRESS (×10) → 原样返回。
+    applyHcScale(value, address) {
+      const deviceCategory = '171C'
+      const num = Number(value)
+      if (!Number.isFinite(num)) return String(value)
+      const addr = String(address)
+      const offsetScaleMap = PARAM_OFFSET_SCALE_ADDRESS[deviceCategory]
+      if (offsetScaleMap && offsetScaleMap[addr]) {
+        const { offset = 0, scale = 1 } = offsetScaleMap[addr]
+        return String(Math.round((num + offset) * scale))
+      }
+      const scale100List = PARAM_SCALE100_ADDRESS[deviceCategory]
+      if (scale100List && scale100List.indexOf(addr) >= 0) {
+        return String(Math.round(num * 100))
+      }
+      const list = PARAM_SCALE10_ADDRESS[deviceCategory]
+      if (list && list.indexOf(addr) >= 0) {
+        return String(Math.round(num * 10))
+      }
+      return String(value)
+    },
+    // 50kW 统一下发通道：multiControl，deviceCategory 171C，addr 按 BMS 子设备地址
+    sendHcCommand(param, registerValue) {
+      return sendCommandFrame({
+        apiSufix: 'multiControl',
+        idCode: this.idCode,
+        typeCode: '3401',
+        address: '01',
+        userId: this.userId,
+        commands: [{
+          deviceCategory: '171C',
+          addr: param.deviceAddr || '01',
+          deviceId: '1',
+          registerAddress: param.address,
+          registerValue,
+          valueType: '01',
+          registerType: '03',
+          extra1: '00',
+          extra2: '00',
+          extra3: '00'
+        }]
+      })
     },
 
     handleParamEdit(param) {
@@ -1035,38 +1393,37 @@ export default {
 
 .param-card {
   background: #ffffff;
-  border-radius: 16rpx;
+  border-radius: 20rpx;
   overflow: hidden;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+  margin-bottom: 24rpx;
 }
 
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx 32rpx;
+  padding: 32rpx;
   border-bottom: 1rpx solid #f0f0f0;
-  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+}
+
+.card-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
 }
 
 .card-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #333;
-  position: relative;
-  padding-left: 20rpx;
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #1a1a1a;
+  letter-spacing: 2rpx;
+}
 
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 6rpx;
-    height: 28rpx;
-    background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
-    border-radius: 3rpx;
-  }
+.card-subtitle {
+  font-size: 22rpx;
+  color: #999;
+  letter-spacing: 1rpx;
 }
 
 .action-btns {
@@ -1075,9 +1432,9 @@ export default {
 }
 
 .edit-btn {
-  padding: 12rpx 28rpx;
-  border-radius: 8rpx;
-  font-size: 26rpx;
+  padding: 14rpx 28rpx;
+  border-radius: 40rpx;
+  font-size: 24rpx;
   transition: all 0.2s ease;
 
   &.primary {
@@ -1103,7 +1460,7 @@ export default {
 }
 
 .edit-text {
-  font-size: 26rpx;
+  font-size: 24rpx;
 }
 
 .param-list {
@@ -1717,5 +2074,95 @@ export default {
   to {
     transform: rotate(360deg);
   }
+}
+
+// ===== 50kW 新协议只读展示 =====
+.hc-body {
+  padding: 12rpx 24rpx 28rpx;
+}
+
+.hc-group {
+  margin-top: 16rpx;
+}
+
+.hc-group-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.hc-bar {
+  width: 6rpx;
+  height: 26rpx;
+  border-radius: 3rpx;
+  margin-right: 12rpx;
+  background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
+}
+
+.hc-group-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.hc-group-count {
+  margin-left: 12rpx;
+  padding: 2rpx 16rpx;
+  font-size: 20rpx;
+  color: #4488fb;
+  background: #eef4ff;
+  border-radius: 999rpx;
+}
+
+.hc-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.hc-tile {
+  width: 48.5%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16rpx;
+  padding: 24rpx 24rpx;
+  background: linear-gradient(135deg, #f8fafc 0%, #f2f6fc 100%);
+  border: 1rpx solid #e8eef6;
+  border-radius: 16rpx;
+}
+
+.hc-tile-name {
+  font-size: 22rpx;
+  color: #888;
+  margin-bottom: 10rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hc-tile-value {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.hc-tile-unit {
+  font-size: 22rpx;
+  color: #999;
+  font-weight: 400;
+}
+
+.hc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 0;
+}
+
+.hc-empty-text {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #999;
 }
 </style>

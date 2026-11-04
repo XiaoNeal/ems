@@ -791,14 +791,14 @@ $text-gray: #868c98;
   border-radius: 20rpx;
   overflow: hidden;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
-  margin-bottom: 12rpx;
+  margin-bottom: 24rpx;
 }
 
 .card-title {
   font-size: 34rpx;
   font-weight: bold;
   color: $text-dark;
-  padding: 8px 32rpx;
+  padding: 32rpx;
   border-bottom: 1rpx solid #f5f5f5;
   letter-spacing: 2rpx;
 }
@@ -1037,9 +1037,9 @@ $text-gray: #868c98;
 }
 
 .edit-btn {
-  padding: 12rpx 28rpx;
-  border-radius: 8rpx;
-  font-size: 26rpx;
+  padding: 14rpx 28rpx;
+  border-radius: 40rpx;
+  font-size: 24rpx;
   transition: all 0.2s ease;
 
   &.primary {
