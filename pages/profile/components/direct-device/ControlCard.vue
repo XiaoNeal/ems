@@ -49,8 +49,9 @@ export default {
 <style lang="scss" scoped>
 .control-card {
   background: #fff;
-  border: 1rpx solid #eef1f5;
-  border-radius: 18rpx;
+  border: 1rpx solid #eceff4;
+  border-radius: 20rpx;
+  box-shadow: 0 1rpx 3rpx rgba(20, 32, 52, 0.03);
   overflow: hidden;
 
   .control-row {

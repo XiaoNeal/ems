@@ -6,7 +6,7 @@
       <view class="group-tail">
         <text v-if="collapsed && summary" class="group-summary">{{ summary }}</text>
         <view class="group-arrow" :class="{ up: !collapsed }">
-          <uni-icons type="down" size="12" color="#98a2ae"></uni-icons>
+          <uni-icons type="down" size="12" color="#8a94a1"></uni-icons>
         </view>
       </view>
     </view>
@@ -61,36 +61,36 @@ export default {
 .group-head {
   display: flex;
   align-items: center;
-  padding: 14rpx 16rpx 14rpx 16rpx;
-  background: #f4f6f9;
-  border-radius: 14rpx;
+  padding: 12rpx 14rpx 12rpx 16rpx;
+  background: #f7f9fc;
+  border-radius: 12rpx;
   transition: background-color 0.15s ease;
 
   &:active {
-    background: #eef2f7;
+    background: #eef2f8;
   }
 
   &.is-collapsed {
-    background: #f7f9fb;
+    background: #f9fbfd;
   }
 }
 
 .group-bar {
   flex-shrink: 0;
-  width: 7rpx;
-  height: 24rpx;
+  width: 6rpx;
+  height: 26rpx;
   margin-right: 12rpx;
-  border-radius: 4rpx;
-  background: linear-gradient(180deg, #63a4ff 0%, #2f7cf6 100%);
+  border-radius: 3rpx;
+  background: #2f7cf6;
 }
 
 .group-title {
   flex: 1;
   min-width: 0;
-  font-size: 27rpx;
+  font-size: 28rpx;
   font-weight: 600;
-  color: #3a4350;
-  letter-spacing: 0.5rpx;
+  color: #26313f;
+  letter-spacing: 0.6rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -104,8 +104,8 @@ export default {
 
 .group-summary {
   margin-right: 8rpx;
-  font-size: 21rpx;
-  color: #98a2ae;
+  font-size: 22rpx;
+  color: #8a94a1;
 }
 
 .group-arrow {

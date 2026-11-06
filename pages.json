@@ -81,15 +81,22 @@
 						"navigationBarTitleText": "监控数据"
 					}
 				},
-				{
-					"path": "quick-control/quick-control",
-					"style": {
-						"navigationStyle": "custom",
-						"navigationBarTitleText": "快捷控制"
-					}
-				},
-				{
-					"path": "settings/settings",
+			{
+				"path": "quick-control/quick-control",
+				"style": {
+					"navigationStyle": "custom",
+					"navigationBarTitleText": "快捷控制"
+				}
+			},
+			{
+				"path": "quick-control/quick-control-50kw",
+				"style": {
+					"navigationStyle": "custom",
+					"navigationBarTitleText": "快捷控制"
+				}
+			},
+			{
+				"path": "settings/settings",
 					"style": {
 						"navigationStyle": "custom",
 						"navigationBarTitleText": "设置参数"
@@ -287,6 +294,7 @@
 	}
 ],
 	"globalStyle": {
+		"navigationStyle": "custom",
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "微能站",
 		"navigationBarBackgroundColor": "#fff",

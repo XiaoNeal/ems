@@ -847,6 +847,20 @@ export default {
       }];
     },
 
+    // 策略启动按钮寄存器地址：20kW=112，50kW（新协议站）=343
+    // 判定：站点容量 ≥50kW，或站点/实时设备中出现 50kW 专属协议设备（1707 PCS / 170C DC / 171C_V2 BMS / 0318 液冷机）
+    // deviceType 归一化与 realtime-websocket-protocolhandler 一致：大写、去下划线、去 0x 前缀
+    systemStartAddress() {
+      const station = this.$store.state.currentSelectDevice || {};
+      const cap = Number(station.totalInstalledCapacity);
+      if (Number.isFinite(cap) && cap > 0 && cap >= 50) return '343';
+      const norm = t => String(t == null ? '' : t).toUpperCase().replace(/_/g, '').replace(/^0X/, '').replace(/\s+/g, '');
+      const is50kwType = t => /^(1707|170C|171CV2|0318)/.test(norm(t));
+      if ((station.list || []).some(item => is50kwType(item.typeCode || item.deviceType))) return '343';
+      if ((this.deviceList || []).some(item => item && is50kwType(item.deviceType))) return '343';
+      return '112';
+    },
+
     // 确认启动
     async confirmStart() {
       this.showModal = false;
@@ -854,7 +868,7 @@ export default {
         title: '策略启动',
         content: '确定要启动策略吗？',
         apiSufix: 'systemControl',
-        commandBuilder: () => this.buildCommand('112', '1'),
+        commandBuilder: () => this.buildCommand(this.systemStartAddress(), '1'),
         action: 'start',
         stateKey: 'systemRunning'
       });
@@ -870,7 +884,7 @@ export default {
         title: '策略停止',
         content: '确定要停止策略吗？',
         apiSufix: 'systemControl',
-        commandBuilder: () => this.buildCommand('112', '0'),
+        commandBuilder: () => this.buildCommand(this.systemStartAddress(), '0'),
         action: 'stop',
         stateKey: 'systemRunning'
       });

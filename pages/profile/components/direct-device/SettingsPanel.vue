@@ -16,17 +16,93 @@
       >
         <uni-icons
           :type="editing ? 'checkmarkempty' : 'compose'"
-          size="13"
-          :color="editing ? '#1f9254' : '#ffffff'"
+          size="14"
+          color="#ffffff"
         ></uni-icons>
         <text>{{ editing ? '完成' : '修改' }}</text>
       </view>
     </view>
 
-    <!-- 编辑态提示条：让「修改」按钮的切换有明确反馈，而不是只变个颜色 -->
+    <!-- 编辑态提示条 -->
     <view v-if="editing" class="sp-edit-hint">
-      <uni-icons type="compose" size="13" color="#2f7cf6"></uni-icons>
-      <text class="sp-edit-hint-text">编辑中 · 点击下方数值卡片修改，确认后立即下发</text>
+      <uni-icons type="compose" size="13" color="#18855a"></uni-icons>
+      <text class="sp-edit-hint-text">编辑模式已开启，点击命令或参数后立即下发</text>
+    </view>
+
+    <!-- 组合报文卡片：同组参数（如储能DC开关机 / 充放电选择 / 总功率）合并成一帧下发 -->
+    <view
+      v-for="b in bundleGroups"
+      :key="b.key"
+      class="sp-card sp-card--bundle"
+      :class="editing ? 'is-editing' : 'is-locked'"
+    >
+      <view class="sp-card-head">
+        <view class="sp-card-title-wrap">
+          <view class="sp-card-bar"></view>
+          <text class="sp-card-title">{{ b.title }}</text>
+          <!-- <text class="sp-bundle-tag">合并下发</text> -->
+        </view>
+        <text v-if="editing" class="sp-card-hint">设置完成后点击下方按钮</text>
+      </view>
+
+      <view v-for="p in b.switchItems" :key="p.key" class="sp-switch-row">
+        <view class="sp-switch-top"> 
+          <text class="sp-switch-label">{{ p.label }}</text>
+          <text v-if="currentLabelOf(p)" class="sp-switch-cur">{{ currentLabelOf(p) }}</text>
+        </view>
+        <view class="sp-seg" :class="{ 'sp-seg--wrap': (p.options || []).length > 4 }">
+          <view
+            v-for="(opt, oi) in (p.options || [])"
+            :key="oi"
+            class="sp-seg-item"
+            :class="{ 'is-active': isActive(p, opt), 'is-danger': opt.dangerous }"
+            @click="onBundleSwitch(p, oi)"
+          >{{ opt.label }}</view>
+        </view>
+      </view>
+
+      <view v-if="b.numericItems.length" class="sp-num-grid sp-num-grid--bundle" :class="{ 'sp-num-grid--single': b.numericItems.length === 1 }">
+        <view
+          v-for="(p, pi) in b.numericItems"
+          :key="p.key"
+          class="sp-num-item"
+          :class="{ 'sp-num-item--right': pi % 2 === 1 }"
+          @click="onBundleNumeric(p)"
+        >
+          <text class="sp-num-name">{{ p.label }}</text>
+          <view class="sp-num-value-row">
+            <text class="sp-num-value">{{ formatCurrentText(p) }}</text>
+            <text v-if="p.unit" class="sp-num-unit">{{ p.unit }}</text>
+          </view>
+          <text v-if="hasRange(p)" class="sp-num-range">
+            {{ p.min }} ~ {{ p.max }}{{ p.unit }}
+          </text>
+          <text v-else class="sp-num-range">--</text>
+          <view class="sp-num-edit" :class="{ 'is-on': editing }">
+            <uni-icons
+              :type="editing ? 'compose' : 'locked'"
+              size="11"
+              :color="editing ? '#2f7cf6' : '#c6ced8'"
+            ></uni-icons>
+          </view>
+        </view>
+      </view>
+
+      <!-- 统一的下发入口：上面怎么调都只改本地选择，点这里才真正把三项合成一帧发出去 -->
+      <view class="sp-bundle-foot">
+        <view class="sp-bundle-state" :class="{ 'is-pending': bundleDirty(b) }">
+          <view class="sp-bundle-dot"></view>
+          <text>{{ bundleDirty(b) ? '有未下发的修改' : '将按当前设置一并下发' }}</text>
+        </view>
+        <view
+          class="sp-bundle-send"
+          :class="{ 'is-disabled': !editing }"
+          @click="onBundleSend(b)"
+        >
+          <uni-icons type="paperplane" size="14" :color="editing ? '#ffffff' : '#a8b1bd'"></uni-icons>
+          <text class="sp-bundle-send-text">一键下发</text>
+        </view>
+      </view>
     </view>
 
     <!-- 命令 / 模式：先在编辑态下才允许点击下发（未点「修改」时点击只会提示） -->
@@ -36,7 +112,7 @@
           <view class="sp-card-bar"></view>
           <text class="sp-card-title">{{ sec.title }}</text>
         </view>
-        <text class="sp-card-hint" :class="{ 'is-warn': !editing }">{{ editing ? '选择后下发' : '先点「修改」' }}</text>
+        <text v-if="editing" class="sp-card-hint">选择后立即下发</text>
       </view>
 
       <view v-for="p in sec.items" :key="p.key" class="sp-switch-row">
@@ -56,17 +132,34 @@
       </view>
     </view>
 
+    <!-- 数值分组切换：某个设备的数值项过多时，按 tabCfg.numericGroups 分段，
+         一次只渲染选中那段；只有一段（当前 BMS 就只剩温控 15 项）时不显示这排 -->
+    <scroll-view v-if="numericSections.length > 1" class="sp-num-tabs" scroll-x :show-scrollbar="false">
+      <view class="sp-num-tabs-inner">
+        <view
+          v-for="(sec, si) in numericSections"
+          :key="sec.key"
+          class="sp-num-tab"
+          :class="{ 'is-active': si === activeNumSection }"
+          @click="activeNumSection = si"
+        >
+          <text class="sp-num-tab-text">{{ sec.short || sec.title }}</text>
+          <text class="sp-num-tab-count">{{ sec.items.length }}</text>
+        </view>
+      </view>
+    </scroll-view>
+
     <!-- 数值设定：两列栅格，点卡片即可编辑 -->
-    <view v-for="(sec, si) in numericSections" :key="sec.key" class="sp-card" :class="editing ? 'is-editing' : 'is-locked'">
+    <view v-for="(sec, si) in visibleNumericSections" :key="sec.key" class="sp-card" :class="editing ? 'is-editing' : 'is-locked'">
       <view class="sp-card-head">
         <view class="sp-card-title-wrap">
           <view class="sp-card-bar"></view>
           <text class="sp-card-title">{{ sec.title }}</text>
         </view>
-        <text class="sp-card-hint">{{ sec.items.length }} 项 · {{ editing ? '点击卡片可改' : '先点「修改」' }}</text>
+        <text v-if="editing" class="sp-card-hint">{{ sec.items.length }} 项 · 点击卡片可修改</text>
       </view>
 
-      <view class="sp-num-grid">
+      <view class="sp-num-grid" :class="{ 'sp-num-grid--single': sec.items.length === 1 }">
         <view
           v-for="(p, pi) in sec.items"
           :key="p.key"
@@ -96,7 +189,8 @@
 
     <!-- 配置为空时的兜底，任何时候都不白屏 -->
     <view v-if="!sections.length && !numericSections.length" class="sp-empty">
-      <text class="sp-empty-text">当前标签页暂无可用参数</text>
+      <uni-icons type="info" size="26" color="#c6ced8"></uni-icons>
+      <text class="sp-empty-text">该设备暂无可配置参数</text>
     </view>
   </view>
 </template>
@@ -106,8 +200,11 @@
  * 设置面板组件（数据驱动，对应 SETTINGS_TABS 中的一项）
  * 事件: toggle-edit(editKey)       —— 点「修改 / 完成」
  *       need-edit                 —— 未进编辑态就点了命令或数值（页面据此提示）
- *       switch-click({ dataKey, key, optionIndex, value, label })
- *       numeric-edit({ dataKey, key })
+ *       switch-click({ dataKey, key, optionIndex, value, label })   —— 普通命令卡：点选即下发
+ *       numeric-edit({ dataKey, key })                              —— 普通数值卡：改完即下发
+ *       bundle-select({ dataKey, key, optionIndex, value, label })  —— 组合卡：只改本地选择
+ *       bundle-value-edit({ dataKey, key })                         —— 组合卡：只改本地数值
+ *       bundle-send({ group })                                      —— 组合卡：合成一帧下发
  *
  * 门禁：命令与数值都必须先点「修改」进入编辑态，未进入时点击只发 need-edit，不下发。
  *
@@ -135,32 +232,73 @@ export default {
     return {
       // 本地即时编辑态：点击「修改」立刻生效，不等父组件回传 prop，
       // 避免事件往返期间按钮「点了没反应」；null 表示跟随父组件的 isEditing
-      localEditing: null
+      localEditing: null,
+      // 当前选中的数值分组（仅当 numericGroups 配了多段时用得上）
+      activeNumSection: 0
     }
   },
   computed: {
+    /** 只渲染选中的那一组数值卡片；不足两组时全渲染 */
+    visibleNumericSections() {
+      const list = this.numericSections
+      if (list.length <= 1) return list
+      const i = Math.min(this.activeNumSection, list.length - 1)
+      return [list[i]]
+    },
     editing() {
       return this.localEditing === null ? this.isEditing : this.localEditing
+    },
+    /**
+     * 组合报文分组（tabCfg.bundleSections）
+     * 协议要求「同组参数放在一个报文里下发」时用：组内开关 + 数值渲染在同一张卡里，
+     * 点任意一项，页面都会把同组其它项的当前值一起带出，合成一帧。
+     */
+    bundleGroups() {
+      const cfg = this.tabCfg || {}
+      const specs = cfg.bundleSections
+      if (!specs || !specs.length) return []
+      const swArr = this.getParams(cfg.dataKey)
+      const numArr = this.getParams(cfg.numericKey)
+      // 数值项可能定义在 dataKey 数组里，两个来源都查
+      const findNum = k => numArr.find(x => x.key === k) || swArr.find(x => x.key === k) || null
+      return specs.map((b, i) => ({
+        key: 'b' + i,
+        group: b.group || '',
+        title: b.title || '组合指令',
+        switchItems: this.withOptions((b.switchKeys || []).map(k => swArr.find(x => x.key === k)).filter(Boolean)),
+        numericItems: (b.numericKeys || []).map(findNum).filter(Boolean)
+      })).filter(g => g.switchItems.length || g.numericItems.length)
+    },
+    /** 已归入组合报文的 key：普通分区里要排掉，否则同一项会出现两次 */
+    bundleKeys() {
+      const cfg = this.tabCfg || {}
+      const out = []
+      ;(cfg.bundleSections || []).forEach(b => {
+        (b.switchKeys || []).forEach(k => out.push(k))
+        ;(b.numericKeys || []).forEach(k => out.push(k))
+      })
+      return out
     },
     /** 命令/模式分区：快捷控制是多段，其余是单段（BMS 可能带额外开关段） */
     sections() {
       const cfg = this.tabCfg || {}
+      const skip = k => this.bundleKeys.indexOf(k) !== -1
       if (cfg.switchSections && cfg.switchSections.length) {
         const mapped = cfg.switchSections.map((ss, i) => ({
           key: 's' + i,
           title: ss.title,
-          items: this.withOptions(this.sectionParams(ss))
+          items: this.withOptions(this.sectionParams(ss)).filter(p => !skip(p.key))
         }))
         if (mapped.some(s => s.items.length)) return mapped.filter(s => s.items.length)
         // 分区 key 与参数 key 对不上（协议模板切换时序问题）时平铺全部开关项，避免整页空白
-        const all = this.withOptions(this.getParams(cfg.dataKey))
+        const all = this.withOptions(this.getParams(cfg.dataKey)).filter(p => !skip(p.key))
         return all.length ? [{ key: 's0', title: cfg.switchTitle || '命令 / 模式', items: all }] : []
       }
       const out = []
-      const main = this.withOptions(this.getParams(cfg.dataKey))
+      const main = this.withOptions(this.getParams(cfg.dataKey)).filter(p => !skip(p.key))
       if (main.length) out.push({ key: 's0', title: cfg.switchTitle || '命令 / 模式', items: main })
       if (cfg.extraSwitchKey) {
-        const extra = this.withOptions(this.getParams(cfg.extraSwitchKey))
+        const extra = this.withOptions(this.getParams(cfg.extraSwitchKey)).filter(p => !skip(p.key))
         if (extra.length) out.push({ key: 's1', title: cfg.extraSwitchTitle || '开关控制', items: extra })
       }
       return out
@@ -168,19 +306,22 @@ export default {
     /** 数值分区：支持 numericGroups 按 group 标签拆分（如 BMS 阈值 / 温控），否则单段 */
     numericSections() {
       const cfg = this.tabCfg || {}
-      const all = this.getParams(cfg.numericKey)
+      const all = this.getParams(cfg.numericKey).filter(p => this.bundleKeys.indexOf(p.key) === -1)
       if (!all.length) return []
       const groups = cfg.numericGroups
       if (!groups || !groups.length) {
         return [{ key: 'n0', title: cfg.numericTitle || '数值设定', items: all }]
       }
       return groups
-        .map((g, i) => ({ key: 'n' + i, title: g.title, items: all.filter(p => (p.group || '') === g.tag) }))
+        .map((g, i) => ({ key: 'n' + i, title: g.title, short: g.short, items: all.filter(p => (p.group || '') === g.tag) }))
         .filter(g => g.items.length)
     },
     heroSub() {
-      const sw = this.sections.reduce((sum, s) => sum + s.items.length, 0)
-      const nm = this.numericSections.reduce((sum, s) => sum + s.items.length, 0)
+      // 组合卡里的项也要计数，否则顶部会显示「命令 5 项」却看不到那两项
+      const bundleSw = this.bundleGroups.reduce((sum, b) => sum + b.switchItems.length, 0)
+      const bundleNum = this.bundleGroups.reduce((sum, b) => sum + b.numericItems.length, 0)
+      const sw = this.sections.reduce((sum, s) => sum + s.items.length, 0) + bundleSw
+      const nm = this.numericSections.reduce((sum, s) => sum + s.items.length, 0) + bundleNum
       const parts = []
       if (sw) parts.push('命令 ' + sw + ' 项')
       if (nm) parts.push('参数 ' + nm + ' 项')
@@ -192,9 +333,10 @@ export default {
     isEditing(v) {
       this.localEditing = v
     },
-    // 换到另一个 tab：编辑态回到初始（各 tab 有自己的编辑开关）
+    // 换到另一个 tab：编辑态回到初始（各 tab 有自己的编辑开关），数值分组回到第一段
     'tabCfg.editKey'() {
       this.localEditing = null
+      this.activeNumSection = 0
     }
   },
   methods: {
@@ -221,6 +363,52 @@ export default {
     /** 是否给出取值范围（0 也要显示，所以用 != null 而不是真值判断） */
     hasRange(p) {
       return p.min != null && p.max != null
+    },
+    /**
+     * 组合卡里的开关：只改本地选择，不下发。
+     * 三项必须「调好一起发」，逐项即时发会被下一帧覆盖。
+     */
+    onBundleSwitch(p, optionIndex) {
+      if (!p) return
+      if (!this.editing) {
+        this.$emit('need-edit')
+        return
+      }
+      const opt = (p.options || [])[optionIndex]
+      if (!opt) return
+      this.$emit('bundle-select', {
+        dataKey: this.tabCfg.dataKey,
+        key: p.key,
+        optionIndex,
+        value: opt.value,
+        label: opt.label
+      })
+    },
+    /** 组合卡里的数值：只改本地值，等「下发组合指令」统一发 */
+    onBundleNumeric(p) {
+      if (!p) return
+      if (!this.editing) {
+        this.$emit('need-edit')
+        return
+      }
+      this.$emit('bundle-value-edit', {
+        dataKey: this.tabCfg.numericKey || this.tabCfg.dataKey,
+        key: p.key
+      })
+    },
+    /** 组合下发：把卡内三项的当前选择合成一帧 */
+    onBundleSend(b) {
+      if (!b) return
+      if (!this.editing) {
+        this.$emit('need-edit')
+        return
+      }
+      this.$emit('bundle-send', { group: b.group || 'storageDc', title: b.title })
+    },
+    /** 卡内是否有尚未下发的本地改动（参数上的 _pending 标记） */
+    bundleDirty(b) {
+      const all = (b.switchItems || []).concat(b.numericItems || [])
+      return all.some(p => p && p._pending)
     },
     /**
      * 开关项点击：只透传定位信息，具体参数对象由页面按 key 反查
@@ -282,14 +470,19 @@ export default {
 
 <style lang="scss" scoped>
 $primary: #2f7cf6;
-$primary-soft: #eaf2ff;
+$primary-soft: #eef4ff;
 $danger: #e5484d;
-$text-1: #1d2430;
-$text-2: #5c6673;
-$text-3: #98a2ae;
-$border: #eef1f5;
-$border-soft: #f3f5f8;
-$bg-soft: #f8fafc;
+/* 编辑态语义色：完成 / 可下发一律用绿色系，与主蓝（修改）区分状态 */
+$success: #18855a;
+$success-soft: #f1faf5;
+$success-line: #d5ecdf;
+$text-1: #16202d;
+$text-2: #58626f;
+/* 三级灰原先偏浅（#97a1ad 在灰底上对比不足），压深一档保证可读 */
+$text-3: #7e8896;
+$border: #e9edf3;
+$border-soft: #f2f5f9;
+$fill: #f6f8fb;
 
 .settings-panel {
   padding-bottom: 8rpx;
@@ -297,37 +490,20 @@ $bg-soft: #f8fafc;
 
 /* ========== 顶部信息条 ========== */
 .sp-hero {
-  position: relative;
   display: flex;
   align-items: center;
-  padding: 24rpx 22rpx;
-  margin-bottom: 16rpx;
+  padding: 22rpx;
+  margin-bottom: 18rpx;
   background: #ffffff;
   border: 1rpx solid $border;
   border-radius: 20rpx;
-  overflow: hidden;
-
-  /* 右上角一枚极淡的蓝色光晕，纯装饰，不抢内容
-     z-index: 0 让它固定在按钮下层：小程序的伪元素对 pointer-events 支持不一致，
-     只靠 pointer-events:none 有过「光晕盖住修改按钮、点了没反应」的坑 */
-  &::after {
-    content: '';
-    position: absolute;
-    right: -70rpx;
-    top: -70rpx;
-    width: 210rpx;
-    height: 210rpx;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(47, 124, 246, 0.12) 0%, rgba(47, 124, 246, 0) 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
+  box-shadow: 0 1rpx 3rpx rgba(20, 32, 52, 0.03);
 }
 
 .sp-hero-icon {
   flex-shrink: 0;
-  width: 64rpx;
-  height: 64rpx;
+  width: 62rpx;
+  height: 62rpx;
   margin-right: 18rpx;
   border-radius: 16rpx;
   background: $primary-soft;
@@ -344,54 +520,66 @@ $bg-soft: #f8fafc;
 }
 
 .sp-hero-title {
-  font-size: 30rpx;
-  font-weight: 700;
+  font-size: 29rpx;
+  font-weight: 600;
+  line-height: 1.3;
   color: $text-1;
-  letter-spacing: 0.5rpx;
+  letter-spacing: 0.3rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .sp-hero-sub {
-  margin-top: 6rpx;
-  font-size: 21rpx;
+  margin-top: 5rpx;
+  font-size: 22rpx;
+  line-height: 1.35;
   color: $text-3;
+  letter-spacing: 0.2rpx;
 }
 
 .sp-edit-btn {
   position: relative;
-  /* 必须高于装饰光晕（z-index:0），否则部分小程序版本里点击会被伪元素吃掉 */
-  z-index: 2;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  /* 触控区偏小容易「点了没反应」，这里保证高度足够（约 40px） */
-  padding: 18rpx 28rpx;
+  justify-content: center;
+  margin-left: 16rpx;
+  /* 触控高度约 40px，避免“点了没反应” */
+  /* 定宽而非 min-width：笔图标与勾图标宽度不同，切换编辑态时按钮会跳 1~2px */
+  width: 148rpx;
+  padding: 15rpx 0;
   border-radius: 999rpx;
   background: $primary;
-  box-shadow: 0 6rpx 16rpx rgba(47, 124, 246, 0.26);
-  transition: all 0.2s ease;
+  box-shadow: 0 2rpx 6rpx rgba(20, 32, 52, 0.10);
+  transition: background-color 0.18s ease, box-shadow 0.18s ease, opacity 0.15s ease;
 
   text {
     margin-left: 6rpx;
     font-size: 23rpx;
     font-weight: 600;
     color: #ffffff;
+    letter-spacing: 0.6rpx;
   }
 
   &:active {
-    transform: scale(0.95);
-    opacity: 0.9;
+    opacity: 0.86;
   }
 
-  /* 编辑中：转成绿色「完成」，提示当前处于可编辑状态 */
+  /* 编辑中：实心绿「完成」。
+     之前用浅绿底 + 绿字，在白色卡片上几乎融进背景，看不出这是可点的按钮；
+     改成实心后既是状态标识（已进入编辑态），也是明确的终点操作。 */
   &.is-editing {
-    background: #eafaf0;
-    box-shadow: none;
+    background: $success;
+    box-shadow: 0 2rpx 6rpx rgba(24, 133, 90, 0.22);
 
     text {
-      color: #1f9254;
+      color: #ffffff;
+    }
+
+    &:active {
+      opacity: 1;
+      background: #14734e;
     }
   }
 }
@@ -400,27 +588,31 @@ $bg-soft: #f8fafc;
 .sp-edit-hint {
   display: flex;
   align-items: center;
-  padding: 14rpx 20rpx;
-  margin-bottom: 16rpx;
-  background: $primary-soft;
-  border: 1rpx solid #d8e6fb;
-  border-radius: 14rpx;
+  padding: 14rpx 18rpx;
+  margin-bottom: 18rpx;
+  background: $success-soft;
+  border: 1rpx solid $success-line;
+  border-radius: 12rpx;
 }
 
 .sp-edit-hint-text {
+  flex: 1;
+  min-width: 0;
   margin-left: 10rpx;
   font-size: 21rpx;
-  line-height: 1.35;
-  color: #2f6bd8;
+  line-height: 1.4;
+  color: #17734c;
 }
 
 /* ========== 区块卡片 ========== */
 .sp-card {
-  padding: 0 22rpx 6rpx;
-  margin-bottom: 16rpx;
+  position: relative;
+  padding: 0 22rpx 8rpx;
+  margin-bottom: 18rpx;
   background: #ffffff;
   border: 1rpx solid $border;
   border-radius: 20rpx;
+  box-shadow: 0 1rpx 3rpx rgba(20, 32, 52, 0.03);
 
   &:last-child {
     margin-bottom: 0;
@@ -430,7 +622,7 @@ $bg-soft: #f8fafc;
   &.is-editing {
     .sp-num-item {
       background: #f5f9ff;
-      border-color: #d8e6fb;
+      border-color: #dbe7f9;
     }
 
     .sp-num-edit {
@@ -451,21 +643,195 @@ $bg-soft: #f8fafc;
       /* 只读态的选中也要看得见：白底 + 深灰字，不用主色蓝避免显得可点 */
       &.is-active {
         background: #ffffff;
-        color: #4a5464;
+        color: #45505f;
         font-weight: 600;
-        box-shadow: 0 2rpx 8rpx rgba(29, 36, 48, 0.08);
+        box-shadow: 0 1rpx 3rpx rgba(20, 32, 52, 0.07);
       }
 
       /* 危险项的当前态：暗红文字提示，但不能用轨道灰底——会和未选中项融为一体 */
       &.is-danger.is-active {
         background: #ffffff;
         color: #c25256;
-        box-shadow: 0 2rpx 8rpx rgba(29, 36, 48, 0.08);
+        box-shadow: 0 1rpx 3rpx rgba(20, 32, 52, 0.07);
+      }
+    }
+
+    .sp-num-item {
+      &:active {
+        background: $fill;
+        border-color: $border;
       }
     }
   }
 }
 
+/* 组合下发卡：卡片头做淡蓝底，与普通卡一眼可分（不用渐变、不用顶部色条） */
+.sp-card--bundle {
+  overflow: hidden;
+  border-color: #e2ebfa;
+
+  .sp-card-head {
+    margin: 0 -22rpx;
+    padding: 22rpx 22rpx 16rpx;
+    background: #f6f9ff;
+    border-radius: 20rpx 20rpx 0 0;
+    border-bottom: 1rpx solid #e6eefb;
+  }
+}
+
+.sp-bundle-tag {
+  flex-shrink: 0;
+  margin-left: 10rpx;
+  padding: 3rpx 10rpx;
+  border-radius: 6rpx;
+  font-size: 18rpx;
+  line-height: 1.4;
+  color: $primary;
+  background: rgba(47, 124, 246, 0.09);
+}
+
+.sp-num-grid--bundle {
+  padding-top: 14rpx;
+  padding-bottom: 6rpx;
+}
+
+/* ========== 数值分组切换（设备数值项过多时按 numericGroups 分段） ========== */
+.sp-num-tabs {
+  width: 100%;
+  margin-bottom: 16rpx;
+  white-space: nowrap;
+  /* 五段在 375pt 屏上会挤，横向滚动而不是换行，保持一行高度一致 */
+  background: transparent;
+}
+
+.sp-num-tabs-inner {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx;
+  background: #ffffff;
+  border: 1rpx solid $border;
+  border-radius: 16rpx;
+}
+
+.sp-num-tab {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 12rpx 18rpx;
+  border-radius: 12rpx;
+  transition: background 0.15s ease;
+
+  &.is-active {
+    background: $primary;
+
+    .sp-num-tab-text,
+    .sp-num-tab-count {
+      color: #ffffff;
+    }
+
+    .sp-num-tab-count {
+      background: rgba(255, 255, 255, 0.22);
+    }
+  }
+}
+
+.sp-num-tab-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: $text-2;
+  line-height: 1;
+}
+
+.sp-num-tab-count {
+  margin-left: 8rpx;
+  padding: 2rpx 8rpx;
+  border-radius: 8rpx;
+  font-size: 18rpx;
+  line-height: 1.4;
+  color: $text-3;
+  background: $fill;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========== 组合卡：状态 + 下发按钮 ========== */
+.sp-bundle-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 0;
+  margin-top: 2rpx;
+  border-top: 1rpx solid $border-soft;
+}
+
+.sp-bundle-state {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  font-size: 20rpx;
+  line-height: 1.3;
+  color: $text-3;
+}
+
+.sp-bundle-dot {
+  flex-shrink: 0;
+  width: 8rpx;
+  height: 8rpx;
+  margin-right: 10rpx;
+  border-radius: 50%;
+  background: #cfd6df;
+}
+
+.sp-bundle-state.is-pending {
+  color: $primary;
+
+  .sp-bundle-dot {
+    background: $primary;
+  }
+}
+
+.sp-bundle-send {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 186rpx;
+  margin-left: 16rpx;
+  padding: 14rpx 24rpx;
+  border-radius: 12rpx;
+  background: $primary;
+
+  &:active {
+    opacity: 0.88;
+  }
+
+  &.is-disabled {
+    background: #f0f3f7;
+
+    .sp-bundle-send-text {
+      color: #a8b1bd;
+    }
+  }
+}
+
+.sp-bundle-send-text {
+  margin-left: 8rpx;
+  font-size: 23rpx;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.5rpx;
+}
+
+/* 只有一个数值项时给整行，别留半张空卡 */
+.sp-num-grid--single .sp-num-item {
+  width: 100%;
+
+  &--right {
+    margin-left: 0;
+  }
+}
+
+/* ========== 卡片头 ========== */
 .sp-card-head {
   display: flex;
   align-items: center;
@@ -482,45 +848,44 @@ $bg-soft: #f8fafc;
 
 .sp-card-bar {
   flex-shrink: 0;
-  width: 6rpx;
-  height: 24rpx;
+  width: 4rpx;
+  height: 22rpx;
   margin-right: 12rpx;
-  border-radius: 3rpx;
-  background: linear-gradient(180deg, #63a4ff 0%, #2f7cf6 100%);
+  border-radius: 2rpx;
+  background: $primary;
 }
 
 .sp-card-title {
-  font-size: 27rpx;
+  font-size: 26rpx;
   font-weight: 600;
+  line-height: 1.3;
   color: $text-1;
-  letter-spacing: 0.5rpx;
+  letter-spacing: 0.3rpx;
 }
 
+/* 只读态不显示操作提示：每张卡重复一句「请先点击修改」是噪音，
+   入口交给顶部主色「修改」按钮，误触时另有点击提示兜底 */
 .sp-card-hint {
   flex-shrink: 0;
+  margin-left: 12rpx;
   font-size: 20rpx;
-  color: #b6bec9;
-
-  /* 未进入编辑态：用暖色把「先点修改」推到视线里，而不是灰到看不见 */
-  &.is-warn {
-    color: #cf9a3a;
-  }
+  color: #b3bbc7;
 }
 
 /* ========== 命令 / 模式行 ========== */
 .sp-switch-row {
-  padding: 22rpx 0 20rpx;
+  padding: 20rpx 0 18rpx;
   border-bottom: 1rpx solid $border-soft;
 
   &:last-child {
     border-bottom: none;
-    padding-bottom: 16rpx;
+    padding-bottom: 14rpx;
   }
 }
 
 .sp-switch-top {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 14rpx;
 }
@@ -530,54 +895,59 @@ $bg-soft: #f8fafc;
   min-width: 0;
   font-size: 26rpx;
   font-weight: 500;
-  color: #2b3240;
   line-height: 1.35;
+  color: #2b3240;
 }
 
+/* 当前值做成小胶囊，比裸文字更像正式 App 的状态标注 */
 .sp-switch-cur {
   flex-shrink: 0;
   margin-left: 12rpx;
-  font-size: 21rpx;
-  color: $text-3;
+  padding: 4rpx 12rpx;
+  font-size: 19rpx;
+  line-height: 1.3;
+  color: #6c7787;
+  background: #f2f5f9;
+  border-radius: 8rpx;
 }
 
 /* ========== 分段控件 ========== */
 .sp-seg {
   display: flex;
-  padding: 5rpx;
+  padding: 4rpx;
   background: #f2f4f8;
-  border-radius: 14rpx;
+  border-radius: 12rpx;
 }
 
 .sp-seg-item {
   flex: 1 1 0;
   min-width: 0;
-  padding: 14rpx 8rpx;
-  border-radius: 10rpx;
-  font-size: 23rpx;
-  line-height: 1.25;
+  padding: 13rpx 8rpx;
+  border-radius: 9rpx;
+  font-size: 22rpx;
+  line-height: 1.3;
   color: $text-2;
   text-align: center;
   word-break: break-all;
-  transition: all 0.18s ease;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 
   &:active {
     opacity: 0.7;
   }
 
-  /* 选中：白底 + 主色文字 + 轻投影，与未选中的灰底一眼可分 */
+  /* 选中：白底 + 主色文字，与未选中的灰底一眼可分 */
   &.is-active {
     background: #ffffff;
     color: $primary;
     font-weight: 600;
-    box-shadow: 0 2rpx 8rpx rgba(47, 124, 246, 0.16);
+    box-shadow: 0 1rpx 4rpx rgba(20, 32, 52, 0.10);
   }
 
   /* 危险动作只有选中后才转红，未选中不使用红字（红字易被误读成已选中） */
   &.is-danger.is-active {
     background: $danger;
     color: #ffffff;
-    box-shadow: 0 3rpx 10rpx rgba(229, 72, 77, 0.28);
+    box-shadow: none;
   }
 }
 
@@ -587,8 +957,9 @@ $bg-soft: #f8fafc;
 
   .sp-seg-item {
     flex: 0 0 auto;
-    padding: 14rpx 22rpx;
+    padding: 12rpx 20rpx;
     margin: 3rpx;
+    font-size: 21rpx;
   }
 }
 
@@ -596,19 +967,19 @@ $bg-soft: #f8fafc;
 .sp-num-grid {
   display: flex;
   flex-wrap: wrap;
-  padding: 18rpx 0 12rpx;
+  padding: 16rpx 0 10rpx;
 }
 
 .sp-num-item {
   position: relative;
-  width: calc(50% - 6rpx);
+  width: calc(50% - 10rpx);
   box-sizing: border-box;
-  padding: 18rpx 18rpx 16rpx;
+  padding: 16rpx 18rpx 14rpx;
   margin-bottom: 12rpx;
-  background: $bg-soft;
+  background: $fill;
   border: 1rpx solid $border;
   border-radius: 14rpx;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 
   /* 右列由模板按奇偶加左间距，不依赖 nth-child（小程序选择器支持不一致） */
   &--right {
@@ -617,33 +988,36 @@ $bg-soft: #f8fafc;
 
   &:active {
     background: #f1f5fa;
-    border-color: #dbe6f5;
+    border-color: #dfe7f2;
   }
 }
 
+/* 名称固定两行高：短名也让两列的值横向对齐，不会高低参差 */
 .sp-num-name {
   display: block;
-  height: 60rpx;
+  height: 58rpx;
   overflow: hidden;
   font-size: 22rpx;
-  line-height: 1.35;
+  line-height: 29rpx;
   color: $text-2;
 }
 
 .sp-num-value-row {
   display: flex;
   align-items: baseline;
-  margin-top: 4rpx;
+  margin-top: 6rpx;
   min-width: 0;
 }
 
 .sp-num-value {
   max-width: 100%;
-  font-size: 34rpx;
+  font-size: 33rpx;
   font-weight: 600;
+  line-height: 1.2;
   color: $text-1;
-  font-family: 'Menlo', 'Consolas', 'Roboto Mono', monospace;
-  letter-spacing: -0.5rpx;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.2rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -652,7 +1026,7 @@ $bg-soft: #f8fafc;
 .sp-num-unit {
   flex-shrink: 0;
   margin-left: 4rpx;
-  font-size: 20rpx;
+  font-size: 19rpx;
   color: $text-3;
 }
 
@@ -661,7 +1035,7 @@ $bg-soft: #f8fafc;
   margin-top: 6rpx;
   font-size: 19rpx;
   line-height: 1.3;
-  color: #b6bec9;
+  color: #a9b3bf;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -669,8 +1043,8 @@ $bg-soft: #f8fafc;
 
 .sp-num-edit {
   position: absolute;
-  right: 14rpx;
-  top: 14rpx;
+  right: 12rpx;
+  top: 12rpx;
   width: 26rpx;
   height: 26rpx;
   display: flex;
@@ -687,14 +1061,16 @@ $bg-soft: #f8fafc;
 
 /* ========== 空态 ========== */
 .sp-empty {
-  padding: 100rpx 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 90rpx 0;
 }
 
 .sp-empty-text {
-  font-size: 26rpx;
+  margin-top: 14rpx;
+  font-size: 24rpx;
   color: $text-3;
 }
 </style>

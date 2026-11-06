@@ -3,8 +3,8 @@
     "name" : "微能站",
     "appid" : "__UNI__D7E714F",
     "description" : "",
-    "versionName" : "V1.0.15",
-    "versionCode" : 186,
+    "versionName" : "V1.0.17",
+    "versionCode" : 188,
     "transformPx" : false,
     "networkTimeout" : {
         "request" : 40000 // 20秒超时 
@@ -145,7 +145,6 @@
     /* 快应用特有相关 */
     "mp-weixin" : {
         "appid" : "wxea9c89df2499f8a0",
-        "navigationStyle" : "custom",
         "__usePrivacyCheck__" : true,
         "setting" : {
             "urlCheck" : false,

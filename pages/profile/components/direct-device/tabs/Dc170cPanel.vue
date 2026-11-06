@@ -25,7 +25,7 @@
         :groups="faultGroups"
         :current="faultCode"
         :has-data="hasStateFrame"
-        hint="暂无故障码数据（未收到 170C 状态帧）"
+        hint="暂无故障码数据"
       />
     </DataGroup>
   </view>
@@ -91,7 +91,8 @@ export default {
 }
 .state-title {
   font-size: 22rpx;
-  color: #98a2ae;
+  color: #78838f;
+  letter-spacing: 0.2rpx;
   display: block;
   margin-bottom: 12rpx;
 }
@@ -108,7 +109,7 @@ export default {
   border: 1rpx solid #eef1f5;
   text {
     font-size: 22rpx;
-    color: #b0b6c0;
+    color: #9aa4b1;
   }
   &.active.green {
     background: #f2fbf5;

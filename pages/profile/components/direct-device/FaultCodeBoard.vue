@@ -1,6 +1,6 @@
 <template>
   <view class="code-board">
-    <!-- 未收到状态帧：不能把 0 当成「无故障」 -->
+    <!-- 未收到数据：不能把 0 当成「无故障」 -->
     <view v-if="!hasData || !valid" class="cb-empty">{{ hint }}</view>
 
     <template v-else>
@@ -11,7 +11,7 @@
         </view>
         <view class="cb-hero-info">
           <text class="cb-hero-name">{{ currentName }}</text>
-          <text class="cb-hero-sub">{{ isFault ? '当前故障码 · 请排查设备' : '当前无故障上报' }}</text>
+          <text class="cb-hero-sub">{{ isFault ? '设备存在故障，请及时排查' : '设备运行正常' }}</text>
         </view>
         <view class="cb-hero-tag">
           <view class="cb-hero-dot"></view>
@@ -72,7 +72,7 @@ export default {
     },
     hint: {
       type: String,
-      default: '暂无故障码数据（未收到 170C 状态帧）'
+      default: '暂无故障码数据'
     }
   },
   computed: {
@@ -226,6 +226,9 @@ export default {
 .cb-cell {
   display: flex;
   align-items: center;
+  /* 编号 + 名称作为整体居中：双列卡片宽度固定，左对齐时右半边留白，
+     两组并排看起来会「一边挤一边空」，居中后左右两列视觉重心一致 */
+  justify-content: center;
   width: calc(50% - 8rpx);
   min-height: 54rpx;
   margin: 4rpx;
@@ -250,10 +253,14 @@ export default {
   font-variant-numeric: tabular-nums;
 }
 .cb-cell-name {
-  flex: 1;
+  /* 不再 flex:1 撑满剩余宽度，否则文字被拉到左侧、居中失效 */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
   font-size: 21rpx;
   color: #8d949e;
   line-height: 1.3;
+  text-align: center;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

@@ -71,10 +71,11 @@ export default {
 }
 
 .status-value {
-  font-size: 25rpx;
+  font-size: 26rpx;
   font-weight: 600;
   color: #1f9254;
-  font-family: 'Menlo', 'Consolas', monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 
   &.error {
     color: #e5484d;
@@ -131,7 +132,7 @@ export default {
   width: 100%;
   padding: 40rpx 0;
   text-align: center;
-  color: #98a2ae;
+  color: #8a94a1;
   font-size: 26rpx;
 }
 </style>

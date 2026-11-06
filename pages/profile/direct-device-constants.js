@@ -245,10 +245,11 @@ function _isDangerousLabel(label) {
 }
 
 function _mkOpts(pairs) {
-  return pairs.map(([label, value]) => ({
+  return pairs.map(([label, value, forceDanger]) => ({
     label,
     value: String(value),
-    dangerous: _isDangerousLabel(label)
+    // 第三个元素可显式标危险（如「一键关机」不含危险词，但确实是停机动作）
+    dangerous: forceDanger === true || _isDangerousLabel(label)
   }))
 }
 
@@ -256,6 +257,12 @@ function _mkParam(def, deviceType) {
   const options = def.options || null
   const param = {
     key: def.key,
+    // 回显用的帧键：默认与 key 相同。
+    // 同一台设备里多个参数共用同一个帧键、而 key 必须全局唯一时（页面按 key 反查参数），
+    // key 可以在后缀上做区分，帧键单独放这里。
+    frameKey: def.frameKey || def.key,
+    // 数值卡片的分组标签：配合 tabCfg.numericGroups 分段，未配置时全部平铺
+    group: def.group || '',
     // field 有两个用途：
     //   1) 下发兜底 —— 没有 address 时用 B{n} 反推寄存器号；
     //   2) 回显 —— 帧解析出的键名（171F 控制帧是 B0/B4/B12…，带 C_ 前缀存储）。
@@ -283,6 +290,15 @@ function _mkParam(def, deviceType) {
     // 回显时协议层已经做过 scale/offset（如 171F 控制帧 B8 已按 10 缩放、B16 已按 100 缩放），
     // 面板不能再除一次，否则 5.0kW 会显示成 0.5kW。
     protoScaled: !!def.protoScaled,
+    // 组合报文分组：同组参数必须放进同一个 0x3401 帧里一次性下发
+    // （储能DC开关机 / 充放电选择 / 充放电总功率就是一个组，分开发设备只认最后一条）
+    bundle: def.bundle || '',
+    // 组合卡里「已调整未下发」标记，必须在这里声明成响应式字段，
+    // 否则后面用 p._pending = true 赋值不会触发视图更新
+    _pending: false,
+    // 严格按自身 deviceType 取数据桶：桶不存在时宁可显示 '--'，
+    // 不回落到面板默认桶（BMS 主机与四级从机的 B 号重号，回落会读成别的量）
+    strictBucket: !!def.strictBucket,
     dangerous: !!options && options.some(o => o.dangerous)
   }
   // 取值范围（工程值，点表「数据范围[a,b]」）：
@@ -380,125 +396,169 @@ const PV_170C_SWITCH_PARAMS = DC170C_SWITCH_DEFS.map(d => _mkParam(d, '170C_PV')
 const PV_170C_NUMERIC_PARAMS = DC170C_NUMERIC_DEFS.map(d => _mkParam(d, '170C_PV'))
 
 // ---- BMS 171C（deviceType '171C_V2'），控制项取自 0x3401 附件2「BMS1(0x171C)」 ----
-// 参考产品页「BMS 参数设置」的分组：DO 控制 / 绝缘采集控制 / 复位指令 / 关机指令 / 主控均衡控制。
-// 附件2 中这些是**独立字节地址**（101/106/108/109/111），不做同地址位打包；
-// 早前误用 1077~1099 的「上高压请求/强控 HSS」一组，与产品页对不上，已移除。
-// key 用 SW_ 前缀：若沿用 B{地址} 形式，同步回显时会去匹配能源帧同名 B 键（B101/B106 等）而串值。
+// 地址规律：控制帧字节 = 3401 地址 − 331（与 171F 相同）。
+//   334 → B3（高压请求/预充/绝缘检测开关，按位）
+//   336 → B5（重启/断路器/系统锁/故障复位，按位）
+//   337 → B6（强控 HSS8/LSS1/LSS2/DO1~DO3，按位）
+//   338 → B7（强控使能位 + 强控 HSS1~HSS7，按位）
+//   339 → B8（绝缘检测控制，独立 int16）
+// 同一字节内多个 bit 必须整字节下发：页面侧的 _packBmsByte 会把同地址所有 bit 的当前值
+// 合成一个字节（未回显的位按 0），因此这些项不能直接发 0/1，否则会顺手清掉别的位。
+// key 统一用 C_B{n}b{m}：控制帧回显的键就叫这个（parseControlRaw 产 B3b0，加 C_ 前缀），
+// 用裸 C_B3 会读到该字节的 int16 合值（如 0x11），选项匹配不上、界面一直显示 '--'。
+// 早前这 24 项被换成 101/106/108/109/111（V1.0 旧段，且是另一套「DO 控制/主控均衡」语义），
+// 与设备实际协议对不上，已按 331 段恢复。
 const BMS171C_SWITCH_PARAMS = [
-  { key: 'SW_DO', label: 'DO 控制', address: '101', options: _mkOpts([['断开', 0], ['闭合', 1]]) },
-  { key: 'SW_INS', label: '绝缘采集控制', address: '106', options: _mkOpts([['开启', 1], ['关闭', 0], ['无效值', 2]]) },
-  { key: 'SW_RESET', label: '复位指令', address: '108', options: _mkOpts([['默认状态', 0], ['复位准备', 1]]) },
-  { key: 'SW_STOP', label: '关机指令', address: '109', options: _mkOpts([['默认状态', 0], ['关机', 1]]) },
-  { key: 'SW_BALANCE', label: '主控均衡控制', address: '111', options: _mkOpts([['关闭均衡', 0], ['开启均衡', 1], ['主控自主', 2]]) }
+  // ---- 334：高压请求 / 预充 / 绝缘检测开关（bit0~bit4）----
+  { key: 'C_B3b0', label: '上高压请求', field: 'B3', address: '334', bit: 0, options: _mkOpts([['无请求', 0], ['请求上电', 1]]) },
+  { key: 'C_B3b1', label: '下高压请求', field: 'B3', address: '334', bit: 1, options: _mkOpts([['无请求', 0], ['请求下电', 1]]) },
+  { key: 'C_B3b2', label: '紧急下电请求', field: 'B3', address: '334', bit: 2, options: _mkOpts([['无请求', 0], ['请求紧急下电', 1]]) },
+  { key: 'C_B3b3', label: '预充请求', field: 'B3', address: '334', bit: 3, options: _mkOpts([['无请求', 0], ['请求预充', 1]]) },
+  { key: 'C_B3b4', label: '绝缘检测开关', field: 'B3', address: '334', bit: 4, options: _mkOpts([['开启绝缘检测', 0], ['关闭绝缘检测', 1]]) },
+  // ---- 336：重启 / 断路器 / 系统锁 / 故障复位（bit0~bit3）----
+  { key: 'C_B5b0', label: '请求BMS重启', field: 'B5', address: '336', bit: 0, options: _mkOpts([['无请求', 0], ['请求重启', 1]]) },
+  { key: 'C_B5b1', label: '交流断路器切断请求', field: 'B5', address: '336', bit: 1, options: _mkOpts([['无请求', 0], ['请求切断', 1]]) },
+  { key: 'C_B5b2', label: '系统锁', field: 'B5', address: '336', bit: 2, options: _mkOpts([['无请求', 0], ['系统锁释放', 1]]) },
+  { key: 'C_B5b3', label: '故障复位', field: 'B5', address: '336', bit: 3, options: _mkOpts([['无请求', 0], ['故障复位', 1]]) },
+  // ---- 337：强控 HSS8 / LSS / DO（bit0~bit5）----
+  { key: 'C_B6b0', label: '强控HSS8', field: 'B6', address: '337', bit: 0, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B6b1', label: '强控LSS1', field: 'B6', address: '337', bit: 1, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B6b2', label: '强控LSS2', field: 'B6', address: '337', bit: 2, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B6b3', label: '强控DO1', field: 'B6', address: '337', bit: 3, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B6b4', label: '强控DO2', field: 'B6', address: '337', bit: 4, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B6b5', label: '强控DO3', field: 'B6', address: '337', bit: 5, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  // ---- 338：强控使能位 + 强控 HSS1~HSS7（bit0~bit7）----
+  { key: 'C_B7b0', label: '强控使能位', field: 'B7', address: '338', bit: 0, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b1', label: '强控HSS1', field: 'B7', address: '338', bit: 1, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b2', label: '强控HSS2', field: 'B7', address: '338', bit: 2, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b3', label: '强控HSS3', field: 'B7', address: '338', bit: 3, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b4', label: '强控HSS4', field: 'B7', address: '338', bit: 4, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b5', label: '强控HSS5', field: 'B7', address: '338', bit: 5, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b6', label: '强控HSS6', field: 'B7', address: '338', bit: 6, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b7', label: '强控HSS7', field: 'B7', address: '338', bit: 7, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  // ---- 339：绝缘检测控制（独立 int16 寄存器，0 开启 / 1 关闭 / 2 上电只检测一次）----
+  { key: 'C_B8', label: '绝缘检测控制', field: 'B8', address: '339', options: _mkOpts([['开启绝缘检测', 0], ['关闭绝缘检测', 1], ['上电只检测一次绝缘', 2]]) }
 ].map(d => _mkParam(d, '171C_V2'))
 
-// 告警阈值：附件2 地址 1~76，每 4 个一组（1/2/3 级报警阈值 + 报警回差值）。
-// 系数来自点表「传输值」：×10 为 0.1V/0.1A/0.1℃ 类，×1000 为单体电压（0.001V）；
-// 温度类统一是 传输值=((实际值+40)*10) → offset=-40，工程值 = 原始值/10 - 40。
-// key 用 TH{地址}，避免与能源帧的 B 键（B24~B27 温度等）撞名。
-const BMS171C_THRESHOLD_PARAMS = [
-  { key: 'TH1', label: '组端过压 1 级报警阈值', unit: 'V', address: '1', scale: 10, min: 0, max: 1000 },
-  { key: 'TH2', label: '组端过压 2 级报警阈值', unit: 'V', address: '2', scale: 10, min: 0, max: 1000 },
-  { key: 'TH3', label: '组端过压 3 级报警阈值', unit: 'V', address: '3', scale: 10, min: 0, max: 1000 },
-  { key: 'TH4', label: '组端过压报警回差值', unit: 'V', address: '4', scale: 10, min: 0, max: 25 },
-  { key: 'TH5', label: '组端欠压 1 级报警阈值', unit: 'V', address: '5', scale: 10, min: 0, max: 1000 },
-  { key: 'TH6', label: '组端欠压 2 级报警阈值', unit: 'V', address: '6', scale: 10, min: 0, max: 1000 },
-  { key: 'TH7', label: '组端欠压 3 级报警阈值', unit: 'V', address: '7', scale: 10, min: 0, max: 1000 },
-  { key: 'TH8', label: '组端欠压报警回差值', unit: 'V', address: '8', scale: 10, min: 0, max: 25 },
-  { key: 'TH9', label: '组端放电过流 1 级报警阈值', unit: 'A', address: '9', scale: 10, min: 0, max: 1000 },
-  { key: 'TH10', label: '组端放电过流 2 级报警阈值', unit: 'A', address: '10', scale: 10, min: 0, max: 1000 },
-  { key: 'TH11', label: '组端放电过流 3 级报警阈值', unit: 'A', address: '11', scale: 10, min: 0, max: 1000 },
-  { key: 'TH12', label: '组端放电过流报警回差值', unit: 'A', address: '12', scale: 10, min: 0, max: 25 },
-  { key: 'TH13', label: '组端充电过流 1 级报警阈值', unit: 'A', address: '13', scale: 10, min: 0, max: 1000 },
-  { key: 'TH14', label: '组端充电过流 2 级报警阈值', unit: 'A', address: '14', scale: 10, min: 0, max: 1000 },
-  { key: 'TH15', label: '组端充电过流 3 级报警阈值', unit: 'A', address: '15', scale: 10, min: 0, max: 1000 },
-  { key: 'TH16', label: '组端充电过流报警回差值', unit: 'A', address: '16', scale: 10, min: 0, max: 25 },
-  { key: 'TH17', label: '组端绝缘 1 级报警阈值', unit: 'kΩ', address: '17', min: 0, max: 60000 },
-  { key: 'TH18', label: '组端绝缘 2 级报警阈值', unit: 'kΩ', address: '18', min: 0, max: 60000 },
-  { key: 'TH19', label: '组端绝缘 3 级报警阈值', unit: 'kΩ', address: '19', min: 0, max: 60000 },
-  { key: 'TH20', label: '组端绝缘报警回差值', unit: 'kΩ', address: '20', min: 0, max: 255 },
-  { key: 'TH21', label: '单体充电过温 1 级报警阈值', unit: '℃', address: '21', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH22', label: '单体充电过温 2 级报警阈值', unit: '℃', address: '22', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH23', label: '单体充电过温 3 级报警阈值', unit: '℃', address: '23', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH24', label: '电池充电过温报警回差值', unit: '℃', address: '24', scale: 10, min: 0, max: 100 },
-  { key: 'TH25', label: '单体充电欠温 1 级报警阈值', unit: '℃', address: '25', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH26', label: '单体充电欠温 2 级报警阈值', unit: '℃', address: '26', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH27', label: '单体充电欠温 3 级报警阈值', unit: '℃', address: '27', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH28', label: '电池充电欠温报警回差值', unit: '℃', address: '28', scale: 10, min: 0, max: 100 },
-  { key: 'TH29', label: '单体电压过压 1 级报警阈值', unit: 'V', address: '29', scale: 1000, decimals: 3, min: 0, max: 4.5 },
-  { key: 'TH30', label: '单体电压过压 2 级报警阈值', unit: 'V', address: '30', scale: 1000, decimals: 3, min: 0, max: 4.5 },
-  { key: 'TH31', label: '单体电压过压 3 级报警阈值', unit: 'V', address: '31', scale: 1000, decimals: 3, min: 0, max: 4.5 },
-  { key: 'TH32', label: '单体电压过压报警回差值', unit: 'V', address: '32', scale: 1000, decimals: 3, min: 0, max: 0.25 },
-  { key: 'TH33', label: '单体电压欠压 1 级报警阈值', unit: 'V', address: '33', scale: 1000, decimals: 3, min: 0, max: 4.5 },
-  { key: 'TH34', label: '单体电压欠压 2 级报警阈值', unit: 'V', address: '34', scale: 1000, decimals: 3, min: 0, max: 4.5 },
-  { key: 'TH35', label: '单体电压欠压 3 级报警阈值', unit: 'V', address: '35', scale: 1000, decimals: 3, min: 0, max: 4.5 },
-  { key: 'TH36', label: '单体电压欠压报警回差值', unit: 'V', address: '36', scale: 1000, decimals: 3, min: 0, max: 0.25 },
-  { key: 'TH37', label: '单体电压差压 1 级报警阈值', unit: 'V', address: '37', scale: 1000, decimals: 3, min: 0, max: 4.5 },
-  { key: 'TH38', label: '单体电压差压 2 级报警阈值', unit: 'V', address: '38', scale: 1000, decimals: 3, min: 0, max: 4.5 },
-  { key: 'TH39', label: '单体电压差压 3 级报警阈值', unit: 'V', address: '39', scale: 1000, decimals: 3, min: 0, max: 4.5 },
-  { key: 'TH40', label: '单体电压差压报警回差值', unit: 'V', address: '40', scale: 1000, decimals: 3, min: 0, max: 0.25 },
-  { key: 'TH41', label: '单体温度温差 1 级报警阈值', unit: '℃', address: '41', scale: 10, min: 0, max: 100 },
-  { key: 'TH42', label: '单体温度温差 2 级报警阈值', unit: '℃', address: '42', scale: 10, min: 0, max: 100 },
-  { key: 'TH43', label: '单体温度温差 3 级报警阈值', unit: '℃', address: '43', scale: 10, min: 0, max: 100 },
-  { key: 'TH44', label: '单体温度温差报警回差值', unit: '℃', address: '44', scale: 10, min: 0, max: 10 },
-  { key: 'TH45', label: 'SOC 过低 1 级报警阈值', unit: '%', address: '45', min: 0, max: 100 },
-  { key: 'TH46', label: 'SOC 过低 2 级报警阈值', unit: '%', address: '46', min: 0, max: 100 },
-  { key: 'TH47', label: 'SOC 过低 3 级报警阈值', unit: '%', address: '47', min: 0, max: 100 },
-  { key: 'TH48', label: 'SOC 过低报警回差值', unit: '%', address: '48', min: 0, max: 100 },
-  { key: 'TH49', label: '动力插箱温度过高 1 级报警阈值', unit: '℃', address: '49', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH50', label: '动力插箱温度过高 2 级报警阈值', unit: '℃', address: '50', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH51', label: '动力插箱温度过高 3 级报警阈值', unit: '℃', address: '51', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH52', label: '动力插箱温度过高报警回差值', unit: '℃', address: '52', scale: 10, min: 0, max: 25 },
-  { key: 'TH53', label: '电池模组过压 1 级报警阈值', unit: 'V', address: '53', scale: 10, min: 0, max: 1000 },
-  { key: 'TH54', label: '电池模组过压 2 级报警阈值', unit: 'V', address: '54', scale: 10, min: 0, max: 1000 },
-  { key: 'TH55', label: '电池模组过压 3 级报警阈值', unit: 'V', address: '55', scale: 10, min: 0, max: 1000 },
-  { key: 'TH56', label: '电池模组过压报警回差值', unit: 'V', address: '56', scale: 10, min: 0, max: 25 },
-  { key: 'TH57', label: '电池模组欠压 1 级报警阈值', unit: 'V', address: '57', scale: 10, min: 0, max: 1000 },
-  { key: 'TH58', label: '电池模组欠压 2 级报警阈值', unit: 'V', address: '58', scale: 10, min: 0, max: 1000 },
-  { key: 'TH59', label: '电池模组欠压 3 级报警阈值', unit: 'V', address: '59', scale: 10, min: 0, max: 1000 },
-  { key: 'TH60', label: '电池模组欠压报警回差值', unit: 'V', address: '60', scale: 10, min: 0, max: 25 },
-  { key: 'TH61', label: '单体放电过温 1 级报警阈值', unit: '℃', address: '61', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH62', label: '单体放电过温 2 级报警阈值', unit: '℃', address: '62', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH63', label: '单体放电过温 3 级报警阈值', unit: '℃', address: '63', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH64', label: '电池放电过温报警回差值', unit: '℃', address: '64', scale: 10, min: 0, max: 100 },
-  { key: 'TH65', label: '单体放电欠温 1 级报警阈值', unit: '℃', address: '65', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH66', label: '单体放电欠温 2 级报警阈值', unit: '℃', address: '66', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH67', label: '单体放电欠温 3 级报警阈值', unit: '℃', address: '67', scale: 10, offset: -40, min: -40, max: 120 },
-  { key: 'TH68', label: '电池放电欠温报警回差值', unit: '℃', address: '68', scale: 10, min: 0, max: 100 },
-  { key: 'TH69', label: 'SOC 过高 1 级报警阈值', unit: '%', address: '69', min: 0, max: 100 },
-  { key: 'TH70', label: 'SOC 过高 2 级报警阈值', unit: '%', address: '70', min: 0, max: 100 },
-  { key: 'TH71', label: 'SOC 过高 3 级报警阈值', unit: '%', address: '71', min: 0, max: 100 },
-  { key: 'TH72', label: 'SOC 过高报警回差值', unit: '%', address: '72', min: 0, max: 100 },
-  { key: 'TH73', label: '温升快 1 级报警阈值', unit: '℃/min', address: '73', min: 0, max: 100 },
-  { key: 'TH74', label: '温升快 2 级报警阈值', unit: '℃/min', address: '74', min: 0, max: 100 },
-  { key: 'TH75', label: '温升快 3 级报警阈值', unit: '℃/min', address: '75', min: 0, max: 100 },
-  { key: 'TH76', label: '温升快报警回差值', unit: '℃/min', address: '76', min: 0, max: 100 },
-].map(d => _mkParam(d, '171C_V2'))
+// ---- 告警阈值（1~76）不挂到 50kW 直连的 BMS 面板 ----
+// 附件2 的 BMS 列开头确实有「地址 1~76」这一段（组端/单体 过压·欠压·过流·绝缘·温差…
+// 19 组 × 4 项，可读可写），但它属于 0x3401 **读写命令**的寄存器地址空间，
+// 不会出现在 0x171C 主动上报的 0x01/0x02/0x04 帧里；直连页只解析上报帧，
+// 所以这些项永远读不到值：
+//   1) 老老实实查不到就是 -- ；
+//   2) 更糟的是 candidate 会回落到「裸地址」，bucket[6..10] 命中能源帧的同号寄存器，
+//      于是出现「组端欠压 2 级 = 10.6 V」这种假数（其实是别的量除以 10）。
+// 另外 373~1076 是 V2.1~V2.4 四台从机各自的阈值段（373/549/725/901 起，每段 176 字节），
+// 它们走从机自己的 0x04 控制帧（帧头地址 02~05，见 _normalizeDeviceType 的分桶），
+// 与主机 171C_V2 的心跳/温控同号不同义，因此单独成组、按 deviceType 收发，详见下方
+// BMS171C_ALARM_PARAMS。而 1~76 与 331 起的主机段仍按下面这颗规则处理：
+// 50kW BMS 面板保留 331 起的一段（331 = 控制帧 byte0，地址 = 331 + 字节号）：
+//   331 心跳 / 334 高压·预充位 / 336 继电器位 / 337 强控输出位 /
+//   338 强控使能位 + HSS1~7 / 339 绝缘检测控制 / 343~371 TMS 温控。
 
-// TMS 温控参数（地址 331~371），与参考页的分段一致，排在阈值之后
+// TMS 温控参数（3401 地址 343~371 → 控制帧 B12~B40）
+// 点表公式：温度类「传输值=((实际值+50)*10)」→ scale 10 + offset -50（原始 300 = -20.0℃）；
+// 回差/湿度类只有 ×10；心跳、TMS 复位、TMS 模式是无缩放的原始整数值。
+// 早前温度类只写了 scale=10、漏了 offset，-20℃ 会显示成 30.0℃。
 const BMS171C_TMS_PARAMS = [
   { key: 'C_B0', label: '心跳', unit: '', address: '331' },
   { key: 'C_B12', label: 'TMS开关机故障复位', unit: '', address: '343' },
   { key: 'C_B14', label: 'TMS模式设置', unit: '', address: '345' },
-  { key: 'C_B16', label: '制冷设定点', unit: '℃', address: '347' },
-  { key: 'C_B18', label: '制冷回差', unit: '℃', address: '349', scale: 10 },
-  { key: 'C_B20', label: '制热设定点', unit: '℃', address: '351' },
-  { key: 'C_B22', label: '制热回差', unit: '℃', address: '353', scale: 10 },
-  { key: 'C_B24', label: '制冷目标参数设置', unit: '℃', address: '355' },
-  { key: 'C_B26', label: '制热目标参数设置', unit: '℃', address: '357' },
-  { key: 'C_B30', label: '控温开启值', unit: '℃', address: '361' },
-  { key: 'C_B32', label: '控温关闭值', unit: '℃', address: '363' },
-  { key: 'C_B34', label: '控湿度开启值', unit: '%', address: '365', scale: 10 },
-  { key: 'C_B36', label: '控湿度关闭值', unit: '%', address: '367', scale: 10 },
-  { key: 'C_B38', label: '温度报警上限值', unit: '℃', address: '369' },
-  { key: 'C_B40', label: '温度报警下限值', unit: '℃', address: '371' }
+  { key: 'C_B16', label: '制冷设定点', unit: '℃', address: '347', scale: 10, offset: -50, min: -50, max: 120 },
+  { key: 'C_B18', label: '制冷回差', unit: '℃', address: '349', scale: 10, min: 0, max: 50 },
+  { key: 'C_B20', label: '制热设定点', unit: '℃', address: '351', scale: 10, offset: -50, min: -50, max: 120 },
+  { key: 'C_B22', label: '制热回差', unit: '℃', address: '353', scale: 10, min: 0, max: 50 },
+  { key: 'C_B24', label: '制冷目标参数设置', unit: '℃', address: '355', scale: 10, offset: -50, min: -50, max: 120 },
+  { key: 'C_B26', label: '制热目标参数设置', unit: '℃', address: '357', scale: 10, offset: -50, min: -50, max: 120 },
+  { key: 'C_B30', label: '控温开启值', unit: '℃', address: '361', scale: 10, offset: -50, min: -50, max: 120 },
+  { key: 'C_B32', label: '控温关闭值', unit: '℃', address: '363', scale: 10, offset: -50, min: -50, max: 120 },
+  { key: 'C_B34', label: '控湿度开启值', unit: '%', address: '365', scale: 10, min: 0, max: 100 },
+  { key: 'C_B36', label: '控湿度关闭值', unit: '%', address: '367', scale: 10, min: 0, max: 100 },
+  { key: 'C_B38', label: '温度报警上限值', unit: '℃', address: '369', scale: 10, offset: -50, min: -50, max: 120 },
+  { key: 'C_B40', label: '温度报警下限值', unit: '℃', address: '371', scale: 10, offset: -50, min: -50, max: 120 }
 ].map(d => _mkParam(d, '171C_V2'))
 
-// 数值项打 group 标签：设置面板按 group 拆成「告警阈值 / 温控参数」两张卡，
-// 否则 91 项平铺要滑十几屏才能找到目标参数。
+// ---- BMS 告警阈值（171C_V2_1 ~ V2_4，各 88 项）----
+// 22 类告警 × 4 字段（告警阈值 / 触发时间 / 释放阈值 / 释放时间），逐项 2 字节递增，
+// 与 171C_V2_1 模型 ControlData 的 B0~B174 一一对应；文案与模型 name 保持一致。
+// 字段顺序：阈值(不缩放)、触发时间(×100，单位 S)、释放阈值(不缩放)、释放时间(×100)，
+// 温度类阈值/释放阈值按点表「传输值 = 实际值 + 50」处理（offset -50）。
+const BMS_ALARM_CATEGORIES = [
+  { name: '单体过压', unit: 'mV' },
+  { name: '单体欠压', unit: 'mV' },
+  { name: '单体压差', unit: 'mV' },
+  { name: '总压过压', unit: 'V' },
+  { name: '总压欠压', unit: 'V' },
+  { name: '总压压差', unit: 'V' },
+  { name: '放电过流', unit: 'A' },
+  { name: '充电过流', unit: 'A' },
+  { name: '放电高温', unit: '℃', temp: true },
+  { name: '充电高温', unit: '℃', temp: true },
+  { name: '放电低温', unit: '℃', temp: true },
+  { name: '充电低温', unit: '℃', temp: true },
+  { name: '温差', unit: '℃', temp: true },
+  { name: '绝缘阻值低', unit: 'ohm/V' },
+  { name: 'T1高温', unit: '℃', temp: true },
+  { name: 'T2高温', unit: '℃', temp: true },
+  { name: 'T3高温', unit: '℃', temp: true },
+  { name: 'T4高温', unit: '℃', temp: true },
+  { name: 'T5高温', unit: '℃', temp: true },
+  { name: 'T6高温', unit: '℃', temp: true },
+  { name: '极柱高温', unit: '℃', temp: true },
+  { name: 'soc低', unit: '%' }
+]
+
+// 四级阈值段：帧头设备地址 02~05，段首为点表 A 列十进制地址
+const BMS_ALARM_LEVELS = [
+  { level: 1, deviceType: '171C_V2_1', base: 373, tag: 'alarm1' },
+  { level: 2, deviceType: '171C_V2_2', base: 549, tag: 'alarm2' },
+  { level: 3, deviceType: '171C_V2_3', base: 725, tag: 'alarm3' },
+  { level: 4, deviceType: '171C_V2_4', base: 901, tag: 'alarm4' }
+]
+
+const BMS171C_ALARM_PARAMS = []
+BMS_ALARM_LEVELS.forEach(({ level, deviceType, base, tag }) => {
+  BMS_ALARM_CATEGORIES.forEach((cat, ci) => {
+    const start = ci * 8
+    const entries = [
+      { byte: start, suffix: '告警阈值', unit: cat.unit, threshold: true },
+      { byte: start + 2, suffix: '告警触发时间', unit: 'S', scale: 100 },
+      { byte: start + 4, suffix: '释放阈值', unit: cat.unit, threshold: true },
+      { byte: start + 6, suffix: '告警释放时间', unit: 'S', scale: 100 }
+    ]
+    entries.forEach(e => {
+      const param = _mkParam({
+        // 四级从机的 B 号完全重号，key 必须带等级前缀；回显帧键是控制帧的 C_B{n}
+        // （从机 bucket 与主机一样按帧类型加前缀，见页面 useFrameTypePrefix）
+        key: 'L' + level + '_B' + e.byte,
+        frameKey: 'C_B' + e.byte,
+        field: 'B' + e.byte,
+        label: `${cat.name}${level}级${e.suffix}(${e.unit})`,
+        unit: e.unit,
+        address: String(base + e.byte),
+        scale: e.scale,
+        // 温度阈值按点表「传输值 = 实际值 + 50」编码
+        offset: e.threshold && cat.temp ? -50 : 0,
+        group: tag,
+        // 只认从机自己的桶：主机桶里的 C_B0 是心跳，回落会把阈值读成 100
+        strictBucket: true
+      }, deviceType)
+      // 输入范围按单位给：温度可负、百分比 0~100、时间 0~600s；
+      // 电压/电流/阻值跨度过大，不给范围（不填就不做上下限校验）
+      if (e.unit === '℃') { param.min = -50; param.max = 150 }
+      else if (e.unit === '%') { param.min = 0; param.max = 100 }
+      else if (e.unit === 'S') { param.min = 0; param.max = 600 }
+      BMS171C_ALARM_PARAMS.push(param)
+    })
+  })
+})
+
+// ---- BMS 数值设定：主机（地址 01）温控 15 项 + 四台从机告警阈值 352 项 ----
+// 1~76 的老阈值段仍不挂：它属于 0x3401 读写命令空间，0x171C 上报帧里没有。
+// 373 起的四段则来自 V2.1~V2.4 从机自己的 0x04 控制帧（按帧头地址分桶），可以正常回显与下发。
 const BMS171C_NUMERIC_PARAMS = [
-  ...BMS171C_THRESHOLD_PARAMS.map(p => ({ ...p, group: 'threshold' })),
-  ...BMS171C_TMS_PARAMS.map(p => ({ ...p, group: 'tms' }))
+  ...BMS171C_TMS_PARAMS.map(p => ({ ...p, group: 'tms' })),
+  ...BMS171C_ALARM_PARAMS
 ]
 
 // ---- 液冷机 0318_V2_3（deviceType '0318'），地址取自 0x3401 附件2「液冷(0x0318)」 ----
@@ -532,44 +592,70 @@ const LIQUID_NUMERIC_PARAMS = [
 
 // ---- 快捷控制 171F（EMS），地址取自 0x3401 附件2「EMS(0x171F)」 ----
 // 下发地址与回显字段是两套东西，必须同时给：
-//   address → 0x3401 远程控制的字节地址（100/102/108/110/112/114/118/122）
-//   field   → 0x171F 页面显示协议「0x04 控制数据」的字节偏移（B0/B2/B4/B6/B12/B14/B18/B22），
+//   address → 0x3401 远程控制的字节地址（331 起，见下）
+//   field   → 0x171F 页面显示协议「0x04 控制数据」的字节偏移（B0/B2/B4/B6/B8/B12/B14/B18/B20/B22），
 //             设备回传的控制帧按 C_B{n} 存入 rawValues['171F']，回显只能靠它匹配。
 // 只写 address 会导致「发得出去、界面永远是灰的」（上次就是这个原因）。
+//
+// ⚠️ 地址必须落在 331 起的新段（0x3401 V1.2 附件2 第 1851 行起）：
+//   331 PCS一键开机 / 333 光伏DC开机 / 335 储能DC开关机 / 337 储能充放电选择 /
+//   339 充放电总功率 / 343 启动按钮 / 345 运行策略 / 347 目标SOC / 349 售卖优先 /
+//   351 限制消费PCS功率 / 353 启动防逆流
+//   规律：地址 = 331 + B号（B4→335、B8→339…）。
+//   100/102/104/106/108/110/112/114/118/122 是 V1.0 的旧段（储DC一键控制 / PCS模式选择 /
+//   充电功率 104 / 放电功率 106），与 171F 现在上报的字段不是同一套语义：
+//   照旧段发出去，设备要么不认，要么按旧定义执行（104 被当成「充电功率」而不是总功率）。
+// 0x3401 附件2「EMS(0x171F)」里明确要求：
+//   储能DC开关机 / 储能充放电选择 / 充放电总功率 —— 三项放在一个报文里下发。
+// 因此三项都打 bundle: 'storageDc'，页面按组打包成一条 0x3401 帧（帧内 3 条命令），
+// 不再各发一帧（设备只认最后一帧，前两项会被覆盖掉）。
 const QUICK_CONTROL_PARAMS_50KW = [
-  // 储能DC开关机（0 不启用 / 1 一键开机 / 2 关机）↔ 171F B4
-  { key: 'qc_storage_dc', label: '储能DC开关机', address: '100', field: 'B4', options: _mkOpts([['不启用', 0], ['并网一键开机', 1], ['一键关机', 2]]) },
+  // 储能DC开关机（0 不启用 / 1 并网一键开机 / 2 一键关机 / 3 离网一键开机）↔ 171F B4
+  {
+    key: 'qc_storage_dc', label: '储能DC开关机', address: '335', field: 'B4', bundle: 'storageDc',
+    options: _mkOpts([['不启用', 0], ['并网一键开机', 1], ['一键关机', 2, true], ['离网一键开机', 3]])
+  },
   // 光伏DC开机（0 不启用 / 1 开机 / 2 关机）↔ 171F B2
-  { key: 'qc_pv_dc', label: '光伏DC开机', address: '110', field: 'B2', options: _mkOpts([['不启用', 0], ['开机', 1], ['关机', 2]]) },
-  // 储能充放电选择（0 不充不放 / 1 充电 / 2 放电 / 3 离网）↔ 171F B6
-  { key: 'qc_pcs_mode', label: '储能充放电选择', address: '102', field: 'B6', options: _mkOpts([['不充不放', 0], ['充电', 1], ['放电', 2], ['离网', 3]]) },
-  // PCS开关机（0 否 / 1 开机 / 2 关机）↔ 171F B0「PCS一键开机」
-  { key: 'qc_pcs_action', label: 'PCS开关机', address: '108', field: 'B0', options: _mkOpts([['不启用', 0], ['开机', 1], ['关机', 2]]) },
+  { key: 'qc_pv_dc', label: '光伏DC开机', address: '333', field: 'B2', options: _mkOpts([['不启用', 0], ['开机', 1], ['关机', 2]]) },
+  // 储能充放电选择（0 不充不放 / 1 充电 / 2 放电；仅当储能DC一键开机=1 时有效）↔ 171F B6
+  {
+    key: 'qc_pcs_mode', label: '储能充放电选择', address: '337', field: 'B6', bundle: 'storageDc',
+    options: _mkOpts([['不充不放', 0], ['充电', 1], ['放电', 2]])
+  },
+  // PCS一键开机（0 否 / 1 是；网关收到后把 PCS 设为恒压模式 / 母线 750V / 开机）↔ 171F B0
+  // 协议里没有「关机」这一档，早期写的 2 会被网关当成非法值忽略，已去掉
+  { key: 'qc_pcs_action', label: 'PCS一键开机', address: '331', field: 'B0', options: _mkOpts([['不启用', 0], ['开机', 1]]) },
   // 运行策略总开关（0 默认 / 1 开启）↔ 171F B12
-  { key: 'qc_start_btn', label: '启动按钮', address: '112', field: 'B12', options: _mkOpts([['默认', 0], ['开启', 1]]) },
-  // 运行策略（114）：0 峰谷 / 3 自发自用 / 4 电池优先 / 5 削峰填谷 / 6 售卖优先 / 7 限制消费 / 8 零出口 / 9 1113+防逆流
+  { key: 'qc_start_btn', label: '启动按钮', address: '343', field: 'B12', options: _mkOpts([['默认', 0], ['开启', 1]]) },
+  // 运行策略（345）：0 峰谷 / 3 自发自用 / 4 电池优先 / 5 削峰填谷 / 6 售卖优先 / 7 限制消费 / 8 零出口 / 9 1113+防逆流
   // 1 恒限功率、2 柔度、10 AI 调度在点表里标注「不使用」，按下发兼容仍保留选项 ↔ 171F B14
   {
-    key: 'qc_run_strategy', label: '运行策略', address: '114', field: 'B14',
+    key: 'qc_run_strategy', label: '运行策略', address: '345', field: 'B14',
     options: _mkOpts([
       ['峰谷', 0], ['恒限功率', 1], ['柔度', 2], ['自发自用', 3], ['电池优先', 4],
       ['削峰填谷', 5], ['售卖优先', 6], ['限制消费', 7], ['零出口', 8], ['1113+防逆流', 9], ['AI调度', 10]
     ])
   },
   // 售卖优先：是否卖储能电（0 不出售 / 1 出售）↔ 171F B18
-  { key: 'qc_sell_storage', label: '售卖优先-出售储能电', address: '118', field: 'B18', options: _mkOpts([['不出售', 0], ['出售', 1]]) },
+  { key: 'qc_sell_storage', label: '售卖优先-出售储能电', address: '349', field: 'B18', options: _mkOpts([['不出售', 0], ['出售', 1]]) },
   // 启动防逆流（1 启动 / 其他 不启动）↔ 171F B22
-  { key: 'qc_anti_backflow', label: '启动防逆流', address: '122', field: 'B22', options: _mkOpts([['不启动', 0], ['启动', 1]]) }
+  { key: 'qc_anti_backflow', label: '启动防逆流', address: '353', field: 'B22', options: _mkOpts([['不启动', 0], ['启动', 1]]) }
 ].map(d => _mkParam(d, '171F'))
 
-// 数值设定：充电功率(104)/放电功率(106)（真实值 0~10kW，下发 = 实际值×10）
-// + 限制消费策略 PCS 功率(120，×10)。
-// 回显注意：171F 控制帧只有「充放电总功率」一项（B8，协议层已 /10），
-// 没有独立的充电/放电功率，所以 104 用 B8 回显总功率，106 无对应回显字段（设备不上报）。
+// 数值设定（171F）：
+//   充放电总功率 339 —— 点表「传输值=实际值*10，单位 0.1kW，默认 0」，
+//     归入 storageDc 组合报文，与开关机/充放电选择一起下发；
+//     充/放电方向由「储能充放电选择」决定，协议只有这一个总功率寄存器
+//     （旧段把功率拆成 104 充电 / 106 放电，那是另一套旧定义，已弃用）。
+//     范围按本项目 50kW 机型取 1~50kW（协议模板里的「1~10kW」是 10kW 机型的值），
+//     下发原始值 = 工程值 × 10，最大 500，仍在无符号 int16 范围内。
+//   限制消费策略 PCS 功率 351（×10，最高功率值）
 const QUICK_POWER_PARAMS_50KW = [
-  { key: 'qc_charge_power', label: '充电功率', unit: 'kW', address: '104', field: 'B8', scale: 10, protoScaled: true, min: 0, max: 10 },
-  { key: 'qc_discharge_power', label: '放电功率', unit: 'kW', address: '106', scale: 10, min: 0, max: 10 },
-  { key: 'qc_limit_power', label: '限制消费-PCS设定功率', unit: 'kW', address: '120', field: 'B20', scale: 10, min: 0, max: 50 }
+  {
+    key: 'qc_total_power', label: '充放电总功率', unit: 'kW', address: '339', field: 'B8',
+    bundle: 'storageDc', scale: 10, protoScaled: true, min: 1, max: 50, decimals: 1
+  },
+  { key: 'qc_limit_power', label: '限制消费-PCS设定功率', unit: 'kW', address: '351', field: 'B20', scale: 10, min: 0, max: 50, decimals: 1 }
 ].map(d => _mkParam(d, '171F'))
 
 // 50kW 设置面板配置（与 SETTINGS_PANELS 格式一致，deviceType 与 factory 产出的 param.deviceType 对齐）
@@ -590,13 +676,13 @@ const SETTINGS_PANELS_50KW = [
 
 // 设置标签页配置（模板 v-for 驱动）
 const SETTINGS_TABS = [
-  { tab: 5, short: 'PCS 设置', dataKey: 'pcsSwitchParams', numericKey: 'pcsNumericParams', title: 'PCS 设置 (171B)', theme: 'pcs-theme', editKey: 'isEditingPcs', switchTitle: '开关控制', numericTitle: '数值参数' },
-  { tab: 6, short: 'BMS 设置', dataKey: 'bmsPowerParams', numericKey: 'bmsNumericParams', title: 'BMS 设置 (171C)', theme: 'bms-theme', editKey: 'isEditingBms', switchTitle: '上下电 / 模式控制', numericTitle: '数值参数', extraSwitchKey: 'bmsSwitchParams', extraSwitchTitle: '开关控制' },
-  { tab: 7, short: '光伏设置', dataKey: 'pvSwitchParams', numericKey: 'pvNumericParams', title: '光伏设置 (171E)', theme: 'pv-theme', editKey: 'isEditingPv', switchTitle: '开关控制', numericTitle: '数值参数' },
-  { tab: 8, short: '储能设置', dataKey: 'storageSwitchParams', numericKey: 'storageNumericParams', title: '储能设置 (171D)', theme: 'storage-theme', editKey: 'isEditingStorage', switchTitle: '开关控制', numericTitle: '数值参数' },
+  { tab: 5, short: 'PCS 设置', dataKey: 'pcsSwitchParams', numericKey: 'pcsNumericParams', title: 'PCS 参数设置', theme: 'pcs-theme', editKey: 'isEditingPcs', switchTitle: '开关控制', numericTitle: '数值参数' },
+  { tab: 6, short: 'BMS 设置', dataKey: 'bmsPowerParams', numericKey: 'bmsNumericParams', title: 'BMS 参数设置', theme: 'bms-theme', editKey: 'isEditingBms', switchTitle: '上下电 / 模式控制', numericTitle: '数值参数', extraSwitchKey: 'bmsSwitchParams', extraSwitchTitle: '开关控制' },
+  { tab: 7, short: '光伏设置', dataKey: 'pvSwitchParams', numericKey: 'pvNumericParams', title: '光伏参数设置', theme: 'pv-theme', editKey: 'isEditingPv', switchTitle: '开关控制', numericTitle: '数值参数' },
+  { tab: 8, short: '储能设置', dataKey: 'storageSwitchParams', numericKey: 'storageNumericParams', title: '储能参数设置', theme: 'storage-theme', editKey: 'isEditingStorage', switchTitle: '开关控制', numericTitle: '数值参数' },
   {
     tab: 9, short: '快捷控制', dataKey: 'quickControlParams', numericKey: 'quickPowerParams',
-    title: '快捷控制 (171F)', theme: 'quick-theme', editKey: 'isEditingQuickControl',
+    title: '快捷控制', theme: 'quick-theme', editKey: 'isEditingQuickControl',
     numericTitle: '功率设置', isQuick: true,
     switchSections: [
       { title: '储能DC一键控制', filterKey: 'qc_storage_dc' },
@@ -610,29 +696,55 @@ const SETTINGS_TABS = [
 // short 是标签栏专用短标题：tab 序号与 20kW 重号（5~9），只靠 TAB_TITLES 兜底会串台——
 // 之前 tab 9 在 50kW 是「液冷机控制」，却显示成「快捷控制」，就是兜底表串了。
 const SETTINGS_TABS_50KW = [
-  { tab: 5, short: 'PCS', dataKey: 'pcsSwitchParams', numericKey: 'pcsNumericParams', title: 'PCS 参数设置 (1707)', theme: 'pcs-theme', editKey: 'isEditingPcs', switchTitle: '命令 / 模式', numericTitle: '数值设定' },
-  { tab: 6, short: '储能DC', dataKey: 'storageSwitchParams', numericKey: 'storageNumericParams', title: '储能 DC/DC 参数设置 (170C)', theme: 'storage-theme', editKey: 'isEditingStorage', switchTitle: '命令 / 模式', numericTitle: '数值设定' },
-  { tab: 7, short: '光伏DC', dataKey: 'pvSwitchParams', numericKey: 'pvNumericParams', title: '光伏 DC/DC 参数设置 (170C)', theme: 'pv-theme', editKey: 'isEditingPv', switchTitle: '命令 / 模式', numericTitle: '数值设定' },
+  { tab: 5, short: 'PCS', dataKey: 'pcsSwitchParams', numericKey: 'pcsNumericParams', title: 'PCS 参数设置', theme: 'pcs-theme', editKey: 'isEditingPcs', switchTitle: '命令 / 模式', numericTitle: '数值设定' },
+  { tab: 6, short: '储能DC', dataKey: 'storageSwitchParams', numericKey: 'storageNumericParams', title: '储能 DC/DC 参数设置', theme: 'storage-theme', editKey: 'isEditingStorage', switchTitle: '命令 / 模式', numericTitle: '数值设定' },
+  { tab: 7, short: '光伏DC', dataKey: 'pvSwitchParams', numericKey: 'pvNumericParams', title: '光伏 DC/DC 参数设置', theme: 'pv-theme', editKey: 'isEditingPv', switchTitle: '命令 / 模式', numericTitle: '数值设定' },
   {
     tab: 8, short: 'BMS', dataKey: 'bmsSwitchParams', numericKey: 'bmsNumericParams',
-    title: 'BMS 参数设置 (171C)', theme: 'bms-theme', editKey: 'isEditingBms',
+    title: 'BMS 参数设置', theme: 'bms-theme', editKey: 'isEditingBms',
     switchTitle: '命令 / 模式', numericTitle: '数值设定',
-    // 91 项数值按用途拆两张卡：告警阈值（1~76）/ 温控参数（331~371）
+    // 24 项开关按用途拆四张卡：一屏铺 24 项既难找也容易点错。
+    // 顺序与产品页一致：高压/预充 → 继电器与系统 → 强控输出 → 绝缘检测
+    switchSections: [
+      { title: '高压与预充', keys: ['C_B3b0', 'C_B3b1', 'C_B3b2', 'C_B3b3'] },
+      { title: '继电器与系统', keys: ['C_B5b0', 'C_B5b1', 'C_B5b2', 'C_B5b3'] },
+      {
+        title: '强控输出',
+        keys: [
+          'C_B7b0', 'C_B6b0', 'C_B6b1', 'C_B6b2', 'C_B6b3', 'C_B6b4', 'C_B6b5',
+          'C_B7b1', 'C_B7b2', 'C_B7b3', 'C_B7b4', 'C_B7b5', 'C_B7b6', 'C_B7b7'
+        ]
+      },
+      { title: '绝缘检测', keys: ['C_B3b4', 'C_B8'] }
+    ],
+    // 数值项共 367 项（主机温控 15 + 四级从机告警阈值 352），一屏铺不下，
+    // 按等级分段切换：温控 / 1级 / 2级 / 3级 / 4级
     numericGroups: [
-      { title: '告警阈值（地址 1~76）', tag: 'threshold' },
-      { title: '温控参数（地址 331~371）', tag: 'tms' }
+      { tag: 'tms', title: '温控参数', short: '温控' },
+      { tag: 'alarm1', title: '1级告警阈值', short: '1级' },
+      { tag: 'alarm2', title: '2级告警阈值', short: '2级' },
+      { tag: 'alarm3', title: '3级告警阈值', short: '3级' },
+      { tag: 'alarm4', title: '4级告警阈值', short: '4级' }
     ]
   },
-  { tab: 9, short: '液冷', dataKey: 'liquidSwitchParams', numericKey: 'liquidNumericParams', title: '液冷机控制 (0318)', theme: 'liquid-theme', editKey: 'isEditingLiquid', switchTitle: '命令 / 模式', numericTitle: '数值设定' },
+  { tab: 9, short: '液冷', dataKey: 'liquidSwitchParams', numericKey: 'liquidNumericParams', title: '液冷机控制', theme: 'liquid-theme', editKey: 'isEditingLiquid', switchTitle: '命令 / 模式', numericTitle: '数值设定' },
   {
     tab: 11, short: '快捷控制', dataKey: 'quickControlParams', numericKey: 'quickPowerParams',
-    title: '快捷控制 (171F)', theme: 'quick-theme', editKey: 'isEditingQuickControl',
+    title: '快捷控制', theme: 'quick-theme', editKey: 'isEditingQuickControl',
     numericTitle: '功率设定', isQuick: true,
+    // 组合报文：点表要求这三项「放在一个报文里下发」，所以单独成一张卡，
+    // 点其中任意一项都会把另外两项的当前值一起带出，合成一帧发下去
+    bundleSections: [
+      {
+        group: 'storageDc',
+        title: '储能DC控制',
+        switchKeys: ['qc_storage_dc', 'qc_pcs_mode'],
+        numericKeys: ['qc_total_power']
+      }
+    ],
     switchSections: [
-      { title: '储能DC开关机', filterKey: 'qc_storage_dc' },
       { title: '光伏DC开机', filterKey: 'qc_pv_dc' },
-      { title: '储能充放电选择', filterKey: 'qc_pcs_mode' },
-      { title: 'PCS开关机', filterKey: 'qc_pcs_action' },
+      { title: 'PCS一键开机', filterKey: 'qc_pcs_action' },
       { title: '启动按钮', filterKey: 'qc_start_btn' },
       { title: '运行策略', filterKey: 'qc_run_strategy' },
       { title: '策略开关', keys: ['qc_sell_storage', 'qc_anti_backflow'] }
@@ -676,7 +788,6 @@ export {
   PV_170C_SWITCH_PARAMS,
   PV_170C_NUMERIC_PARAMS,
   BMS171C_SWITCH_PARAMS,
-  BMS171C_THRESHOLD_PARAMS,
   BMS171C_TMS_PARAMS,
   BMS171C_NUMERIC_PARAMS,
   LIQUID_SWITCH_PARAMS,

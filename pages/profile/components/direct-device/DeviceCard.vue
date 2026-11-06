@@ -1,12 +1,5 @@
 <template>
   <view class="device-card" :class="connectionState">
-    <!-- 装饰光斑背景 -->
-    <view class="device-card-bg">
-      <view class="bg-orb bg-orb-1"></view>
-      <view class="bg-orb bg-orb-2"></view>
-      <view class="bg-orb bg-orb-3"></view>
-    </view>
-
     <view class="device-card-content">
       <!-- 头部：图标 + 信息 + 操作按钮 -->
       <view class="device-header">
@@ -14,7 +7,6 @@
           <view class="device-icon">
             <uni-icons type="gear-filled" size="26" color="#fff"></uni-icons>
           </view>
-          <view v-if="connectionState === 'online'" class="icon-pulse"></view>
         </view>
 
         <view class="device-info">
@@ -27,7 +19,6 @@
           </view>
           <view class="device-model">
             <text class="model-label">{{ deviceSubtitle }}</text>
-            <view class="model-chip">{{ config.protocol === 'mqtt' ? 'MQTT直连' : 'TCP' }}</view>
           </view>
         </view>
 
@@ -95,116 +86,63 @@ export default {
 .device-card {
   flex-shrink: 0;
   margin: 20rpx;
-  border-radius: 28rpx;
+  border-radius: 20rpx;
   overflow: hidden;
   position: relative;
-  box-shadow: 0 16rpx 48rpx rgba(0, 122, 255, 0.22), 0 4rpx 12rpx rgba(0, 122, 255, 0.08);
-
-  /* 内边框高光，增强玻璃质感 */
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 28rpx;
-    border: 1rpx solid rgba(255, 255, 255, 0.25);
-    pointer-events: none;
-    z-index: 2;
-  }
-
-  .device-card-bg {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, #1f5fd0 0%, #2f7cf6 52%, #4f9bff 100%);
-    .bg-orb {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.15);
-      filter: blur(4rpx);
-    }
-    /* 光斑保持静态：轻微氛围即可，动画会持续抢占注意力 */
-    .bg-orb-1 {
-      width: 280rpx; height: 280rpx; top: -90rpx; right: -70rpx;
-      background: rgba(255, 255, 255, 0.16);
-    }
-    .bg-orb-2 {
-      width: 160rpx; height: 160rpx; bottom: -50rpx; right: 60rpx;
-      background: rgba(255, 255, 255, 0.10);
-    }
-    .bg-orb-3 {
-      width: 100rpx; height: 100rpx; top: 60rpx; right: 220rpx;
-      background: rgba(255, 255, 255, 0.12);
-    }
-  }
+  background: #2f7cf6;
+  box-shadow: 0 4rpx 14rpx rgba(20, 32, 52, 0.10);
 
   &.offline {
-    box-shadow: 0 16rpx 48rpx rgba(138, 148, 166, 0.20), 0 4rpx 12rpx rgba(138, 148, 166, 0.08);
-    .device-card-bg { background: linear-gradient(135deg, #5f6877 0%, #7c8798 52%, #a3acba 100%); }
+    background: #7c8798;
+    box-shadow: 0 4rpx 14rpx rgba(20, 32, 52, 0.06);
   }
   &.connecting {
-    box-shadow: 0 16rpx 48rpx rgba(232, 137, 12, 0.24), 0 4rpx 12rpx rgba(232, 137, 12, 0.10);
-    .device-card-bg { background: linear-gradient(135deg, #c47a08 0%, #e09012 52%, #f5b53c 100%); }
+    background: #e09012;
+    box-shadow: 0 4rpx 14rpx rgba(20, 32, 52, 0.06);
   }
 
-  .device-card-content { position: relative; padding: 28rpx 32rpx; z-index: 1; }
+  .device-card-content { position: relative; padding: 26rpx 30rpx; z-index: 1; }
   .device-header { display: flex; align-items: center; gap: 20rpx; }
 
   .device-icon-wrap {
     position: relative; width: 76rpx; height: 76rpx; flex-shrink: 0;
     .device-icon {
-      width: 76rpx; height: 76rpx; border-radius: 22rpx;
-      background: rgba(255, 255, 255, 0.28);
+      width: 76rpx; height: 76rpx; border-radius: 18rpx;
+      background: rgba(255, 255, 255, 0.20);
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.15), inset 0 1rpx 0 rgba(255, 255, 255, 0.4);
-      backdrop-filter: blur(10px);
-    }
-    /* 在线时用外圈脉冲提示连接活跃（图标本身不旋转，避免持续动效分散注意力） */
-    .icon-pulse {
-      position: absolute; inset: -10rpx; border-radius: 26rpx;
-      border: 4rpx solid rgba(76, 217, 100, 0.55);
-      animation: iconPulse 2s ease-out infinite;
     }
   }
 
   .device-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
   .device-name-row { display: flex; align-items: center; gap: 12rpx; }
   .device-name {
-    font-size: 34rpx; color: #fff; font-weight: 700; letter-spacing: 0.5rpx;
-    text-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.12);
+    font-size: 32rpx; color: #fff; font-weight: 600; letter-spacing: 0.6rpx;
   }
 
+  /* 状态徽章统一白底半透明，只用圆点颜色表状态：
+     满色徽章（绿/黄）会和蓝色卡面抢色，看起来像两个色块拼在一起 */
   .status-badge {
-    display: flex; align-items: center; gap: 6rpx; font-size: 22rpx;
-    padding: 6rpx 16rpx; border-radius: 20rpx;
-    background: rgba(255, 255, 255, 0.22);
-    backdrop-filter: blur(6px); flex-shrink: 0;
-    box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.3);
+    display: flex; align-items: center; gap: 8rpx; font-size: 21rpx;
+    padding: 5rpx 14rpx; border-radius: 999rpx;
+    background: rgba(255, 255, 255, 0.18);
+    flex-shrink: 0;
     .status-dot {
       width: 10rpx; height: 10rpx; border-radius: 50%;
-      background: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.65);
     }
-    .status-dot.online {
-      background: #4cd964;
-      box-shadow: 0 0 10rpx rgba(76, 217, 100, 0.9);
-      animation: dotPulse 1.5s ease-in-out infinite;
-    }
-    .status-dot.connecting { background: #ffc960; animation: dotPulse 1s ease-in-out infinite; }
-    &.online { background: rgba(76, 217, 100, 0.28); }
-    &.offline { background: rgba(0, 0, 0, 0.18); }
-    &.connecting { background: rgba(255, 201, 96, 0.32); }
-    .status-text { color: #fff; font-weight: 500; }
+    .status-dot.online { background: #4cd964; }
+    .status-dot.connecting { background: #ffc960; }
+    .status-text { color: #fff; font-weight: 500; letter-spacing: 0.3rpx; }
   }
 
   .device-model {
     display: flex; align-items: center; gap: 10rpx;
+    min-width: 0;
     .model-label {
-      font-size: 22rpx; color: rgba(255, 255, 255, 0.88);
-    }
-    .model-chip {
-      font-size: 20rpx; color: rgba(255, 255, 255, 0.95);
-      background: rgba(255, 255, 255, 0.22);
-      padding: 4rpx 14rpx; border-radius: 10rpx;
-      font-family: 'Menlo', 'Consolas', monospace; letter-spacing: 1rpx;
-      backdrop-filter: blur(4px);
+      flex: 1; min-width: 0;
+      font-size: 22rpx; color: rgba(255, 255, 255, 0.82); letter-spacing: 0.3rpx;
+      /* 副标题固定单行：参数设置类名称较长，换行会把卡片头部撑高 */
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
   }
 
@@ -213,31 +151,27 @@ export default {
     width: 56rpx; height: 56rpx; border-radius: 50%;
     background: rgba(255, 255, 255, 0.22);
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(8px);
-    box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.35), 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
-    &:active { background: rgba(255, 255, 255, 0.5); transform: scale(0.92); }
+    transition: opacity 0.2s ease;
+    &:active { background: rgba(255, 255, 255, 0.4); }
     &.more {
       background: transparent;
-      box-shadow: none;
     }
-    &.more:active { background: rgba(255, 255, 255, 0.18); box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.2); }
+    &.more:active { background: rgba(255, 255, 255, 0.18); }
     &.disabled { opacity: 0.4; pointer-events: none; }
   }
 
   .device-meta {
-    margin-top: 24rpx; padding: 22rpx 26rpx; border-radius: 18rpx;
+    margin-top: 24rpx; padding: 22rpx 26rpx; border-radius: 14rpx;
     background: rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(14px);
     display: flex; flex-direction: column; gap: 16rpx;
     border: 1rpx solid rgba(255, 255, 255, 0.08);
   }
   .meta-row { display: flex; align-items: center; font-size: 24rpx; }
   .meta-icon { width: 36rpx; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-  .meta-label { color: rgba(255, 255, 255, 0.6); width: 90rpx; flex-shrink: 0; }
+  .meta-label { color: rgba(255, 255, 255, 0.68); width: 90rpx; flex-shrink: 0; letter-spacing: 0.3rpx; }
   .meta-value {
     color: #fff; flex: 1; text-align: right; word-break: break-all;
-    font-family: 'Menlo', 'Consolas', monospace; font-size: 22rpx;
+    font-size: 22rpx; font-variant-numeric: tabular-nums; letter-spacing: 0.2rpx;
   }
   .disconnect-row {
     margin-top: 4rpx; padding: 18rpx 20rpx;
@@ -248,12 +182,4 @@ export default {
   }
 }
 
-@keyframes iconPulse {
-  0% { transform: scale(1); opacity: 0.7; }
-  100% { transform: scale(1.8); opacity: 0; }
-}
-@keyframes dotPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.85); }
-}
 </style>

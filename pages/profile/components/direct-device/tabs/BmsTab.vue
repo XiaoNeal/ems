@@ -10,15 +10,7 @@
             v-else-if="g.faultGroups"
             :groups="g.faultGroups"
             :has-data="rawBucketHasData"
-            hint="暂无故障位数据（未收到 171C 能源帧）"
-          />
-        </DataGroup>
-        <DataGroup title="控制指令">
-          <ControlCard
-            :list="controlList"
-            :isConnected="isConnected"
-            :clickedBtn="clickedBtn"
-            @control-click="onControlClick"
+            hint="暂无故障位数据"
           />
         </DataGroup>
       </view>
@@ -77,14 +69,6 @@
             { label: '电池箱最高温(℃)', value: formattedValues['171C_B106'] }
           ]" />
         </DataGroup>
-        <DataGroup title="控制指令">
-          <ControlCard
-            :list="controlList"
-            :isConnected="isConnected"
-            :clickedBtn="clickedBtn"
-            @control-click="onControlClick"
-          />
-        </DataGroup>
       </view>
     </view>
   </scroll-view>
@@ -93,10 +77,10 @@
 <script>
 import DataGroup from '../DataGroup.vue'
 import DataGrid from '../DataGrid.vue'
-import ControlCard from '../ControlCard.vue'
 import FaultBoard from '../FaultBoard.vue'
 import {
-  BMS_CELL, BMS_CONFIG, BMS_MEASURE, BMS_STATE, BMS_ENERGY, BMS_PDU, BMS_PACK,
+  BMS_CELL, BMS_CONFIG, BMS_MEASURE, BMS_STATE, BMS_DEVICE_STATUS, BMS_FIRE,
+  BMS_ENERGY, BMS_PDU, BMS_PACK,
   ENV_ITEMS, BMS_FAULT_WORDS
 } from '../../../direct-device-50kw-fields.js'
 import { fmtItems, withPrefixAliases } from '../../../direct-device-50kw-format.js'
@@ -108,27 +92,15 @@ import { fmtItems, withPrefixAliases } from '../../../direct-device-50kw-format.
  */
 export default {
   name: 'BmsTab',
-  components: { DataGroup, DataGrid, ControlCard, FaultBoard },
+  components: { DataGroup, DataGrid, FaultBoard },
   props: {
     formattedValues: {
       type: Object,
       default: () => ({})
     },
-    controlList: {
-      type: Array,
-      default: () => []
-    },
     rawValues: {
       type: Object,
       default: () => ({})
-    },
-    isConnected: {
-      type: Boolean,
-      default: false
-    },
-    clickedBtn: {
-      type: Object,
-      default: null
     },
     is50KwMode: {
       type: Boolean,
@@ -138,7 +110,7 @@ export default {
   computed: {
     /** 171C V2.0 原始寄存器 bucket（B 号为字节地址，值未缩放） */
     rawBucket() {
-      return (this.rawValues && this.rawValues['171C_V2']) || {}
+      return this._mergeFrames((this.rawValues && this.rawValues['171C_V2']) || {})
     },
     /** 是否收到过 171C V2 帧（无帧时故障位全 0，不能当作“全部正常”） */
     rawBucketHasData() {
@@ -148,14 +120,13 @@ export default {
       const b = this.rawBucket || {}
       return [
         { title: '环境数据', items: this.envItems },
-        { title: '设备状态', items: this.statusItems },
+        { title: '设备状态', items: fmtItems(BMS_DEVICE_STATUS, b).concat(fmtItems(BMS_STATE, b)) },
+        { title: '设备信息', items: fmtItems(BMS_MEASURE, b).concat(fmtItems(BMS_ENERGY, b)) },
         { title: '系统配置', items: fmtItems(BMS_CONFIG, b) },
-        { title: '电气测量', items: fmtItems(BMS_MEASURE, b) },
-        { title: '状态与继电器', items: fmtItems(BMS_STATE, b) },
-        { title: '电量与时长', items: fmtItems(BMS_ENERGY, b) },
+        { title: 'PACK信息', items: fmtItems(BMS_PACK, b) },
         { title: '单体信息', items: fmtItems(BMS_CELL, b) },
         { title: '高压盒信息', items: fmtItems(BMS_PDU, b) },
-        { title: 'PACK信息', items: fmtItems(BMS_PACK, b) },
+        { title: '消防信息', items: fmtItems(BMS_FIRE, b) },
         { title: '故障信息', faultGroups: this.faultWordGroups }
       ]
     },
@@ -165,51 +136,25 @@ export default {
       return fmtItems(ENV_ITEMS, env)
     },
     /**
-     * 设备状态：B0 为接触器状态（bit0~2），B1 为打包字节
-     *   bit0~1 故障告警等级 / bit2~3 电池充放电状态 / bit4~6 BMS 运行状态
-     * 电流方向仅作为充放电状态的兜底（B1 未上报时）
+     * 故障字 1~16 分组（FaultBoard 用：组名 = 故障字等级，组内 16 位）
+     *
+     * ⚡ 故障位是「慢变量」：12 个故障字一天也变不了几次，但它们是本页最大的
+     *    一组节点（150 个药丸标签）。以前每次刷新都重建分组对象 → FaultBoard 的
+     *    props 变了 → 150 个标签整片重排 + 一轮 setData。
+     *    这里用 12 个故障字拼个签名，签名没变直接复用上次的对象（引用不变 →
+     *    子组件不重渲染），一次刷新能省掉一半的渲染数据量。
      */
-    statusItems() {
-      const b = this.rawBucket || {}
-      const CONTACTOR = { 0: '已断开', 1: '正在连接_1', 2: '正在连接_2', 3: '已连接', 4: '连接失败' }
-      const LEVEL = { 0: '无故障', 1: '1级', 2: '2级', 3: '3级' }
-      const CHARGE = { 0: '空闲', 1: '充电中', 2: '放电中' }
-      const RUN = { 0: '正常', 1: '禁止充电', 2: '禁止放电', 3: '待机', 4: '停止' }
-
-      const rawB0 = b['B0']
-      const rawB1 = b['B1']
-      const b0 = Number(rawB0)
-      const b1 = Number(rawB1)
-      const hasB0 = rawB0 !== undefined && rawB0 !== null && Number.isFinite(b0)
-      const hasB1 = rawB1 !== undefined && rawB1 !== null && Number.isFinite(b1)
-
-      // 点表：B0 整字节枚举 0x0~0x4（不是位组）
-      const contactor = hasB0 ? (CONTACTOR[b0] || String(b0)) : '--'
-      // 点表：B1 bit0~1 故障等级 / bit2~3 充放电状态 / bit4~6 运行状态
-      const alarm = hasB1 ? (LEVEL[b1 & 0x03] || '--') : '--'
-      const runState = hasB1 ? (RUN[(b1 >> 4) & 0x07] || '--') : '--'
-
-      let chargeState = hasB1 ? (CHARGE[(b1 >> 2) & 0x03] || '--') : '--'
-      if (chargeState === '--') {
-        // 兜底：B1 未上报时按电池电流方向判定（B12 编码为 (实际值+1000)*10）
-        const cur = Number(b['B12'])
-        if (b['B12'] !== undefined && b['B12'] !== null && Number.isFinite(cur) && cur !== 0) {
-          const amp = cur / 10 - 1000
-          chargeState = amp > 0.5 ? '充电中' : amp < -0.5 ? '放电中' : '空闲'
-        }
-      }
-
-      return [
-        { label: 'BMS接触器状态', value: contactor, unit: '' },
-        { label: '故障告警等级', value: alarm, unit: '' },
-        { label: '电池充放电状态', value: chargeState, unit: '' },
-        { label: 'BMS运行状态', value: runState, unit: '' }
-      ]
-    },
-    /** 故障字 1~16 分组（FaultBoard 用：组名 = 故障字等级，组内 16 位） */
     faultWordGroups() {
       const b = this.rawBucket || {}
-      return BMS_FAULT_WORDS.map(word => {
+      const words = BMS_FAULT_WORDS
+      let sig = ''
+      for (let i = 0; i < words.length; i++) {
+        const v = b[words[i].key]
+        sig += (v === undefined || v === null ? '-' : String(v)) + ','
+      }
+      if (sig === this._faultSig && this._faultGroups) return this._faultGroups
+      this._faultSig = sig
+      this._faultGroups = words.map(word => {
         const val = Number(b[word.key])
         const has = b[word.key] !== undefined && b[word.key] !== null && Number.isFinite(val)
         return {
@@ -221,16 +166,43 @@ export default {
             .filter(Boolean)
         }
       }).filter(g => g.items.length > 0)
+      return this._faultGroups
+    }
+  },
+  methods: {
+    /**
+     * 帧类型前缀合并（必须放 methods：它是被调用的工具函数，不是计算属性）
+     *   171C V2.0 的字段分散在三类帧：能源帧(0x02) 存裸键 B2/B10…，状态帧(0x03) 存 S_ 前缀
+     *   （系统配置 B70~B80 只在状态帧里），控制帧(0x04) 存 C_ 前缀。
+     *   点表里同名 B 号在两类帧中含义不同，所以不能简单互相覆盖：
+     *   裸键（能源帧）优先，S_/C_ 只补裸键缺的字段。
+     *
+     * ⚠️ 这里必须「保留原键 + 补裸键别名」，不能只输出裸键：
+     *   BMS_CONFIG 的 6 项系统配置（额定电压/额定容量/串数/温感数/pack 数/极柱温感数）
+     *   在字段表里写的就是 'S_B70'…'S_B80'（它们只存在于状态帧），
+     *   旧实现把 S_ 前缀全部剥掉，于是桶里只剩 B70…，按 'S_B70' 查永远是 undefined，
+     *   整块「系统配置」就固定显示 '--'。
+     */
+    _mergeFrames(src) {
+      const out = {}
+      const bareInSrc = {}
+      Object.keys(src).forEach(k => {
+        if (!/^[SC]_/.test(k)) bareInSrc[k] = true
+      })
+      // 1) 原样保留（含 S_/C_ 前缀），保证显式写了 'S_B70' 这类键的字段能精确命中
+      Object.keys(src).forEach(k => { out[k] = src[k] })
+      // 2) 带前缀的键补一份裸键别名：只在能源帧没有同名裸键时补，避免状态帧覆盖能源帧同号字段
+      Object.keys(src).forEach(k => {
+        if (!/^[SC]_/.test(k)) return
+        const bare = String(k).replace(/^[SC]_/, '')
+        if (bareInSrc[bare]) return
+        if (out[bare] === undefined) out[bare] = src[k]
+      })
+      return out
     }
   },
   data() {
     return {}
-  },
-  methods: {
-    /** 透传 ControlCard 的下标载荷，页面侧按 controlList 反查真实对象 */
-    onControlClick(payload) {
-      this.$emit('control-click', payload)
-    }
   }
 }
 </script>
@@ -266,7 +238,7 @@ export default {
     width: 8rpx;
     height: 30rpx;
     border-radius: 4rpx;
-    background: linear-gradient(180deg, #63a4ff 0%, #2f7cf6 100%);
+    background: #2f7cf6;
   }
 }
 

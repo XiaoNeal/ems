@@ -49,6 +49,8 @@ export class MqttDirectClient {
     this.connected = false
     this.connecting = false
     this._connectPromise = null
+    // 每次真正建立连接自增：页面据此判断「这条连接是否已经订阅过」，避免重复注册 handler
+    this.connectionSeq = 0
 
     this.onConnect = null
     this.onDisconnect = null
@@ -113,6 +115,7 @@ export class MqttDirectClient {
       maxReconnectAttempts: this.maxReconnectAttempts
     })
 
+    this.connectionSeq++
     this.client.setTopics({
       realtime: this.realtimeTopic,
       status: this.statusTopic,
@@ -266,6 +269,78 @@ export class MqttDirectClient {
     console.log('=======================================================')
 
     // 按设备侧实际协议下发：默认 hex 文本
+    if (CONTROL_PAYLOAD_MODE === 'binary') {
+      return this.publish(topic, frame, { qos: 1 })
+    }
+    if (CONTROL_PAYLOAD_MODE === 'json') {
+      return this.publish(topic, JSON.stringify({ 'Send Data': frameHex }), { qos: 1 })
+    }
+    return this.publish(topic, frameHex, { qos: 1 })
+  }
+
+  /**
+   * 批量控制：一个报文（一帧 0x3401）内下发多条命令
+   *
+   * 设备侧对某些参数组有硬性要求，例如 0x171F 的
+   * 「储能DC开关机 / 储能充放电选择 / 充放电总功率」必须放在同一个报文里，
+   * 分三帧发会被当成三次独立状态，最终只剩最后一帧生效（前两项被覆盖）。
+   *
+   * @param {Array} items [{ field, value, registerAddress?, regType? }]
+   * @param {string} [deviceType]
+   * @param {object} [overrides] 公共覆盖项（deviceCategory/addr/deviceId 等）
+   */
+  async sendControlBatch(items, deviceType, overrides = {}) {
+    const dt = deviceType || this._currentDeviceType
+    if (!dt) throw new Error('sendControlBatch: 未指定 deviceType，请先调 setDeviceType')
+    if (!Array.isArray(items) || !items.length) throw new Error('sendControlBatch: 命令列表为空')
+
+    const topic = this.controlSetTopic || 'neiic/microEnergyStationCtl002'
+    const profile = resolveDeviceProfile(dt)
+
+    const commands = items.map(it => {
+      let regAddress = it.registerAddress
+      if (regAddress === undefined || regAddress === null || regAddress === '') {
+        const m = String(it.field || '').match(/^B(\d+)$/)
+        if (!m) throw new Error('sendControlBatch: 无效的字段名 ' + it.field)
+        regAddress = parseInt(m[1], 10) / 2
+        if (!Number.isInteger(regAddress)) throw new Error('sendControlBatch: 字段 ' + it.field + ' 的寄存器地址不是偶数')
+      }
+      regAddress = normalizeRegisterAddress(regAddress)
+      if (it.value === undefined || it.value === null || String(it.value).trim() === '') {
+        throw new Error('下发值为空：字段 ' + (it.field || '(未指定)') + '，寄存器地址 ' + regAddress + '（十进制）')
+      }
+      return {
+        deviceCategory: profile.category,
+        addr: profile.addr,
+        deviceId: profile.deviceId,
+        registerType: it.regType !== undefined ? it.regType : 3,
+        extra1: '00',
+        extra2: '0000',
+        extra3: '0000',
+        ...overrides,
+        registerAddress: regAddress,
+        registerValue: it.value,
+      }
+    })
+
+    const frame = buildIemsCommandFrame('3401', commands)
+    const frameHex = Array.from(frame).map(b => b.toString(16).padStart(2, '0')).join(CONTROL_HEX_SEPARATOR)
+    this._lastControlHex = frameHex.replace(/[\s,]/g, '').toUpperCase()
+    this._lastControlAt = Date.now()
+
+    console.log('========== MQTT 组合命令帧下发 (MqttDirectClient) ==========')
+    console.log('[MQTT] topic       :', topic)
+    console.log('[MQTT] deviceType  :', dt, ' 命令条数:', commands.length)
+    console.log('[MQTT] 设备身份    :', profile.category, '索引号', profile.addr, '设备ID', profile.deviceId)
+    commands.forEach((c, i) => {
+      console.log('[MQTT] 命令' + (i + 1) + '       : 寄存器', c.registerAddress,
+        '→ 0x' + Number(c.registerAddress).toString(16).toUpperCase().padStart(8, '0'),
+        ' 值:', c.registerValue, ' 类型:', c.registerType)
+    })
+    console.log('[MQTT] frame length:', frame.length, 'bytes')
+    console.log('[MQTT] frame hex   :', frameHex)
+    console.log('============================================================')
+
     if (CONTROL_PAYLOAD_MODE === 'binary') {
       return this.publish(topic, frame, { qos: 1 })
     }

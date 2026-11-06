@@ -2,8 +2,7 @@
  * 液冷机（0318 V2.3）展示字段表 —— 直连设备页「液冷机」监测 tab
  *
  * 对应点表：.dumate/inbox/(0x0318)同飞液冷机转发通信协议-V2.3-25.6.23.xlsx
- * 与云端监控页（community/monitor-data）的「液冷机运行数据」栏目保持一致：
- *   运行状态 / 开关量 / 运行参数 / 运行统计 / 故障报警
+ * 与《液冷机参数》栏目保持一致：运行状态（机组状态+开关量）/ 设备信息 / 故障报警
  *
  * 字段说明同 direct-device-50kw-fields.js：
  *   key 由 service/protocols/0318_V2_3.js 产出（B 号为字节地址，B38/B39/B41 为单字节位信号）
@@ -22,7 +21,8 @@ export const COOL_BAUD_RATE = { 0: '9600', 1: '4800', 2: '19200' }
 export const COOL_RUN_STATUS = ['空闲', '准备启动', '运行', '延时停机', '故障']
 export const COOL_RUN_MODE = ['待机', '制冷', '制热', '自循环']
 
-// 运行参数（数值型）
+// 设备信息（数值型，按《液冷机参数》栏目顺序：温度 → 开度/转速 → 压力 → 故障码 → 功率 → 累计运行）
+// 点表：B114 传输值=实际值*10，单位 0.1kW → 显示 kW；周数项单位为天
 export const COOL_RUN_ITEMS = [
   { key: 'B42', label: '供液温度(℃)', scale: 10, decimals: 1, unit: '℃' },
   { key: 'B44', label: '回液温度(℃)', scale: 10, decimals: 1, unit: '℃' },
@@ -30,34 +30,26 @@ export const COOL_RUN_ITEMS = [
   { key: 'B50', label: '蒸出温度(℃)', scale: 10, decimals: 1, unit: '℃' },
   { key: 'B52', label: '环境温度(℃)', scale: 10, decimals: 1, unit: '℃' },
   { key: 'B54', label: '系统冷凝(℃)', scale: 10, decimals: 1, unit: '℃' },
-  { key: 'B72', label: '供水压力(bar)', scale: 10, decimals: 1, unit: 'bar' },
-  { key: 'B74', label: '回水压力(bar)', scale: 10, decimals: 1, unit: 'bar' },
-  { key: 'B78', label: '排气压力(bar)', scale: 10, decimals: 1, unit: 'bar' },
   { key: 'B58', label: '节流电膨当前开度(步)', scale: 1, decimals: 0, unit: '步' },
   { key: 'B60', label: '水泵当前转速(%)', scale: 1, decimals: 0, unit: '%' },
   { key: 'B62', label: '压缩机当前转速(RPS)', scale: 1, decimals: 0, unit: 'RPS' },
   { key: 'B64', label: '风机转速(RPS)', scale: 1, decimals: 0, unit: 'RPS' },
-  { key: 'B114', label: '变频器输出功率(kW)', scale: 10, decimals: 1, unit: 'kW' }
-]
-
-// 运行统计（累计时长）
-export const COOL_RUNTIME_ITEMS = [
-  { key: 'B116', label: '水泵累计运行(h)', scale: 1, decimals: 0, unit: 'h' },
-  { key: 'B118', label: '水泵累计运行(天)', scale: 1, decimals: 0, unit: '天' },
-  { key: 'B120', label: '加热累计运行(h)', scale: 1, decimals: 0, unit: 'h' },
-  { key: 'B122', label: '加热累计运行(天)', scale: 1, decimals: 0, unit: '天' },
-  { key: 'B124', label: '压缩机累计运行(h)', scale: 1, decimals: 0, unit: 'h' },
-  { key: 'B126', label: '压缩机累计运行(天)', scale: 1, decimals: 0, unit: '天' },
-  { key: 'B128', label: '风机累计运行(h)', scale: 1, decimals: 0, unit: 'h' },
-  { key: 'B130', label: '风机累计运行(天)', scale: 1, decimals: 0, unit: '天' }
-]
-
-// 故障码 / 等级
-export const COOL_FAULT_CODES = [
-  { key: 'B100', label: '变频器故障代码' },
-  { key: 'B104', label: '系统总故障等级' },
-  { key: 'B106', label: '系统总故障代码' },
-  { key: 'B112', label: '三相PFC故障号' }
+  { key: 'B72', label: '供水压力(bar)', scale: 10, decimals: 1, unit: 'bar' },
+  { key: 'B74', label: '回水压力(bar)', scale: 10, decimals: 1, unit: 'bar' },
+  { key: 'B78', label: '排气压力(bar)', scale: 10, decimals: 1, unit: 'bar' },
+  { key: 'B100', label: '变频器故障代码', scale: 1, decimals: 0, unit: '' },
+  { key: 'B104', label: '系统总故障等级', scale: 1, decimals: 0, unit: '' },
+  { key: 'B106', label: '系统总故障代码', scale: 1, decimals: 0, unit: '' },
+  { key: 'B112', label: '三相PFC故障号', scale: 1, decimals: 0, unit: '' },
+  { key: 'B114', label: '变频器输出功率(kW)', scale: 10, decimals: 1, unit: 'kW' },
+  { key: 'B116', label: '水泵累计运行小时(h)', scale: 1, decimals: 0, unit: 'h' },
+  { key: 'B118', label: '水泵累计运行周数(天)', scale: 1, decimals: 0, unit: '天' },
+  { key: 'B120', label: '加热累计运行小时(h)', scale: 1, decimals: 0, unit: 'h' },
+  { key: 'B122', label: '加热累计运行周数(天)', scale: 1, decimals: 0, unit: '天' },
+  { key: 'B124', label: '压缩机累计运行小时(h)', scale: 1, decimals: 0, unit: 'h' },
+  { key: 'B126', label: '压缩机累计运行周数(天)', scale: 1, decimals: 0, unit: '天' },
+  { key: 'B128', label: '风机累计运行时长(h)', scale: 1, decimals: 0, unit: 'h' },
+  { key: 'B130', label: '风机累计运行周数(天)', scale: 1, decimals: 0, unit: '天' }
 ]
 
 /**

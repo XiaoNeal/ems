@@ -431,7 +431,7 @@
           <view class="content">
             <!-- 50kW 微能站：光伏DC 使用 170C_V1_1 模型（地址06） -->
             <view v-if="isHighCapacity" class="module">
-              <view class="module-title">光伏</view>
+              <view class="module-title">光伏DC</view>
 
               <view v-if="device170CPv" class="data-group">
                 <view class="group-title">运行参数</view>
@@ -473,7 +473,7 @@
             </view>
 
             <view v-if="!isHighCapacity" class="module">
-              <view class="module-title">光伏</view>
+              <view class="module-title">光伏DC</view>
 
               <view class="data-group">
                 <view class="group-title">运行状态</view>
@@ -1182,9 +1182,9 @@
               <view class="module-title">液冷机</view>
 
               <view v-if="device0318" class="data-group">
-                <view class="group-title">运行参数</view>
+                <view class="group-title">运行状态</view>
                 <view class="data-grid">
-                  <view v-for="field in liquidCoolingFields.params" :key="field.key" class="grid-item">
+                  <view v-for="field in liquidCoolingFields.status" :key="field.key" class="grid-item">
                     <text class="item-label">{{ field.name }}</text>
                     <text class="item-value">{{ field.value }}</text>
                   </view>
@@ -1192,10 +1192,23 @@
               </view>
 
               <view v-if="device0318" class="data-group">
-                <view class="group-title">故障报警</view>
-                <view class="status-grid">
-                  <view v-for="field in liquidCoolingFields.faults" :key="field.key" class="fault-item">
-                    <text class="fault-name" :class="{ active: field.value === '有故障' }">{{ field.name }}</text>
+                <view class="group-title">设备信息</view>
+                <view class="data-grid">
+                  <view v-for="field in liquidCoolingFields.info" :key="field.key" class="grid-item">
+                    <text class="item-label">{{ field.name }}</text>
+                    <text class="item-value">{{ field.value }}</text>
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="device0318" class="data-group">
+                <view class="group-title">故障信息</view>
+                <view v-for="group in liquidCoolingFields.faultGroups" :key="group.title" class="fault-word">
+                  <view class="fault-word-title">{{ group.title }}</view>
+                  <view class="status-grid">
+                    <view v-for="field in group.items" :key="field.key" class="fault-item">
+                      <text class="fault-name" :class="{ active: field.isFault }">{{ field.name }}</text>
+                    </view>
                   </view>
                 </view>
               </view>
@@ -1249,26 +1262,51 @@ const MOVED_PCS_STATE_KEYS = [
   'Enclosure_Fan_Stop_Time', 'Enclosure_Fan_Forced_Start_Command'
 ];
 
+// 《液冷机数据分类》：运行状态字段（电平信号/机组运行状态/输出位）
+const LIQUID_STATUS_KEYS = [
+  'B38b1', 'B38b2', 'B39b0', 'B39b2', 'B39b5', 'B39b6',
+  'unitRunStatus',
+  'B41b3', 'B41b5', 'B41b6', 'B41b7'
+];
+// 《液冷机数据分类》：设备信息字段（温度/压力/转速/故障代码/累计运行）
+const LIQUID_INFO_KEYS = [
+  'supplyLiquidTemp', 'returnLiquidTemp', 'systemEvapInlet', 'evapOutletTemp',
+  'envTemp', 'systemCondensing', 'expansionValveOpening', 'pumpSpeed',
+  'compressorSpeed', 'fanSpeed', 'supplyPressure', 'returnPressure', 'dischargePressure',
+  'inverterFaultCode', 'systemFaultLevel', 'systemFaultCode', 'pfcFaultCode',
+  'inverterOutputPower',
+  'pumpRunHours', 'pumpRunWeeks', 'heatingRunHours', 'heatingRunWeeks',
+  'compressorRunHours', 'compressorRunWeeks', 'fanRunHours', 'fanRunWeeks'
+];
+// 《液冷机数据分类》：故障字字节 + 有效位数（B86~B95 依次为故障字1~10）
+const LIQUID_FAULT_BYTES = [
+  [86, 8], [87, 8], [88, 4], [89, 8], [90, 2],
+  [91, 8], [92, 8], [93, 8], [94, 7], [95, 8]
+];
+
 // 50kW PCS 展示分组（依据《PCS数据页面调整》文档的数据分类）
-// 设备状态：按文档对 0/1 值做文案映射
+// 设备状态：0/1 按文档映射为文案
 const PCS1707_STATUS_KEYS = [
   'Shutdown_Status', 'Standby_Status', 'Operation_Status',
   'Total_Fault_Status', 'Total_Alarm_Status', 'Remote_Local_Status',
   'E_Stop_Input_Status', 'Grid_Connected_Status', 'VF_Off_Grid_Status',
   'Overload_Derating', 'BMS_Dry_Contact_Input'
 ];
+// ⚠ 位状态的 0 是「有效读数」而不是「没有数据」：0 一律给反向文案，
+//   只有模型层未收到帧（value 为 '--'/undefined）才显示 '--'，
+//   避免待机/运行/总故障/并网等 10 项与「无数据」混淆（与直连设备页 PCS_STATUS 口径一致）。
 const PCS1707_STATUS_VALUE_MAP = {
-  Shutdown_Status: { '0': '--', '1': '停机' },
-  Standby_Status: { '0': '--', '1': '待机' },
-  Operation_Status: { '0': '--', '1': '运行' },
-  Total_Fault_Status: { '0': '--', '1': '故障' },
-  Total_Alarm_Status: { '0': '--', '1': '告警' },
+  Shutdown_Status: { '0': '未停机', '1': '停机' },
+  Standby_Status: { '0': '未待机', '1': '待机' },
+  Operation_Status: { '0': '未运行', '1': '运行' },
+  Total_Fault_Status: { '0': '无故障', '1': '故障' },
+  Total_Alarm_Status: { '0': '无告警', '1': '告警' },
   Remote_Local_Status: { '0': '本地', '1': '远程' },
-  E_Stop_Input_Status: { '0': '--', '1': '有效' },
-  Grid_Connected_Status: { '0': '--', '1': '并网' },
-  VF_Off_Grid_Status: { '0': '--', '1': 'VF 离网' },
-  Overload_Derating: { '0': '--', '1': '过载发生' },
-  BMS_Dry_Contact_Input: { '0': '--', '1': '故障有效' }
+  E_Stop_Input_Status: { '0': '未触发', '1': '已触发' },
+  Grid_Connected_Status: { '0': '离网', '1': '并网' },
+  VF_Off_Grid_Status: { '0': '未启用', '1': 'VF 离网' },
+  Overload_Derating: { '0': '未过载', '1': '过载降容' },
+  BMS_Dry_Contact_Input: { '0': '未动作', '1': '故障有效' }
 };
 // 交流侧：电压/电流/频率/有功/无功/视在功率/功率因数
 const PCS1707_AC_KEYS = [
@@ -1346,8 +1384,64 @@ const BMS_INFO_GROUPS = [
   },
   {
     key: 'deviceStatus', title: '设备状态', items: [
+      { label: '总正继电器', group: 'state', key: 'B0b0' },
+      { label: '总负继电器', group: 'state', key: 'B0b1' },
+      { label: '断路器脱扣控制', group: 'state', key: 'B0b2' },
+      { label: '预充继电器控制', group: 'state', key: 'B0b3' },
+      { label: '绿灯', group: 'state', key: 'B0b4' },
+      { label: '红灯', group: 'state', key: 'B0b5' },
+      { label: '从机唤醒', group: 'state', key: 'B0b7' },
+      { label: '三级故障输出', group: 'state', key: 'B1b4' },
+      { label: '水浸（常开）', group: 'state', key: 'B2b1' },
+      { label: '总正辅助触点检{DIS1 (SWDi1)}', group: 'state', key: 'B3b5' },
+      { label: '总负辅助触点检{DIS2 (SWDi2)}', group: 'state', key: 'B3b6' },
+      { label: '断路器辅助点检{DIS3 (SWDi3)}', group: 'state', key: 'B3b7' },
+      { label: '告警状态', group: 'energy', key: 'B1b0' },
       { label: '充放电状态', group: 'energy', key: 'B1b2' },
-      { label: '告警状态', group: 'energy', key: 'B1b0' }
+      { label: 'BMS运行状态', group: 'energy', key: 'B1b4' },
+      { label: '接触器状态（充电连接）', group: 'energy', key: 'B0b0' },
+      { label: '预充状态', group: 'energy', key: 'B47b0' },
+      { label: '均衡状态', group: 'energy', key: 'B47b2' },
+      { label: '高压低锁定状态', group: 'energy', key: 'B47b5' },
+      { label: '准备状态', group: 'energy', key: 'B47b6' },
+      { label: 'BMS模式', group: 'energy', key: 'B47b7' },
+      { label: '自检状态', group: 'energy', key: 'B50' },
+      { label: '总正继电器状态', group: 'energy', key: 'B53b0' },
+      { label: '总负继电器状态', group: 'energy', key: 'B53b1' },
+      { label: '预充继电器状态', group: 'energy', key: 'B53b2' },
+      { label: '断路器状态', group: 'energy', key: 'B53b3' },
+      { label: '总正继电器故障状态', group: 'energy', key: 'B55b0' },
+      { label: '总负继电器故障状态', group: 'energy', key: 'B55b2' },
+      { label: '预充继电器故障状态', group: 'energy', key: 'B55b4' },
+      { label: '断路器故障状态', group: 'energy', key: 'B55b6' }
+    ]
+  },
+  {
+    key: 'sysInfo', title: '设备信息', items: [
+      { label: 'SOC(%)', group: 'energy', key: 'B32' },
+      { label: 'SOH(%)', group: 'energy', key: 'B112' },
+      { label: '充电最大电压(V)', group: 'energy', key: 'B2' },
+      { label: '最大放电电流(A)', group: 'energy', key: 'B4' },
+      { label: '放电最小电压(V)', group: 'energy', key: 'B6' },
+      { label: '最大充电电流(A)', group: 'energy', key: 'B8' },
+      { label: '总电压(V)', group: 'energy', key: 'B10' },
+      { label: '总电流(A)', group: 'energy', key: 'B12' },
+      { label: '正极绝缘阻值(kΩ)', group: 'energy', key: 'B36' },
+      { label: '负极绝缘阻值(kΩ)', group: 'energy', key: 'B38' },
+      { label: 'HV1电压(V)', group: 'energy', key: 'B40' },
+      { label: 'HV2电压(V)', group: 'energy', key: 'B42' },
+      { label: 'BAT+电压(V)', group: 'energy', key: 'B44' },
+      { label: '电池累计电压(V)', group: 'energy', key: 'B48' },
+      { label: '分流器电流(A)', group: 'energy', key: 'B56' },
+      { label: '累计使用时间(min)', group: 'energy', key: 'B130' },
+      { label: '累计循环次数', group: 'energy', key: 'B128' },
+      { label: '累计充电电量(kWh)', group: 'energy', key: 'B124' },
+      { label: '累积充电时间(min)', group: 'energy', key: 'B138' },
+      { label: '累计放电电量(kWh)', group: 'energy', key: 'B120' },
+      { label: '累积放电时间(min)', group: 'energy', key: 'B134' },
+      { label: '单次放电累计电量(kWh)', group: 'energy', key: 'B116' },
+      { label: '单次充电累计电量(kWh)', group: 'energy', key: 'B118' },
+      { label: 'BMS运行状态', group: 'energy', key: 'B1b4' }
     ]
   },
   {
@@ -1357,56 +1451,7 @@ const BMS_INFO_GROUPS = [
       { label: '电池串数', group: 'state', key: 'B74' },
       { label: '温感数量', group: 'state', key: 'B76' },
       { label: '从机（pack）数量', group: 'state', key: 'B78' },
-      { label: '极柱温感数', group: 'state', key: 'B80' },
-      { label: '充电最大电压(V)', group: 'energy', key: 'B2' },
-      { label: '最大放电电流(A)', group: 'energy', key: 'B4' },
-      { label: '放电最小电压(V)', group: 'energy', key: 'B6' },
-      { label: '最大充电电流(A)', group: 'energy', key: 'B8' },
-      { label: '初始SOC', group: null, key: null }
-    ]
-  },
-  {
-    key: 'sysInfo', title: '系统信息', items: [
-      { label: 'SOC(%)', group: 'energy', key: 'B32' },
-      { label: 'SOH(%)', group: 'energy', key: 'B112' },
-      { label: '总电压(V)', group: 'energy', key: 'B10' },
-      { label: '总电流(A)', group: 'energy', key: 'B12' },
-      { label: '正极绝缘阻值(kΩ)', group: 'energy', key: 'B36' },
-      { label: '负极绝缘阻值(kΩ)', group: 'energy', key: 'B38' },
-      { label: '预充状态', group: 'energy', key: 'B47b0' },
-      { label: '均衡状态', group: 'energy', key: 'B47b2' },
-      { label: '高压低锁定状态', group: 'energy', key: 'B47b5' },
-      { label: '准备状态', group: 'energy', key: 'B47b6' },
-      { label: 'BMS模式', group: 'energy', key: 'B47b7' },
-      { label: '自检状态', group: 'energy', key: 'B50' },
-      { label: '累计使用时间(min)', group: 'energy', key: 'B130' },
-      { label: '累计循环次数', group: 'energy', key: 'B128' },
-      { label: '累计充电电量(kWh)', group: 'energy', key: 'B124' },
-      { label: '累积充电时间(min)', group: 'energy', key: 'B138' },
-      { label: '累计放电电量(kWh)', group: 'energy', key: 'B120' },
-      { label: '累积放电时间(min)', group: 'energy', key: 'B134' },
-      { label: '单次放电累计电量(kWh)', group: 'energy', key: 'B116' },
-      { label: '单次充电累计电量(kWh)', group: 'energy', key: 'B118' },
-      { label: 'BMS运行状态', group: 'energy', key: 'B1b4' },
-      { label: 'HV1电压(V)', group: 'energy', key: 'B40' },
-      { label: 'BAT+电压(V)', group: 'energy', key: 'B44' },
-      { label: '电池累计电压(V)', group: 'energy', key: 'B48' },
-      { label: '总正继电器状态', group: 'energy', key: 'B53b0' },
-      { label: '总负继电器状态', group: 'energy', key: 'B53b1' },
-      { label: '预充继电器状态', group: 'energy', key: 'B53b2' },
-      { label: '断路器状态', group: 'energy', key: 'B53b3' },
-      { label: '总正继电器故障状态', group: 'energy', key: 'B55b0' },
-      { label: '总负继电器故障状态', group: 'energy', key: 'B55b2' },
-      { label: '预充继电器故障状态', group: 'energy', key: 'B55b4' },
-      { label: '断路器故障状态', group: 'energy', key: 'B55b6' },
-      { label: '分流器电流(A)', group: 'energy', key: 'B56' },
-      { label: '电池连接失败原因', group: 'energy', key: 'B66' },
-      { label: '电池未成功连接原因', group: 'energy', key: 'B68' }
-    ]
-  },
-  {
-    key: 'chargeInfo', title: '充电信息', items: [
-      { label: '充电连接', group: 'energy', key: 'B0b0' }
+      { label: '极柱温感数', group: 'state', key: 'B80' }
     ]
   },
   {
@@ -1476,7 +1521,7 @@ export default {
       return (station.list || []).some(item => newTypes.includes(String(item.typeCode || item.deviceType || '').trim()));
     },
     tabs() {
-      const base = ['PCS', '储能DC', '光伏', 'BMS'];
+      const base = ['PCS', '储能DC', '光伏DC', 'BMS'];
       if (this.isHighCapacity) return [...base, '液冷机'];
       return base;
     },
@@ -1562,20 +1607,30 @@ export default {
     pv170C() {
       return this.build170CData(this.device170CPv);
     },
-    // 液冷机(0318V2_3)数据：按位故障标志与运行参数分组
-    // 故障字从 byte 86 开始（B86~B130），byte 38/39 电平信号、byte 41 输出位归运行参数
+    // 液冷机(0318V2_3)数据：按《液冷机数据分类》分为运行状态、设备信息、故障信息（按故障字）
     liquidCoolingFields() {
-      const energyData = this.device0318 && this.device0318.energyData;
-      const params = [];
-      const faults = [];
-      if (energyData) {
-        Object.keys(energyData).forEach(key => {
-          const field = { key, name: energyData[key].name, value: energyData[key].value };
-          if (/^B(8[6-9]|9\d|1\d{2,})b\d+$/.test(key)) faults.push(field);
-          else params.push(field);
-        });
-      }
-      return { params, faults };
+      const energyData = (this.device0318 && this.device0318.energyData) || {};
+      const toField = key => {
+        const src = energyData[key] || {};
+        return { key, name: src.name || key, value: src.value === undefined || src.value === null || src.value === '' ? '--' : src.value };
+      };
+      const status = LIQUID_STATUS_KEYS.filter(key => energyData[key]).map(toField);
+      const info = LIQUID_INFO_KEYS.filter(key => energyData[key]).map(toField);
+      // 故障信息：按故障字分组，位值为 1 的故障名称标红
+      const faultGroups = LIQUID_FAULT_BYTES.map(([byte, bits], index) => ({
+        title: `故障字${index + 1}`,
+        items: Array.from({ length: bits }, (_, bit) => `B${byte}b${bit}`)
+          .filter(key => energyData[key])
+          .map(key => {
+            const src = energyData[key];
+            return {
+              key,
+              name: src.name,
+              isFault: Number(src.raw) === 1 || src.value === '有故障'
+            };
+          })
+      })).filter(group => group.items.length);
+      return { status, info, faultGroups };
     },
     // 50kW BMS：按《电池簇信息记录》栏目分组展示，取 171C_V2 与 131C_V2 实时值
     bmsInfoGroups() {
@@ -1587,6 +1642,7 @@ export default {
         state: (dev && dev.stateData) || {},
         env131: (env131 && env131.statusData) || {}
       };
+      console.log(stores);
       const toVal = v => (v !== undefined && v !== null && v !== '' ? v : '--');
       return BMS_INFO_GROUPS.map(group => {
         if (group.expand) {

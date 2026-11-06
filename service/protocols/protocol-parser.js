@@ -72,6 +72,7 @@ export function parseDevicePayload(deviceType, dataType, payload) {
 export function parseDeviceFrame(rawBytes) {
   // 第一步: 解析 IEMS 帧结构（内部已调用协议模块解析 payload）
   const frameResult = parseIemsFrame(rawBytes)
+  console.log('[protocol-parser] 解析 IEMS 帧:', frameResult)
   if (!frameResult) {
     console.warn('[protocol-parser] IEMS 帧解析失败')
     return null

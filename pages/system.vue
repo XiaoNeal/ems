@@ -210,10 +210,20 @@ export default {
       });
     },
     
-    // 跳转到快捷控制页面
+    // 跳转到快捷控制页面（50kW 大容量站走新协议页面）
     goToQuickControl() {
+      const station = this.$store.state.currentSelectDevice || {};
+      const cap = Number(station.totalInstalledCapacity);
+      let is50kw = Number.isFinite(cap) && cap > 0 ? cap >= 50 : false;
+      if (!is50kw) {
+        // 无容量字段时回退：设备列表中出现 50kW 专属协议设备即视为大容量
+        // typeCode 归一化：大写、去下划线、去 0x 前缀（1707 PCS / 170C DC / 171C_V2 BMS / 0318 液冷机）
+        const norm = t => String(t == null ? '' : t).toUpperCase().replace(/_/g, '').replace(/^0X/, '').replace(/\s+/g, '');
+        const is50kwType = t => /^(1707|170C|171CV2|0318)/.test(norm(t));
+        is50kw = (station.list || []).some(item => is50kwType(item.typeCode || item.deviceType));
+      }
       uni.navigateTo({
-        url: '/community/quick-control/quick-control'
+        url: is50kw ? '/community/quick-control/quick-control-50kw' : '/community/quick-control/quick-control'
       });
     },
     

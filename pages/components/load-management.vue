@@ -57,7 +57,10 @@
 
       <!-- 卡片网格容器 -->
       <view class="device-card-grid">
-        <view v-for="(item, index) in deviceList" :key="index" @click="onDeviceClick(item)" class="device-card" :class="{ 'device-offline': !isDeviceOnline(item) }">
+        <!-- 空态：站点未接入负荷设备时展示 -->
+        <EmptyState v-if="!deviceList || deviceList.length === 0" class="list-empty" title="暂无设备" desc="该站点暂未接入负荷设备" :show-refresh="false" />
+        <template v-else>
+          <view v-for="(item, index) in deviceList" :key="index" @click="onDeviceClick(item)" class="device-card" :class="{ 'device-offline': !isDeviceOnline(item) }">
           <view class="device-name">{{ item.deviceName }}</view>
           <!-- 设备图标 -->
           <view class="device-image">
@@ -81,6 +84,7 @@
             </view>
           </view>
         </view>
+        </template>
       </view>
     </view>
   </view>
@@ -834,6 +838,12 @@ export default {
   padding: 20rpx;
   gap: 10rpx;
   /* 卡片间距 */
+}
+
+/* 负荷列表空态：占满整行并保证可读高度 */
+.list-empty {
+  width: 100%;
+  min-height: 360rpx;
 }
 
 .device-card {

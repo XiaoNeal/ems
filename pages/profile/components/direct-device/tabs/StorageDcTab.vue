@@ -113,7 +113,7 @@ export default {
     width: 8rpx;
     height: 30rpx;
     border-radius: 4rpx;
-    background: linear-gradient(180deg, #63a4ff 0%, #2f7cf6 100%);
+    background: #2f7cf6;
   }
 }
 </style>

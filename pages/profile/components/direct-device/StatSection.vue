@@ -57,8 +57,9 @@ export default {
 <style lang="scss" scoped>
 .arch-stats-section {
   background: #ffffff;
-  border: 1rpx solid #eef1f5;
-  border-radius: 18rpx;
+  border: 1rpx solid #eceff4;
+  border-radius: 20rpx;
+  box-shadow: 0 1rpx 3rpx rgba(20, 32, 52, 0.03);
   padding: 26rpx 26rpx;
   margin-bottom: 16rpx;
 }
@@ -75,7 +76,7 @@ export default {
     width: 7rpx;
     height: 28rpx;
     border-radius: 4rpx;
-    background: linear-gradient(180deg, #63a4ff 0%, #2f7cf6 100%);
+    background: #2f7cf6;
   }
 }
 .arch-title-text {
@@ -130,28 +131,29 @@ export default {
   gap: 6rpx;
 }
 .arch-stat-label {
-  font-size: 21rpx;
-  color: #98a2ae;
+  font-size: 22rpx;
+  color: #78838f;
+  letter-spacing: 0.2rpx;
   white-space: nowrap;
 }
 .arch-stat-value {
   font-size: 32rpx;
-  font-weight: 700;
-  color: #1d2430;
-  font-family: 'Menlo', 'Consolas', monospace;
+  font-weight: 600;
+  color: #16202d;
+  /* 表格数字：刷新时不抖动，且与中文同一套字体骨架 */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
   line-height: 1.3;
   &.small {
     font-size: 25rpx;
     font-weight: 400;
     color: #5c6673;
-    font-family: inherit;
   }
 }
 .arch-stat-unit {
   font-size: 21rpx;
-  color: #98a2ae;
-  font-weight: 400;
-  margin-left: 4rpx;
-  font-family: inherit;
+  color: #8a94a1;
+  font-weight: 500;
+  margin-left: 5rpx;
 }
 </style>

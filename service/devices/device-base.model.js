@@ -6,7 +6,9 @@ export default class DeviceBase {
     constructor() {}
 
     getDeviceData(jsonData, barCode) {
-        switch (jsonData.dataType) {
+        // dataType 归一化：兼容后端传字符串('1')与数字(1)两种格式，本地/生产不一致导致 switch 全 miss
+        const type = String(jsonData.dataType);
+        switch (type) {
             case '1':
                 this.getBaseData(jsonData);
                 break;

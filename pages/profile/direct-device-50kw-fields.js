@@ -17,7 +17,11 @@
 // ==================== PCS 1707 V3.5 ====================
 
 // 设备状态位 0/1 → 文案
-const STATUS_ON = { 0: '--', 1: '是' }
+// ⚠ 位状态的 0 是「有效读数」而不是「没有数据」：
+//   以前把 0 映射成 '--'，页面就和「帧没收到」长得一模一样，
+//   导致 PCS 停机/待机/运行、总故障、并网等 10 项长期显示 `--`。
+//   现在 0 一律给反向文案，只有「整个字节没上报」才走 '--'（见 readRaw 返回 undefined）。
+//   dangerOn：命中这些值才标红（DataGrid 的 item.danger），正常态保持黑色。
 const REMOTE_LOCAL = { 0: '本地', 1: '远程' }
 
 // 交流侧 / 直流侧 / 温度 / 电量 / 版本
@@ -68,10 +72,12 @@ const PCS_TEMP = [
 ]
 
 const PCS_ENERGY = [
-  { keys: ['B62', 'B64'], label: 'PCS交流累计充电电量(kWh)', scale: 1000, decimals: 1, unit: 'kWh' },
-  { keys: ['B66', 'B68'], label: 'PCS交流累计放电电量(kWh)', scale: 1000, decimals: 1, unit: 'kWh' },
-  { keys: ['B70', 'B72'], label: 'PCS直流累计充电电量(kWh)', scale: 1000, decimals: 1, unit: 'kWh' },
-  { keys: ['B74', 'B76'], label: 'PCS直流累计放电电量(kWh)', scale: 1000, decimals: 1, unit: 'kWh' }
+  // 单位已由 unit 字段单独渲染在数值右侧，label 里不再重复「(kWh)」，
+  // 否则三列网格里 12 字的标签必须折两行才放得下
+  { keys: ['B62', 'B64'], label: 'PCS交流累计充电电量', scale: 1000, decimals: 1, unit: 'kWh' },
+  { keys: ['B66', 'B68'], label: 'PCS交流累计放电电量', scale: 1000, decimals: 1, unit: 'kWh' },
+  { keys: ['B70', 'B72'], label: 'PCS直流累计充电电量', scale: 1000, decimals: 1, unit: 'kWh' },
+  { keys: ['B74', 'B76'], label: 'PCS直流累计放电电量', scale: 1000, decimals: 1, unit: 'kWh' }
 ]
 
 const PCS_VERSION = [
@@ -89,18 +95,23 @@ const PCS_VERSION = [
   { keys: ['B80', 'B82', 'B84', 'B86', 'B88', 'B90'], combine: 'clock', label: '系统时钟', scale: 1, decimals: 0, unit: '' }
 ]
 
+/**
+ * PCS 设备状态位（1707 V3.5 能源帧 0x02）
+ * 字节位 → 设备状态；0/1 两种取值都给明确文案，dangerOn 命中即标红。
+ * 位定义见 1707 点表 B1/B2/B3，与 1707V3_5-model.js 的字段命名一一对应。
+ */
 const PCS_STATUS = [
-  { key: 'B2b0', label: '停机状态', map: { 0: '--', 1: '停机' } },
-  { key: 'B2b1', label: '待机状态', map: { 0: '--', 1: '待机' } },
-  { key: 'B2b2', label: '运行状态', map: { 0: '--', 1: '运行' } },
-  { key: 'B2b3', label: '总故障状态', map: { 0: '--', 1: '故障' } },
-  { key: 'B2b4', label: '总报警状态', map: { 0: '--', 1: '告警' } },
+  { key: 'B2b0', label: '停机状态', map: { 0: '未停机', 1: '停机' }, dangerOn: [1] },
+  { key: 'B2b1', label: '待机状态', map: { 0: '未待机', 1: '待机' } },
+  { key: 'B2b2', label: '运行状态', map: { 0: '未运行', 1: '运行' } },
+  { key: 'B2b3', label: '总故障状态', map: { 0: '无故障', 1: '故障' }, dangerOn: [1] },
+  { key: 'B2b4', label: '总报警状态', map: { 0: '无告警', 1: '告警' } },
   { key: 'B2b5', label: '远程就地状态', map: REMOTE_LOCAL },
-  { key: 'B2b6', label: '急停输入状态', map: { 0: '--', 1: '有效' } },
-  { key: 'B2b7', label: '并网状态', map: { 0: '--', 1: '并网' } },
-  { key: 'B3b0', label: 'VF离网状态', map: { 0: '--', 1: 'VF离网' } },
-  { key: 'B3b1', label: '过载降容', map: { 0: '--', 1: '过载发生' } },
-  { key: 'B3b5', label: 'BMS干接点输入', map: { 0: '--', 1: '故障有效' } },
+  { key: 'B2b6', label: '急停输入状态', map: { 0: '未触发', 1: '已触发' }, dangerOn: [1] },
+  { key: 'B2b7', label: '并网状态', map: { 0: '离网', 1: '并网' } },
+  { key: 'B3b0', label: 'VF离网状态', map: { 0: '未启用', 1: 'VF离网' } },
+  { key: 'B3b1', label: '过载降容', map: { 0: '未过载', 1: '过载降容' }, dangerOn: [1] },
+  { key: 'B3b5', label: 'BMS干接点输入', map: { 0: '未动作', 1: '故障有效' }, dangerOn: [1] },
   { key: 'B1b0', label: '外部电操开关', map: { 0: '分闸', 1: '合闸' } }
 ]
 
@@ -280,66 +291,75 @@ const DC_ERROR_GROUPS = [
 // 说明：状态帧的键在 bucket 中带 S_ 前缀（useFrameTypePrefix），能源帧不带
 
 // 单体信息（能源数据）
+// 单体信息（能源数据，顺序与《电池簇信息记录》一致）
+// 点表 B70=「BMS最大单体值」（本次上电，重启失效）、B72=最大单体值位置、B74=单体压差（1mV）。
+// 注意：点表里没有「单体最大压差」字段，旧界面把 B74 标成了「单体最大压差」，已纠正。
 const BMS_CELL = [
   { key: 'B14', label: '电池平均电压(mV)', scale: 1, decimals: 0, unit: 'mV' },
-  { key: 'B16', label: '最高单体电压(mV)', scale: 1, decimals: 0, unit: 'mV' },
-  { key: 'B18', label: '最低单体电压(mV)', scale: 1, decimals: 0, unit: 'mV' },
-  { key: 'B20', label: '最大电压电池位置', scale: 1, decimals: 0, unit: '' },
-  { key: 'B22', label: '最小电压电池位置', scale: 1, decimals: 0, unit: '' },
-  { key: 'B74', label: '单体最大压差(mV)', scale: 1, decimals: 0, unit: 'mV' },
-  { key: 'B70', label: '本次上电最大单体值(mV)', scale: 1, decimals: 0, unit: 'mV' },
-  { key: 'B72', label: '本次上电最大单体位置', scale: 1, decimals: 0, unit: '' },
-  { key: 'B24', label: '最高电芯温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
-  { key: 'B25', label: '最低电芯温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
-  { key: 'B26', label: '单体最大温差(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
   { key: 'B27', label: '电池平均温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
-  { key: 'B28', label: '最高温度电池位置', scale: 1, decimals: 0, unit: '' },
-  { key: 'B30', label: '最低温度电池位置', scale: 1, decimals: 0, unit: '' }
+  { key: 'B72', label: '本次上电累计最大单体位置', scale: 1, decimals: 0, unit: '' },
+  { key: 'B70', label: '本次上电累计最大单体值(mV)', scale: 1, decimals: 0, unit: 'mV' },
+  { key: 'B20', label: '最大电压电池位置', scale: 1, decimals: 0, unit: '' },
+  { key: 'B16', label: '最高单体电压(mV)', scale: 1, decimals: 0, unit: 'mV' },
+  { key: 'B22', label: '最小电压电池位置', scale: 1, decimals: 0, unit: '' },
+  { key: 'B18', label: '最低单体电压(mV)', scale: 1, decimals: 0, unit: 'mV' },
+  { key: 'B74', label: '单体压差(mV)', scale: 1, decimals: 0, unit: 'mV' },
+  { key: 'B28', label: '最高电芯温度位置', scale: 1, decimals: 0, unit: '' },
+  { key: 'B24', label: '最高电芯温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
+  { key: 'B30', label: '最低电芯温度位置', scale: 1, decimals: 0, unit: '' },
+  { key: 'B25', label: '最低电芯温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
+  { key: 'B26', label: '单体最大温差(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' }
 ]
 
-// 系统配置（状态帧 S_B70~S_B80 + 能源数据限制值 + PACK 采集数量）
+// 系统配置（状态帧 0x03 S_B70~S_B80，6 项）
 const BMS_CONFIG = [
+  { key: 'S_B72', label: '标称容量(Ah)', scale: 10, decimals: 1, unit: 'Ah' },
   { key: 'S_B70', label: '额定电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'S_B72', label: '额定容量(Ah)', scale: 10, decimals: 1, unit: 'Ah' },
   { key: 'S_B74', label: '电池串数', scale: 1, decimals: 0, unit: '' },
-  { key: 'S_B76', label: '电池温感数', scale: 1, decimals: 0, unit: '' },
+  { key: 'S_B76', label: '温感数量', scale: 1, decimals: 0, unit: '' },
   { key: 'S_B78', label: '从机(pack)数量', scale: 1, decimals: 0, unit: '' },
-  { key: 'S_B80', label: '极柱温感数', scale: 1, decimals: 0, unit: '' },
-  { key: 'B170', label: 'PACK温感采集数量', scale: 1, decimals: 0, unit: '' },
-  { key: 'B172', label: 'PACK电压采集数量', scale: 1, decimals: 0, unit: '' },
+  { key: 'S_B80', label: '极柱温感数', scale: 1, decimals: 0, unit: '' }
+]
+
+// 设备信息·电气量（能源数据）：限制值 / 总压总流 / 绝缘 / HV / 分流器
+const BMS_MEASURE = [
+  { key: 'B32', label: 'SOC(%)', scale: 10, decimals: 1, unit: '%' },
+  { key: 'B112', label: 'SOH(%)', scale: 10, decimals: 1, unit: '%' },
+  { key: 'B114', label: 'pack总容量(Ah)', scale: 10, decimals: 1, unit: 'Ah' },
   { key: 'B2', label: '充电最大电压(V)', scale: 10, decimals: 1, unit: 'V' },
   { key: 'B4', label: '最大放电电流(A)', scale: 10, decimals: 1, unit: 'A' },
   { key: 'B6', label: '放电最小电压(V)', scale: 10, decimals: 1, unit: 'V' },
   { key: 'B8', label: '最大充电电流(A)', scale: 10, decimals: 1, unit: 'A' },
-  { key: 'B114', label: 'PACK总容量(Ah)', scale: 10, decimals: 1, unit: 'Ah' }
-]
-
-// 电气测量（能源数据）：SOC/SOH、总压总流、绝缘、HV/BAT+、分流器与霍尔电流
-const BMS_MEASURE = [
-  { key: 'B32', label: 'SOC(%)', scale: 10, decimals: 1, unit: '%' },
-  { key: 'B34', label: '实际剩余容量(%)', scale: 10, decimals: 1, unit: '%' },
-  { key: 'B112', label: 'SOH(%)', scale: 10, decimals: 1, unit: '%' },
-  { key: 'B10', label: '总电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B12', label: '总电流(A)', scale: 10, offset: -1000, decimals: 1, unit: 'A' },
-  { key: 'B36', label: '正极绝缘阻值(kΩ)', scale: 1, decimals: 0, unit: 'kΩ' },
-  { key: 'B38', label: '负极绝缘阻值(kΩ)', scale: 1, decimals: 0, unit: 'kΩ' },
+  { key: 'B10', label: '电池电压(V)', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B12', label: '电池电流(A)', scale: 10, offset: -1000, decimals: 1, unit: 'A' },
+  { key: 'B36', label: '正绝缘电阻(kΩ)', scale: 1, decimals: 0, unit: 'kΩ' },
+  { key: 'B38', label: '负绝缘电阻(kΩ)', scale: 1, decimals: 0, unit: 'kΩ' },
   { key: 'B40', label: 'HV1电压(V)', scale: 10, decimals: 1, unit: 'V' },
   { key: 'B42', label: 'HV2电压(V)', scale: 10, decimals: 1, unit: 'V' },
   { key: 'B44', label: 'BAT+电压(V)', scale: 10, decimals: 1, unit: 'V' },
   { key: 'B48', label: '电池累计电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B56', label: '分流器电流(A)', scale: 10, offset: -1000, decimals: 1, unit: 'A' },
-  { key: 'B58', label: '霍尔电流1(A)', scale: 10, offset: -1000, decimals: 1, unit: 'A' },
-  { key: 'B60', label: '霍尔电流2(A)', scale: 10, offset: -1000, decimals: 1, unit: 'A' },
-  { key: 'B62', label: 'CAN霍尔电流(A)', scale: 10, offset: -1000, decimals: 1, unit: 'A' }
+  { key: 'B56', label: '分流器电流(A)', scale: 10, offset: -1000, decimals: 1, unit: 'A' }
 ]
 
-// 状态与继电器（能源数据 B47 位组 / B53 继电器 / B55 继电器故障）
+// 设备信息·电量与时长（能源数据）：累计电量 32 位；时间点表单位 5min（显示 = 原始值 × 5 min）
+const BMS_ENERGY = [
+  { key: 'B128', label: '累计充电次数(循环次数)', scale: 1, decimals: 0, unit: '' },
+  { key: 'B130', label: '总使用时间(min)', scale: 0.2, decimals: 0, unit: 'min' },
+  { key: 'B116', label: '单次放电累计电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' },
+  { key: 'B118', label: '单次充电累计电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' },
+  { key: 'B120', label: '放电累计电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' },
+  { key: 'B134', label: '总放电时间(min)', scale: 0.2, decimals: 0, unit: 'min' },
+  { key: 'B138', label: '总充电时间(min)', scale: 0.2, decimals: 0, unit: 'min' },
+  { key: 'B124', label: '充电累计电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' }
+]
+
+// 运行状态参数（能源数据）：B0 接触器状态整字节枚举 0~4，B47 位组，B50 自检，B53/B55 继电器
+// 展示位置：与设备状态开关量合并在「设备状态」栏（BmsTab.groups50）
 const RELAY_FAULT_MAP = { 0: '无故障', 1: '粘连故障', 2: '开路故障', 3: '诊断电路故障' }
 const BMS_STATE = [
+  { key: 'B0', label: '接触器状态(充电连接)', map: { 0: '已断开', 1: '正在连接_1', 2: '正在连接_2', 3: '已连接', 4: '连接失败' } },
   { bitField: { key: 'B47', start: 0, width: 2 }, label: '预充状态', map: { 0: '无', 1: '预充电', 2: '已预充电', 3: '预充电失败' } },
   { key: 'B47b2', label: '均衡状态', map: { 0: '未在均衡', 1: '在均衡' } },
-  { key: 'B47b3', label: '加热状态', map: { 0: '无效', 1: '有效' } },
-  { key: 'B47b4', label: '制冷状态', map: { 0: '无效', 1: '有效' } },
   { key: 'B47b5', label: '高压低锁定状态', map: { 0: '无效', 1: '有效' } },
   { key: 'B47b6', label: '准备状态', map: { 0: '无效', 1: '有效' } },
   { key: 'B47b7', label: 'BMS模式', map: { 0: '无效', 1: '有效' } },
@@ -351,34 +371,42 @@ const BMS_STATE = [
   { bitField: { key: 'B55', start: 0, width: 2 }, label: '总正继电器故障状态', map: RELAY_FAULT_MAP },
   { bitField: { key: 'B55', start: 2, width: 2 }, label: '总负继电器故障状态', map: RELAY_FAULT_MAP },
   { bitField: { key: 'B55', start: 4, width: 2 }, label: '预充继电器故障状态', map: RELAY_FAULT_MAP },
-  { bitField: { key: 'B55', start: 6, width: 2 }, label: '断路器故障状态', map: RELAY_FAULT_MAP },
-  { key: 'B66', label: '电池连接失败原因', map: { 0: '成功', 1: '通信失败', 2: '数据错误', 3: '其他错误' } },
-  { key: 'B68', label: '电池未成功连接原因', scale: 1, decimals: 0, unit: '' }
+  { bitField: { key: 'B55', start: 6, width: 2 }, label: '断路器故障状态', map: RELAY_FAULT_MAP }
 ]
 
-// 电量与时长（能源数据）：累计电量 32 位；时间点表单位 5min（显示 = 原始值 × 5 min）
-const BMS_ENERGY = [
-  { key: 'B124', label: '累计充电电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' },
-  { key: 'B120', label: '累计放电电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' },
-  { key: 'B142', label: '当日累计充电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' },
-  { key: 'B144', label: '当日累计放电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' },
-  { key: 'B118', label: '单次充电累计电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' },
-  { key: 'B116', label: '单次放电累计电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' },
-  { key: 'B128', label: '累计充电次数(循环)', scale: 1, decimals: 0, unit: '' },
-  // 点表：传输值=(实际值*5)，单位 5min → 分钟 = 原始值 × 5（scale 0.2）
-  { key: 'B130', label: '累计使用时间(min)', scale: 0.2, decimals: 0, unit: 'min' },
-  { key: 'B138', label: '累积充电时间(min)', scale: 0.2, decimals: 0, unit: 'min' },
-  { key: 'B134', label: '累积放电时间(min)', scale: 0.2, decimals: 0, unit: 'min' }
+/**
+ * 设备状态（状态帧 0x03 的 HSS/DI 开关量 + 能源帧 B1 打包字节）
+ *   S_B0~S_B3：本机 HSS/LSS/DI 信号，0=无效 1=有效（点表 statusEnums 统一定义）
+ *   B1 bit0~1 故障告警等级 / bit2~3 电池充放电状态
+ */
+const DEVICE_ONOFF = { 0: '无效', 1: '有效' }
+const BMS_DEVICE_STATUS = [
+  { key: 'S_B0b0', label: '总正继电器', map: DEVICE_ONOFF },
+  { key: 'S_B0b1', label: '总负继电器', map: DEVICE_ONOFF },
+  { key: 'S_B0b2', label: '断路器脱扣控制', map: DEVICE_ONOFF },
+  { key: 'S_B0b3', label: '预充继电器控制', map: DEVICE_ONOFF },
+  { key: 'S_B0b4', label: '绿灯', map: DEVICE_ONOFF },
+  { key: 'S_B0b5', label: '红灯', map: DEVICE_ONOFF },
+  { key: 'S_B0b7', label: '从机唤醒', map: DEVICE_ONOFF },
+  { key: 'S_B1b4', label: '三级故障输出', map: DEVICE_ONOFF },
+  { key: 'S_B2b1', label: '水浸(常开)', map: DEVICE_ONOFF },
+  { key: 'S_B3b5', label: '总正辅助触点检(DIS1)', map: DEVICE_ONOFF },
+  { key: 'S_B3b6', label: '总负辅助触点检(DIS2)', map: DEVICE_ONOFF },
+  { key: 'S_B3b7', label: '断路器辅助点检(DIS3)', map: DEVICE_ONOFF },
+  { bitField: { key: 'B1', start: 0, width: 2 }, label: '告警状态', map: { 0: '无故障', 1: '1级', 2: '2级', 3: '3级' } },
+  { bitField: { key: 'B1', start: 2, width: 2 }, label: '充放电状态', map: { 0: '空闲', 1: '充电中', 2: '放电中', 3: '预留' } },
+  { bitField: { key: 'B1', start: 4, width: 3 }, label: 'BMS运行状态', map: { 0: '正常', 1: '禁止充电', 2: '禁止放电', 3: '待机', 4: '停止' } }
 ]
 
-// 高压盒（PDU）极柱温度：B148/B149 及 B158~B165 为单字节 uint8，偏移 -50
+// 消防信息（状态帧 0x03 B2 位）
+const BMS_FIRE = [
+  { key: 'S_B2b0', label: '消防泄放', map: DEVICE_ONOFF }
+]
+
+// 高压盒（PDU）：温度数量 + PDU1~6 极柱温度（单字节 uint8，偏移 -50）
 const BMS_PDU = [
-  { key: 'B156', label: 'PDU温度数量', scale: 1, decimals: 0, unit: '' },
-  { key: 'B148', label: '极柱最高温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
-  { key: 'B149', label: '极柱最低温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
-  { key: 'B150', label: '极柱最高温度位置', scale: 1, decimals: 0, unit: '' },
-  { key: 'B152', label: '极柱最低温度位置', scale: 1, decimals: 0, unit: '' }
-].concat([1, 2, 3, 4, 5, 6, 7, 8].map(n => ({
+  { key: 'B156', label: 'PDU温度数量', scale: 1, decimals: 0, unit: '' }
+].concat([1, 2, 3, 4, 5, 6].map(n => ({
   key: 'B' + (157 + n),
   label: 'PDU' + n + '极柱温度(℃)',
   scale: 1,
@@ -387,25 +415,27 @@ const BMS_PDU = [
   unit: '℃'
 })))
 
-// PACK 信息：PACK1~3 各 9 项（PACK 总压 / 最高最低单体温度 / 温度与电压位置 / 最高最低单体电压）
-const BMS_PACK = ['PACK1', 'PACK2', 'PACK3'].reduce((acc, name, i) => {
+// PACK 信息：采集数量（能源帧 B170/B172）+ PACK1~3 各 9 项
+// 顺序与《电池簇信息记录》一致：总压 → 最高温度位置 → 最高/最低单体温度 → 最低温度位置
+// → 最高电压位置 → 最高单体电压 → 最低电压位置 → 最低单体电压
+const BMS_PACK = [
+  { key: 'B170', label: 'PACK温感采集数量', scale: 1, decimals: 0, unit: '' },
+  { key: 'B172', label: 'PACK电压采集数量', scale: 1, decimals: 0, unit: '' }
+].concat(['PACK1', 'PACK2', 'PACK3'].reduce((acc, name, i) => {
   const base = 176 + i * 16
   const B = n => 'B' + (base + n)
   return acc.concat([
     { key: B(0), label: name + '总压(V)', scale: 10, decimals: 1, unit: 'V' },
+    { key: B(4), label: name + '最高温度位置', scale: 1, decimals: 0, unit: '' },
     { key: B(2), label: name + '最高单体温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
     { key: B(3), label: name + '最低单体温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
-    { key: B(4), label: name + '最高温度位置', scale: 1, decimals: 0, unit: '' },
     { key: B(6), label: name + '最低温度位置', scale: 1, decimals: 0, unit: '' },
     { key: B(8), label: name + '最高电压位置', scale: 1, decimals: 0, unit: '' },
-    { key: B(10), label: name + '最低电压位置', scale: 1, decimals: 0, unit: '' },
     { key: B(12), label: name + '最高单体电压(mV)', scale: 1, decimals: 0, unit: 'mV' },
+    { key: B(10), label: name + '最低电压位置', scale: 1, decimals: 0, unit: '' },
     { key: B(14), label: name + '最低单体电压(mV)', scale: 1, decimals: 0, unit: 'mV' }
   ])
-}, [])
-
-// 兼容旧引用：系统信息 = 电气测量 + 状态继电器 + 电量时长
-const BMS_INFO = BMS_MEASURE.concat(BMS_STATE, BMS_ENERGY)
+}, []))
 
 // 故障字 1~12（能源数据 B78~B100，每字 16 位）
 export const BMS_FAULT_WORDS = [
@@ -494,9 +524,10 @@ export {
   BMS_CONFIG,
   BMS_MEASURE,
   BMS_STATE,
+  BMS_DEVICE_STATUS,
+  BMS_FIRE,
   BMS_ENERGY,
   BMS_PDU,
   BMS_PACK,
-  BMS_INFO,
   ENV_ITEMS
 }

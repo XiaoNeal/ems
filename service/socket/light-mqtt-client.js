@@ -373,6 +373,23 @@ export class LightMqttClient {
    */
   async subscribe(topic, handler) {
     if (!this.connected) throw new Error('未连接到 Broker')
+    this._sendSubscribePacket(topic)
+
+    if (handler) {
+      // 同一 topic 可能被订阅多次（如 realtime 和 controlResp 同一个 topic），用 Set 支持多 handler
+      let handlers = this._topicHandlers.get(topic)
+      if (!handlers) {
+        handlers = new Set()
+        this._topicHandlers.set(topic, handlers)
+      }
+      // 幂等：同一个 handler 引用重复注册不会再叠加（页面 onShow 重连时会重复调 subscribeAll）
+      handlers.add(handler)
+    }
+    return true
+  }
+
+  /** 只发 SUBSCRIBE 报文，不动 handler 表（供重连后恢复订阅复用） */
+  _sendSubscribePacket(topic) {
     const packetId = this.nextPacketId++
     // 可变头：packetId(2) + topicFilters(每个: length(2)+str + qos(1))
     const topicBytes = encodeUtf8String(topic)
@@ -385,17 +402,19 @@ export class LightMqttClient {
     const fixedHeader = this._encodeFixedHeader(T.SUBSCRIBE, 0x02, varHeader.length)
     const packet = this._concat(fixedHeader, varHeader)
     this.ws.send(packet)
+  }
 
-    if (handler) {
-      // 同一 topic 可能被订阅多次（如 realtime 和 controlResp 同一个 topic），用 Set 支持多 handler
-      let handlers = this._topicHandlers.get(topic)
-      if (!handlers) {
-        handlers = new Set()
-        this._topicHandlers.set(topic, handlers)
+  /**
+   * 重连后恢复订阅：CONNECT 用的是 CleanSession，broker 会丢掉上次的订阅，
+   * 不重发 SUBSCRIBE 就会出现「连接正常但一条数据都没有」
+   */
+  _resendSubscriptions() {
+    if (!this.ws || !this.connected) return
+    this._topicHandlers.forEach((handlers, topic) => {
+      if (handlers && handlers.size > 0) {
+        try { this._sendSubscribePacket(topic) } catch (e) { /* 忽略单条失败 */ }
       }
-      handlers.add(handler)
-    }
-    return true
+    })
   }
 
   /**
@@ -503,6 +522,71 @@ export class LightMqttClient {
     console.log('[MQTT] payload mode:', CONTROL_PAYLOAD_MODE)
     console.log('[MQTT] frame hex :', frameHex)
     console.log('====================================')
+
+    const topic = this._controlSetTopic || 'neiic/microEnergyStationCtl002'
+    if (CONTROL_PAYLOAD_MODE === 'binary') {
+      return this.publish(topic, frame, { retain: false })
+    }
+    if (CONTROL_PAYLOAD_MODE === 'json') {
+      return this.publish(topic, JSON.stringify({ 'Send Data': frameHex }), { retain: false })
+    }
+    return this.publish(topic, frameHex, { retain: false })
+  }
+
+  /**
+   * 批量控制：一个报文（一帧 0x3401）内下发多条命令
+   * 0x171F 的「储能DC开关机 / 充放电选择 / 充放电总功率」必须同帧下发，
+   * 分帧发设备只认最后一帧，前两项会被覆盖。
+   * @param {Array} items [{ field, value, registerAddress?, regType? }]
+   */
+  async sendControlBatch(items, deviceType, overrides = {}) {
+    const dt = deviceType || this._currentDeviceType
+    if (!dt) throw new Error('sendControlBatch: 未指定 deviceType，请先调 setDeviceType')
+    if (!Array.isArray(items) || !items.length) throw new Error('sendControlBatch: 命令列表为空')
+
+    const profile = resolveDeviceProfile(dt)
+    const commands = items.map(it => {
+      let regAddress = it.registerAddress
+      if (regAddress === undefined || regAddress === null || regAddress === '') {
+        const m = String(it.field || '').match(/^B(\d+)$/)
+        if (!m) throw new Error('sendControlBatch: 无效的字段名 ' + it.field)
+        regAddress = parseInt(m[1], 10) / 2
+        if (!Number.isInteger(regAddress)) throw new Error('sendControlBatch: 字段 ' + it.field + ' 的寄存器地址不是偶数')
+      }
+      regAddress = normalizeRegisterAddress(regAddress)
+      if (it.value === undefined || it.value === null || String(it.value).trim() === '') {
+        throw new Error('下发值为空：字段 ' + (it.field || '(未指定)') + '，寄存器地址 ' + regAddress + '（十进制）')
+      }
+      return {
+        deviceCategory: profile.category,
+        addr: profile.addr,
+        deviceId: profile.deviceId,
+        registerType: it.regType !== undefined ? it.regType : 3,
+        extra1: '00',
+        extra2: '0000',
+        extra3: '0000',
+        ...overrides,
+        registerAddress: regAddress,
+        registerValue: it.value,
+      }
+    })
+
+    const frame = buildIemsCommandFrame('3401', commands)
+    const frameHex = Array.from(frame).map(b => b.toString(16).padStart(2, '0')).join(CONTROL_HEX_SEPARATOR)
+    this._lastControlHex = frameHex.replace(/[\s,]/g, '').toUpperCase()
+    this._lastControlAt = Date.now()
+
+    console.log('========== MQTT 组合命令帧下发 ==========')
+    console.log('[MQTT] topic       :', this._controlSetTopic || 'neiic/microEnergyStationCtl002')
+    console.log('[MQTT] deviceType  :', dt, ' 命令条数:', commands.length)
+    console.log('[MQTT] 设备身份    :', profile.category, '索引号', profile.addr, '设备ID', profile.deviceId)
+    commands.forEach((c, i) => {
+      console.log('[MQTT] 命令' + (i + 1) + '       : 寄存器', c.registerAddress,
+        ' 值:', c.registerValue, ' 类型:', c.registerType)
+    })
+    console.log('[MQTT] frame length:', frame.length, 'bytes')
+    console.log('[MQTT] frame hex   :', frameHex)
+    console.log('========================================')
 
     const topic = this._controlSetTopic || 'neiic/microEnergyStationCtl002'
     if (CONTROL_PAYLOAD_MODE === 'binary') {
@@ -666,12 +750,8 @@ export class LightMqttClient {
       console.error('[mqtt] _onSocketMessage: 未知数据类型, return')
       return
     }
-    const hexAll = Array.from(chunk).map(b => b.toString(16).padStart(2, '0')).join(' ')
-    // console.log('[mqtt] chunk hex ALL:', hexAll, 'len=', chunk.length)
-
-    const chunkHex = Array.from(chunk.slice(0, 20)).map(b => b.toString(16).padStart(2, '0')).join(' ')
-    // console.log('[mqtt recv] raw chunk len=' + chunk.length + ' hex(前20):', chunkHex)
-
+    // 注意：不要在收包路径里做 hex 转换（曾被注释掉的日志保留着 Array.from+map+join），
+    // 每秒几十个分片时这段纯字符串拼接会明显拖慢 JS 线程
     // 追加到接收缓冲区
     const newBuf = new Uint8Array(this._recvBuffer.length + chunk.length)
     newBuf.set(this._recvBuffer, 0)
@@ -744,6 +824,9 @@ export class LightMqttClient {
       this.connecting = false
       this._reconnectAttempts = 0
       this._startPing()
+      // 重连成功（CleanSession）后 broker 已丢掉订阅，必须补发 SUBSCRIBE，
+      // 否则表现为「已连接但没有任何数据」，页面看起来像卡死
+      this._resendSubscriptions()
       if (this._connectResolve) {
         this._connectResolve(true)
         this._connectResolve = null
@@ -780,14 +863,6 @@ export class LightMqttClient {
     }
 
     const messageBytes = payload.slice(payloadOffset)
-    const messageHex = Array.from(messageBytes.slice(0, Math.min(messageBytes.length, 30)))
-      .map(b => b.toString(16).padStart(2, '0')).join(' ')
-
-    // 诊断
-    // console.log('[MQTT PUBLISH DIAG] topic=' + topic + ' topicNextOffset=' + nextOffset +
-    //   ' qos=' + qos + ' payloadOffset=' + payloadOffset +
-    //   ' messageBytes=' + messageBytes.length +
-    //   ' hex(前30)=' + messageHex)
 
     const messageStr = decodeUtf8(messageBytes, 0, messageBytes.length)
 

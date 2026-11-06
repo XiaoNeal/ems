@@ -10,7 +10,7 @@
             v-else-if="g.faultGroups"
             :groups="g.faultGroups"
             :has-data="bucket50HasData"
-            hint="暂无故障位数据（未收到 1707 能源帧）"
+            hint="暂无故障位数据"
           />
           <DataGrid v-else :items="g.items" />
         </DataGroup>
@@ -170,15 +170,29 @@ export default {
         { title: '故障信息', faultGroups: this.buildFaultGroups(b) }
       ]
     },
-    /** 按字节分组组装故障看板数据（组内 active 为该位是否为 1） */
+    /**
+     * 按字节分组组装故障看板数据（组内 active 为该位是否为 1）
+     * ⚡ 故障位是慢变量：用全部故障位拼签名，签名不变就复用上次对象，
+     *    避免 60+ 个药丸标签每次刷新都整片重排（理由同 BmsTab.faultWordGroups）
+     */
     buildFaultGroups(bucket) {
-      return PCS_FAULT_GROUPS.map(g => ({
+      let sig = ''
+      PCS_FAULT_GROUPS.forEach(g => {
+        g.items.forEach(f => {
+          const v = bucket[f.key]
+          sig += (v === undefined || v === null ? '-' : String(v)) + ','
+        })
+      })
+      if (sig === this._faultSig && this._faultGroups) return this._faultGroups
+      this._faultSig = sig
+      this._faultGroups = PCS_FAULT_GROUPS.map(g => ({
         title: g.title,
         items: g.items.map(f => ({
           name: f.name,
           active: Number(bucket[f.key]) === 1
         }))
       }))
+      return this._faultGroups
     }
   }
 }
@@ -215,7 +229,7 @@ export default {
     width: 8rpx;
     height: 30rpx;
     border-radius: 4rpx;
-    background: linear-gradient(180deg, #63a4ff 0%, #2f7cf6 100%);
+    background: #2f7cf6;
   }
 }
 

@@ -33,7 +33,7 @@
     <!-- 标签页 + 数据区 -->
     <!-- 标签页 -->
     <view class="tab-container">
-      <scroll-view scroll-x="true" class="tab-scroll" :scroll-into-view="'tab-' + currentTab" scroll-with-animation>
+      <scroll-view scroll-x="true" class="tab-scroll" :scroll-into-view="'tab-' + currentTab" :scroll-with-animation="tabScrollAnim">
         <view class="tab-list" :class="{ 'tab-list-auto': bottomTab === 'setting' }">
           <view v-for="index in currentTabGroup" :key="index"
             :id="'tab-' + index"
@@ -46,71 +46,78 @@
       </scroll-view>
     </view>
 
-      <!-- 数据区：view + v-show 切换，彻底去掉 swiper -->
+      <!-- 数据区：面板首次进入才创建，之后用 v-show 复用
+           v-if 每次都重建整棵节点树（BMS 近千节点 / 设置面板上百项），微信在创建 scroll-view
+           与大量节点期间会先画一块空白，看起来就是“切一下白几秒”；
+           常驻后只有激活面板拿实时数据（fv/rv 喂冻结空对象给后台面板），既没有重建也不会有逐帧重渲染。 -->
       <view class="content-area">
         <!-- 概览标签页 -->
-        <scroll-view v-show="currentTab === 0" class="module-scroll" scroll-y="true">
+        <scroll-view v-if="renderedTabs[0]" v-show="currentTab === 0" class="module-scroll" scroll-y="true">
           <view class="content">
-            <OverviewTab :formattedValues="formattedValues" :systemRunning="archSystemRunning" @start-stop="onSystemStartStop" />
+            <OverviewTab :formattedValues="fv(0)" :systemRunning="systemRunningStable" @start-stop="onSystemStartStop" />
           </view>
         </scroll-view>
 
         <!-- PCS标签页 -->
-        <scroll-view v-show="currentTab === 1" class="module-scroll" scroll-y="true">
+        <scroll-view v-if="renderedTabs[1]" v-show="currentTab === 1" class="module-scroll" scroll-y="true">
           <view class="content">
-            <PcsTab :formattedValues="formattedValues" :rawValues="rawValues" :is50KwMode="is50KwMode" />
+            <PcsTab :formattedValues="fv(1)" :rawValues="rv(1)" :is50KwMode="is50KwMode" />
           </view>
         </scroll-view>
 
         <!-- 储能DC标签页 -->
-        <scroll-view v-show="currentTab === 2" class="module-scroll" scroll-y="true">
+        <scroll-view v-if="renderedTabs[2]" v-show="currentTab === 2" class="module-scroll" scroll-y="true">
           <view class="content">
-            <StorageDcTab :formattedValues="formattedValues" :rawValues="rawValues" :is50KwMode="is50KwMode" />
+            <StorageDcTab :formattedValues="fv(2)" :rawValues="rv(2)" :is50KwMode="is50KwMode" />
           </view>
         </scroll-view>
 
         <!-- 光伏标签页 -->
-        <scroll-view v-show="currentTab === 3" class="module-scroll" scroll-y="true">
+        <scroll-view v-if="renderedTabs[3]" v-show="currentTab === 3" class="module-scroll" scroll-y="true">
           <view class="content">
-            <PvTab :formattedValues="formattedValues" :rawValues="rawValues" :is50KwMode="is50KwMode" />
+            <PvTab :formattedValues="fv(3)" :rawValues="rv(3)" :is50KwMode="is50KwMode" />
           </view>
         </scroll-view>
 
         <!-- BMS标签页 -->
-        <scroll-view v-show="currentTab === 4" class="module-scroll" scroll-y="true">
+        <scroll-view v-if="renderedTabs[4]" v-show="currentTab === 4" class="module-scroll" scroll-y="true">
           <view class="content">
             <BmsTab
-              :formattedValues="formattedValues"
-              :rawValues="rawValues"
-              :controlList="controlList"
-              :isConnected="isConnected"
-              :clickedBtn="clickedBtn"
+              :formattedValues="fv(4)"
+              :rawValues="rv(4)"
               :is50KwMode="is50KwMode"
-              @control-click="onControlClick"
             />
           </view>
         </scroll-view>
 
         <!-- 液冷机监测标签页（tab 10，仅 50kW 显示 tab 栏按钮，但内容始终可渲染） -->
-        <scroll-view v-show="currentTab === 10" class="module-scroll" scroll-y="true">
+        <scroll-view v-if="renderedTabs[10]" v-show="currentTab === 10" class="module-scroll" scroll-y="true">
           <view class="content">
-            <LiquidCoolingTab :rawValues="rawValues" :is50KwMode="is50KwMode" />
+            <LiquidCoolingTab :rawValues="rv(10)" :is50KwMode="is50KwMode" />
           </view>
         </scroll-view>
 
         <!-- 设置标签页：由当前 tab 直接驱动，只渲染一份面板
-             （不再用 v-for 固定槽位 —— 槽位下标与 tab 序号（5~9、11）对不上时整块不渲染，页面就空白） -->
+             （不再用 v-for 固定槽位 —— 槽位下标与 tab 序号（5~9、11）对不上时整块不渲染，页面就空白）
+             面板常驻：切监测 tab 时只隐藏，切不同设置 tab 只换 tabCfg，不重新创建上百个参数项 -->
         <scroll-view
+          v-if="settingsRendered && settingsTabCfg"
           v-show="!!currentSettingsTab"
           class="module-scroll"
           scroll-y="true"
         >
           <view class="content">
+            <!-- 两阶段挂载：先画页头骨架这一帧（点按立即有反馈），下一帧再建参数面板。
+                 BMS 设置 367 项、9 张卡，和「切标签 + 换面板」挤在同一帧里就是几百毫秒空白。 -->
+            <view v-if="!settingsReady && hasAccessCode" class="sp-skeleton">
+              <view class="sp-skeleton-hero"></view>
+              <view v-for="n in 3" :key="n" class="sp-skeleton-card"></view>
+            </view>
             <SettingsPanel
-              v-if="hasAccessCode && currentSettingsTab"
-              :tabCfg="currentSettingsTab"
+              v-else-if="hasAccessCode && settingsTabCfg"
+              :tabCfg="settingsTabCfg"
               :paramsMap="settingsParamsMap"
-              :isEditing="isEditing(currentSettingsTab.editKey)"
+              :isEditing="isEditing(settingsTabCfg.editKey)"
               :formatCurrentLabel="getParamCurrentLabel"
               :formatCurrentValue="getParamCurrentValue"
               :formatCurrentText="getParamCurrentText"
@@ -118,6 +125,9 @@
               @switch-click="onSwitchParamClick"
               @numeric-edit="onNumericParamEdit"
               @need-edit="onNeedEdit"
+              @bundle-select="onBundleSelect"
+              @bundle-value-edit="onBundleValueEdit"
+              @bundle-send="onBundleSend"
             />
             <!-- 兜底提示：设置模式下若 tab 与配置对不上，给出明确信息而不是白屏 -->
             <view v-else class="settings-placeholder">
@@ -250,6 +260,9 @@ export default {
         '171B': {}, '171C': {}, '171D': {}, '171E': {}, '171F': {},
         // 50kW 新协议 bucket（与 getRegisterMap 前缀匹配对应）
         '1707': {}, '170C_STORAGE': {}, '170C_PV': {}, '171C_V2': {},
+        // 171C 从机（V2.1~V2.4 四级告警阈值，帧头设备地址 02~05）
+        // 必须在这里预声明：Vue2 动态新增属性不是响应式的，运行期才加会读不到更新
+        '171C_V2_1': {}, '171C_V2_2': {}, '171C_V2_3': {}, '171C_V2_4': {},
         // 液冷机 0318（50kW 站点配置）
         '0318': {},
         // 环境监测 131C（50kW BMS 环境数据：温度/湿度）
@@ -261,16 +274,33 @@ export default {
         archSocNumeric: 0,
         archStorageStatusGradient: '#8c8c8c'
       },
+      // 设置面板参数映射的稳定容器（数组内部变更仍响应，但对象引用不变，
+      // 避免参数回显每秒触发 SettingsPanel 整块重渲染）
+      paramsMapRef: null,
+      // 已创建过的标签页面板：首次进入才挂载，之后用 v-show 复用。
+      // 只用 v-if 时，每次切 tab 都要从零创建整棵面板（BMS 近千节点、设置面板上百项），
+      // 微信在创建 scroll-view + 大量节点期间会先画一块空白，就是“切一下白几秒”的来源。
+      renderedTabs: { 0: true },
+      // 设置面板同理：首次进入设置后常驻，切不同设置 tab 只换 tabCfg，不重新创建
+      settingsRendered: false,
+      // 参数面板是否已就绪：切设置 tab 时先渲染一帧骨架，下一帧再建面板（见 currentTab watcher）
+      settingsReady: false,
+      // 标签条滚动动画开关：跨「监测/设置」组切换时用瞬时定位代替滑动，
+      // 否则旧的横向滚动位置会带动画滑到新位置，观感就是整条标签“推片”
+      tabScrollAnim: true,
+      // 刚被切走的 tab：多保留 250ms 真实数据，避免和「建新面板」撞在同一帧
+      keepDataTab: null,
+      lastSettingsTabCfg: null,
       // 显示用结构（由 updateDisplay 同步重建）
       displayItems: [],
       // 分组显示结构（由 updateDisplay 同步重建，避免 computed 全量重建）
       groupedDisplay: [],
-      controlList: [],
-      clickedBtn: '',
-      clickedResetTimer: null,
       platformClass: '',
       showDeviceMeta: false,
       archRefreshTimer: null,
+      // 运行状态防抖后的展示值：单帧毛刺不直接改文案，避免按钮「运行中 / 启动」闪跳
+      systemRunningStable: false,
+      archRunningTimer: null,
       // ============ 设置面板状态 ============
       bmsNumericParams: [],
       bmsSwitchParams: [],
@@ -354,7 +384,8 @@ export default {
     is50KwMode() {
       if (this.config && this.config.deviceType === '50kW') return true
       const rv = this.rawValues || {}
-      const hit = ['1707', '170C_STORAGE', '170C_PV', '171C_V2'].filter(k => rv[k] && Object.keys(rv[k]).length > 0)
+      const hit = ['1707', '170C_STORAGE', '170C_PV', '171C_V2', '171C_V2_1', '171C_V2_2', '171C_V2_3', '171C_V2_4']
+        .filter(k => rv[k] && Object.keys(rv[k]).length > 0)
       return hit.length > 0
     },
     settingsTabs() {
@@ -364,25 +395,19 @@ export default {
     currentSettingsTab() {
       return this.settingsTabs.find(t => t.tab === this.currentTab) || null
     },
+    /**
+     * 交给 SettingsPanel 的 tabCfg：
+     * 设置面板常驻后，切回监测 tab 时 currentSettingsTab 会变 null，
+     * 这里保留最后一次的设置配置，避免面板在隐藏瞬间被塞进 null 而报错/闪空。
+     */
+    settingsTabCfg() {
+      return this.currentSettingsTab || this.lastSettingsTabCfg
+    },
     /** 设置面板参数映射：供 SettingsPanel 子组件按 key 取参数数组 */
     settingsParamsMap() {
-      // 旧协议和 50kW 协议共用 data() 里的同名数组 key
-      // syncSettingsFromRealtime 会根据检测到的协议类型初始化/填充这些数组
-      return {
-        bmsNumericParams: this.bmsNumericParams,
-        bmsSwitchParams: this.bmsSwitchParams,
-        bmsPowerParams: this.bmsPowerParams,
-        pcsNumericParams: this.pcsNumericParams,
-        pcsSwitchParams: this.pcsSwitchParams,
-        pvNumericParams: this.pvNumericParams,
-        pvSwitchParams: this.pvSwitchParams,
-        storageNumericParams: this.storageNumericParams,
-        storageSwitchParams: this.storageSwitchParams,
-        quickControlParams: this.quickControlParams,
-        quickPowerParams: this.quickPowerParams,
-        liquidSwitchParams: this.liquidSwitchParams,
-        liquidNumericParams: this.liquidNumericParams
-      }
+      // 返回稳定引用：参数数组内部属性变更照常响应（子组件直接读参数对象），
+      // 但映射对象本身不重建，settingsParamsMap 就不会每秒触发面板整块重渲染
+      return this.paramsMapRef || this._buildParamsMap()
     },
     currentDeviceType() {
       // 设置面板：按当前协议模板取 deviceType（50kW → 1707/170C_STORAGE/170C_PV/171C_V2）
@@ -475,10 +500,21 @@ export default {
         ? this.getVal('171F', 'B128', 1)
         : this.getVal('171F', 'B58', 1)
     },
-    /** 策略运行状态 (171F.B12, 对齐 architecture-diagram) */
+    /**
+     * 系统运行状态
+     * 取值优先级：控制帧 C_B12（寄存器 112 启动按钮的回显）→ 能源帧 B56（启动按钮）。
+     *
+     * ⚠️ 不能用能源帧 B12：那是「储能充放电状态」（0 不充不放 / 1 充电 / 2 放电），
+     *    设备在充电与放电之间切换时该值在 1、2 之间跳变，
+     *    按钮就会跟着在「运行中 / 启动」之间反复闪（本次故障根因）。
+     */
     archSystemRunning() {
-      const val = this.rawValues['171F'] && this.rawValues['171F']['B12']
-      return val === 1 || val === '1'
+      const bucket = this.rawValues['171F'] || {}
+      const isOn = v => v !== undefined && v !== null && v !== '' && String(v).trim() === '1'
+      if (bucket['C_B12'] !== undefined && bucket['C_B12'] !== null) {
+        return isOn(bucket['C_B12'])
+      }
+      return isOn(bucket['B56'])
     },
     bmsAlarmStatus() {
       const data = this.rawValues['171C'] || {}
@@ -490,9 +526,87 @@ export default {
   },
   watch: {
     currentTab() {
+      const tab = this.currentTab
+      // 首次进入某个面板时才创建它，之后复用（v-show），避免每次切换都重建整棵节点树造成白屏
+      if ([0, 1, 2, 3, 4, 10].indexOf(tab) !== -1 && !this.renderedTabs[tab]) {
+        this.$set(this.renderedTabs, tab, true)
+      }
+      if (this.currentSettingsTab) {
+        this.lastSettingsTabCfg = this.currentSettingsTab
+        this.settingsRendered = true
+        // 设置页用不到这些监测结构，顺手清空：它们常驻在页面数据里，
+        // 200 多项 × 8 个字段每秒都要参与小程序的数据 diff。
+        if (this.displayItems.length) {
+          this.displayItems = []
+          this.groupedDisplay = []
+        }
+        const key = this.currentSettingsTab.editKey
+        const echo = () => {
+          if (this._settingsEchoTimer) clearTimeout(this._settingsEchoTimer)
+          this._settingsEchoTimer = setTimeout(() => {
+            this._settingsEchoTimer = null
+            this.flushPendingFramesNow()
+            // flush 收尾会排一个 1s 后的回显定时器，这里要立即同步一次，先把它撤掉
+            if (this._syncSettingsTimer) {
+              clearTimeout(this._syncSettingsTimer)
+              this._syncSettingsTimer = null
+            }
+            this._doSyncSettingsFromRealtime()
+          }, 90)
+        }
+        // 已挂载过同一个面板（预热过 tab5，或从监测切回来）→ 只翻 v-show，直接出内容
+        if (this._mountedSettingsKey === key && this.settingsReady) {
+          echo()
+          return
+        }
+        // ⚡ 两阶段挂载：这一帧只画标签栏 + 骨架，下一帧再建参数面板。
+        //   以前切设置是「切 tab + 建 367 项面板 + 强制提交一帧数据 + 逐项回显」
+        //   全压在同一帧里，点按后要等几百毫秒才有画面，期间还会出现推片/白块。
+        this.settingsReady = false
+        this._mountedSettingsKey = key
+        if (this._settingsMountTimer) clearTimeout(this._settingsMountTimer)
+        this._settingsMountTimer = setTimeout(() => {
+          this._settingsMountTimer = null
+          this.settingsReady = true
+          // 面板建好后再提交暂存帧 + 回显一次，两步都排在面板首次绘制之后
+          echo()
+        }, 48)
+        return
+      }
+      this.settingsReady = true
+      this.flushPendingFramesNow()
+      // 50kW：监测面板全部直接读 rawValues（见各 tab 的 bucket50），
+      // displayItems / formattedValues 在这套协议下没有任何模板读它，
+      // 建一次就是 200 多项 × 8 个字段写进页面 data，之后每轮 setData 都要带着走。
+      if (this.is50KwMode) {
+        if (this.displayItems.length) {
+          this.displayItems = []
+          this.groupedDisplay = []
+        }
+        // 只有「概览」tab 用 formattedValues（架构图 KPI 来自 171F）
+        if (this.currentTab === 0) this.rebuildFormattedValues(['171F'])
+        return
+      }
       this.updateDisplay()
-      this.rebuildFormattedValues()
+      const dt = this.currentDeviceType
+      this.rebuildFormattedValues(dt && dt !== '171F' ? [dt, '171F'] : ['171F'])
+    },
+    /** 运行状态只有连续 800ms 稳定后才落到按钮上，防止帧级毛刺造成文案闪跳 */
+    archSystemRunning(v) {
+      if (this.archRunningTimer) clearTimeout(this.archRunningTimer)
+      this.archRunningTimer = setTimeout(() => {
+        this.archRunningTimer = null
+        this.systemRunningStable = v
+      }, 800)
     }
+  },
+  created() {
+    // 参数映射容器（SettingsPanel 的 props 依赖它，必须在首次渲染前就绪）
+    this.paramsMapRef = this._buildParamsMap()
+    // 冻结的空对象：喂给「后台标签页」当 props 用。
+    // 引用恒定 + 不被 Vue 观测，后台面板的 computed 永远不会被逐帧失效，
+    // 既不会因为每 800ms 一次落库而重渲染，也不会拖慢当前页。
+    this._emptyRef = Object.freeze({})
   },
   onLoad() {
     uni.getSystemInfo({
@@ -501,26 +615,69 @@ export default {
       }
     })
     this.loadConfig()
-    this.initControlList()
     this.initSettingsParams()
     // 直连模式下 rawValues 必须为空，所有数据只能来自 MQTT 帧；
     // 不要从 realtimeDataProvider（云端 WebSocket）同步数据——那是另一路数据源，
     // 会让页面在 MQTT 还没连上时就显示"假数据"
     this.resetRawValues()
     this.updateDisplay()
-    this.rebuildFormattedValues()
+    // 50kW 只需要架构图那几个值（概览 tab 用），其它 tab 直接读 rawValues
+    this.rebuildFormattedValues(this.is50KwMode ? ['171F'] : undefined)
     if (this.config.enabled) {
       // 进入页面即尝试连接
       this.$nextTick(() => this.start())
+      // 首屏画完 2.4s 后，按 500ms 间隔把还没建过的监测面板逐个「预挂载」。
+      // 后台面板拿到的是冻结空数据（不会逐帧重渲染），代价只有一次性建节点；
+      // 换来的是第一次点某个 tab 时不必从零创建整棵面板 —— 那一步正是“白屏几秒”的来源。
+      this._prewarmBootTimer = setTimeout(() => {
+        this._prewarmBootTimer = null
+        this._prewarmTabs()
+      }, 2400)
     }
   },
   onUnload() {
     this.stopArchRefreshTimer()
+    if (this.archRunningTimer) {
+      clearTimeout(this.archRunningTimer)
+      this.archRunningTimer = null
+    }
+    if (this._frameFlushTimer) {
+      clearTimeout(this._frameFlushTimer)
+      this._frameFlushTimer = null
+    }
+    this._frameBatches = {}
+    this._frameDirty = {}
+    if (this._prewarmTimer) {
+      clearTimeout(this._prewarmTimer)
+      this._prewarmTimer = null
+    }
+    if (this._prewarmBootTimer) {
+      clearTimeout(this._prewarmBootTimer)
+      this._prewarmBootTimer = null
+    }
+    if (this._settingsMountTimer) {
+      clearTimeout(this._settingsMountTimer)
+      this._settingsMountTimer = null
+    }
+    if (this._settingsEchoTimer) {
+      clearTimeout(this._settingsEchoTimer)
+      this._settingsEchoTimer = null
+    }
+    if (this._tabAnimTimer) {
+      clearTimeout(this._tabAnimTimer)
+      this._tabAnimTimer = null
+    }
+    if (this._keepDataTimer) {
+      clearTimeout(this._keepDataTimer)
+      this._keepDataTimer = null
+    }
     this.stop()
   },
   onShow() {
     // 直连页禁用云端 WebSocket 数据同步——所有数据只能来自 MQTT 帧
     // MQTT 连接成功后会自动 subscribe 并在 applyIemsFrame 中填充 rawValues
+    // 从后台返回：恢复收帧处理（onHide 里暂停过），并把暂停期间丢弃后的第一帧立即提交
+    this._paused = false
 
     // 息屏回来后 MQTT 连接可能已被系统断开，主动检查并重连
     // （LightMqttClient 有 autoReconnect，但微信息屏期间定时器会被挂起，
@@ -536,14 +693,100 @@ export default {
   },
   onHide() {
     this.stopArchRefreshTimer()
+    // 页面不可见时不再解析/合并/渲染：MQTT 连接保持不断（回来即用），
+    // 但每帧解析 + 定时 flush + setData 在小程序里照样要过 JS/渲染桥，
+    // 后台持续跑只会让返回页面那一下更卡。数据帧丢了无所谓，回来 1s 内就有新帧。
+    this._paused = true
+    this._frameBatches = {}
+    this._frameDirty = {}
+    if (this._frameFlushTimer) {
+      clearTimeout(this._frameFlushTimer)
+      this._frameFlushTimer = null
+    }
   },
   methods: {
+    /**
+     * 预热监测面板：逐个把未创建的 tab 设为已渲染（隐藏状态下建节点，用户看不到）。
+     * 一次只建一个，间隔 500ms，避免和收帧/flush 抢主线程。
+     */
+    _prewarmTabs() {
+      const queue = [1, 2, 3, 4, 10].filter(t => !this.renderedTabs[t])
+      if (!queue.length) {
+        this._prewarmSettingsPanel()
+        return
+      }
+      const t = queue[0]
+      this.$set(this.renderedTabs, t, true)
+      if (queue.length > 1) {
+        this._prewarmTimer = setTimeout(() => this._prewarmTabs(), 500)
+      } else {
+        // 监测面板建完后，再空一帧去预建设置面板，别和最后一块监测面板挤在一起
+        this._prewarmTimer = setTimeout(() => {
+          this._prewarmTimer = null
+          this._prewarmSettingsPanel()
+        }, 500)
+      }
+    },
+    /**
+     * 预热设置面板（默认第一个设置 tab，即「快捷控制」）。
+     * 面板在隐藏状态下建好（v-show=false），点「设置」时只需翻 v-show，
+     * 不必在同一帧里创建 scroll-view + 参数卡片 —— 那一步正是首次进入卡顿的来源。
+     * 只有拿到操作码才建，否则渲染的是占位提示，不预热。
+     */
+    _prewarmSettingsPanel() {
+      if (this.settingsRendered || !this.hasAccessCode) return
+      const first = this.settingsTabs[0]
+      if (!first) return
+      this.lastSettingsTabCfg = first
+      this.settingsReady = true
+      this._mountedSettingsKey = first.editKey
+      this.settingsRendered = true
+    },
+    /**
+     * 标签页取数：只有当前激活的那个面板拿真实数据，
+     * 常驻的后台面板一律喂冻结空对象（引用不变 → computed 不重算 → 不重渲染）。
+     * keepDataTab：刚被切走的那个面板还能多留 250ms 真实数据。
+     *   否则一切 tab，上一块面板的 props 立刻从 rawValues 变成空对象 →
+     *   BMS 近千个文本同时变成「--」，这一下和「建新面板」撞在同一帧里就是明显掉帧。
+     *   留 250ms 后再置空，用户已经看不到它了，置空的代价落在空闲帧。
+     */
+    fv(tab) {
+      const active = this.currentTab === tab || this.keepDataTab === tab
+      return active ? this.formattedValues : this._emptyRef
+    },
+    rv(tab) {
+      const active = this.currentTab === tab || this.keepDataTab === tab
+      return active ? this.rawValues : this._emptyRef
+    },
+    /**
+     * 构建参数映射（仅在协议模板重建数组时调用）
+     * 必须放在 methods 里：它是函数，不是计算属性
+     */
+    _buildParamsMap() {
+      // 旧协议和 50kW 协议共用 data() 里的同名数组 key
+      // syncSettingsFromRealtime 会根据检测到的协议类型初始化/填充这些数组
+      return {
+        bmsNumericParams: this.bmsNumericParams,
+        bmsSwitchParams: this.bmsSwitchParams,
+        bmsPowerParams: this.bmsPowerParams,
+        pcsNumericParams: this.pcsNumericParams,
+        pcsSwitchParams: this.pcsSwitchParams,
+        pvNumericParams: this.pvNumericParams,
+        pvSwitchParams: this.pvSwitchParams,
+        storageNumericParams: this.storageNumericParams,
+        storageSwitchParams: this.storageSwitchParams,
+        quickControlParams: this.quickControlParams,
+        quickPowerParams: this.quickPowerParams,
+        liquidSwitchParams: this.liquidSwitchParams,
+        liquidNumericParams: this.liquidNumericParams
+      }
+    },
     /**
      * 架构图启停按钮 handler — 下发 171F.B12 策略运行指令
      * 对齐 architecture-diagram.vue handleStartStop 逻辑
      */
     onSystemStartStop() {
-      const running = this.archSystemRunning
+      const running = this.systemRunningStable
       const title = running ? '策略停止' : '策略启动'
       const content = running ? '确定要停止策略吗？' : '确定要启动策略吗？'
       uni.showModal({
@@ -608,6 +851,16 @@ export default {
      * 直连模式下所有数据只能来自 MQTT 帧，禁止任何其他数据源注入
      */
     resetRawValues() {
+      // 丢弃未落库的暂存帧：清空/重连后旧数据不允许再写进新 bucket
+      this._frameBatches = {}
+      this._frameDirty = {}
+      this._stage = {}
+      this._lastCommitAt = 0
+      this._lastUpdateAt = 0
+      if (this._frameFlushTimer) {
+        clearTimeout(this._frameFlushTimer)
+        this._frameFlushTimer = null
+      }
       const newBuckets = {}
       for (const key of Object.keys(this.rawValues || {})) {
         newBuckets[key] = {}
@@ -623,12 +876,30 @@ export default {
         newBuckets['170C_STORAGE'] = {}
         newBuckets['170C_PV'] = {}
         newBuckets['171C_V2'] = {}
+        newBuckets['171C_V2_1'] = {}
+        newBuckets['171C_V2_2'] = {}
+        newBuckets['171C_V2_3'] = {}
+        newBuckets['171C_V2_4'] = {}
         newBuckets['0318'] = {}
         newBuckets['131C'] = {}
       }
       this.rawValues = newBuckets
+      // 桶被清空 → 50kW 判定缓存失效，下次收帧重新识别协议
+      this._has50KwData = false
+      this._fieldRegCache = {}
+      this._candCache = {}
+      this._paramSeen = {}
     },
     updateDisplay(deviceType) {
+      // 50kW 协议不走这套「寄存器 → 卡片」显示结构（各 tab 直接读 rawValues），
+      // 这里再建一遍纯属把几百项死数据塞进页面 data
+      if (this.is50KwMode) {
+        if (this.displayItems.length) {
+          this.displayItems = []
+          this.groupedDisplay = []
+        }
+        return
+      }
       const dtype = deviceType || this.currentDeviceType
       // 概览标签页没有对应的设备类型，清空显示列表
       if (!dtype) {
@@ -691,15 +962,21 @@ export default {
     /**
      * 重建指定设备类型的预格式化显示值
      * 模板直接绑定 formattedValues['171B_B0'] 以确保响应式更新
+     * @param {string|string[]} [deviceType] 设备类型或类型数组；不传则全量重建
      */
     rebuildFormattedValues(deviceType) {
-      // 需要 rebuild 的 bucket 列表：
-      //   - 传了 deviceType → 只 rebuild 那个 bucket + 171F（架构图）
-      //   - 没传 → rebuild 所有可能的 bucket（20kW 旧码 + 50kW 新协议）
       const ALL_BUCKETS = ['171B', '171C', '171D', '171E', '171F', '1707', '170C_STORAGE', '170C_PV', '171C_V2', '0318', '131C']
-      const types = deviceType
-        ? (deviceType === '171F' ? ['171F'] : [deviceType, '171F'])
-        : ALL_BUCKETS
+      // 需要 rebuild 的 bucket 列表：
+      //   - 数组 → 原样；传单个 → 该 bucket + 171F（架构图）
+      //   - 不传 → 所有可能的 bucket（20kW 旧码 + 50kW 新协议）
+      let types
+      if (Array.isArray(deviceType)) types = deviceType
+      else if (deviceType) types = deviceType === '171F' ? ['171F'] : [deviceType, '171F']
+      else types = ALL_BUCKETS
+      this._applyFormattedValues(this._buildFormattedValues(types))
+    },
+    /** 纯计算：把若干 bucket 的原始值格式化成显示值（不做响应式赋值，供 flush 合并成一次赋值） */
+    _buildFormattedValues(types) {
       const newVals = {}
       types.forEach(dt => {
         const bucket = this.rawValues[dt] || {}
@@ -714,6 +991,10 @@ export default {
           })
         }
         Object.keys(bucket).forEach(field => {
+          // 只保留 B 号字段：控制帧/状态帧键（C_/S_ 前缀）和寄存器号别名（纯数字）没有任何模板读取，
+          // 保留它们会把 formattedValues 撑到上千个 key（每次 setData 都要 diff/serialize），
+          // 是小程序里最容易被忽略的渲染层开销
+          if (/^[SC]_/.test(field) || /^\d+$/.test(field)) return
           const key = `${dt}_${field}`
           if (newVals[key] === undefined) {
             const val = bucket[field]
@@ -735,8 +1016,11 @@ export default {
         '171C_V2': '171C'       // 50kW BMS → 20kW BMS 别名
       }
       for (const [newPrefix, oldPrefix] of Object.entries(ALIAS_MAP)) {
+        // 只为本次要重建的前缀做别名：tab 组件按旧前缀 '171C_*' 取值的，需要由 50kW bucket 生成
+        if (types.indexOf(oldPrefix) === -1 && types.indexOf(newPrefix) === -1) continue
         const aliasBucket = this.rawValues[newPrefix] || {}
         Object.keys(aliasBucket).forEach(field => {
+          if (/^[SC]_/.test(field) || /^\d+$/.test(field)) return
           const aliasKey = `${oldPrefix}_${field}`
           // 仅当 20kW bucket 没有同名 key 时才用 50kW bucket 的数据覆盖
           // （20kW bucket 优先，避免 alias 覆盖掉真实的 20kW 数据）
@@ -760,9 +1044,9 @@ export default {
       newVals['archStoragePower'] = f(r('171F', 'B8'), 2)
       newVals['archLoadPower'] = f(r('171F', 'B68') !== undefined ? r('171F', 'B68') : r('171F', 'B14'), 2)
       newVals['archLoadMidPower'] = f(r('171F', 'B14'), 2)
-      newVals['archGenToday'] = f(r('171F', 'B34'), 1)
-      newVals['archUseToday'] = f(r('171F', 'B38'), 1)
-      newVals['archGridSupply'] = f(r('171F', 'B42'), 1)
+      newVals['archGenToday'] = f(r('171F', 'B34'), 2)
+      newVals['archUseToday'] = f(r('171F', 'B38'), 2)
+      newVals['archGridSupply'] = f(r('171F', 'B42'), 2)
       // === 与 grid-management.vue 对齐的电网统计字段 ===
       // B174: 频率 (Hz), B176: 正向有功电度(累计供电 kWh), B180: 反向有功电度(累计馈电 kWh)
       // B184: 当天正向有功电度(今日供电 kWh), B188: 当天反向有功电度(今日馈电 kWh)
@@ -772,8 +1056,8 @@ export default {
       newVals['archTodaySupplyEnergy'] = f(r('171F', 'B184'), 1)
       newVals['archTodayFeedEnergy'] = f(r('171F', 'B188'), 1)
       const socVal = r('171F', 'B128') !== undefined ? r('171F', 'B128') : r('171F', 'B58')
-      newVals['archSoc'] = f(socVal, 1)
-      newVals['archStorageRemaining'] = f(socVal, 1)
+      newVals['archSoc'] = f(socVal, 2)
+      newVals['archStorageRemaining'] = f(socVal, 2)
       // 储能SOC数值（用于进度条百分比）
       newVals['archSocNumeric'] = socVal !== undefined && socVal !== null ? Number(socVal) : 0
       // 剩余电量预计可用小时
@@ -830,19 +1114,31 @@ export default {
         }
         this._deviceCountsComputed = true
       }
-      // 增量更新：只在值变化时才赋值，避免整包 spread 触发 Vue 全量依赖重算
+      return newVals
+    },
+    /** 增量落值：已有 key 逐键触发响应式（setData 只带变化的字段），仅当出现全新 key 时才整包替换 */
+    _applyFormattedValues(newVals) {
       const fv = this.formattedValues
       let changed = false
+      let added = false
       for (const k of Object.keys(newVals)) {
         const oldVal = fv[k]
         const newVal = newVals[k]
-        if (oldVal !== newVal && !(oldVal === undefined && newVal === undefined)) {
+        if (oldVal === newVal) continue
+        if (oldVal === undefined) {
+          // Vue2 里给已有对象加属性必须 $set，否则新键不是响应式的、不会通知面板
+          this.$set(fv, k, newVal)
+          added = true
+        } else if (newVal !== undefined) {
           fv[k] = newVal
-          changed = true
         }
+        changed = true
       }
-      // 如果有变化，手动触发一次引用更新让 Vue 检测到
-      if (changed) this.formattedValues = { ...fv }
+      // 只有「出现新键」才整包替换一次（首帧、切设备时会发生，之后基本不会）。
+      // 以前每次 flush 都 `{...fv}`：formattedValues 有上千个键，等于每 800ms 把整个对象
+      // 序列化给渲染层一次 —— 这是监测页和设置页共同卡顿的源头之一。
+      if (added) this.formattedValues = { ...fv }
+      return changed
     },
     getArchValue(deviceType, field) {
       const bucket = this.rawValues[deviceType] || {}
@@ -895,22 +1191,22 @@ export default {
     switchTab(index) {
       console.log('[tab] switchTab 点击: index=', index, '当前 currentTab=', this.currentTab, 'bottomTab=', this.bottomTab)
       if (index !== this.currentTab) {
+        // 记住旧 tab，让它的面板晚 250ms 再置空（见 fv/rv 的 keepDataTab）
+        const prev = this.currentTab
+        this.keepDataTab = prev
+        if (this._keepDataTimer) clearTimeout(this._keepDataTimer)
+        this._keepDataTimer = setTimeout(() => {
+          this._keepDataTimer = null
+          this.keepDataTab = null
+        }, 250)
         this.currentTab = index
         console.log('[tab] currentTab 已更新为=', index, 'is50Kw=', this.is50KwMode)
         const types = this.is50KwMode ? DEVICE_TYPES_50KW : DEVICE_TYPES
         const bucket = types[index]
         console.log('[tab] 对应 bucket=', bucket, 'rawValues[bucket] keys=', bucket ? Object.keys(this.rawValues[bucket] || {}).length : 'N/A')
-        if (bucket === '171C' || bucket === '171C_V2') {
-          this.initControlList()
-        }
-        if (index >= 5) {
-          this.syncSettingsFromRealtime()
-          const cfg = this.settingsTabs.find(t => t.tab === index)
-          console.log('[tab] 设置面板=', cfg ? cfg.title : '未命中',
-            '开关项=', cfg ? (this[cfg.dataKey] || []).length : 0,
-            '数值项=', cfg ? (this[cfg.numericKey] || []).length : 0,
-            '当前协议=', this.settingsProtocol)
-        }
+        // 设置面板的「提交暂存帧 + 参数回显」改由 currentTab watcher 在面板挂载后触发
+        // （见 settingsReady 两阶段挂载），这里不再 nextTick 立即执行——
+        // 那一步会把「渲染新面板」排在几百项回显之后，表现就是点一下白几百毫秒。
       } else {
         console.log('[tab] switchTab 跳过：index 与 currentTab 相同')
       }
@@ -923,6 +1219,15 @@ export default {
         uni.showToast({ title: '请先在配置页输入操作码', icon: 'none' })
         return
       }
+      // 跨组切换时标签条内容整体换一批（监测 0~4/10 ↔ 设置 5~9/11）。
+      // 若保留 scroll-with-animation，旧滚动位置会带动画滑向新标签 —— 观感就是“推片”。
+      // 先关掉动画瞬时定位，再把动画恢复给同组内的点击。
+      this.tabScrollAnim = false
+      if (this._tabAnimTimer) clearTimeout(this._tabAnimTimer)
+      this._tabAnimTimer = setTimeout(() => {
+        this._tabAnimTimer = null
+        this.tabScrollAnim = true
+      }, 260)
       this.bottomTab = type
       // 跳到对应组的首个子 tab
       this.switchTab(type === 'monitor' ? 0 : 5)
@@ -962,14 +1267,6 @@ export default {
         console.error('加载直连配置失败:', e)
       }
     },
-    initControlList() {
-      const map = getRegisterMap(this.currentDeviceType)
-      this.controlList = map.control.map(c => ({
-        ...c,
-        currentValue: null,
-        currentLabel: '--'
-      }))
-    },
     async start() {
       if (!this.config.enabled) return
       this.errorMsg = ''
@@ -1004,6 +1301,14 @@ export default {
         clearTimeout(this._syncSettingsTimer)
         this._syncSettingsTimer = null
       }
+      if (this._frameFlushTimer) {
+        clearTimeout(this._frameFlushTimer)
+        this._frameFlushTimer = null
+      }
+      this._frameBatches = {}
+      this._frameDirty = {}
+      // 断开后允许下一次连接重新订阅
+      this._subscribedSeq = null
     },
     // ============ MQTT 路径 ============
     async startMqtt() {
@@ -1059,16 +1364,25 @@ export default {
     async subscribeMqttTopics() {
       const realtimeTopic = this.config.realtimeTopic
       const controlTopic = this.config.controlSetTopic
+      const c = this.client
+      if (!c) return
+      // 同一条连接只订阅一次：onShow / 重试会反复进这里，重复 subscribeAll 会让同一条消息
+      // 被多个 handler 重复解析（卡顿、重复 toast 都由此而来）
+      if (this._subscribedSeq === c.connectionSeq) {
+        console.log('[MQTT] 该连接已订阅过，跳过重复订阅 seq=' + c.connectionSeq)
+        return
+      }
       console.log('[MQTT] 订阅主题: realtime=' + realtimeTopic + ' control=' + controlTopic)
-      this.client.setTopics({
+      c.setTopics({
         realtime: realtimeTopic,
         controlSet: controlTopic,
         controlResp: controlTopic
       })
-      await this.client.subscribeAll({
+      await c.subscribeAll({
         onRealtime: (payloadStr, topic, payloadBytes) => this.handleMqttRealtime(payloadStr, payloadBytes),
         onControlResp: (payloadStr, topic, payloadBytes) => this.handleMqttControlResp(payloadStr, topic, payloadBytes)
       })
+      this._subscribedSeq = c.connectionSeq
     },
     /**
      * 处理 MQTT 实时数据 payload
@@ -1077,7 +1391,15 @@ export default {
      *   2) 真机二进制 IEMS 帧：首字节 0x07/0x17/0x18，用 iems-frame-parser 解析
      */
     handleMqttRealtime(payloadStr, payloadBytes) {
+      // 页面不可见期间直接丢弃：连接保持，回前台后 1s 内自然有新帧
+      if (this._paused) return
       try {
+        // 快路径：真机二进制帧直接进解析器，跳过 hex 解包/转换（每秒多帧时这段字符串处理不便宜）
+        if (payloadBytes && payloadBytes.length >= 10 && isIemsBinaryFrame(payloadBytes)) {
+          this.applyIemsFrame(payloadBytes)
+          return
+        }
+
         let realBytes = payloadBytes
 
         // 先解开可能的 JSON 信封（{"Send Data": "17 17..."} → "17 17..."）
@@ -1094,8 +1416,8 @@ export default {
 
         if (realBytes && isIemsBinaryFrame(realBytes)) {
           // console.log('[MQTT] 收到 IEMS 状态帧, 长度=' + realBytes.length + ' 字节')
+          // lastUpdate 不在这里写：每秒多帧都改会让页头文案跟着重渲染，统一在 flush 里更新
           this.applyIemsFrame(realBytes)
-          this.lastUpdate = Date.now()
           return
         }
 
@@ -1131,6 +1453,22 @@ export default {
         else if (addr === '1E' || addr === '30') result = '170C_STORAGE'
         else result = '170C_STORAGE'
       } else if (dt === '171CV2' || dt.startsWith('171CV2')) result = '171C_V2'
+      // ⚠️ 50kW 微能站：171C 帧头里写的仍是 '171C'（协议模块本身 deviceType 也是 '171C'），
+      // 版本只体现在显式指定的 protocolKey 上。若这里不按模式改写，BMS 数据会全部落到
+      // 20kW 的 '171C' bucket，而 BMS 页（50kW 分支）读的是 '171C_V2' → 整页全是 '--'。
+      else if (dt === '171C' && this._use50KwProtocol()) {
+        // 站点里 171C 不止一台：地址 01 = V2.0 运行控制主机（心跳/强控/TMS 温控），
+        // 地址 02~05 = V2.1~V2.4 四级告警阈值从机。五台设备的控制帧 B 号完全重号
+        // （B0：主机=心跳，从机=单体过压 1 级告警阈值），共用一个 bucket 就是
+        // 「谁后到谁覆盖」——从机每秒一帧、阈值全是 0，把主机心跳 100 和温控参数
+        // 全刷成 0，面板于是显示 0 / -50.0℃。这里按帧头设备地址分桶，互不干扰。
+        const ai = parseInt(String(addrHint || '').trim(), 16)
+        if (ai === 2) result = '171C_V2_1'
+        else if (ai === 3) result = '171C_V2_2'
+        else if (ai === 4) result = '171C_V2_3'
+        else if (ai === 5) result = '171C_V2_4'
+        else result = '171C_V2'
+      }
       else if (dt === '0318' || dt.startsWith('0318')) result = '0318'
       else if (dt === '131C' || dt.startsWith('131C')) result = '131C'
       else {
@@ -1160,22 +1498,11 @@ export default {
         }
       })
       if (hasNew) {
-        this.rawValues[deviceType] = { ...bucket, ...batch }
-        this.updateDisplay(deviceType)
-        this.rebuildFormattedValues(deviceType)
-        this.syncSettingsFromRealtime()
+        // ⚡ 同 applyIemsFrame：暂存 + 800ms 节流合并写入，避免每帧全量重渲染
+        if (!this._frameBatches) this._frameBatches = {}
+        this._frameBatches[deviceType] = Object.assign(this._frameBatches[deviceType] || {}, batch)
+        this.scheduleFrameFlush(deviceType)
       }
-      if (deviceType === this.currentDeviceType) {
-        this.controlList.forEach(c => {
-          const f = fields[c.field]
-          if (f && f.raw !== undefined) {
-            c.currentValue = f.raw
-            const opt = c.options && c.options.find(o => String(o.value) === String(f.raw))
-            c.currentLabel = opt ? opt.label : String(f.raw)
-          }
-        })
-      }
-      this.lastUpdate = Date.now()
     },
     /**
      * 解析二进制 IEMS 帧并写入 rawValues
@@ -1187,10 +1514,20 @@ export default {
      */
     _use50KwProtocol() {
       if (this.config && this.config.deviceType === '50kW') return true
+      // 命中过任意一个 50kW 桶就一直认为是 50kW（桶只会被填、不会被清空，
+      // 除 stop/重置时会复位这个标记）——以前每帧都对 8 个桶做一次 Object.keys，
+      // 上千个键的数组分配 × 每秒多帧，纯属浪费。
+      if (this._has50KwData) return true
       const rv = this.rawValues || {}
-      return ['1707', '170C_STORAGE', '170C_PV', '171C_V2'].some(
-        k => rv[k] && Object.keys(rv[k]).length > 0
-      )
+      const keys = ['1707', '170C_STORAGE', '170C_PV', '171C_V2', '171C_V2_1', '171C_V2_2', '171C_V2_3', '171C_V2_4']
+      for (let i = 0; i < keys.length; i++) {
+        const b = rv[keys[i]]
+        if (b && Object.keys(b).length > 0) {
+          this._has50KwData = true
+          return true
+        }
+      }
+      return false
     },
     /** 读取帧头里的设备类型（大端 2 字节） */
     _pendingDeviceType(frameBytes) {
@@ -1208,6 +1545,7 @@ export default {
       return ''
     },
     applyIemsFrame(frameBytes) {
+      this._perfFrames = (this._perfFrames || 0) + 1
       try {
         // 50kW 微能站：新协议与旧协议共用同一设备类型码（170C/171C），
         // 必须显式指定协议模块，否则会落到 170C_000A / 171C_000A 旧布局上解析错位
@@ -1223,11 +1561,24 @@ export default {
         const dataTypeNum = parsed._dataTypeNum
         const bucket = this.rawValues[deviceType]
 
+        // 解析出 0 个字段 = 帧长与协议结构不匹配（协议版本选错 / payload 截断），
+        // 现象就是对应页面整屏 '--'。按 10s 聚合打印一次，便于现场定位是哪一帧没解析出来
+        if (Object.keys(data).length === 0) {
+          const nowTs = Date.now()
+          if (!this._emptyFrameAt || nowTs - this._emptyFrameAt > 10000) {
+            this._emptyFrameAt = nowTs
+            console.warn('[IEMS] 帧解析结果为空：deviceType=0x' + rawDt +
+              ' dataType=0x' + (parsed.dataType || '?') +
+              ' protocolKey=' + (protocolKey || '(auto)') +
+              ' payload=' + (parsed.payload ? parsed.payload.length : 0) + ' 字节')
+          }
+          return
+        }
         // 所有非 DEVICEINFO 类型的帧：都把解析到的数据存入 rawValues
         // ENERGY / STATE / CONTROL 只是用途不同，但都包含寄存器值
-        const fieldToReg = {}
-        ;(map.monitor || []).forEach(p => { if (p.reg !== undefined && p.field) fieldToReg[p.field] = p.reg })
-        ;(map.control || []).forEach(p => { if (p.reg !== undefined && p.field) fieldToReg[p.field] = p.reg })
+        // 反向表按 deviceType 缓存：以前每帧都从 map.monitor/control 重建一遍
+        // （两台设备上百项），1 秒多帧时纯属白烧 CPU
+        const fieldToReg = this._getFieldToReg(deviceType)
 
         // 非 ENERGY 帧键加前缀隔离，避免与 ENERGY 帧共享 B-key 互相覆盖
         //   50kW bucket：STATE='S_' / CONTROL='C_'
@@ -1236,9 +1587,13 @@ export default {
         //     不加前缀会用控制帧的原始值覆盖架构图与今日电量展示
         //   0318 液冷机：设置页下发控制后设备会回读整帧，未使用的字节普遍填充 0xFF，
         //     不加前缀会把 B86~B95 故障字覆盖成 0xFF，导致 76 个故障位全部点亮
+        //   171C_V2_1~4（四级告警阈值从机）：B0~B174 既是它 0x04 控制帧的阈值寄存器，
+        //     也和它自己的能源/状态帧 B 号重号，不加前缀会在两种帧之间互相覆盖，
+        //     面板上就会出现「阈值时有时无、甚至整列 0」。前缀规则与主机一致。
         const useFrameTypePrefix =
           deviceType === '1707' || deviceType === '170C_STORAGE' ||
           deviceType === '170C_PV' || deviceType === '171C_V2' ||
+          deviceType.indexOf('171C_V2_') === 0 ||
           deviceType === '171F' || deviceType === '131C' ||
           deviceType === '0318'
         const keyPrefix = !useFrameTypePrefix ? ''
@@ -1260,41 +1615,194 @@ export default {
         })
 
         if (hasNewValue) {
-          this.rawValues[deviceType] = { ...bucket, ...batch }
-          // ENERGY 和 STATE 帧都会更新数值显示
-          if (dataTypeNum === IEMS_DATA_TYPE.ENERGY || dataTypeNum === IEMS_DATA_TYPE.STATE) {
-            this.updateDisplay(deviceType)
-            this.rebuildFormattedValues(deviceType)
-          }
-          // CONTROL 帧：更新设置面板上的开关/控制参数
-          if (dataTypeNum === IEMS_DATA_TYPE.CONTROL) {
+          // ⚡ 性能关键：设备每秒上报多路帧，这里不再同步写 rawValues / 重建显示值，
+          // 只把本帧数据暂存进非响应式缓冲，由 800ms 节流的统一 flush 合并写一次。
+          // 之前每帧 spread 替换 rawValues bucket + 重建 formattedValues，
+          // 一次引用变化会让所有 v-show 挂载的 tab 组件整体重渲染，1 秒多帧时页面直接卡死。
+          if (!this._frameBatches) this._frameBatches = {}
+          this._frameBatches[deviceType] = Object.assign(this._frameBatches[deviceType] || {}, batch)
+
+          // CONTROL 帧：171F 控制数据用于快捷控制回显，日志按 10s 聚合避免刷屏
+          if (dataTypeNum === IEMS_DATA_TYPE.CONTROL && deviceType === this.currentDeviceType) {
             if (deviceType === '171F') {
-              // 快捷控制回显依赖这一帧（0x04 控制数据）；没有这行日志说明设备根本没回控制帧
-              const ks = Object.keys(data).filter(k => data[k] !== undefined).slice(0, 24)
-              console.log('[171F] 控制数据帧字段:', ks.join(','))
+              // 快捷控制回显依赖这一帧（0x04 控制数据）；没有这行日志说明设备根本没回控制帧。
+              // 每秒一帧 → 日志按 10s 聚合，避免刷屏拖慢调试器
+              const now = Date.now()
+              if (!this._ctlFrameLogAt || now - this._ctlFrameLogAt > 10000) {
+                this._ctlFrameLogAt = now
+                const ks = Object.keys(data).filter(k => data[k] !== undefined).slice(0, 24)
+                console.log('[171F] 控制数据帧字段:', ks.join(','))
+              }
             }
-            if (deviceType === this.currentDeviceType) {
-              this.controlList.forEach(c => {
-                const v = data[c.field]
-                if (v !== undefined && v !== null) {
-                  c.currentValue = v
-                  const opt = c.options && c.options.find(o => String(o.value) === String(v))
-                  c.currentLabel = opt ? opt.label : String(v)
-                }
-              })
-            }
-            // 某些设备的 CONTROL 帧也携带状态量（如 171D 同时包含一些状态位）
-            // 所以 CONTROL 帧也触发 display 更新，确保不会漏掉任何变化
-            this.updateDisplay(deviceType)
-            this.rebuildFormattedValues(deviceType)
           }
-          // 数据到达后同步设置面板（首次拿到 50kW bucket 即切换到新协议模板）
-          this.syncSettingsFromRealtime()
+          // 171C 系列：每台设备各打一行（一次性）。BMS 设置面板读的就是 0x04 控制帧，
+          // 参数整列显示 '--' 时先看这里有没有 addr=01 这一行：
+          //   没有 → 设备根本没上报控制帧（要另发读命令，面板无从取值）；
+          //   有但 addr 只有 02~05 → 主机控制帧缺失，或站点只有阈值从机。
+          if (dataTypeNum === IEMS_DATA_TYPE.CONTROL && deviceType.indexOf('171C') === 0) {
+            this._bmsCtlSeen = this._bmsCtlSeen || {}
+            if (!this._bmsCtlSeen[deviceType]) {
+              this._bmsCtlSeen[deviceType] = true
+              const head = Object.keys(data).slice(0, 8).map(k => k + '=' + data[k]).join(',')
+              console.log('[171C] 控制帧 bucket=' + deviceType + ' addr=' + (parsed.address || '?') +
+                ' 字段数=' + Object.keys(data).length + ' 前 8 项=' + head)
+            }
+          }
+          // 171C 状态帧（0x03）：BMS 概览「系统配置」6 项（额定电压/容量/串数/温感数/pack 数/
+          // 极柱温感数）只在这类帧里（键带 S_ 前缀）。整块 '--' 时先看这行日志：
+          //   没有这一行 → 设备没上报 0x03 状态帧；有但配置项全「无」→ 帧长/协议版本不匹配。
+          if (dataTypeNum === IEMS_DATA_TYPE.STATE && deviceType.indexOf('171C') === 0) {
+            this._bmsStateSeen = this._bmsStateSeen || {}
+            if (!this._bmsStateSeen[deviceType]) {
+              this._bmsStateSeen[deviceType] = true
+              const cfg = ['B70', 'B72', 'B74', 'B76', 'B78', 'B80']
+                .map(k => k + '=' + (data[k] !== undefined ? data[k] : '无')).join(',')
+              console.log('[171C] 状态帧 bucket=' + deviceType + ' addr=' + (parsed.address || '?') +
+                ' 字段数=' + Object.keys(data).length + ' 系统配置=' + cfg)
+            }
+          }
+          this.scheduleFrameFlush(deviceType)
         }
-        this.lastUpdate = Date.now()
       } catch (e) {
         console.error('IEMS 帧解析失败:', e && e.message, 'deviceType=', arguments[1] || '(unknown)')
       }
+    },
+    /** ⚡ 帧数据节流 flush：最多 800ms 把多帧数据合并进暂存区（是否提交到 rawValues 由 _displayCommitMs 决定） */
+    scheduleFrameFlush(deviceType) {
+      if (!this._frameDirty) this._frameDirty = {}
+      this._frameDirty[deviceType] = true
+      if (this._frameFlushTimer) return
+      this._frameFlushTimer = setTimeout(() => {
+        this._frameFlushTimer = null
+        this._flushFrameBatches()
+      }, 800)
+    },
+    /** 立即合并暂存帧并强制提交：下发前读当前值、进入编辑态同步回显前调用，避免读到 ≤1.5s 的旧值 */
+    flushPendingFramesNow() {
+      if (this._frameFlushTimer) {
+        clearTimeout(this._frameFlushTimer)
+        this._frameFlushTimer = null
+      }
+      // 强制提交：跳过显示节流，保证下发/编辑前读到的是最新值
+      this._flushFrameBatches(true)
+    },
+    /** 显示提交间隔：只有「提交」这一步会让面板重渲染（改这里等于改屏刷频率） */
+    _displayCommitMs() {
+      // 设置页要较快回显（编辑态读的也是提交后的值）；监测页 1.5s 足够，
+      // 传感器量本就缓慢变化，比 0.8s 少掉近一半的渲染 / setData 过桥
+      return this.currentSettingsTab ? 900 : 1500
+    },
+    _flushFrameBatches(force) {
+      const dirty = this._frameDirty || {}
+      this._frameDirty = {}
+      const batches = this._frameBatches || {}
+      this._frameBatches = {}
+      const types = Object.keys(dirty)
+      if (!types.length) {
+        // 没有新帧但暂存区还有没提交的值（上次被节流跳过）→ 强制提交
+        if (force && this._stage && Object.keys(this._stage).length) this._commitStaged()
+        return
+      }
+      // 1) 并入暂存区：普通对象写入，不产生任何响应式通知 → 收帧再密也不会推动渲染
+      types.forEach(dt => {
+        const batch = batches[dt]
+        if (batch) this._mergeBucket(dt, batch)
+      })
+      // 2) 到点才把暂存区提交进 rawValues（唯一触发面板重渲染的一步）。
+      //    以前 800ms 提交一次：BMS 面板 100+ 数值 + 150 个故障位每次都整树重排，
+      //    再走一轮 setData 过桥；现在合并成 1.5s 一次，收帧节奏不变、桥调用砍一半。
+      const now = Date.now()
+      if (!force && this._lastCommitAt && now - this._lastCommitAt < this._displayCommitMs()) return
+      this._lastCommitAt = now
+      const changed = this._commitStaged()
+      const t0 = Date.now()
+      const onSettings = !!this.currentSettingsTab
+      if (!onSettings) {
+        // 50kW 的监测 tab 全部直接读 rawValues（BMS/PCS/储能DC/光伏/液冷），只有「概览」用
+        // formattedValues；20kW 旧协议各 tab 仍走 formattedValues。
+        // 以前不分模式每次都格式化上千个键，等于给没人读的对象白做一轮响应式写入。
+        const needFv = !this.is50KwMode || this.currentTab === 0
+        if (needFv) {
+          const cur = this.currentDeviceType
+          const visible = types.filter(t => t === '171F' || t === cur)
+          if (visible.indexOf('171F') === -1) visible.push('171F')
+          this._applyFormattedValues(this._buildFormattedValues(visible))
+        }
+      }
+      // 3) 设置面板参数回显：只在设置 tab 可见时同步
+      if (onSettings) this.syncSettingsFromRealtime()
+      // 「最后更新 16:24:30」这行文案一到点就要整页重渲染一次（页面 data 里有 rawValues /
+      // 参数树，diff 一遍不便宜），4s 刷一次足够看出在线，没必要跟着每次提交走
+      if (!this._lastUpdateAt || now - this._lastUpdateAt >= 4000) {
+        this._lastUpdateAt = now
+        this.lastUpdate = now
+      }
+      // 诊断：每 10 秒一行。卡顿时先看这行：收帧正常而提交耗时长 → 瓶颈在面板渲染；
+      // 收帧很少 → 瓶颈在解析/映射。
+      this._perfFrames = this._perfFrames || 0
+      this._perfCommits = (this._perfCommits || 0) + 1
+      this._perfBuildMs = (this._perfBuildMs || 0) + (now - t0)
+      if (!this._perfAt) this._perfAt = now
+      if (now - this._perfAt >= 10000) {
+        const secs = Math.max(1, Math.round((now - this._perfAt) / 1000))
+        console.log('[perf] ' + secs + 's：收帧 ' + this._perfFrames + '（' +
+          Math.round(this._perfFrames / secs) + '/s），提交 ' + this._perfCommits +
+          ' 次，平均提交 ' + (this._perfBuildMs / Math.max(1, this._perfCommits)).toFixed(1) +
+          'ms，tab=' + this.currentTab + '，有变化=' + (changed ? '是' : '否'))
+        this._perfAt = now; this._perfFrames = 0; this._perfCommits = 0; this._perfBuildMs = 0
+      }
+    },
+    /**
+     * 写入「暂存区」（非响应式）。收帧再频繁也只是几次属性赋值，
+     * 真正的响应式写入集中在 _commitStaged()，由显示节流控制频率。
+     */
+    _mergeBucket(dt, batch) {
+      const stage = this._stage || (this._stage = {})
+      const st = stage[dt] || (stage[dt] = {})
+      const keys = Object.keys(batch)
+      for (let i = 0; i < keys.length; i++) st[keys[i]] = batch[keys[i]]
+    },
+    /**
+     * 把暂存区提交进 rawValues（唯一触发渲染的地方）。
+     * 不用整对象替换：171C 主机 224 字段、四台阈值从机各 176 字段，`{...old, ...batch}`
+     * 每次新建上千键对象，Vue2 要逐键 defineProperty。这里值相同跳过、已有键直接赋值
+     * （只通知真正变化的键）、新键用 $set，新键很多（首帧/控制帧第一次到）时才整体替换。
+     * @returns {boolean} 是否有值真的变了
+     */
+    _commitStaged() {
+      const stage = this._stage
+      if (!stage) return false
+      this._stage = {}
+      const rv = this.rawValues
+      let changed = false
+      for (const dt in stage) {
+        const src = stage[dt]
+        const bucket = rv[dt]
+        if (!bucket) {
+          this.$set(rv, dt, Object.assign({}, src))
+          changed = true
+          continue
+        }
+        const keys = Object.keys(src)
+        let newKeys = 0
+        for (let i = 0; i < keys.length; i++) {
+          if (!(keys[i] in bucket)) newKeys++
+        }
+        if (newKeys > 8) {
+          rv[dt] = Object.assign({}, bucket, src)
+          changed = true
+          continue
+        }
+        for (let i = 0; i < keys.length; i++) {
+          const k = keys[i]
+          const v = src[k]
+          if (bucket[k] === v) continue
+          if (k in bucket) bucket[k] = v
+          else this.$set(bucket, k, v)
+          changed = true
+        }
+      }
+      return changed
     },
     handleMqttStatus(payloadStr) {
       try {
@@ -1409,9 +1917,16 @@ export default {
       const printableText = (payloadStr && /^[\x20-\x7e\r\n\t\u4e00-\u9fa5]*$/.test(payloadStr))
         ? payloadStr.slice(0, 140)
         : ''
-      console.warn('[MQTT CONTROL RESP] 无法识别的消息格式' +
-        (hexDump ? ' hex=' + hexDump.slice(0, 180) : '') +
-        (printableText ? ' text=' + printableText : ''))
+      // 控制 topic 上如有周期性杂帧，逐条 warn 会刷爆日志（调试器里非常卡），按 10s 聚合
+      const nowTs = Date.now()
+      this._ctlWarnCount = (this._ctlWarnCount || 0) + 1
+      if (!this._ctlWarnAt || nowTs - this._ctlWarnAt > 10000) {
+        console.warn('[MQTT CONTROL RESP] 无法识别的消息格式（10s 内 ' + this._ctlWarnCount + ' 条）' +
+          (hexDump ? ' 示例 hex=' + hexDump.slice(0, 120) : '') +
+          (printableText ? ' text=' + printableText : ''))
+        this._ctlWarnAt = nowTs
+        this._ctlWarnCount = 0
+      }
     },
     /**
      * 判断是否是本机刚下发的控制帧（同 topic 订阅回环）
@@ -1513,19 +2028,14 @@ export default {
     _applyControlChange(change) {
       // 更新快捷控制/设置面板的按钮状态
       if (change.field && change.newValue !== undefined) {
-        this.controlList.forEach(c => {
-          if (c.field === change.field) {
-            c.currentValue = change.newValue
-            const opt = c.options && c.options.find(o => String(o.value) === String(change.newValue))
-            if (opt) c.currentLabel = opt.label
-          }
-        })
         // 同步设置面板参数状态
         this.syncAllParamsFromResp(change)
       }
     },
     syncParamFromResp(params, data) {
       params.forEach(p => {
+        // 组合卡里待下发的本地改动优先，别被回执刷掉
+        if (p._pending) return
         if (p.field === data.field && data.newValue !== undefined) {
           const raw = data.newValue
           p.currentValue = raw
@@ -1564,62 +2074,6 @@ export default {
       // MQTT 推流模式：数据自动到达，无需主动刷新
       uni.showToast({ title: 'MQTT 推流模式，数据自动到达', icon: 'none' })
     },
-    async onControlClick(rawPayload, legacyOpt) {
-      const payload = this._normalizePanelPayload(rawPayload)
-      // 新载荷：{ index, optionIndex }（ControlCard → BmsTab → 页面，两级事件桥都只传下标）
-      // 旧载荷：(ctrl, opt)，保留兼容
-      let ctrl = null
-      let opt = null
-      if (payload && typeof payload === 'object' && payload.index !== undefined && payload.optionIndex !== undefined) {
-        ctrl = (this.controlList || [])[payload.index] || null
-        opt = (ctrl && ctrl.options) ? ctrl.options[payload.optionIndex] : null
-      } else {
-        ctrl = payload || null
-        opt = legacyOpt || null
-      }
-      if (!ctrl || !opt || opt.value === undefined || opt.value === null || String(opt.value).trim() === '') {
-        console.error('[CMD] 控制项解析失败，载荷=', payload)
-        uni.showModal({
-          title: '下发失败',
-          content: '未能识别该按钮对应的指令，请退出页面重新进入后再试',
-          showCancel: false
-        })
-        return
-      }
-      if (!this.isConnected) {
-        uni.showToast({ title: '设备未连接', icon: 'none' })
-        return
-      }
-      if (String(ctrl.currentValue) === String(opt.value)) {
-        uni.showToast({ title: '已是当前状态', icon: 'none' })
-        return
-      }
-      this.clickedBtn = ctrl.field + '-' + opt.value
-      if (this.clickedResetTimer) clearTimeout(this.clickedResetTimer)
-      this.clickedResetTimer = setTimeout(() => { this.clickedBtn = '' }, 600)
-
-      const doWrite = async () => {
-        try {
-          // MQTT 模式：publish 控制指令到 control/set 主题，等模拟器回 controlResp
-          await this.client.sendControl(ctrl.field, opt.value, this.currentDeviceType)
-          uni.showToast({ title: '指令已下发，等待设备响应', icon: 'none' })
-        } catch (e) {
-          uni.showModal({ title: '下发失败', content: e.message || '请重试', showCancel: false })
-        }
-      }
-
-      if (opt.dangerous) {
-        uni.showModal({
-          title: '操作确认',
-          content: `确定要执行「${opt.label}」吗？此操作可能影响设备运行状态。`,
-          success: (res) => {
-            if (res.confirm) doWrite()
-          }
-        })
-      } else {
-        await doWrite()
-      }
-    },
     // ============ 设置面板方法 ============
 
     initSettingsParams() {
@@ -1627,12 +2081,15 @@ export default {
       this.syncSettingsFromRealtime()
     },
     syncSettingsFromRealtime() {
-      // 节流：设置面板数据 500ms 合并更新一次，避免每帧全量遍历几十个参数做 scale 换算
-      if (this._syncSettingsTimer) return
+      // 节流：设置面板 1s 合并更新一次。
+      // 数值设定（告警阈值 / 温控）根本不需要秒级刷新，而每次同步都要遍历几百项参数，
+      // 写回显字段 → 小程序要重新 diff 一遍参数树。以前 500ms 一次（实际上是 0ms 空转，
+      // 见 _doSyncSettingsFromRealtime 的注释），是设置页持续卡顿的主要来源之一。
+      if (this._syncSettingsTimer || this._inSettingsSync) return
       this._syncSettingsTimer = setTimeout(() => {
         this._syncSettingsTimer = null
         this._doSyncSettingsFromRealtime()
-      }, 500)
+      }, 1000)
     },
     /** 按面板配置深克隆一份参数数组（重置回显值），供协议切换 / 自愈复用 */
     _clonePanelParams(cfg) {
@@ -1644,11 +2101,110 @@ export default {
         currentLabel: hasOptions ? '--' : undefined,
         currentText: hasOptions ? undefined : '--'
       }))
+      // 数组被整体替换 → 映射容器指向新数组（引用变化只发生在协议切换/初始化这一次）
+      this.paramsMapRef = this._buildParamsMap()
+      // 回显用的两个缓存必须一起清：候选键依赖协议模式（100 段 / 331 段），
+      // 原始值快照依赖参数集合，不清会把上一套参数的判断结果套到新参数上
+      this._candCache = {}
+      this._paramSeen = {}
     },
     _doSyncSettingsFromRealtime() {
+      // 防自激：本方法内部会 flushPendingFramesNow()，而 flush 收尾又会调
+      // syncSettingsFromRealtime()。定时器先置 null 再 flush 的老写法，等于
+      // 「同步 → flush → 再排一个定时器 → 同步 …」无限空转：没收到任何数据也每秒跑几遍
+      // 全量遍历。这里用同步锁切断。
+      if (this._inSettingsSync) return
+      this._inSettingsSync = true
+      try {
+        this._syncSettingsCore()
+      } finally {
+        this._inSettingsSync = false
+      }
+    },
+    /** 寄存器映射的 field→reg 反向表，按 deviceType 缓存（以前每次同步、每个面板重建一遍） */
+    _getFieldToReg(deviceType) {
+      const cache = this._fieldRegCache || (this._fieldRegCache = {})
+      let m = cache[deviceType]
+      if (m) return m
+      m = {}
+      const regMap = getRegisterMap(deviceType)
+      if (regMap && regMap.monitor) {
+        regMap.monitor.forEach(p => { if (p.reg !== undefined && p.field) m[p.field] = p.reg })
+      }
+      if (regMap && regMap.control) {
+        regMap.control.forEach(p => { if (p.reg !== undefined && p.field) m[p.field] = p.reg })
+      }
+      cache[deviceType] = m
+      return m
+    },
+    /**
+     * 参数回显的候选键列表（只与参数定义 + 协议模式有关，与实时值无关）。
+     * 以前每项、每次同步都要重跑几条正则和数组拼接，几百项 × 每秒一次，
+     * 光内存分配就够小程序喝一壶；缓存后只在首次算。
+     */
+    _getCandidates(p, cfg, allFieldToReg) {
+      const cache = this._candCache || (this._candCache = {})
+      const ck = cfg.dataKey + '|' + p.key
+      let arr = cache[ck]
+      if (arr) return arr
+      const has50Kw = this.is50KwMode
+      const fk = p.frameKey || p.key
+      arr = []
+      const is171FQuickCtl = cfg.deviceType === '171F' &&
+        (cfg.dataKey === 'quickControlParams' || cfg.dataKey === 'quickPowerParams')
+      if (is171FQuickCtl) {
+        // 171F 控制帧的 B-key 与能源帧重号（B0=光伏功率、B4=电网功率、B8=储能功率…），
+        // 只能读带 C_ 前缀的控制帧键；回落裸 B4 会把「电网功率」当成「储能DC开关机」
+        const f = String(p.field || '')
+        if (/^B\d+$/.test(f)) arr.push('C_' + f)
+        arr.push(fk)
+      } else if (has50Kw && /^[SC]_/.test(String(fk))) {
+        // 50kW：帧键自带 S_/C_ 前缀，说明这一项「只能从那类帧读」。
+        // 状态帧 B0=运行状态、控制帧 B0=心跳、能源帧 B0=接触器状态，同号不同义，
+        // 一旦回落到裸 B 号就会张冠李戴 —— BMS 心跳 100 曾被能源帧 B0（接触器已断开=0）
+        // 盖成 0，温控 15 项同理全被读成「原始 0 → -50.0℃」。
+        // 没有对应帧时宁可显示 '--'（并提示设备未上报控制帧），也不要编一个数出来。
+        arr.push(fk)
+      } else {
+        arr.push(fk)
+        const bareKey = String(fk).replace(/^[SC]_/, '')
+        if (bareKey !== fk) arr.push(bareKey)
+        if (p.field) arr.push(p.field)
+        if (p.address) {
+          const addrNum = parseInt(p.address, 10)
+          // 50kW 面板地址一律 ≥331；小于 300 的「裸地址」会命中能源帧同号寄存器，
+          // 早前 BMS 告警阈值（地址 1~76）就是这么把别的量读成 10.6V 的，直接跳过
+          if (!isNaN(addrNum) && !(has50Kw && addrNum < 300)) arr.push(addrNum)
+        }
+        // registerMap 里 field → reg 号（帧解析同时存了 B{n} 和 reg 号两种 key）
+        if (allFieldToReg) {
+          if (allFieldToReg[fk] !== undefined) arr.push(allFieldToReg[fk])
+          if (allFieldToReg[p.field] !== undefined) arr.push(allFieldToReg[p.field])
+        }
+      }
+      cache[ck] = arr
+      return arr
+    },
+    _syncSettingsCore() {
+      // 设置面板读的是 rawValues：先把暂存帧合并进来，保证回显用的是最新帧
+      this.flushPendingFramesNow()
       // 50kW 判定：配置页选择 50kW，或已收到新协议 bucket 数据
       const has50Kw = this.is50KwMode
       const rv = this.rawValues || {}
+
+      // BMS 设置面板的 15 项温控参数只能从 0x04 控制帧回显。
+      // 主机一个字节都没收到时（bucket 里没有 C_ 键），整列显示 '--' 是正常的，
+      // 这里提示一次，免得被当成「页面又坏了」——真机若是这种情况，需要设备侧开控制帧上报，
+      // 或者另做一条「读参数」流程（发 0x3401 读命令收应答），不能靠全量上报。
+      if (has50Kw && this.currentSettingsTab && this.currentSettingsTab.tab === 8) {
+        const bmsBucket = rv['171C_V2'] || {}
+        const hasAnyFrame = Object.keys(bmsBucket).length > 0
+        const hasCtlFrame = Object.keys(bmsBucket).some(k => k.indexOf('C_') === 0)
+        if (hasAnyFrame && !hasCtlFrame && !this._bmsCtlTipShown) {
+          this._bmsCtlTipShown = true
+          uni.showToast({ title: 'BMS 未上报控制帧（0x04），温控参数暂不可读', icon: 'none', duration: 2600 })
+        }
+      }
 
       // 协议模板切换：initSettingsParams 会先按 20kW 模板填充数组，
       // 检测到 50kW 后必须整体重建，否则永远显示 20kW 参数
@@ -1665,85 +2221,85 @@ export default {
         if (!arr || arr.length === 0) this._clonePanelParams(cfg)
       })
 
-      // 同步实时值：遍历对应协议的 PANELS 配置
-      const panels = sourcePanels
+      // 只同步「当前设置 tab 真正用到的数组」。
+      // 以前每次同步都把 9 个面板全遍历一遍（BMS 367 项 + PCS/光伏/储能/液冷上百项），
+      // 一屏却只看得到一个 tab —— 其余几百项算完就扔，还把它们一起拖进参数树的 diff。
+      const cfgNow = this.currentSettingsTab
+      if (!cfgNow) return
+      const needKeys = [cfgNow.dataKey, cfgNow.numericKey, cfgNow.extraSwitchKey]
+      const panels = sourcePanels.filter(c => needKeys.indexOf(c.dataKey) !== -1)
+      // 原始值快照：值没变就整项跳过（见下面快路径）
+      const seenCache = this._paramSeen || (this._paramSeen = {})
+
       panels.forEach(cfg => {
         const params = this[cfg.dataKey]
         if (!params || params.length === 0) return
         const bucket = rv[cfg.deviceType] || {}
         // 同一 deviceType 可能 registerMap 是短码（170C_STORAGE 前缀匹配 '170C'），用 getRegisterMap 拿完整映射
-        const regMap = getRegisterMap(cfg.deviceType)
-        const allFieldToReg = {}
-        if (regMap && regMap.monitor) {
-          regMap.monitor.forEach(p => { if (p.reg !== undefined && p.field) allFieldToReg[p.field] = p.reg })
-        }
-        if (regMap && regMap.control) {
-          regMap.control.forEach(p => { if (p.reg !== undefined && p.field) allFieldToReg[p.field] = p.reg })
-        }
-
-        // 171F 快捷控制/功率参数来自 CONTROL 帧，而 CONTROL 帧键已加 C_ 前缀；
-        // ENERGY 帧的同名 B-key（B0=光伏功率、B4=电网功率…）含义完全不同，不能误读
-        const is171FQuickCtl = cfg.deviceType === '171F' &&
-          (cfg.dataKey === 'quickControlParams' || cfg.dataKey === 'quickPowerParams')
+        // 反向表按 deviceType 缓存，不再每次同步重建几百项的对象
+        const allFieldToReg = this._getFieldToReg(cfg.deviceType)
 
         params.forEach(p => {
-          // 多层 fallback 查找顺序：
-          // 1. 171F 快捷控制：C_/S_ 帧前缀键（CONTROL 帧的控制命令）
-          // 2. param.key（50kW 带 S_/C_ 帧前缀；旧协议 B{n}）
-          // 3. 去掉前缀的裸 B-key（模拟器 JSON 上报不带帧类型前缀）
-          // 4. param.field（地址字符串）
-          // 5. param.address 转成整数（十进制 byte 地址）
-          // 6. registerMap 里 field → reg 号（帧解析同时存了 B{n} 和 reg 号两种 key）
-          const candidates = []
-          if (is171FQuickCtl) {
-            // 171F 控制帧的 B-key 与能源帧重号（B0=光伏功率、B4=电网功率、B8=储能功率…），
-            // 只能读带 C_ 前缀的控制帧键；回落裸 B4 会把「电网功率」当成「储能DC开关机」
-            const f = String(p.field || '')
-            if (/^B\d+$/.test(f)) candidates.push('C_' + f)
-            candidates.push(p.key)
-          } else {
-            candidates.push(p.key)
-            const bareKey = String(p.key).replace(/^[SC]_/, '')
-            if (bareKey !== p.key) candidates.push(bareKey)
-            candidates.push(p.field)
-            if (p.address) {
-              const addrNum = parseInt(p.address, 10)
-              if (!isNaN(addrNum)) candidates.push(addrNum)
-            }
-            if (allFieldToReg[p.key] !== undefined) candidates.push(allFieldToReg[p.key])
-            if (allFieldToReg[p.field] !== undefined) candidates.push(allFieldToReg[p.field])
-          }
+          // 组合卡里已改但还没下发的项：保留用户的选择，等「下发组合指令」后再由回显校准。
+          // 否则设备还在报旧值，用户刚选的「放电」会在 500ms 内被刷回去。
+          if (p._pending) return
+          // 每项可能属于不同设备（例如 171C 站点里有主机和阈值从机），
+          // 桶必须按参数自己的 deviceType 取，不能一律用面板的 cfg.deviceType。
+          // strictBucket 的项（BMS 四级告警阈值）在从机没上报时直接显示 '--'，
+          // 绝不回落到主机桶——两边 B0 重号，回落会把心跳 100 当成阈值。
+          const pbucket = p.strictBucket
+            ? (rv[p.deviceType] || {})
+            : ((p.deviceType && rv[p.deviceType]) || bucket)
+          // 候选键列表（多层 fallback：帧前缀键 → 裸 B 号 → field → 十进制地址 → reg 号）
+          // 只与参数定义和协议模式有关，缓存后不再每次重跑正则/拼数组
+          const candidates = this._getCandidates(p, cfg, allFieldToReg)
 
           let val
-          for (const k of candidates) {
-            if (k !== undefined && bucket[k] !== undefined) { val = bucket[k]; break }
+          for (let i = 0; i < candidates.length; i++) {
+            const k = candidates[i]
+            if (k !== undefined && pbucket[k] !== undefined) { val = pbucket[k]; break }
           }
           if (val === undefined) return  // bucket 里没这个值（控制寄存器设备不上报）
 
           const raw = typeof val === 'object' ? (val.raw !== undefined ? val.raw : val.eng) : val
+          // 快路径：数值项的显示值只由原始值决定。原始值没变、面板值也没被本地改过
+          // → 直接跳过换算与写回。367 项每秒重算一次除法 + toFixed 再写响应式属性，
+          // 是这个页面持续卡顿的大头（阈值这类值几分钟都不变）。
+          const seenKey = cfg.dataKey + '|' + p.key
+          const seen = p.options ? null : seenCache[seenKey]
+          if (seen && seen.raw === raw && seen.v === p.currentValue) return
           const eng = typeof val === 'object' ? (val.eng !== undefined ? val.eng : raw) : raw
           const sf = p.scale || 1
           const off = p.offset || 0
+          let nextValue
+          let nextText
           if (p.protoScaled) {
             // 协议层已按点表 scale 换算过（如 171F 控制帧 B8 已 /10、B16 已 /100），
             // 面板不能再除一次，否则 5.0kW 会变成 0.5kW
-            p.currentValue = Number(eng)
-            p.currentText = this.formatValue(Number(eng), p.decimals !== undefined ? p.decimals : 1)
+            nextValue = Number(eng)
+            nextText = this.formatValue(nextValue, p.decimals !== undefined ? p.decimals : 1)
           } else if (sf !== 1 || off) {
             // 工程值 = 原始值/系数 + 偏移（温度阈值 -40℃ 类，原始 810 → 41.0℃）
-            const scaled = Number(eng) / sf + off
-            p.currentValue = scaled
-            p.currentText = this.formatValue(scaled, p.decimals !== undefined ? p.decimals : 1)
+            nextValue = Number(eng) / sf + off
+            nextText = this.formatValue(nextValue, p.decimals !== undefined ? p.decimals : 1)
           } else {
-            p.currentValue = raw
-            p.currentText = raw !== undefined ? String(raw) : '--'
+            nextValue = raw
+            nextText = raw !== undefined ? String(raw) : '--'
           }
+          // 只在真的变了才写：BMS 数值设定有 367 项，每秒无条件赋值 700 多次
+          // 会白白触发一轮响应式通知（小程序里就是一层层 setData）
+          if (p.currentValue !== nextValue) p.currentValue = nextValue
+          if (p.currentText !== nextText) p.currentText = nextText
           if (p.options) {
             // 位命令：帧上报单比特 0/1，选项值为 0x00000000/0x00010000，先归一化再匹配
             const matchRaw = p.bitHex ? (Number(raw) ? '0x00010000' : '0x00000000') : raw
             const opt = p.options.find(o => String(o.value) === String(matchRaw))
-            p.currentLabel = opt ? opt.label : (raw !== undefined ? String(raw) : '--')
-            if (p.bitHex) p.currentValue = matchRaw
+            const nextLabel = opt ? opt.label : (raw !== undefined ? String(raw) : '--')
+            if (p.currentLabel !== nextLabel) p.currentLabel = nextLabel
+            if (p.bitHex && p.currentValue !== matchRaw) p.currentValue = matchRaw
+          } else {
+            // 记下这次的原始值 + 落库值，下次同步就能用快路径直接跳过
+            seenCache[seenKey] = { raw: raw, v: nextValue }
           }
         })
       })
@@ -1792,7 +2348,7 @@ export default {
     /** 未进入编辑态就点参数：明确提示，不下发（以前这里会顺手把编辑态打开，等于绕过「修改」按钮） */
     onNeedEdit() {
       this.showOpToast = true
-      this.opToast = '请先点右上角「修改」，再操作参数'
+      this.opToast = '请先点击右上角“修改”，再执行此操作'
       if (this._needEditTimer) clearTimeout(this._needEditTimer)
       this._needEditTimer = setTimeout(() => {
         this.showOpToast = false
@@ -1889,6 +2445,166 @@ export default {
       }
       return { param: p, option: opt }
     },
+    /**
+     * 组装「储能DC」组合报文
+     *
+     * 协议（0x3401 附件2 / EMS 0x171F，V1.2 起为 331 段地址）：储能DC开关机(335) /
+     * 储能充放电选择(337) / 充放电总功率(339) 三项必须放在一个报文里下发。分三帧发的话，设备按「最后一次写入」
+     * 理解，前面两项会被覆盖 —— 以前单独点「并网一键开机」再点「充电」，实际开机状态就丢了。
+     *
+     * @param {object} target 本次改动的参数
+     * @param {number} targetRaw 该参数的目标原始值（开关量是选项值，功率是 ×10 后的整数）
+     * @returns {{commands:Array, fallbacks:Array, error?:string}}
+     */
+    _buildStorageDcBundle(target, targetRaw) {
+      // 组帧前先把暂存帧落库：避免把 ≤800ms 前的回显旧值当作「当前值」一并下发
+      this.flushPendingFramesNow()
+      const groups = [
+        { key: 'qc_storage_dc', arr: this.quickControlParams },
+        { key: 'qc_pcs_mode', arr: this.quickControlParams },
+        { key: 'qc_total_power', arr: this.quickPowerParams }
+      ]
+      const commands = []
+      const fallbacks = []
+      for (let i = 0; i < groups.length; i++) {
+        const g = groups[i]
+        const item = (g.arr || []).find(x => x.key === g.key)
+        if (!item) return { error: `缺少参数 ${g.key}，请退出页面重新进入后再试` }
+        if (!item.address && !item.field) return { error: `参数“${item.label}”缺少寄存器地址` }
+
+        let raw
+        if (target && item.key === target.key) {
+          raw = Number(targetRaw)
+        } else {
+          raw = this._paramCurrentRaw(item)
+          if (raw === null) {
+            // 设备还没回显这一项：用协议默认值 0 占位（不启用 / 不充不放 / 功率 0），
+            // 既保证三项齐全、报文结构合法，也不会把设备推到未知状态
+            raw = 0
+            fallbacks.push(`${item.label}=0（未回显，按默认）`)
+          }
+        }
+        if (!Number.isFinite(raw)) return { error: `参数“${item.label}”的当前值无法换算，请稍后重试` }
+        commands.push({
+          field: item.field,
+          registerAddress: item.address,
+          value: raw,
+          regType: item.regType,
+          label: item.label
+        })
+      }
+      return { commands, fallbacks }
+    },
+    /** 工程值 → 下发原始值：开关量直接用选项值，数值走 (工程值 - offset) × scale */
+    _paramCurrentRaw(p) {
+      const cv = p.currentValue
+      if (cv === undefined || cv === null || cv === '') return null
+      const n = Number(cv)
+      if (!Number.isFinite(n)) return null
+      if (p.options) return Math.round(n)
+      return Math.round((n - (p.offset || 0)) * (p.scale || 1))
+    },
+    /** 一帧下发组合命令（储能DC）：成功返回 { ok: true, fallbacks }，失败弹窗并返回 { ok: false } */
+    async _sendStorageDcBundle(target, targetRaw) {
+      const bundle = this._buildStorageDcBundle(target, targetRaw)
+      if (bundle.error) {
+        uni.showModal({ title: '下发失败', content: bundle.error, showCancel: false })
+        return { ok: false }
+      }
+      const deviceType = (target && target.deviceType) || '171F'
+      console.log('========== 下发组合命令帧（储能DC，一个报文） ==========')
+      bundle.commands.forEach((c, i) => {
+        console.log(`[CMD] 命令${i + 1} ${c.label}: 字段 ${c.field} 寄存器 ${c.registerAddress} = ${c.value}`)
+      })
+      if (bundle.fallbacks.length) {
+        console.log('[CMD] 未回显项按默认值一并下发:', bundle.fallbacks.join('、'))
+      }
+      console.log('======================================================')
+      try {
+        this.client.setDeviceType(deviceType)
+        await this.client.sendControlBatch(bundle.commands, deviceType)
+        return { ok: true, fallbacks: bundle.fallbacks }
+      } catch (e) {
+        uni.showModal({ title: '下发失败', content: e.message || '请重试', showCancel: false })
+        return { ok: false }
+      }
+    },
+    /** 组合卡：本地选择（不下发），打 _pending 标记，未下发前不被设备回显覆盖 */
+    onBundleSelect(payload) {
+      if (!this._guardSettingsEdit()) return
+      const r = this._resolvePanelEvent(payload, null)
+      const p = r.param
+      const opt = r.option
+      if (!p || !opt) return
+      p.currentValue = opt.value
+      p.currentLabel = opt.label
+      p._pending = true
+      console.log('[BUNDLE] 本地选择:', p.label, '=', opt.label, '（待下发）')
+    },
+    /** 组合卡：本地改数值（只弹输入框，不下发） */
+    onBundleValueEdit(payload) {
+      if (!this._guardSettingsEdit()) return
+      const p = this._resolvePanelEvent(payload, null).param
+      if (!p) return
+      uni.showModal({
+        title: `设置 ${p.label}`,
+        editable: true,
+        placeholderText: `当前: ${p.currentText || '--'}${p.unit ? ' ' + p.unit : ''}，请输入新值`,
+        success: (res) => {
+          if (!res.confirm || res.content === undefined || res.content === '') return
+          const newVal = parseFloat(res.content)
+          if (isNaN(newVal)) {
+            uni.showToast({ title: '请输入有效数字', icon: 'none' })
+            return
+          }
+          if (p.min !== undefined && newVal < p.min) {
+            uni.showToast({ title: `不能小于 ${p.min}`, icon: 'none' })
+            return
+          }
+          if (p.max !== undefined && newVal > p.max) {
+            uni.showToast({ title: `不能大于 ${p.max}`, icon: 'none' })
+            return
+          }
+          p.currentValue = newVal
+          p.currentText = this.formatValue(newVal, p.decimals !== undefined ? p.decimals : 1)
+          p._pending = true
+          console.log('[BUNDLE] 本地改值:', p.label, '=', p.currentText, p.unit || '', '（待下发）')
+        }
+      })
+    },
+    /** 组合卡：点「下发组合指令」，把卡内三项的当前选择合成一帧发出 */
+    async onBundleSend() {
+      if (!this._guardSettingsEdit()) return
+      const run = async () => {
+        const r = await this._sendStorageDcBundle(null, null)
+        if (!r || !r.ok) return
+        this._clearBundlePending()
+        const tail = r.fallbacks && r.fallbacks.length ? '，未回显项已按默认值下发' : ''
+        this.opToast = `指令已下发${tail}`
+        this.showOpToast = true
+        setTimeout(() => { this.showOpToast = false }, 2600)
+      }
+      // 关机属危险动作：组合报文里含「一键关机」时先确认
+      const dc = (this.quickControlParams || []).find(x => x.key === 'qc_storage_dc')
+      if (dc && String(dc.currentValue) === '2') {
+        this.confirmTitle = '操作确认'
+        this.confirmContent = '即将执行“一键关机”，该指令将与充放电选择、充放电总功率一并下发，是否继续？'
+        this.confirmPayload = null
+        this.confirmCallback = run
+        this.showConfirm = true
+        return
+      }
+      await run()
+    },
+    /** 组合报文发完，清掉本地待下发标记，让回显重新接管 */
+    _clearBundlePending() {
+      const keys = ['qc_storage_dc', 'qc_pcs_mode', 'qc_total_power']
+      keys.forEach(k => {
+        const p = (this.quickControlParams || []).find(x => x.key === k) ||
+          (this.quickPowerParams || []).find(x => x.key === k)
+        if (p) p._pending = false
+      })
+    },
     async onSwitchParamClick(payload, legacyOpt) {
       // 门禁放最前：未点「修改」时连解析都不做，直接提示
       if (!this._guardSettingsEdit()) return
@@ -1914,8 +2630,17 @@ export default {
       }
       if (String(p.currentValue) === String(opt.value)) {
         this.showOpToast = true
-        this.opToast = `${p.label}: 当前已是 ${opt.label}`
+        this.opToast = `${p.label} 当前已是“${opt.label}”`
         setTimeout(() => { this.showOpToast = false }, 2000)
+        return
+      }
+
+      // 组合报文：储能DC开关机 / 充放电选择 / 总功率 必须同帧下发，不能走单字段 sendControl
+      if (p.bundle) {
+        // 组合参数不走单字段下发（会把同组另外两项覆盖掉），一律走卡片上的「统一下发」
+        this.opToast = '该项需与同组参数一并下发，请在顶部卡片点击“统一下发”'
+        this.showOpToast = true
+        setTimeout(() => { this.showOpToast = false }, 2400)
         return
       }
 
@@ -1934,10 +2659,10 @@ export default {
           // 兜底校验：宁可在这里报一句能看懂的话，也不要让空值一路进到帧构造函数，
           // 最后只抛一个「字段不能为空」（看不出是哪个参数、为什么空）
           if (sendField === undefined || sendField === null || String(sendField).trim() === '') {
-            throw new Error(`参数「${p.label}」缺少下发字段（${p.key}），请重新进入该标签页后再试`)
+            throw new Error(`参数“${p.label}”数据异常，请重新进入该页面后再试`)
           }
           if (sendValue === undefined || sendValue === null || String(sendValue).trim() === '') {
-            throw new Error(`参数「${p.label}」的下发值为空，请重新进入该标签页后再试`)
+            throw new Error(`参数“${p.label}”下发值无效，请重新进入该页面后再试`)
           }
 
           // 下发前打印完整指令，便于与设备侧抓包逐项比对
@@ -1969,7 +2694,7 @@ export default {
               }, 1200)
             }
           }
-          this.opToast = `${p.label} → ${opt.label} 指令已下发`
+          this.opToast = `已下发：${p.label} - ${opt.label}`
           this.showOpToast = true
           setTimeout(() => { this.showOpToast = false }, 2500)
         } catch (e) {
@@ -1979,7 +2704,7 @@ export default {
 
       if (opt.dangerous) {
         this.confirmTitle = '操作确认'
-        this.confirmContent = `确定要执行「${p.label} - ${opt.label}」吗？此操作可能影响设备运行状态。`
+        this.confirmContent = `确定对“${p.label}”执行“${opt.label}”吗？该操作将直接影响设备运行。`
         this.confirmPayload = { param: p, option: opt, deviceType }
         this.confirmCallback = doSend
         this.showConfirm = true
@@ -1992,6 +2717,13 @@ export default {
       const resolved = this._resolvePanelEvent(payload, null)
       const p = resolved.param
       if (!p) return
+      if (p.bundle) {
+        // 组合参数不走单字段下发（会把同组另外两项覆盖掉），一律走卡片的「下发组合指令」
+        this.opToast = '该项需与同组参数一并下发，请在顶部卡片点击“统一下发”'
+        this.showOpToast = true
+        setTimeout(() => { this.showOpToast = false }, 2400)
+        return
+      }
       this.editingParamKey = p.key
       this.editingParamDeviceType = p.deviceType || '171C'
       this.editingParamValue = p.currentText ? String(p.currentText) : ''
@@ -2023,7 +2755,7 @@ export default {
             if (!p.address && !hasField) {
               uni.showModal({
                 title: '下发失败',
-                content: `参数「${p.label}」缺少寄存器地址，请重新进入该标签页后再试`,
+                content: `参数“${p.label}”数据异常，请重新进入该页面后再试`,
                 showCancel: false
               })
               return
@@ -2031,7 +2763,7 @@ export default {
             if (!Number.isFinite(rawVal)) {
               uni.showModal({
                 title: '下发失败',
-                content: `参数「${p.label}」的换算结果无效，请重新输入`,
+                content: `参数“${p.label}”输入值超出有效范围，请重新输入`,
                 showCancel: false
               })
               return
@@ -2055,7 +2787,7 @@ export default {
               const scaled = rawVal / (p.scale || 1) + (p.offset || 0)
               p.currentValue = scaled
               p.currentText = this.formatValue(scaled, p.decimals !== undefined ? p.decimals : 1)
-              this.opToast = `${p.label} 已修改为 ${p.currentText}${p.unit ? ' ' + p.unit : ''}`
+              this.opToast = `${p.label}已修改为 ${p.currentText}${p.unit ? ' ' + p.unit : ''}`
               this.showOpToast = true
               setTimeout(() => { this.showOpToast = false }, 2500)
             } catch (e) {
@@ -2084,6 +2816,12 @@ export default {
 .sub-page {
   /* 与「关于我们」等页面统一的浅灰蓝底色 */
   background: #f4f6f9;
+  /* 显式字体栈：安卓 WebView 默认字体在数字与中文混排时字重不均，
+     指定系统 UI 字体后中文走苹方/HarmonyOS Sans，数字走 SF/Roboto，观感统一 */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC',
+    'HarmonyOS Sans', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+  color: #17202e;
+  -webkit-font-smoothing: antialiased;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -2102,13 +2840,16 @@ export default {
   height: calc(100vh - 209px);
 }
 
-/* ========== 标签栏（胶囊选中式） ==========
-   注意：本栏高度固定为 90rpx ≈ 46px，
-   swiperStyle 中 fixed 常量需同步（placeholder 89 + 卡片 95 + 标签栏 46 + 底部tab 44） */
+/* ========== 标签栏（分段控件式） ==========
+   整条做成一个白色轨道，选中项是轨道里的主色滑块。
+   之前每项各自一张白卡加投影，五个并排时像五张卡片在抢注意力，
+   分段控件只留一个视觉焦点，更接近系统级 App 的次级导航。
+   高度固定 90rpx ≈ 46px，swiperStyle 中 fixed 常量需同步
+   （placeholder 89 + 卡片 95 + 标签栏 46 + 底部 tab 44） */
 .tab-container {
   flex-shrink: 0;
   background-color: #f4f6f9;
-  padding: 10rpx 0 12rpx;
+  padding: 10rpx 0 14rpx;
   border-bottom: none;
   box-shadow: none;
   position: relative;
@@ -2122,61 +2863,65 @@ export default {
 .tab-list {
   display: flex;
   align-items: center;
-  padding: 0 20rpx;
-  width: 100%;
+  margin: 0 20rpx;
+  padding: 5rpx;
+  width: calc(100% - 40rpx);
   box-sizing: border-box;
+  background: #ffffff;
+  border: 1rpx solid #e7ecf3;
+  border-radius: 999rpx;
+  box-shadow: 0 1rpx 3rpx rgba(20, 32, 52, 0.04);
 }
 
-/* 设置组标题较长：容器按内容宽度排布，配合 scroll-view 横向滚动 */
+/* 设置组标题较长：容器按内容宽度排布，配合 scroll-view 横向滚动。
+   右侧留 40rpx：否则最后一项会被屏幕边缘切掉半个字，看着像渲染出错 */
 .tab-list-auto {
+  /* 设置组标题较长：轨道按内容撑开，横向滚动；右侧多留一段，
+     否则滚到末尾时最后一项紧贴轨道内壁，看起来像被切掉 */
   width: max-content;
-  min-width: 100%;
+  min-width: calc(100% - 40rpx);
+  // padding-right: 44rpx;
 }
 
 .tab-item {
   /* 设置组标题较长：按内容宽度排布并允许横向滚动，避免文字互相粘连 */
   flex: 0 0 auto;
   text-align: center;
-  padding: 14rpx 26rpx;
-  font-size: 27rpx;
-  line-height: 1.2;
-  color: #5c6673;
-  background: #ffffff;
-  border: 1rpx solid #e8edf4;
+  padding: 12rpx 18rpx;
+  font-size: 26rpx;
+  line-height: 1.25;
+  letter-spacing: 0.4rpx;
+  color: #5f6a79;
+  font-weight: 500;
+  background: transparent;
+  border: none;
   border-radius: 999rpx;
   white-space: nowrap;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  transition: color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
 
   /* 监测组标题较短：等分宽度铺满 */
   &.tab-monitor {
     flex: 1 1 0;
-    padding: 14rpx 6rpx;
+    padding: 12rpx 8rpx;
   }
 
   & + .tab-item {
-    margin-left: 10rpx;
+    margin-left: 4rpx;
   }
 
   &:active {
-    opacity: 0.75;
+    opacity: 0.7;
   }
 
-  /* 监测组：激活态实心蓝胶囊 */
-  &.tab-monitor.active {
-    color: #ffffff;
-    background: #2f7cf6;
-    border-color: #2f7cf6;
-    font-weight: 600;
-    box-shadow: 0 6rpx 16rpx rgba(47, 124, 246, 0.24);
-  }
-
-  /* 设置组：激活态实心橙胶囊，提示当前处于可下发区域 */
+  /* 激活态：轨道内的主色滑块。
+     两组统一配色 —— 监测/设置的身份由底部主导航表达，顶部再换一次颜色，
+     同一个控件在两屏之间会「换一张脸」。
+     不加字重：设置组按内容宽度排布，选中项一加粗整排会横向抖 1~2px。 */
+  &.tab-monitor.active,
   &.tab-setting.active {
     color: #ffffff;
-    background: #e8890c;
-    border-color: #e8890c;
-    font-weight: 600;
-    box-shadow: 0 6rpx 16rpx rgba(232, 137, 12, 0.24);
+    background: #2f7cf6;
+    box-shadow: 0 2rpx 5rpx rgba(20, 32, 52, 0.14);
   }
 }
 
@@ -2238,6 +2983,7 @@ export default {
   width: 100%;
   min-height: 0;
   position: relative;
+  background: #f4f6f9;
   z-index: 1;
   overflow: hidden;
 }
@@ -2295,20 +3041,44 @@ export default {
 }
 
 .bottom-tab-label {
-  font-size: 21rpx;
+  font-size: 22rpx;
   line-height: 1;
-  color: #b0b6c0;
+  letter-spacing: 0.4rpx;
+  color: #8a94a1;
 }
 
 .module-scroll {
   height: 100%;
   min-height: 0;
   touch-action: pan-y;
+  /* 显式底色：面板创建/切换的瞬间若还没画内容，露出的是与标签栏一致的浅灰，
+     而不是微信默认的白色块（之前那种“白一块”的观感就是底色透出来的） */
+  background: #f4f6f9;
 }
 
 .content {
   /* 与 DeviceCard 的 20rpx 外边距对齐 */
   padding: 20rpx;
+}
+
+/* 设置面板两阶段挂载时的骨架：与真实面板同尺寸的浅色块，
+   只画一帧，代价接近 0，避免点按后出现空白/推片 */
+.sp-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+.sp-skeleton-hero {
+  height: 106rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  border: 1rpx solid #eceff4;
+}
+.sp-skeleton-card {
+  height: 220rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  border: 1rpx solid #eceff4;
 }
 
 /* 设置区兜底提示（配置未命中时也要有可见内容，不能白屏） */
@@ -2363,9 +3133,9 @@ export default {
   &::after { border: none; }
 
   &.primary {
-    background: #007AFF;
+    background: #2f7cf6;
     color: #fff;
-    box-shadow: 0 6rpx 16rpx rgba(0, 122, 255, 0.22);
+    box-shadow: 0 2rpx 8rpx rgba(20, 32, 52, 0.12);
   }
 
   &[disabled] {

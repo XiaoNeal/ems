@@ -53,8 +53,9 @@ export default {
   display: flex;
   flex-wrap: wrap;
   background: #ffffff;
-  border: 1rpx solid #eef1f5;
-  border-radius: 18rpx;
+  border: 1rpx solid #eceff4;
+  border-radius: 20rpx;
+  box-shadow: 0 1rpx 3rpx rgba(20, 32, 52, 0.03);
   overflow: hidden;
 
   &--bare {
@@ -86,14 +87,21 @@ export default {
 
 .item-label {
   max-width: 100%;
-  font-size: 21rpx;
-  line-height: 1.3;
-  color: #98a2ae;
+  font-size: 22rpx;
+  line-height: 1.35;
+  color: #78838f;
+  letter-spacing: 0.2rpx;
   text-align: center;
   margin-bottom: 8rpx;
+  /* 标签允许折行（最多 2 行）：三列时每格只有 1/3 屏宽，
+     像「PCS交流累计充电电量」这类 8 字以上的名称单行必然被省略成「…」，
+     信息直接丢失。改成两行显示完整名称，正常长度的标签仍是一行，不受影响。
+     行高固定 1.35，两行也只用 2.7 行高，不会明显撑高卡片。 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: break-word;
 }
 
 .item-value-row {
@@ -106,12 +114,17 @@ export default {
 
 .item-value {
   max-width: 100%;
-  font-size: 30rpx;
+  font-size: 32rpx;
   font-weight: 600;
-  color: #1d2430;
-  /* 等宽字体：数值刷新时宽度不跳动 */
-  font-family: 'Menlo', 'Consolas', 'Roboto Mono', monospace;
-  letter-spacing: -0.5rpx;
+  color: #16202d;
+  /* 数字等宽：刷新时宽度不跳动，但不使用 mono 字体 ——
+     安卓上 Menlo/Consolas 会落到通用 monospace，中英混排时字面高低不齐，
+     换成系统 UI 字体 + 表格数字特性，既对齐又与中文同一套骨架 */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC',
+    'HarmonyOS Sans', 'Helvetica Neue', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -119,10 +132,10 @@ export default {
 
 .item-unit {
   flex-shrink: 0;
-  margin-left: 4rpx;
-  font-size: 20rpx;
-  font-weight: 400;
-  color: #98a2ae;
+  margin-left: 5rpx;
+  font-size: 21rpx;
+  font-weight: 500;
+  color: #8a94a1;
 }
 
 .grid-item--alarm {
@@ -138,6 +151,6 @@ export default {
   padding: 36rpx 0;
   text-align: center;
   font-size: 24rpx;
-  color: #98a2ae;
+  color: #8a94a1;
 }
 </style>

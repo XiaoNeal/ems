@@ -134,10 +134,16 @@ class Model0318V2_3 extends DeviceBase {
             fanRunWeeks: { name: '风机累计运行周数(天)', value: '--' },
         }
         this.stateData = {}
+        // 位型字段 raw 属性防御：确保 energyData 里所有字段在初始化阶段就存在 raw 键
+        // 避免某些环境下 raw 未定义导致故障标红判断失效
+        Object.values(this.energyData).forEach(f => {
+            if (f && typeof f === 'object' && !('raw' in f)) f.raw = null;
+        });
     }
 
     getData(json) {
-        if (json.dataType == "2") {
+        // 宽松比较：兼容 dataType 为字符串('2')或数字(2)
+        if (String(json.dataType) === '2') {
             this.getEnergyData(json)
         }
     }
@@ -145,6 +151,24 @@ class Model0318V2_3 extends DeviceBase {
     getEnergyData(jsonData) {
         if (!jsonData) return
         const data = jsonData.data || jsonData
+        // 位型字段统一读取：后端可能直接下发位键(B86b0)，也可能只下发字节键(B86)。
+        // 优先位键，缺失时从字节按位提取；两者都缺失返回 null（显示 --，避免误判为无故障）
+        const readBit = (byte, idx) => {
+            const bitKey = data['B' + byte + 'b' + idx];
+            if (bitKey !== undefined && bitKey !== null && bitKey !== '') {
+                const n = parseInt(bitKey);
+                if (Number.isFinite(n)) return n & 1;
+            }
+            const byteVal = parseInt(data['B' + byte]);
+            if (!Number.isFinite(byteVal)) return null;
+            return (byteVal >> idx) & 1;
+        };
+        // 位型字段赋值：raw 存 0/1 位值供前端标红判断，value 按枚举转中文
+        const setBitField = (key, byte, idx, enumMap) => {
+            const bit = readBit(byte, idx);
+            this.energyData[key].raw = bit;
+            this.energyData[key].value = bit === null ? '--' : (enumMap[bit] !== undefined ? enumMap[bit] : bit);
+        };
         this.energyData.startMode.value = startModeEnum[data.B0] || data.B0;
         this.energyData.workMode.value = workModeEnum[data.B2] || data.B2;
         this.energyData.supplyReturnTarget.value = supplyReturnTargetEnum[data.B4] || data.B4;
@@ -162,20 +186,19 @@ class Model0318V2_3 extends DeviceBase {
         this.energyData.supplyPressureWarningDiff.value = data.B28;
         this.energyData.modbusAddr.value = data.B32;
         this.energyData.baudRate.value = baudRateEnum[data.B34] || data.B34;
+        this.energyData.baudRate.raw = data.B34;
         this.energyData.unitRunStatus.value = unitRunStatusEnum(data.B36);
-        // byte 38 电平信号：低字节 8 bit
-        this.energyData.B38b1.value = levelEnum[(parseInt(data.B38) >> 1) & 1] || ((parseInt(data.B38) >> 1) & 1);
-        this.energyData.B38b2.value = levelEnum[(parseInt(data.B38) >> 2) & 1] || ((parseInt(data.B38) >> 2) & 1);
-        // byte 39 电平信号
-        this.energyData.B39b0.value = levelEnum[(parseInt(data.B39) >> 0) & 1] || ((parseInt(data.B39) >> 0) & 1);
-        this.energyData.B39b2.value = levelEnum[(parseInt(data.B39) >> 2) & 1] || ((parseInt(data.B39) >> 2) & 1);
-        this.energyData.B39b5.value = levelEnum[(parseInt(data.B39) >> 5) & 1] || ((parseInt(data.B39) >> 5) & 1);
-        this.energyData.B39b6.value = levelEnum[(parseInt(data.B39) >> 6) & 1] || ((parseInt(data.B39) >> 6) & 1);
-        // byte 41 输出位：0=断开, 1=输出
-        this.energyData.B41b3.value = outputEnum[(parseInt(data.B41) >> 3) & 1] || ((parseInt(data.B41) >> 3) & 1);
-        this.energyData.B41b5.value = outputEnum[(parseInt(data.B41) >> 5) & 1] || ((parseInt(data.B41) >> 5) & 1);
-        this.energyData.B41b6.value = outputEnum[(parseInt(data.B41) >> 6) & 1] || ((parseInt(data.B41) >> 6) & 1);
-        this.energyData.B41b7.value = outputEnum[(parseInt(data.B41) >> 7) & 1] || ((parseInt(data.B41) >> 7) & 1);
+        // byte 38/39 电平信号、byte 41 输出位：0/1 位值按枚举转换
+        setBitField('B38b1', 38, 1, levelEnum);
+        setBitField('B38b2', 38, 2, levelEnum);
+        setBitField('B39b0', 39, 0, levelEnum);
+        setBitField('B39b2', 39, 2, levelEnum);
+        setBitField('B39b5', 39, 5, levelEnum);
+        setBitField('B39b6', 39, 6, levelEnum);
+        setBitField('B41b3', 41, 3, outputEnum);
+        setBitField('B41b5', 41, 5, outputEnum);
+        setBitField('B41b6', 41, 6, outputEnum);
+        setBitField('B41b7', 41, 7, outputEnum);
         this.energyData.supplyLiquidTemp.value = data.B42;
         this.energyData.returnLiquidTemp.value = data.B44;
         this.energyData.systemEvapInlet.value = data.B46;
@@ -189,75 +212,12 @@ class Model0318V2_3 extends DeviceBase {
         this.energyData.supplyPressure.value = data.B72;
         this.energyData.returnPressure.value = data.B74;
         this.energyData.dischargePressure.value = data.B78;
-        this.energyData.B86b0.value = faultEnum[(parseInt(data.B86) >> 0) & 1] || ((parseInt(data.B86) >> 0) & 1);
-        this.energyData.B86b1.value = faultEnum[(parseInt(data.B86) >> 1) & 1] || ((parseInt(data.B86) >> 1) & 1);
-        this.energyData.B86b2.value = faultEnum[(parseInt(data.B86) >> 2) & 1] || ((parseInt(data.B86) >> 2) & 1);
-        this.energyData.B86b3.value = faultEnum[(parseInt(data.B86) >> 3) & 1] || ((parseInt(data.B86) >> 3) & 1);
-        this.energyData.B86b4.value = faultEnum[(parseInt(data.B86) >> 4) & 1] || ((parseInt(data.B86) >> 4) & 1);
-        this.energyData.B86b5.value = faultEnum[(parseInt(data.B86) >> 5) & 1] || ((parseInt(data.B86) >> 5) & 1);
-        this.energyData.B86b6.value = faultEnum[(parseInt(data.B86) >> 6) & 1] || ((parseInt(data.B86) >> 6) & 1);
-        this.energyData.B86b7.value = faultEnum[(parseInt(data.B86) >> 7) & 1] || ((parseInt(data.B86) >> 7) & 1);
-        this.energyData.B87b0.value = faultEnum[(parseInt(data.B87) >> 0) & 1] || ((parseInt(data.B87) >> 0) & 1);
-        this.energyData.B87b1.value = faultEnum[(parseInt(data.B87) >> 1) & 1] || ((parseInt(data.B87) >> 1) & 1);
-        this.energyData.B87b2.value = faultEnum[(parseInt(data.B87) >> 2) & 1] || ((parseInt(data.B87) >> 2) & 1);
-        this.energyData.B87b3.value = faultEnum[(parseInt(data.B87) >> 3) & 1] || ((parseInt(data.B87) >> 3) & 1);
-        this.energyData.B87b4.value = faultEnum[(parseInt(data.B87) >> 4) & 1] || ((parseInt(data.B87) >> 4) & 1);
-        this.energyData.B87b5.value = faultEnum[(parseInt(data.B87) >> 5) & 1] || ((parseInt(data.B87) >> 5) & 1);
-        this.energyData.B87b6.value = faultEnum[(parseInt(data.B87) >> 6) & 1] || ((parseInt(data.B87) >> 6) & 1);
-        this.energyData.B87b7.value = faultEnum[(parseInt(data.B87) >> 7) & 1] || ((parseInt(data.B87) >> 7) & 1);
-        this.energyData.B88b0.value = faultEnum[(parseInt(data.B88) >> 0) & 1] || ((parseInt(data.B88) >> 0) & 1);
-        this.energyData.B88b1.value = faultEnum[(parseInt(data.B88) >> 1) & 1] || ((parseInt(data.B88) >> 1) & 1);
-        this.energyData.B88b2.value = faultEnum[(parseInt(data.B88) >> 2) & 1] || ((parseInt(data.B88) >> 2) & 1);
-        this.energyData.B88b3.value = faultEnum[(parseInt(data.B88) >> 3) & 1] || ((parseInt(data.B88) >> 3) & 1);
-        this.energyData.B89b0.value = faultEnum[(parseInt(data.B89) >> 0) & 1] || ((parseInt(data.B89) >> 0) & 1);
-        this.energyData.B89b1.value = faultEnum[(parseInt(data.B89) >> 1) & 1] || ((parseInt(data.B89) >> 1) & 1);
-        this.energyData.B89b2.value = faultEnum[(parseInt(data.B89) >> 2) & 1] || ((parseInt(data.B89) >> 2) & 1);
-        this.energyData.B89b3.value = faultEnum[(parseInt(data.B89) >> 3) & 1] || ((parseInt(data.B89) >> 3) & 1);
-        this.energyData.B89b4.value = faultEnum[(parseInt(data.B89) >> 4) & 1] || ((parseInt(data.B89) >> 4) & 1);
-        this.energyData.B89b5.value = faultEnum[(parseInt(data.B89) >> 5) & 1] || ((parseInt(data.B89) >> 5) & 1);
-        this.energyData.B89b6.value = faultEnum[(parseInt(data.B89) >> 6) & 1] || ((parseInt(data.B89) >> 6) & 1);
-        this.energyData.B89b7.value = faultEnum[(parseInt(data.B89) >> 7) & 1] || ((parseInt(data.B89) >> 7) & 1);
-        this.energyData.B90b0.value = faultEnum[(parseInt(data.B90) >> 0) & 1] || ((parseInt(data.B90) >> 0) & 1);
-        this.energyData.B90b1.value = faultEnum[(parseInt(data.B90) >> 1) & 1] || ((parseInt(data.B90) >> 1) & 1);
-        this.energyData.B91b0.value = faultEnum[(parseInt(data.B91) >> 0) & 1] || ((parseInt(data.B91) >> 0) & 1);
-        this.energyData.B91b1.value = faultEnum[(parseInt(data.B91) >> 1) & 1] || ((parseInt(data.B91) >> 1) & 1);
-        this.energyData.B91b2.value = faultEnum[(parseInt(data.B91) >> 2) & 1] || ((parseInt(data.B91) >> 2) & 1);
-        this.energyData.B91b3.value = faultEnum[(parseInt(data.B91) >> 3) & 1] || ((parseInt(data.B91) >> 3) & 1);
-        this.energyData.B91b4.value = faultEnum[(parseInt(data.B91) >> 4) & 1] || ((parseInt(data.B91) >> 4) & 1);
-        this.energyData.B91b5.value = faultEnum[(parseInt(data.B91) >> 5) & 1] || ((parseInt(data.B91) >> 5) & 1);
-        this.energyData.B91b6.value = faultEnum[(parseInt(data.B91) >> 6) & 1] || ((parseInt(data.B91) >> 6) & 1);
-        this.energyData.B91b7.value = faultEnum[(parseInt(data.B91) >> 7) & 1] || ((parseInt(data.B91) >> 7) & 1);
-        this.energyData.B92b0.value = faultEnum[(parseInt(data.B92) >> 0) & 1] || ((parseInt(data.B92) >> 0) & 1);
-        this.energyData.B92b1.value = faultEnum[(parseInt(data.B92) >> 1) & 1] || ((parseInt(data.B92) >> 1) & 1);
-        this.energyData.B92b2.value = faultEnum[(parseInt(data.B92) >> 2) & 1] || ((parseInt(data.B92) >> 2) & 1);
-        this.energyData.B92b3.value = faultEnum[(parseInt(data.B92) >> 3) & 1] || ((parseInt(data.B92) >> 3) & 1);
-        this.energyData.B92b4.value = faultEnum[(parseInt(data.B92) >> 4) & 1] || ((parseInt(data.B92) >> 4) & 1);
-        this.energyData.B92b5.value = faultEnum[(parseInt(data.B92) >> 5) & 1] || ((parseInt(data.B92) >> 5) & 1);
-        this.energyData.B92b6.value = faultEnum[(parseInt(data.B92) >> 6) & 1] || ((parseInt(data.B92) >> 6) & 1);
-        this.energyData.B92b7.value = faultEnum[(parseInt(data.B92) >> 7) & 1] || ((parseInt(data.B92) >> 7) & 1);
-        this.energyData.B93b0.value = faultEnum[(parseInt(data.B93) >> 0) & 1] || ((parseInt(data.B93) >> 0) & 1);
-        this.energyData.B93b1.value = faultEnum[(parseInt(data.B93) >> 1) & 1] || ((parseInt(data.B93) >> 1) & 1);
-        this.energyData.B93b2.value = faultEnum[(parseInt(data.B93) >> 2) & 1] || ((parseInt(data.B93) >> 2) & 1);
-        this.energyData.B93b3.value = faultEnum[(parseInt(data.B93) >> 3) & 1] || ((parseInt(data.B93) >> 3) & 1);
-        this.energyData.B93b4.value = faultEnum[(parseInt(data.B93) >> 4) & 1] || ((parseInt(data.B93) >> 4) & 1);
-        this.energyData.B93b5.value = faultEnum[(parseInt(data.B93) >> 5) & 1] || ((parseInt(data.B93) >> 5) & 1);
-        this.energyData.B93b6.value = faultEnum[(parseInt(data.B93) >> 6) & 1] || ((parseInt(data.B93) >> 6) & 1);
-        this.energyData.B93b7.value = faultEnum[(parseInt(data.B93) >> 7) & 1] || ((parseInt(data.B93) >> 7) & 1);
-        this.energyData.B94b0.value = faultEnum[(parseInt(data.B94) >> 0) & 1] || ((parseInt(data.B94) >> 0) & 1);
-        this.energyData.B94b1.value = faultEnum[(parseInt(data.B94) >> 1) & 1] || ((parseInt(data.B94) >> 1) & 1);
-        this.energyData.B94b2.value = faultEnum[(parseInt(data.B94) >> 2) & 1] || ((parseInt(data.B94) >> 2) & 1);
-        this.energyData.B94b3.value = faultEnum[(parseInt(data.B94) >> 3) & 1] || ((parseInt(data.B94) >> 3) & 1);
-        this.energyData.B94b4.value = faultEnum[(parseInt(data.B94) >> 4) & 1] || ((parseInt(data.B94) >> 4) & 1);
-        this.energyData.B94b5.value = faultEnum[(parseInt(data.B94) >> 5) & 1] || ((parseInt(data.B94) >> 5) & 1);
-        this.energyData.B94b6.value = faultEnum[(parseInt(data.B94) >> 6) & 1] || ((parseInt(data.B94) >> 6) & 1);
-        this.energyData.B95b0.value = faultEnum[(parseInt(data.B95) >> 0) & 1] || ((parseInt(data.B95) >> 0) & 1);
-        this.energyData.B95b1.value = faultEnum[(parseInt(data.B95) >> 1) & 1] || ((parseInt(data.B95) >> 1) & 1);
-        this.energyData.B95b2.value = faultEnum[(parseInt(data.B95) >> 2) & 1] || ((parseInt(data.B95) >> 2) & 1);
-        this.energyData.B95b3.value = faultEnum[(parseInt(data.B95) >> 3) & 1] || ((parseInt(data.B95) >> 3) & 1);
-        this.energyData.B95b4.value = faultEnum[(parseInt(data.B95) >> 4) & 1] || ((parseInt(data.B95) >> 4) & 1);
-        this.energyData.B95b5.value = faultEnum[(parseInt(data.B95) >> 5) & 1] || ((parseInt(data.B95) >> 5) & 1);
-        this.energyData.B95b6.value = faultEnum[(parseInt(data.B95) >> 6) & 1] || ((parseInt(data.B95) >> 6) & 1);
-        this.energyData.B95b7.value = faultEnum[(parseInt(data.B95) >> 7) & 1] || ((parseInt(data.B95) >> 7) & 1);
+        // 故障字 B86~B95：后端 0=无故障，1=有故障，按位提取后经 faultEnum 转中文
+        [[86, 8], [87, 8], [88, 4], [89, 8], [90, 2], [91, 8], [92, 8], [93, 8], [94, 7], [95, 8]].forEach(([byte, bits]) => {
+            for (let i = 0; i < bits; i++) {
+                setBitField('B' + byte + 'b' + i, byte, i, faultEnum);
+            }
+        });
         this.energyData.inverterFaultCode.value = inverterFaultEnum[data.B100] || data.B100;
         this.energyData.systemFaultLevel.value = data.B104;
         this.energyData.systemFaultCode.value = data.B106;

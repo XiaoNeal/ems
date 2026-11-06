@@ -61,6 +61,10 @@ page {
 	// background-image: url('static/main_bg_img_750.jpg');
 	height: 100%;
 	box-sizing: border-box;
+	/* 全局字体栈：安卓 WebView 未显式指定时会落到思源/默认字体，
+	   数字与中文混排字重不齐；统一走系统 UI 字体，子组件继承后观感一致 */
+	font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC',
+		'HarmonyOS Sans', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
 	/* App 端用 custom navigationStyle，状态栏由 DyNavbar 内部 header-safe-area 处理 */
 	/* #ifdef MP */
 	padding-top: env(safe-area-inset-top);

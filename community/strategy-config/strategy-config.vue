@@ -446,6 +446,18 @@ export default {
     }
   },
   methods: {
+    // 运行策略寄存器地址：20kW=114，50kW（新协议站）=345
+    // 判定与 architecture-diagram.systemStartAddress / system.vue.goToQuickControl 口径一致：
+    // 站点容量 ≥50kW，或站点设备列表出现 50kW 专属协议设备（1707/170C/171C_V2/0318，归一化前缀匹配）
+    strategyRegisterAddress() {
+      const station = this.$store.state.currentSelectDevice || {};
+      const cap = Number(station.totalInstalledCapacity);
+      if (Number.isFinite(cap) && cap > 0 && cap >= 50) return '345';
+      const norm = t => String(t == null ? '' : t).toUpperCase().replace(/_/g, '').replace(/^0X/, '').replace(/\s+/g, '');
+      const is50kwType = t => /^(1707|170C|171CV2|0318)/.test(norm(t));
+      if ((station.list || []).some(item => is50kwType(item.typeCode || item.deviceType))) return '345';
+      return '114';
+    },
     buildCommand(registerAddress, registerValue) {
       return [{
         deviceCategory: '171F',
@@ -738,7 +750,7 @@ export default {
               typeCode: deviceConfig.typeCode,
               address: deviceConfig.address,
               userId: this.userId,
-              commands: this.buildCommand('114', strategyType)
+              commands: this.buildCommand(this.strategyRegisterAddress(), strategyType)
             });
             uni.showToast({ title: '保存并下发成功', icon: 'success' });
           } else {

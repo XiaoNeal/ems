@@ -7,46 +7,22 @@
         value: '不可用',
         bgColor: '#f8fafc',
         borderColor: '#eef1f5',
-        color: '#98a2ae'
+        color: '#8a94a1'
       }]" />
     </DataGroup>
 
     <template v-else>
       <!-- 未收到数据时仍显示完整参数模板，仅数值为 -- -->
-      <view v-if="!hasData" class="tip-banner">尚未接收到液冷机数据，以下为参数模板，数值显示为 --</view>
+      <view v-if="!hasData" class="tip-banner">尚未接收到液冷机数据，数值显示为 --</view>
 
-      <!-- 运行状态 -->
+      <!-- 运行状态：机组运行状态 + 电平/输出开关量 -->
       <DataGroup title="运行状态">
         <view class="state-cards">
           <view class="state-card">
             <text class="state-label">机组运行状态</text>
             <text class="state-value" :class="{ warn: runStatus.fault }">{{ runStatus.text }}</text>
           </view>
-          <view class="state-card">
-            <text class="state-label">启动模式</text>
-            <text class="state-value">{{ enums.startMode }}</text>
-          </view>
-          <view class="state-card">
-            <text class="state-label">工作模式</text>
-            <text class="state-value">{{ enums.workMode }}</text>
-          </view>
-          <view class="state-card">
-            <text class="state-label">供回水控制目标</text>
-            <text class="state-value">{{ enums.supplyTarget }}</text>
-          </view>
-          <view class="state-card">
-            <text class="state-label">485通讯地址</text>
-            <text class="state-value">{{ misc.addr }}</text>
-          </view>
-          <view class="state-card">
-            <text class="state-label">波特率</text>
-            <text class="state-value">{{ enums.baudRate }}</text>
-          </view>
         </view>
-      </DataGroup>
-
-      <!-- 开关量 -->
-      <DataGroup title="开关量">
         <view class="signal-grid">
           <view
             v-for="s in signalItems"
@@ -60,19 +36,9 @@
         </view>
       </DataGroup>
 
-      <!-- 运行参数 -->
-      <DataGroup title="运行参数">
+      <!-- 设备信息 -->
+      <DataGroup title="设备信息">
         <DataGrid :items="runItems" />
-      </DataGroup>
-
-      <!-- 故障码 -->
-      <DataGroup title="故障等级与代码">
-        <DataGrid :items="faultCodeItems" />
-      </DataGroup>
-
-      <!-- 运行统计 -->
-      <DataGroup title="累计运行时长">
-        <DataGrid :items="runtimeItems" />
       </DataGroup>
 
       <!-- 故障报警 -->
@@ -94,12 +60,10 @@ import DataGroup from '../DataGroup.vue'
 import DataGrid from '../DataGrid.vue'
 import StatusGrid from '../StatusGrid.vue'
 import {
-  COOL_START_MODE, COOL_WORK_MODE, COOL_SUPPLY_TARGET, COOL_BAUD_RATE,
   COOL_RUN_STATUS, COOL_RUN_MODE,
-  COOL_RUN_ITEMS, COOL_RUNTIME_ITEMS, COOL_FAULT_CODES,
-  COOL_LEVEL_BITS, COOL_OUTPUT_BITS, COOL_FAULT_WORDS, COOL_FAULT_ACTIVE_LOW
+  COOL_RUN_ITEMS, COOL_LEVEL_BITS, COOL_OUTPUT_BITS, COOL_FAULT_WORDS, COOL_FAULT_ACTIVE_LOW
 } from '../../../direct-device-0318-fields.js'
-import { fmtItem, fmtItems } from '../../../direct-device-50kw-format.js'
+import { fmtItems } from '../../../direct-device-50kw-format.js'
 import FaultBoard from '../FaultBoard.vue'
 
 /**
@@ -166,24 +130,6 @@ export default {
       const mode = COOL_RUN_MODE[high] || `模式${high}`
       return { text: `${status}/${mode}`, fault: low === 4 }
     },
-    enums() {
-      const pick = (key, map) => {
-        const v = this.data50[key]
-        if (v === undefined || v === null) return '--'
-        const txt = map[Number(v)]
-        return txt !== undefined ? txt : String(v)
-      }
-      return {
-        startMode: pick('B0', COOL_START_MODE),
-        workMode: pick('B2', COOL_WORK_MODE),
-        supplyTarget: pick('B4', COOL_SUPPLY_TARGET),
-        baudRate: pick('B34', COOL_BAUD_RATE)
-      }
-    },
-    misc() {
-      const v = this.data50['B32']
-      return { addr: v === undefined || v === null ? '--' : String(v) }
-    },
     /** 开关量：电平信号（低/高电平）+ 输出信号（断开/输出） */
     signalItems() {
       const build = (defs) => defs.map(d => {
@@ -201,12 +147,6 @@ export default {
     },
     runItems() {
       return fmtItems(COOL_RUN_ITEMS, this.data50)
-    },
-    runtimeItems() {
-      return fmtItems(COOL_RUNTIME_ITEMS, this.data50)
-    },
-    faultCodeItems() {
-      return COOL_FAULT_CODES.map(it => fmtItem({ key: it.key, label: it.label, scale: 1, decimals: 0 }, this.data50))
     },
     /**
      * 故障字取值：ENERGY 裸键 → STATE(S_) → CONTROL(C_)
@@ -239,7 +179,16 @@ export default {
     },
     /** 故障位按故障字分组：用于 FaultBoard（组名取语义短名，未定义则回退「故障字N」） */
     faultGroups() {
-      return COOL_FAULT_WORDS.map(word => {
+      // ⚡ 故障位是慢变量：用故障字拼签名，签名不变就复用上次的对象
+      // （引用不变 → FaultBoard 不重渲染），避免几十个标签每次刷新都整片重排
+      let sig = ''
+      for (let i = 0; i < COOL_FAULT_WORDS.length; i++) {
+        const v = this.faultWords[COOL_FAULT_WORDS[i].key]
+        sig += (v === null || v === undefined ? '-' : String(v)) + ','
+      }
+      if (sig === this._faultSig && this._faultGroups) return this._faultGroups
+      this._faultSig = sig
+      this._faultGroups = COOL_FAULT_WORDS.map(word => {
         const val = this.faultWords[word.key]
         const has = val !== null
         return {
@@ -253,6 +202,7 @@ export default {
           }).filter(Boolean)
         }
       })
+      return this._faultGroups
     }
   }
 }
@@ -279,9 +229,11 @@ export default {
 .state-cards {
   display: flex;
   flex-wrap: wrap;
+  margin-bottom: 16rpx;
   background: #ffffff;
-  border: 1rpx solid #eef1f5;
-  border-radius: 18rpx;
+  border: 1rpx solid #eceff4;
+  border-radius: 20rpx;
+  box-shadow: 0 1rpx 3rpx rgba(20, 32, 52, 0.03);
   overflow: hidden;
 }
 .state-card {
@@ -294,8 +246,9 @@ export default {
   border-bottom: 1rpx solid #f3f5f8;
 }
 .state-label {
-  font-size: 21rpx;
-  color: #98a2ae;
+  font-size: 22rpx;
+  color: #78838f;
+  letter-spacing: 0.2rpx;
   margin-bottom: 8rpx;
   text-align: center;
 }
@@ -328,15 +281,16 @@ export default {
   flex-direction: column;
   align-items: center;
   .signal-name {
-    font-size: 20rpx;
-    color: #98a2ae;
+    font-size: 21rpx;
+    color: #78838f;
     text-align: center;
     margin-bottom: 8rpx;
     line-height: 1.3;
   }
   .signal-value {
     font-size: 24rpx;
-    color: #b0b6c0;
+    /* 未命中的位不再用近乎不可见的浅灰，保持中性但可读 */
+    color: #9aa4b1;
     font-weight: 600;
   }
   &.active {
@@ -359,7 +313,7 @@ export default {
 .fault-empty {
   padding: 20rpx 12rpx;
   font-size: 24rpx;
-  color: #8a9099;
+  color: #8a94a1;
   text-align: center;
 }
 </style>

@@ -20,10 +20,10 @@
  */
 
 /** 展示用版本号（含 V 前缀，必须与 manifest.json 的 versionName 一致） */
-export const APP_VERSION = 'V1.0.15'
+export const APP_VERSION = 'V1.0.16'
 
 /** 版本序号（必须与 manifest.json 的 versionCode 一致，用于整包 / wgt 升级比较） */
-export const APP_VERSION_CODE = 186
+export const APP_VERSION_CODE = 187
 
 /** 去掉 V/v 前缀，得到纯数字版本号：V1.0.15 -> 1.0.15 */
 export function toPlainVersion(version = APP_VERSION) {

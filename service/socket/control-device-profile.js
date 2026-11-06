@@ -24,9 +24,14 @@ export const DEVICE_PROFILES = {
   // 光伏 DC：上行 (0x170C) V1.1，控制下行按 0x171E（索引号/ID = 6）
   '170C_PV': { category: '171E', addr: 6, deviceId: 6 },
   '171E': { category: '171E', addr: 6, deviceId: 6 },
-  // BMS：(0x171C) V2.0
+  // BMS：(0x171C) V2.0 主机，索引号/ID = 01
   '171C_V2': { category: '171C', addr: 1, deviceId: 1 },
   '171C': { category: '171C', addr: 1, deviceId: 1 },
+  // BMS 告警阈值从机 V2.1~V2.4（帧头设备地址 02~05，下发同池 171C）
+  '171C_V2_1': { category: '171C', addr: 2, deviceId: 2 },
+  '171C_V2_2': { category: '171C', addr: 3, deviceId: 3 },
+  '171C_V2_3': { category: '171C', addr: 4, deviceId: 4 },
+  '171C_V2_4': { category: '171C', addr: 5, deviceId: 5 },
   // 液冷机：同飞 (0x0318) V2.3，索引号/ID = 10
   '0318': { category: '0318', addr: 10, deviceId: 10 },
   // 能量控制器（快捷控制 / 运行策略）

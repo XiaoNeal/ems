@@ -29,7 +29,7 @@
           </view>
         </view>
         <!-- 负荷 -->
-        <view class="device-label" style="left: 36%; top: 31%;">
+        <view class="device-label" style="left: 36%; top: 30%;">
           <view class="power-row">
             <text class="device-power">{{ formattedValues['archLoadMidPower'] || '--' }}</text>
             <text class="power-unit">kW</text>
@@ -222,9 +222,9 @@ export default {
 .module-scroll {
   height: 100%;
 }
-.content {
-  padding: 0 20rpx 32rpx;
-}
+//.content {
+//  padding: 0 20rpx 32rpx;
+//}
 
 /* 系统架构图 */
 .system-img {
@@ -232,8 +232,8 @@ export default {
   flex-shrink: 0;
   height: 500rpx;
   margin: 20rpx 0 16rpx;
-  border-radius: 18rpx;
-  border: 1rpx solid #eef1f5;
+  border-radius: 20rpx;
+  border: 1rpx solid #eceff4;
   overflow: hidden;
   background: #fff;
 }
@@ -252,8 +252,8 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 4rpx 12rpx rgba(68, 136, 251, 0.25);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2rpx 8rpx rgba(20, 32, 52, 0.12);
   position: relative;
 }
 .start-bg {
@@ -266,10 +266,11 @@ export default {
 }
 .start-text {
   font-size: 26rpx;
-  font-weight: bold;
+  font-weight: 600;
   position: relative;
   z-index: 2;
-  color: #4488FB;
+  color: #2f7cf6;
+  letter-spacing: 0.5rpx;
 }
 
 .device-label,
@@ -298,22 +299,26 @@ export default {
 
 .device-name {
   font-size: 22rpx;
-  color: #555;
+  color: #566173;
   margin-bottom: 2rpx;
   font-weight: 500;
+  letter-spacing: 0.3rpx;
 }
 
 .device-power {
-  font-size: 26rpx;
-  color: #4488fb;
-  font-weight: bold;
+  font-size: 27rpx;
+  color: #2f7cf6;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
 
 .device-soc {
   font-size: 22rpx;
-  color: #52c41a;
+  color: #1f9254;
   margin-top: 2rpx;
-  font-weight: bold;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .power-row {
@@ -322,9 +327,10 @@ export default {
 }
 
 .power-unit {
-  font-size: 18rpx;
-  color: #999;
-  margin-left: 2rpx;
+  font-size: 19rpx;
+  color: #8a94a1;
+  margin-left: 3rpx;
+  font-weight: 500;
 }
 
 /* 关键指标卡片 */
@@ -336,13 +342,14 @@ export default {
 
 .metric-card {
   position: relative;
-  width: calc(50% - 8rpx);
+  width: calc(50% - 12rpx);
   box-sizing: border-box;
-  padding: 22rpx 20rpx 20rpx 24rpx;
+  padding: 22rpx 20rpx 20rpx 26rpx;
   margin-bottom: 16rpx;
   background: #ffffff;
-  border: 1rpx solid #eef1f5;
-  border-radius: 18rpx;
+  border: 1rpx solid #eceff4;
+  border-radius: 20rpx;
+  box-shadow: 0 1rpx 3rpx rgba(20, 32, 52, 0.03);
   overflow: hidden;
 
   /* 左列由模板加类控制间距，不依赖 nth-child */
@@ -350,15 +357,16 @@ export default {
     margin-right: 16rpx;
   }
 
-  /* 左侧细色条：用颜色区分发电 / 用电 / 储能 / 电网四种口径 */
+  /* 左侧色条：用颜色区分发电 / 用电 / 储能 / 电网四种口径，
+     加宽到 6rpx 并收圆角，缩略图上也能看清是哪一类 */
   &::before {
     content: '';
     position: absolute;
     left: 0;
-    top: 24rpx;
-    bottom: 24rpx;
-    width: 5rpx;
-    border-radius: 0 3rpx 3rpx 0;
+    top: 26rpx;
+    bottom: 26rpx;
+    width: 6rpx;
+    border-radius: 0 4rpx 4rpx 0;
     background: #2f7cf6;
   }
 }
@@ -371,23 +379,29 @@ export default {
 .metric-title {
   display: block;
   font-size: 22rpx;
-  color: #98a2ae;
+  line-height: 1.35;
+  color: #66707e;
+  letter-spacing: 0.4rpx;
 }
 
 .metric-value-row {
   display: flex;
   align-items: baseline;
-  margin-top: 10rpx;
+  margin-top: 8rpx;
   min-width: 0;
 }
 
 .metric-value {
   max-width: 100%;
-  font-size: 40rpx;
-  font-weight: 700;
-  color: #1d2430;
-  font-family: 'Menlo', 'Consolas', monospace;
-  letter-spacing: -1rpx;
+  font-size: 42rpx;
+  font-weight: 600;
+  color: #16202d;
+  /* 系统 UI 字体 + 表格数字：数字等宽对齐，又不与中文标题的字面冲突 */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC',
+    'HarmonyOS Sans', 'Helvetica Neue', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.4rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -396,15 +410,17 @@ export default {
 .metric-unit {
   flex-shrink: 0;
   margin-left: 6rpx;
-  font-size: 20rpx;
-  color: #98a2ae;
+  font-size: 21rpx;
+  font-weight: 500;
+  color: #8a94a1;
 }
 
 /* 储能SOC进度条模块 */
 .arch-status-container {
   background: #ffffff;
-  border: 1rpx solid #eef1f5;
-  border-radius: 18rpx;
+  border: 1rpx solid #eceff4;
+  border-radius: 20rpx;
+  box-shadow: 0 1rpx 3rpx rgba(20, 32, 52, 0.03);
   padding: 22rpx 24rpx;
   margin-bottom: 16rpx;
 }
@@ -482,12 +498,13 @@ export default {
   justify-content: space-between;
   align-items: center;
   font-size: 26rpx;
-  color: #555;
+  color: #566173;
 }
 
 .arch-soc-hours {
-  font-weight: bold;
-  color: #333;
+  font-weight: 600;
+  color: #26313f;
+  font-variant-numeric: tabular-nums;
 }
 
 /* 公共区块标题 */
@@ -506,7 +523,7 @@ export default {
     width: 6rpx;
     height: 30rpx;
     border-radius: 3rpx;
-    background: linear-gradient(180deg, #6699ff 0%, #4488fb 100%);
+    background: #2f7cf6;
   }
 }
 
@@ -520,8 +537,9 @@ export default {
 /* 负荷设备模块 */
 .arch-device-stats {
   background: #ffffff;
-  border: 1rpx solid #eef1f5;
-  border-radius: 18rpx;
+  border: 1rpx solid #eceff4;
+  border-radius: 20rpx;
+  box-shadow: 0 1rpx 3rpx rgba(20, 32, 52, 0.03);
   padding: 26rpx 26rpx;
   margin-bottom: 16rpx;
 }
@@ -547,13 +565,15 @@ export default {
 
 .arch-device-number {
   font-size: 34rpx;
-  font-weight: 700;
+  font-weight: 600;
   color: #2f7cf6;
-  font-family: 'Menlo', 'Consolas', monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
 
 .arch-device-text {
   font-size: 22rpx;
-  color: #7a828c;
+  color: #78838f;
+  letter-spacing: 0.2rpx;
 }
 </style>

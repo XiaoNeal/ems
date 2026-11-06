@@ -1,6 +1,6 @@
 <template>
   <view class="fault-board">
-    <!-- 未收到帧 / 无位定义：不能把「全 0」当成全部正常 -->
+    <!-- 未收到数据 / 无位定义：不能把「全 0」当成全部正常 -->
     <view v-if="!hasData || totalCount === 0" class="fb-empty">{{ hint }}</view>
 
     <template v-else>
@@ -202,6 +202,9 @@ export default {
 .fb-cell {
   display: flex;
   align-items: center;
+  /* 圆点 + 名称整体居中（同 FaultCodeBoard）：双列固定宽，
+     左对齐时右列右半边全是空白，两列视觉重心不齐 */
+  justify-content: center;
   width: calc((100% - 8rpx) / 2);
   min-height: 54rpx;
   padding: 8rpx 14rpx;
@@ -226,10 +229,14 @@ export default {
   flex-shrink: 0;
 }
 .fb-text {
-  flex: 1;
+  /* 不再 flex:1 撑满剩余宽度，否则文字被拉到左侧、居中失效 */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
   font-size: 22rpx;
   color: #8d949e;
   line-height: 1.3;
+  text-align: center;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

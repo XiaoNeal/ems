@@ -186,7 +186,7 @@ export class Model171C_V2 extends DeviceBase {
         this.stateData.B0b3.value = statusEnums.B0b3[data.B0b3] || data.B0b3;
         this.stateData.B0b4.value = statusEnums.B0b4[data.B0b4] || data.B0b4;
         this.stateData.B0b5.value = statusEnums.B0b5[data.B0b5] || data.B0b5;
-        this.stateData.B0b6.value = statusEnums.B0b6[data.B0b6] || data.B0b6;
+        // this.stateData.B0b6.value = statusEnums.B0b6[data.B0b6] || data.B0b6;
         this.stateData.B0b7.value = statusEnums.B0b7[data.B0b7] || data.B0b7;
         // this.stateData.B1b0.value = statusEnums.B1b0[data.B1b0] || data.B1b0;
         // this.stateData.B1b1.value = statusEnums.B1b1[data.B1b1] || data.B1b1;
@@ -306,10 +306,10 @@ export class Model171C_V2 extends DeviceBase {
         // this.stateData.B62.value = data.B62;
         // this.stateData.B64.value = data.B64;
         // this.stateData.B66.value = data.B66;
-        // this.stateData.B70.value = data.B70;
-        // this.stateData.B72.value = data.B72;
-        // this.stateData.B74.value = data.B74;
-        // this.stateData.B76.value = data.B76;
+        this.stateData.B70.value = data.B70;
+        this.stateData.B72.value = data.B72;
+        this.stateData.B74.value = data.B74;
+        this.stateData.B76.value = data.B76;
         this.stateData.B78.value = data.B78;
         this.stateData.B80.value = data.B80;
         // this.stateData.B85.value = data.B85;
@@ -614,7 +614,7 @@ class StateData {
     B0b3 = { name: '预充继电器控制', value: '--' }
     B0b4 = { name: '绿灯', value: '--' }
     B0b5 = { name: '红灯', value: '--' }
-    B0b6 = { name: '预留', value: '--' }
+    // B0b6 = { name: '预留', value: '--' }
     B0b7 = { name: '从机唤醒', value: '--' }
     // B1b0 = { name: 'LSS1', value: '--' }
     // B1b1 = { name: 'LSS2', value: '--' }
@@ -734,10 +734,10 @@ class StateData {
     // B62 = { name: '板载NTC温度(℃)', value: '--' }
     // B64 = { name: 'RTC片内温度(℃)', value: '--' }
     // B66 = { name: '分流器ADC片内温度(℃)', value: '--' }
-    // B70 = { name: '额定电压(V)', value: '--' }
-    // B72 = { name: '额定容量(Ah)', value: '--' }
-    // B74 = { name: '单体数量', value: '--' }
-    // B76 = { name: '电池温感数', value: '--' }
+    B70 = { name: '额定电压(V)', value: '--' }
+    B72 = { name: '标称容量(Ah)', value: '--' }
+    B74 = { name: '电池串数', value: '--' }
+    B76 = { name: '温感数量', value: '--' }
     B78 = { name: '从机（pack）数量', value: '--' }
     B80 = { name: '极柱温感数', value: '--' }
     // B85 = { name: '风机T1温度(℃)', value: '--' }
@@ -906,7 +906,7 @@ const statusEnums = {
     B0b3: { 0: '无效', 1: '有效' },
     B0b4: { 0: '无效', 1: '有效' },
     B0b5: { 0: '无效', 1: '有效' },
-    B0b6: { 0: '无效', 1: '有效' },
+    // B0b6: { 0: '无效', 1: '有效' },
     B0b7: { 0: '无效', 1: '有效' },
     B1b0: { 0: '无效', 1: '有效' },
     B1b1: { 0: '无效', 1: '有效' },
