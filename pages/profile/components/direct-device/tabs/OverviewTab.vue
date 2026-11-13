@@ -1,5 +1,6 @@
 <template>
-  <scroll-view class="module-scroll" scroll-y="true">
+  <!-- 滚动由页面外层 scroll-view 统一负责，避免嵌套滚动容器 -->
+  <view class="panel-root">
     <view class="content">
       <view class="system-img">
         <!-- 系统启停按钮 -->
@@ -36,8 +37,8 @@
           </view>
         </view>
         <!-- 储能 -->
-        <view class="device-label" style="left: 18%; top: 78%;">
-          <text class="device-name">储能</text>
+        <view class="device-label" style="left: 18%; top: 75%;">
+          <text class="device-name" style="text-align: left;margin-left: 30%;width: 100%;">储能</text>
           <view class="power-row">
             <text class="device-power">
               <text>{{ formattedValues['archStorageStatus'] || '--' }}</text>
@@ -93,19 +94,23 @@
       <view class="arch-status-container">
         <view class="arch-status-content">
           <view class="arch-status-indicator">
-            <image class="arch-battery-icon" src="/static/images/img-storage.png" />
+            <image class="arch-battery-icon" src="/static/images/img-storage.png" mode="aspectFit" />
             <view class="arch-soc-container">
               <view class="arch-soc-progress">
-                <image src="/static/images/storage.svg" class="arch-soc-icon" />
+                <image src="/static/images/storage.svg" class="arch-soc-icon" mode="aspectFit" />
                 <view class="arch-progress-track">
+                  <!-- SOC 为 0 / 无数据时不渲染填充：原来 width:0% 仍被 padding-right
+                       撑出 16rpx 的圆角小块，看起来像进度条左边多了一个畸形灰点。 -->
                   <view class="arch-progress-fill" :style="{
-                    width: (formattedValues['archSocNumeric'] || 0) + '%',
+                    width: archSocNumeric + '%',
+                    display: archSocNumeric > 0 ? 'flex' : 'none',
                     background: formattedValues['archStorageStatusGradient'] || '#8c8c8c'
                   }">
                     <text class="arch-progress-text">{{ formattedValues['archSoc'] || '--' }}%</text>
                   </view>
                 </view>
-                <text class="arch-status-text" :style="{ color: formattedValues['archStorageStatusGradient'] || '#8c8c8c' }">
+                <text class="arch-status-text"
+                  :style="{ color: formattedValues['archStorageStatusGradient'] || '#8c8c8c' }">
                   {{ formattedValues['archStorageStatusExtended'] || '--' }}
                 </text>
               </view>
@@ -119,51 +124,65 @@
       </view>
 
       <!-- 电网统计模块 -->
-      <StatSection
-        title="电网数据"
-        :rows="[
-          { cols: [
-            { subs: [
-              { label: '电网实时功率', value: formattedValues['archGridPower'], unit: 'kW' },
-              { label: '电网频率', value: formattedValues['archGridFrequency'], unit: 'Hz' }
-            ]},
-            { subs: [
-              { label: '电网今日馈电量', value: formattedValues['archTodayFeedEnergy'], unit: 'kWh' },
-              { label: '电网累计馈电量', value: formattedValues['archTotalFeedEnergy'], unit: 'kWh' }
-            ]},
-            { subs: [
-              { label: '电网今日供电', value: formattedValues['archTodaySupplyEnergy'], unit: 'kWh' },
-              { label: '电网累计供电', value: formattedValues['archTotalSupplyEnergy'], unit: 'kWh' }
-            ]}
-          ]}
-        ]"
-      />
+      <StatSection title="电网数据" :rows="[
+        {
+          cols: [
+            {
+              subs: [
+                { label: '电网实时功率', value: formattedValues['archGridPower'], unit: 'kW' },
+                { label: '电网频率', value: formattedValues['archGridFrequency'], unit: 'Hz' }
+              ]
+            },
+            {
+              subs: [
+                { label: '电网今日馈电量', value: formattedValues['archTodayFeedEnergy'], unit: 'kWh' },
+                { label: '电网累计馈电量', value: formattedValues['archTotalFeedEnergy'], unit: 'kWh' }
+              ]
+            },
+            {
+              subs: [
+                { label: '电网今日供电', value: formattedValues['archTodaySupplyEnergy'], unit: 'kWh' },
+                { label: '电网累计供电', value: formattedValues['archTotalSupplyEnergy'], unit: 'kWh' }
+              ]
+            }
+          ]
+        }
+      ]" />
 
       <!-- 光伏统计模块 -->
-      <StatSection
-        title="光伏数据"
-        :rows="[
-          { cols: [
-            { center: true, subs: [
-              { label: '当日发电量', value: formattedValues['archPvTodayGen'], unit: 'kWh' }
-            ]},
-            { subs: [
-              { label: '累计发电量', value: formattedValues['archPvTotalGen'], unit: 'kWh' },
-              { label: '累计发电时长', value: formattedValues['archPvTotalGenDays'], unit: '天' }
-            ]}
-          ]},
-          { divider: true },
-          { cols: [
-            { subs: [
-              { label: '日最高发电量', value: formattedValues['archPvDayMaxGen'], unit: 'kWh' },
-              { label: '出现在', value: formattedValues['archPvDayMaxGenTime'], small: true }
-            ]},
-            { subs: [
-              { label: '历史最高发电功率', value: formattedValues['archPvHistMaxPower'], unit: 'kW' }
-            ]}
-          ]}
-        ]"
-      />
+      <StatSection title="光伏数据" :rows="[
+        {
+          cols: [
+            {
+              center: true, subs: [
+                { label: '当日发电量', value: formattedValues['archPvTodayGen'], unit: 'kWh' }
+              ]
+            },
+            {
+              subs: [
+                { label: '累计发电量', value: formattedValues['archPvTotalGen'], unit: 'kWh' },
+                { label: '累计发电时长', value: formattedValues['archPvTotalGenDays'], unit: '天' }
+              ]
+            }
+          ]
+        },
+        { divider: true },
+        {
+          cols: [
+            {
+              subs: [
+                { label: '日最高发电量', value: formattedValues['archPvDayMaxGen'], unit: 'kWh' },
+                { label: '出现在', value: formattedValues['archPvDayMaxGenTime'], small: true }
+              ]
+            },
+            {
+              subs: [
+                { label: '历史最高发电功率', value: formattedValues['archPvHistMaxPower'], unit: 'kW' }
+              ]
+            }
+          ]
+        }
+      ]" />
 
       <!-- 负荷设备模块 -->
       <view class="arch-device-stats">
@@ -172,56 +191,74 @@
         </view>
         <view class="arch-device-grid">
           <view class="arch-device-item">
-            <text class="arch-device-number">{{ formattedValues['archDeviceCounts'] ? formattedValues['archDeviceCounts'].dljQuantity : 0 }}</text>
+            <text class="arch-device-number">{{ formattedValues['archDeviceCounts'] ?
+              formattedValues['archDeviceCounts'].dljQuantity : 0 }}</text>
             <text class="arch-device-text">空调</text>
           </view>
           <view class="arch-device-item">
-            <text class="arch-device-number">{{ formattedValues['archDeviceCounts'] ? formattedValues['archDeviceCounts'].cdzQuantity : 0 }}</text>
+            <text class="arch-device-number">{{ formattedValues['archDeviceCounts'] ?
+              formattedValues['archDeviceCounts'].cdzQuantity : 0 }}</text>
             <text class="arch-device-text">充电桩</text>
           </view>
           <view class="arch-device-item">
-            <text class="arch-device-number">{{ formattedValues['archDeviceCounts'] ? formattedValues['archDeviceCounts'].lightQuantity : 0 }}</text>
+            <text class="arch-device-number">{{ formattedValues['archDeviceCounts'] ?
+              formattedValues['archDeviceCounts'].lightQuantity : 0 }}</text>
             <text class="arch-device-text">照明</text>
           </view>
           <view class="arch-device-item">
-            <text class="arch-device-number">{{ formattedValues['archDeviceCounts'] ? formattedValues['archDeviceCounts'].unknownDeviceQuantity : 0 }}</text>
+            <text class="arch-device-number">{{ formattedValues['archDeviceCounts'] ?
+              formattedValues['archDeviceCounts'].unknownDeviceQuantity : 0 }}</text>
             <text class="arch-device-text">未知设备</text>
           </view>
         </view>
       </view>
     </view>
-  </scroll-view>
+  </view>
 </template>
 
 <script>
 import StatSection from '../StatSection.vue'
+import { getFormatted } from '../realtime-store.js'
+import { realtimeSubscribe } from '../realtime-subscribe.js'
 
 /**
  * 概览 tab 组件
  * 展示系统架构图、关键数据卡片、储能SOC、电网/光伏统计、设备信息
- * 所有数据通过 formattedValues 传入，无专属计算属性
+ *
+ * ⚡ 实时数据走 fmtVer 数字版本号驱动：父页面每轮 patch 只传一个数字，
+ *    格式化值本体从非响应式仓库读取。模板里的 formattedValues[...] 全部不变。
  */
 export default {
+  mixins: [realtimeSubscribe],
   name: 'OverviewTab',
   components: { StatSection },
   props: {
-    formattedValues: {
-      type: Object,
-      default: () => ({})
-    },
+    /** 父页面 formattedValues 版本号（只有本 tab 可见时才递增） */
     /** 系统是否在运行（来自 171F 策略状态） */
     systemRunning: {
       type: Boolean,
       default: false
+    }
+  },
+  computed: {
+    formattedValues() {
+      void this.rtVer
+      return getFormatted()
+    },
+    /** SOC 数值（0~100）。进度条填充是否渲染由它决定，避免 0% 时残留圆角小块 */
+    archSocNumeric() {
+      const v = Number(this.formattedValues['archSocNumeric'])
+      return Number.isFinite(v) && v > 0 ? v : 0
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.module-scroll {
-  height: 100%;
+.panel-root {
+  width: 100%;
 }
+
 //.content {
 //  padding: 0 20rpx 32rpx;
 //}
@@ -236,6 +273,7 @@ export default {
   border: 1rpx solid #eceff4;
   overflow: hidden;
   background: #fff;
+  margin-top: unset;
 }
 
 /* 启动/停止按钮 */
@@ -245,6 +283,7 @@ export default {
   left: 77%;
   z-index: 5;
 }
+
 .start-circle {
   width: 100rpx;
   height: 100rpx;
@@ -256,6 +295,7 @@ export default {
   box-shadow: 0 2rpx 8rpx rgba(20, 32, 52, 0.12);
   position: relative;
 }
+
 .start-bg {
   position: absolute;
   width: 100%;
@@ -264,8 +304,9 @@ export default {
   left: 0;
   pointer-events: none;
 }
+
 .start-text {
-  font-size: 26rpx;
+  font-size: 28rpx;
   font-weight: 600;
   position: relative;
   z-index: 2;
@@ -283,8 +324,8 @@ export default {
   z-index: 2;
   padding: 6rpx 12rpx;
   border-radius: 10rpx;
- // background: rgba(255, 255, 255, 0.88);
- // box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  // background: rgba(255, 255, 255, 0.88);
+  // box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
 .device-label-top-left {
@@ -298,7 +339,7 @@ export default {
 }
 
 .device-name {
-  font-size: 22rpx;
+  font-size: 27rpx;
   color: #566173;
   margin-bottom: 2rpx;
   font-weight: 500;
@@ -306,7 +347,7 @@ export default {
 }
 
 .device-power {
-  font-size: 27rpx;
+  font-size: 28rpx;
   color: #2f7cf6;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -314,7 +355,7 @@ export default {
 }
 
 .device-soc {
-  font-size: 22rpx;
+  font-size: 27rpx;
   color: #1f9254;
   margin-top: 2rpx;
   font-weight: 600;
@@ -327,7 +368,7 @@ export default {
 }
 
 .power-unit {
-  font-size: 19rpx;
+  font-size: 26rpx;
   color: #8a94a1;
   margin-left: 3rpx;
   font-weight: 500;
@@ -371,14 +412,25 @@ export default {
   }
 }
 
-.metric-blue::before { background: #2f7cf6; }
-.metric-green::before { background: #1f9254; }
-.metric-cyan::before { background: #0f9b8e; }
-.metric-violet::before { background: #7c5cf5; }
+.metric-blue::before {
+  background: #2f7cf6;
+}
+
+.metric-green::before {
+  background: #1f9254;
+}
+
+.metric-cyan::before {
+  background: #0f9b8e;
+}
+
+.metric-violet::before {
+  background: #7c5cf5;
+}
 
 .metric-title {
   display: block;
-  font-size: 22rpx;
+  font-size: 27rpx;
   line-height: 1.35;
   color: #66707e;
   letter-spacing: 0.4rpx;
@@ -410,7 +462,7 @@ export default {
 .metric-unit {
   flex-shrink: 0;
   margin-left: 6rpx;
-  font-size: 21rpx;
+  font-size: 26rpx;
   font-weight: 500;
   color: #8a94a1;
 }
@@ -481,14 +533,14 @@ export default {
 }
 
 .arch-progress-text {
-  font-size: 20rpx;
+  font-size: 26rpx;
   color: #fff;
   font-weight: bold;
   white-space: nowrap;
 }
 
 .arch-status-text {
-  font-size: 24rpx;
+  font-size: 28rpx;
   flex-shrink: 0;
   font-weight: 500;
 }
@@ -497,7 +549,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: #566173;
 }
 
@@ -543,6 +595,7 @@ export default {
   padding: 26rpx 26rpx;
   margin-bottom: 16rpx;
 }
+
 .arch-device-grid {
   display: flex;
   flex-wrap: wrap;
@@ -564,7 +617,7 @@ export default {
 }
 
 .arch-device-number {
-  font-size: 34rpx;
+  font-size: 36rpx;
   font-weight: 600;
   color: #2f7cf6;
   font-variant-numeric: tabular-nums;
@@ -572,7 +625,7 @@ export default {
 }
 
 .arch-device-text {
-  font-size: 22rpx;
+  font-size: 27rpx;
   color: #78838f;
   letter-spacing: 0.2rpx;
 }

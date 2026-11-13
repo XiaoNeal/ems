@@ -402,40 +402,42 @@ const PV_170C_NUMERIC_PARAMS = DC170C_NUMERIC_DEFS.map(d => _mkParam(d, '170C_PV
 //   337 → B6（强控 HSS8/LSS1/LSS2/DO1~DO3，按位）
 //   338 → B7（强控使能位 + 强控 HSS1~HSS7，按位）
 //   339 → B8（绝缘检测控制，独立 int16）
-// 同一字节内多个 bit 必须整字节下发：页面侧的 _packBmsByte 会把同地址所有 bit 的当前值
-// 合成一个字节（未回显的位按 0），因此这些项不能直接发 0/1，否则会顺手清掉别的位。
+// 50kW BMS 位命令（171C_V2，addr=01）：按 0x3401 V1.2 附件2「对应控制数据」+《BMS控制数据地址表》，
+// 334~338 的 bit 字段已统一移至 **1077~1099**，且每个 bit 独占一个地址、整字节 0/1 直写，
+// 不再共享字节 —— 因此不再需要 _packBmsByte 打包：下发时 isBit=false，sendValue 直接取选项值 0/1，
+// 经 overrides.registerAddress 写入对应寄存器即可，互不干扰。
+// 地址映射与 community/settings/param-settings-constants.js 的 BMS_CONTROL_ADDRESS_MAP、
+// utils/device-params.js 的 BMS50_BIT_ADDR 完全一致（同一套协议口径）。
 // key 统一用 C_B{n}b{m}：控制帧回显的键就叫这个（parseControlRaw 产 B3b0，加 C_ 前缀），
 // 用裸 C_B3 会读到该字节的 int16 合值（如 0x11），选项匹配不上、界面一直显示 '--'。
-// 早前这 24 项被换成 101/106/108/109/111（V1.0 旧段，且是另一套「DO 控制/主控均衡」语义），
-// 与设备实际协议对不上，已按 331 段恢复。
 const BMS171C_SWITCH_PARAMS = [
-  // ---- 334：高压请求 / 预充 / 绝缘检测开关（bit0~bit4）----
-  { key: 'C_B3b0', label: '上高压请求', field: 'B3', address: '334', bit: 0, options: _mkOpts([['无请求', 0], ['请求上电', 1]]) },
-  { key: 'C_B3b1', label: '下高压请求', field: 'B3', address: '334', bit: 1, options: _mkOpts([['无请求', 0], ['请求下电', 1]]) },
-  { key: 'C_B3b2', label: '紧急下电请求', field: 'B3', address: '334', bit: 2, options: _mkOpts([['无请求', 0], ['请求紧急下电', 1]]) },
-  { key: 'C_B3b3', label: '预充请求', field: 'B3', address: '334', bit: 3, options: _mkOpts([['无请求', 0], ['请求预充', 1]]) },
-  { key: 'C_B3b4', label: '绝缘检测开关', field: 'B3', address: '334', bit: 4, options: _mkOpts([['开启绝缘检测', 0], ['关闭绝缘检测', 1]]) },
-  // ---- 336：重启 / 断路器 / 系统锁 / 故障复位（bit0~bit3）----
-  { key: 'C_B5b0', label: '请求BMS重启', field: 'B5', address: '336', bit: 0, options: _mkOpts([['无请求', 0], ['请求重启', 1]]) },
-  { key: 'C_B5b1', label: '交流断路器切断请求', field: 'B5', address: '336', bit: 1, options: _mkOpts([['无请求', 0], ['请求切断', 1]]) },
-  { key: 'C_B5b2', label: '系统锁', field: 'B5', address: '336', bit: 2, options: _mkOpts([['无请求', 0], ['系统锁释放', 1]]) },
-  { key: 'C_B5b3', label: '故障复位', field: 'B5', address: '336', bit: 3, options: _mkOpts([['无请求', 0], ['故障复位', 1]]) },
-  // ---- 337：强控 HSS8 / LSS / DO（bit0~bit5）----
-  { key: 'C_B6b0', label: '强控HSS8', field: 'B6', address: '337', bit: 0, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  { key: 'C_B6b1', label: '强控LSS1', field: 'B6', address: '337', bit: 1, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  { key: 'C_B6b2', label: '强控LSS2', field: 'B6', address: '337', bit: 2, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  { key: 'C_B6b3', label: '强控DO1', field: 'B6', address: '337', bit: 3, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  { key: 'C_B6b4', label: '强控DO2', field: 'B6', address: '337', bit: 4, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  { key: 'C_B6b5', label: '强控DO3', field: 'B6', address: '337', bit: 5, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  // ---- 338：强控使能位 + 强控 HSS1~HSS7（bit0~bit7）----
-  { key: 'C_B7b0', label: '强控使能位', field: 'B7', address: '338', bit: 0, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  { key: 'C_B7b1', label: '强控HSS1', field: 'B7', address: '338', bit: 1, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  { key: 'C_B7b2', label: '强控HSS2', field: 'B7', address: '338', bit: 2, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  { key: 'C_B7b3', label: '强控HSS3', field: 'B7', address: '338', bit: 3, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  { key: 'C_B7b4', label: '强控HSS4', field: 'B7', address: '338', bit: 4, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  { key: 'C_B7b5', label: '强控HSS5', field: 'B7', address: '338', bit: 5, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  { key: 'C_B7b6', label: '强控HSS6', field: 'B7', address: '338', bit: 6, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
-  { key: 'C_B7b7', label: '强控HSS7', field: 'B7', address: '338', bit: 7, options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  // ---- 1077~1081：高压请求 / 预充 / 绝缘检测开关（每个 bit 独立地址）----
+  { key: 'C_B3b0', label: '上高压请求', field: 'B3', address: '1077', options: _mkOpts([['无请求', 0], ['请求上电', 1]]) },
+  { key: 'C_B3b1', label: '下高压请求', field: 'B3', address: '1078', options: _mkOpts([['无请求', 0], ['请求下电', 1]]) },
+  { key: 'C_B3b2', label: '紧急下电请求', field: 'B3', address: '1079', options: _mkOpts([['无请求', 0], ['请求紧急下电', 1]]) },
+  { key: 'C_B3b3', label: '预充请求', field: 'B3', address: '1080', options: _mkOpts([['无请求', 0], ['请求预充', 1]]) },
+  { key: 'C_B3b4', label: '绝缘检测开关', field: 'B3', address: '1081', options: _mkOpts([['开启绝缘检测', 0], ['关闭绝缘检测', 1]]) },
+  // ---- 1082~1085：重启 / 断路器 / 系统锁 / 故障复位 ----
+  { key: 'C_B5b0', label: '请求BMS重启', field: 'B5', address: '1082', options: _mkOpts([['无请求', 0], ['请求重启', 1]]) },
+  { key: 'C_B5b1', label: '交流断路器切断请求', field: 'B5', address: '1083', options: _mkOpts([['无请求', 0], ['请求切断', 1]]) },
+  { key: 'C_B5b2', label: '系统锁', field: 'B5', address: '1084', options: _mkOpts([['无请求', 0], ['系统锁释放', 1]]) },
+  { key: 'C_B5b3', label: '故障复位', field: 'B5', address: '1085', options: _mkOpts([['无请求', 0], ['故障复位', 1]]) },
+  // ---- 1094~1099：强控 HSS8 / LSS1~3 / DO1~3 ----
+  { key: 'C_B6b0', label: '强控HSS8', field: 'B6', address: '1094', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B6b1', label: '强控LSS1', field: 'B6', address: '1095', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B6b2', label: '强控LSS2', field: 'B6', address: '1096', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B6b3', label: '强控DO1', field: 'B6', address: '1097', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B6b4', label: '强控DO2', field: 'B6', address: '1098', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B6b5', label: '强控DO3', field: 'B6', address: '1099', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  // ---- 1086~1093：强控使能位 + 强控 HSS1~HSS7 ----
+  { key: 'C_B7b0', label: '强控使能位', field: 'B7', address: '1086', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b1', label: '强控HSS1', field: 'B7', address: '1087', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b2', label: '强控HSS2', field: 'B7', address: '1088', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b3', label: '强控HSS3', field: 'B7', address: '1089', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b4', label: '强控HSS4', field: 'B7', address: '1090', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b5', label: '强控HSS5', field: 'B7', address: '1091', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b6', label: '强控HSS6', field: 'B7', address: '1092', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
+  { key: 'C_B7b7', label: '强控HSS7', field: 'B7', address: '1093', options: _mkOpts([['不强控', 0], ['强控', 1]]) },
   // ---- 339：绝缘检测控制（独立 int16 寄存器，0 开启 / 1 关闭 / 2 上电只检测一次）----
   { key: 'C_B8', label: '绝缘检测控制', field: 'B8', address: '339', options: _mkOpts([['开启绝缘检测', 0], ['关闭绝缘检测', 1], ['上电只检测一次绝缘', 2]]) }
 ].map(d => _mkParam(d, '171C_V2'))
@@ -453,36 +455,40 @@ const BMS171C_SWITCH_PARAMS = [
 // 与主机 171C_V2 的心跳/温控同号不同义，因此单独成组、按 deviceType 收发，详见下方
 // BMS171C_ALARM_PARAMS。而 1~76 与 331 起的主机段仍按下面这颗规则处理：
 // 50kW BMS 面板保留 331 起的一段（331 = 控制帧 byte0，地址 = 331 + 字节号）：
-//   331 心跳 / 334 高压·预充位 / 336 继电器位 / 337 强控输出位 /
-//   338 强控使能位 + HSS1~7 / 339 绝缘检测控制 / 343~371 TMS 温控。
+//   331 心跳 / 339 绝缘检测控制 / 343~371 TMS 温控；
+//   高压·预充 / 继电器·系统锁·故障复位 / 强控输出 等位命令已按协议移至 1077~1099（每 bit 独立地址、整字节直写）。
 
 // TMS 温控参数（3401 地址 343~371 → 控制帧 B12~B40）
 // 点表公式：温度类「传输值=((实际值+50)*10)」→ scale 10 + offset -50（原始 300 = -20.0℃）；
 // 回差/湿度类只有 ×10；心跳、TMS 复位、TMS 模式是无缩放的原始整数值。
 // 早前温度类只写了 scale=10、漏了 offset，-20℃ 会显示成 30.0℃。
 const BMS171C_TMS_PARAMS = [
-  { key: 'C_B0', label: '心跳', unit: '', address: '331' },
-  { key: 'C_B12', label: 'TMS开关机故障复位', unit: '', address: '343' },
-  { key: 'C_B14', label: 'TMS模式设置', unit: '', address: '345' },
-  { key: 'C_B16', label: '制冷设定点', unit: '℃', address: '347', scale: 10, offset: -50, min: -50, max: 120 },
-  { key: 'C_B18', label: '制冷回差', unit: '℃', address: '349', scale: 10, min: 0, max: 50 },
-  { key: 'C_B20', label: '制热设定点', unit: '℃', address: '351', scale: 10, offset: -50, min: -50, max: 120 },
-  { key: 'C_B22', label: '制热回差', unit: '℃', address: '353', scale: 10, min: 0, max: 50 },
-  { key: 'C_B24', label: '制冷目标参数设置', unit: '℃', address: '355', scale: 10, offset: -50, min: -50, max: 120 },
-  { key: 'C_B26', label: '制热目标参数设置', unit: '℃', address: '357', scale: 10, offset: -50, min: -50, max: 120 },
-  { key: 'C_B30', label: '控温开启值', unit: '℃', address: '361', scale: 10, offset: -50, min: -50, max: 120 },
-  { key: 'C_B32', label: '控温关闭值', unit: '℃', address: '363', scale: 10, offset: -50, min: -50, max: 120 },
-  { key: 'C_B34', label: '控湿度开启值', unit: '%', address: '365', scale: 10, min: 0, max: 100 },
-  { key: 'C_B36', label: '控湿度关闭值', unit: '%', address: '367', scale: 10, min: 0, max: 100 },
-  { key: 'C_B38', label: '温度报警上限值', unit: '℃', address: '369', scale: 10, offset: -50, min: -50, max: 120 },
-  { key: 'C_B40', label: '温度报警下限值', unit: '℃', address: '371', scale: 10, offset: -50, min: -50, max: 120 }
+  // { key: 'C_B0', label: '心跳', unit: '', address: '331' },
+  // { key: 'C_B12', label: 'TMS开关机故障复位', unit: '', address: '343' },
+  // { key: 'C_B14', label: 'TMS模式设置', unit: '', address: '345' },
+  // { key: 'C_B16', label: '制冷设定点', unit: '℃', address: '347', scale: 10, offset: -50, min: -50, max: 120 },
+  // { key: 'C_B18', label: '制冷回差', unit: '℃', address: '349', scale: 10, min: 0, max: 50 },
+  // { key: 'C_B20', label: '制热设定点', unit: '℃', address: '351', scale: 10, offset: -50, min: -50, max: 120 },
+  // { key: 'C_B22', label: '制热回差', unit: '℃', address: '353', scale: 10, min: 0, max: 50 },
+  // { key: 'C_B24', label: '制冷目标参数设置', unit: '℃', address: '355', scale: 10, offset: -50, min: -50, max: 120 },
+  // { key: 'C_B26', label: '制热目标参数设置', unit: '℃', address: '357', scale: 10, offset: -50, min: -50, max: 120 },
+  // { key: 'C_B30', label: '控温开启值', unit: '℃', address: '361', scale: 10, offset: -50, min: -50, max: 120 },
+  // { key: 'C_B32', label: '控温关闭值', unit: '℃', address: '363', scale: 10, offset: -50, min: -50, max: 120 },
+  // { key: 'C_B34', label: '控湿度开启值', unit: '%', address: '365', scale: 10, min: 0, max: 100 },
+  // { key: 'C_B36', label: '控湿度关闭值', unit: '%', address: '367', scale: 10, min: 0, max: 100 },
+  // { key: 'C_B38', label: '温度报警上限值', unit: '℃', address: '369', scale: 10, offset: -50, min: -50, max: 120 },
+  // { key: 'C_B40', label: '温度报警下限值', unit: '℃', address: '371', scale: 10, offset: -50, min: -50, max: 120 }
 ].map(d => _mkParam(d, '171C_V2'))
 
 // ---- BMS 告警阈值（171C_V2_1 ~ V2_4，各 88 项）----
 // 22 类告警 × 4 字段（告警阈值 / 触发时间 / 释放阈值 / 释放时间），逐项 2 字节递增，
-// 与 171C_V2_1 模型 ControlData 的 B0~B174 一一对应；文案与模型 name 保持一致。
-// 字段顺序：阈值(不缩放)、触发时间(×100，单位 S)、释放阈值(不缩放)、释放时间(×100)，
-// 温度类阈值/释放阈值按点表「传输值 = 实际值 + 50」处理（offset -50）。
+// 与 171C_V2_1 模型 ControlData 的 B0~B174 一一对应；名称只写业务含义，
+// 单位由 unit 字段在数值/范围侧统一标注（label 不再带 (mV)/(S) 等括号单位，避免重复）。
+// 模型文件里的 name 保留点表原始写法（含单位），仅作协议对照，不用于设置页展示。
+// 换算按 0x3401 V1.2 附件2「传输值」列逐地址判定（不做类别假设）：
+//   触发/释放时间 ×100（0.01S）；温度类阈值/释放阈值 (实际值+50)（offset -50, scale 1）；
+//   总压/过流/SOC 类阈值/释放阈值 ×10（0.1V / 0.1A / 0.1%），见 BMS_ALARM_SCALE10_ADDRESSES；
+//   单体电压(mV)、绝缘阻值(ohm/V) 以及充电过流 2/3/4 级(A) 不缩放。
 const BMS_ALARM_CATEGORIES = [
   { name: '单体过压', unit: 'mV' },
   { name: '单体欠压', unit: 'mV' },
@@ -516,6 +522,25 @@ const BMS_ALARM_LEVELS = [
   { level: 4, deviceType: '171C_V2_4', base: 901, tag: 'alarm4' }
 ]
 
+/**
+ * 告警阈值段中「传输值=(实际值*10)」的 42 个寄存器地址（0x3401 V1.2 附件2 BMS1 列）。
+ * 与 community/settings/param-settings-constants.js 的 PARAM_SCALE10_ADDRESS['171C'] 同源，
+ * 少了它们会导致总压/过流/SOC 阈值下发值小 10 倍（输入 80V 只发 80，设备按 8.0V 执行）。
+ * ⚠️ 充电过流只有 1 级（429/433）×10，2/3/4 级（605/609、781/785、957/961）
+ *    点表写「传输值=(实际值)，单位 1A」，故必须按地址判定，不能按告警类别统一给 scale。
+ * 用数组而非 Set：小程序旧基础库对 Set 的支持不一致，indexOf 最稳。
+ */
+const BMS_ALARM_SCALE10_ADDRESSES = [
+  // 1 级（段首 373）：总压过压/欠压/压差、放电过流、充电过流、soc低
+  '397', '401', '405', '409', '413', '417', '421', '425', '429', '433', '541', '545',
+  // 2 级（段首 549）
+  '573', '577', '581', '585', '589', '593', '597', '601', '717', '721',
+  // 3 级（段首 725）
+  '749', '753', '757', '761', '765', '769', '773', '777', '893', '897',
+  // 4 级（段首 901）
+  '925', '929', '933', '937', '941', '945', '949', '953', '1069', '1073'
+]
+
 const BMS171C_ALARM_PARAMS = []
 BMS_ALARM_LEVELS.forEach(({ level, deviceType, base, tag }) => {
   BMS_ALARM_CATEGORIES.forEach((cat, ci) => {
@@ -533,10 +558,13 @@ BMS_ALARM_LEVELS.forEach(({ level, deviceType, base, tag }) => {
         key: 'L' + level + '_B' + e.byte,
         frameKey: 'C_B' + e.byte,
         field: 'B' + e.byte,
-        label: `${cat.name}${level}级${e.suffix}(${e.unit})`,
+        // 单位只标在数值侧（SettingsPanel 的 sp-num-unit），名称里不再重复
+        label: `${cat.name}${level}级${e.suffix}`,
         unit: e.unit,
         address: String(base + e.byte),
-        scale: e.scale,
+        // 时间项 ×100；阈值/释放阈值再按附件2 的 ×10 地址表判定（此前只按类别生成，
+        // 总压/过流/SOC 类一律漏了 scale，下发值小 10 倍）
+        scale: e.scale || (BMS_ALARM_SCALE10_ADDRESSES.indexOf(String(base + e.byte)) >= 0 ? 10 : undefined),
         // 温度阈值按点表「传输值 = 实际值 + 50」编码
         offset: e.threshold && cat.temp ? -50 : 0,
         group: tag,

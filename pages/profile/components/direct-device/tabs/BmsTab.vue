@@ -1,14 +1,16 @@
 <template>
-  <scroll-view class="module-scroll" scroll-y="true">
+  <!-- 页面外层已有 module-scroll；这里再套一层 scroll-view 会造成嵌套滚动/手势冲突，
+       且每个后台面板都要多维护一个滚动容器。改为普通 view，滚动统一交给页面层。 -->
+  <view class="panel-root">
     <view class="content">
       <!-- 50kW：171C V2.0 协议 -->
       <view v-if="is50KwMode" class="module">
         <view class="module-title">BMS电池管理系统</view>
         <DataGroup v-for="g in groups50" :key="g.title" :title="g.title">
-          <DataGrid v-if="g.items" :items="g.items" />
+          <DataGrid v-if="g.items" :items="g.items || []" />
           <FaultBoard
             v-else-if="g.faultGroups"
-            :groups="g.faultGroups"
+            :groups="g.faultGroups || []"
             :has-data="rawBucketHasData"
             hint="暂无故障位数据"
           />
@@ -71,7 +73,7 @@
         </DataGroup>
       </view>
     </view>
-  </scroll-view>
+  </view>
 </template>
 
 <script>
@@ -84,30 +86,35 @@ import {
   ENV_ITEMS, BMS_FAULT_WORDS
 } from '../../../direct-device-50kw-fields.js'
 import { fmtItems, withPrefixAliases } from '../../../direct-device-50kw-format.js'
+import { getFormatted, getSnapshot } from '../realtime-store.js'
+import { realtimeSubscribe } from '../realtime-subscribe.js'
 
 /**
  * BMS tab 组件
  * 20kW：旧协议 171C
  * 50kW：新协议 171C V2.0（按《电池簇信息记录》栏目：环境数据 / 设备状态 / 系统配置 / 系统信息 / 单体信息 / 故障信息）
+ *
+ * ⚡ 实时数据由 realtime-subscribe mixin 订阅仓库驱动，父页面不参与收帧渲染。
  */
 export default {
+  mixins: [realtimeSubscribe],
   name: 'BmsTab',
   components: { DataGroup, DataGrid, FaultBoard },
   props: {
-    formattedValues: {
-      type: Object,
-      default: () => ({})
-    },
-    rawValues: {
-      type: Object,
-      default: () => ({})
-    },
     is50KwMode: {
       type: Boolean,
       default: false
     }
   },
   computed: {
+    formattedValues() {
+      void this.rtVer
+      return getFormatted()
+    },
+    rawValues() {
+      void this.rtVer
+      return getSnapshot()
+    },
     /** 171C V2.0 原始寄存器 bucket（B 号为字节地址，值未缩放） */
     rawBucket() {
       return this._mergeFrames((this.rawValues && this.rawValues['171C_V2']) || {})
@@ -208,8 +215,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.module-scroll {
-  height: 100%;
+.panel-root {
+  width: 100%;
 }
 .content {
   padding: 0 20rpx 32rpx;

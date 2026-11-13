@@ -46,14 +46,14 @@ export default {
 .confirm-title {
   padding: 38rpx 32rpx 10rpx;
   text-align: center;
-  font-size: 32rpx;
+  font-size: 34rpx;
   font-weight: 600;
   color: #1d2430;
 }
 .confirm-content {
   padding: 10rpx 44rpx 38rpx;
   text-align: center;
-  font-size: 27rpx;
+  font-size: 28rpx;
   line-height: 1.6;
   color: #6b7480;
 }
@@ -69,7 +69,7 @@ export default {
   flex: 1;
   padding: 24rpx 0;
   text-align: center;
-  font-size: 29rpx;
+  font-size: 30rpx;
   border-radius: 14rpx;
   transition: opacity 0.15s ease;
 

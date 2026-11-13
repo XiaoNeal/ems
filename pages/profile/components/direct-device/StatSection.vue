@@ -131,13 +131,13 @@ export default {
   gap: 6rpx;
 }
 .arch-stat-label {
-  font-size: 22rpx;
+  font-size: 27rpx;
   color: #78838f;
   letter-spacing: 0.2rpx;
   white-space: nowrap;
 }
 .arch-stat-value {
-  font-size: 32rpx;
+  font-size: 34rpx;
   font-weight: 600;
   color: #16202d;
   /* 表格数字：刷新时不抖动，且与中文同一套字体骨架 */
@@ -145,13 +145,13 @@ export default {
   font-feature-settings: 'tnum' 1;
   line-height: 1.3;
   &.small {
-    font-size: 25rpx;
+    font-size: 28rpx;
     font-weight: 400;
     color: #5c6673;
   }
 }
 .arch-stat-unit {
-  font-size: 21rpx;
+  font-size: 26rpx;
   color: #8a94a1;
   font-weight: 500;
   margin-left: 5rpx;

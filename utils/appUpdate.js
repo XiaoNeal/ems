@@ -1,24 +1,52 @@
 /**
- * APP 升级更新模块（参考同行业主流方案：微信/支付宝及 uniapp 生态通用做法）
+ * APP 自动更新升级模块
  *
  * 能力清单：
- * 1. 自定义升级弹窗页（pages-public/app-update）：卡片式 UI + 更新日志 + 下载进度条
- * 2. 整包更新（Android）：应用内下载 APK + 进度显示 + 自动拉起系统安装器
- * 3. 整包更新（iOS）：直接跳转 App Store 下载页
- * 4. wgt 热更新：应用内下载 + 进度显示 + 安装后重启生效
- * 5. 强制更新：弹窗不可关闭、返回键拦截
- * 6. 忽略版本：非强制更新允许"稍后再说"，同版本不再打扰
- * 7. 版本号二次校验：服务端版本必须高于本地才提示（防止服务端误发）
- * 8. 失败降级：下载/安装失败时提供"重试"与"浏览器下载"兜底
- * 9. 检查节流：短时间内重复启动不重复弹窗
+ * 1. 启动时 / 手动检查更新：服务端下发 + 本地版本号二次校验 + 10 分钟节流
+ * 2. 自定义升级弹窗页：更新日志、强制更新、忽略版本、下载进度
+ * 3. wgt 热更新：应用内下载 + 进度显示 + 安装后重启生效
+ * 4. Android 整包更新：应用内下载 APK + 进度显示 + 系统安装器接管
+ * 5. iOS 整包更新：跳转 App Store
+ * 6. 失败降级：下载 / 安装失败时提供「重试」与「浏览器下载」兜底
  *
- * 注意：Android 整包更新需在 manifest.json 的 APP 模块权限中
- *       声明 android.permission.REQUEST_INSTALL_PACKAGES
+ * ⚠️ 厂商安全检测提示（2026-11-09 决策：业务要求保留自动更新升级）
+ *    「应用内下载 + 安装」会被荣耀 / 华为等安全引擎计入风险权重
+ *    （提示文案「私自下载安装应用」），恢复后必须同时遵守以下约束：
+ *      - 只从企业官方服务器 https://iems.neiic.com 下载，只安装本应用自身的新版本；
+ *      - 全程需用户主动点击「立即更新」，不做静默下载、静默安装、后台自启；
+ *      - 使用正式证书 ems.keystore 签名（SHA1 B2:5E:F7:...），并保留官方误报申诉；
+ *      - INSTALL_PACKAGES / DUMP / READ_PHONE_STATE / 短信 / 通讯录等冗余权限
+ *        继续在 manifest.json 中以 tools:node="remove" 剔除，不因本次恢复而放开。
+ *
+ *    一键回退（若后续决定彻底规避该风险）：
+ *      1. 把下方 ALLOW_IN_APP_APK_INSTALL 置为 false（APK 整包改走浏览器下载）；
+ *      2. 把 manifest.json 中 REQUEST_INSTALL_PACKAGES 改回 tools:node="remove"。
+ *      wgt 热更新仍可在应用内自动安装，因为它不需要该权限。
+ *    详见 .workbuddy/docs/APK安全误报处置方案.md B3 节。
  */
 import { decrypt } from '@/utils/decryptData.js'
 
-// 两次检查更新的最小间隔（毫秒）：10 分钟
+// 同一进程内两次自动检查的最小间隔（毫秒）
+// 注意：不再写入 storage —— 每次冷启动（进入 APP）都必须真正发起一次检查。
+// 旧实现把时间戳写在「发起请求时」且手动检查也会写，导致手动点过「检查更新」后，
+// 之后 10 分钟内的冷启动整批被跳过，表现为「进 APP 不自动弹、手动点才弹」。
 const CHECK_GAP = 10 * 60 * 1000
+let lastAutoCheckAt = 0
+
+// 「稍后再说」只在本次运行内生效：下次冷启动重新提醒，不再永久忽略版本
+let snoozedVersion = ''
+
+/**
+ * 记录用户在升级弹窗点击「稍后再说」
+ * 只影响当前进程；同时清掉旧逻辑写入的永久忽略标记 ignored_version，
+ * 避免用户手机上已存在的历史数据继续把自动弹窗挡住。
+ */
+export function snoozeUpdateVersion(version) {
+	snoozedVersion = String(version || '')
+	try {
+		uni.removeStorageSync('ignored_version')
+	} catch (e) { }
+}
 
 // ============================================================
 // 检查更新接口地址
@@ -30,6 +58,13 @@ const UPDATE_API_BASE = 'https://iems.neiic.com'
 
 // 待处理更新信息在 storage 中的键名（升级页读取）
 export const PENDING_UPDATE_KEY = 'pending_update_info'
+
+/**
+ * 是否允许 APK 整包在应用内下载安装。
+ * true  = 完整自动更新升级（需 REQUEST_INSTALL_PACKAGES 权限）
+ * false = APK 整包跳浏览器下载，wgt 热更新仍应用内自动安装
+ */
+export const ALLOW_IN_APP_APK_INSTALL = true
 
 /**
  * 语义化版本比较：v1 > v2 返回 1，相等返回 0，v1 < v2 返回 -1
@@ -50,25 +85,44 @@ export function compareVersion(v1 = '', v2 = '') {
 }
 
 /**
- * 启动时检查更新入口（仅 APP-PLUS 生效）
- * @param {boolean} force - true 时跳过节流与"忽略版本"，用于设置页手动检查
+ * 检查更新入口（仅 APP-PLUS 生效）
+ * @param {boolean} force - true = 手动检查：跳过进程内去重与「稍后再说」，无更新/失败时给 toast
+ *
+ * 自动检查（App.vue onLaunch 调用）的可靠性约束：
+ *   1. 不读写 storage 时间戳，每次冷启动都真正发起一次检查；
+ *   2. 只有拿到服务端有效响应才算完成一次检查，失败可有限重试；
+ *   3. plus.runtime 早期未就绪时走兜底版本 + 2s 超时，不静默中断；
+ *   4. 启动早期网络 / 登录态未就绪导致的失败，最多自动重试 2 次（间隔 3s）。
  */
 export function checkAppUpdate(force = false) {
 	// #ifdef APP-PLUS
-	// 节流：短时间内重复启动不重复检查（手动检查不受限）
-	const lastCheck = uni.getStorageSync('last_update_check_time') || 0
-	if (!force && Date.now() - lastCheck < CHECK_GAP) {
-		console.log('[AppUpdate] 10 分钟内已检查过，跳过（force 可跳过此限制）')
+	// 进程内去重：只防同一进程内生命周期重复调用；手动检查不占用自动检查配额
+	if (!force && lastAutoCheckAt && Date.now() - lastAutoCheckAt < CHECK_GAP) {
+		console.log('[AppUpdate] 本次运行已成功检查过，跳过（手动检查不受限）')
 		return
 	}
-	uni.setStorageSync('last_update_check_time', Date.now())
 
-	plus.runtime.getProperty(plus.runtime.appid, (widgetInfo) => {
-		// 去掉可能的 V/v 前缀，统一为纯数字版本号（如 V1.0.12 -> 1.0.12）
-		const currentVersion = (widgetInfo.version || '').replace(/^v/i, '')
-		const osName = plus.os.name
+	const AUTO_RETRY_MAX = force ? 0 : 2
+	const AUTO_RETRY_GAP = 3000
+	const fallbackVersion = () => {
+		try { return String(plus.runtime.version || '').replace(/^v/i, '') } catch (e) { return '' }
+	}
+	let checkStarted = false
+
+	const runCheck = (currentVersion, retryCount = 0) => {
+		let osName = 'Android'
+		try { osName = plus.os.name || osName } catch (e) { }
 		const updateUrl = `${UPDATE_API_BASE}/appletAPI/app/checkUpdate?version=${currentVersion}&osName=${osName}`
-		console.log('[AppUpdate] 开始检查更新:', updateUrl)
+		console.log('[AppUpdate] 开始检查更新:', updateUrl, '| force:', force, '| retry:', retryCount)
+
+		const retryLater = (reason) => {
+			if (!force && retryCount < AUTO_RETRY_MAX) {
+				console.warn('[AppUpdate]', reason, `${AUTO_RETRY_GAP / 1000}s 后自动重试`)
+				setTimeout(() => runCheck(currentVersion, retryCount + 1), AUTO_RETRY_GAP)
+			} else if (force) {
+				uni.showToast({ title: '检查更新失败，请检查网络', icon: 'none' })
+			}
+		}
 
 		uni.request({
 			url: updateUrl,
@@ -81,12 +135,17 @@ export function checkAppUpdate(force = false) {
 					parsed = JSON.parse(decrypt(res.data))
 				} catch (e) {
 					console.error('[AppUpdate] 解密失败，原始响应前 50 字符:', String(res.data).slice(0, 50), e)
+					retryLater('响应解密失败')
 					return
 				}
 				if (!parsed || parsed.status != 200 || !parsed.data) {
 					console.log('[AppUpdate] 接口异常或无数据:', JSON.stringify(parsed))
+					// 已拿到服务端响应即算一次有效检查，避免「无数据」场景反复重试
+					if (!force) lastAutoCheckAt = Date.now()
 					return
 				}
+				// 只有真正完成一次检查才记录时间，失败路径不占用配额
+				if (!force) lastAutoCheckAt = Date.now()
 
 				const info = parsed.data
 				console.log('[AppUpdate] 服务端返回:', JSON.stringify(info), '| 本地版本:', currentVersion)
@@ -109,42 +168,108 @@ export function checkAppUpdate(force = false) {
 			},
 			fail: (err) => {
 				console.error('[AppUpdate] 检查更新请求失败:', err)
-				if (force) uni.showToast({ title: '检查更新失败，请检查网络', icon: 'none' })
+				retryLater('请求失败')
 			}
 		})
-	})
+	}
+
+	const startWith = (v) => {
+		if (checkStarted) return
+		checkStarted = true
+		runCheck(v)
+	}
+
+	try {
+		plus.runtime.getProperty(plus.runtime.appid, (widgetInfo) => {
+			const v = (widgetInfo && widgetInfo.version ? String(widgetInfo.version) : '').replace(/^v/i, '')
+			startWith(v || fallbackVersion())
+		}, (err) => {
+			console.warn('[AppUpdate] 读取运行时版本失败，使用兜底版本继续检查:', err)
+			startWith(fallbackVersion())
+		})
+	} catch (e) {
+		console.warn('[AppUpdate] plus.runtime 未就绪，使用兜底版本继续检查:', e)
+		startWith(fallbackVersion())
+	}
+	// 个别机型 onLaunch 早期 getProperty 不回调，2s 后强制继续，避免整条检查静默中断
+	setTimeout(() => {
+		if (!checkStarted) {
+			console.warn('[AppUpdate] 读取运行时版本超时，使用兜底版本继续检查')
+			startWith(fallbackVersion())
+		}
+	}, 2000)
 	// #endif
 }
 
 /**
  * 打开自定义升级弹窗页（pages-public/app-update）
- * onLaunch 早期页面栈未就绪，延迟导航并对失败自动重试
+ * onLaunch 早期页面栈未就绪、首页还可能 redirectTo 到登录页，
+ * 因此等页面栈就绪后再导航，并对失败自动重试。
  */
 function showUpdatePage(info, force = false) {
 	// #ifdef APP-PLUS
-	// 已在升级页则不重复打开
-	const pages = getCurrentPages()
-	if (pages.length && pages[pages.length - 1].route.indexOf('app-update') > -1) return
-
-	// 非强制更新：用户上次忽略的版本不再重复打扰（手动检查不受限）
 	const isForce = !!info.force
-	const ignoredVersion = uni.getStorageSync('ignored_version') || ''
-	if (!force && !isForce && ignoredVersion === info.version) {
-		console.log('[AppUpdate] 版本', info.version, '曾被用户忽略，跳过弹窗')
+	// 「稍后再说」只在本次运行内生效；下次冷启动会重新提醒（手动检查不受限）
+	if (!force && !isForce && snoozedVersion && snoozedVersion === String(info.version || '')) {
+		console.log('[AppUpdate] 本次运行已选择「稍后再说」，跳过（下次进入 APP 会重新提醒）')
 		return
 	}
-	console.log('[AppUpdate] 命中更新，打开升级弹窗页:', info.version, 'force:', isForce)
+	console.log('[AppUpdate] 命中更新，准备打开升级弹窗页:', info.version, '| force:', isForce)
 
 	uni.setStorageSync(PENDING_UPDATE_KEY, info)
+	openUpdatePageWhenReady(0, Date.now() + 1200)
+	// #endif
+}
 
-	const nav = () => {
+/**
+ * 等待页面栈就绪后打开升级弹窗，最多重试 12 次。
+ * 启动瞬间 getCurrentPages() 可能为空、navigateTo 可能失败，
+ * 旧实现只在 fail 时无限重试，页面栈未就绪时会静默丢掉弹窗。
+ */
+function openUpdatePageWhenReady(retry, notBefore) {
+	const delay = Math.max(0, notBefore - Date.now()) || (retry ? 500 : 0)
+	setTimeout(() => {
+		let pages = []
+		try { pages = getCurrentPages() || [] } catch (e) { pages = [] }
+		const current = pages.length ? pages[pages.length - 1] : null
+		if (current && current.route && current.route.indexOf('app-update') > -1) return
+		if (!pages.length && retry < 12) {
+			openUpdatePageWhenReady(retry + 1, notBefore)
+			return
+		}
 		uni.navigateTo({
 			url: '/pages-public/app-update/app-update',
-			fail: () => setTimeout(nav, 800)
+			success: () => console.log('[AppUpdate] 升级弹窗已打开'),
+			fail: (err) => {
+				console.warn('[AppUpdate] 打开升级弹窗失败，重试:', err)
+				if (retry < 12) setTimeout(() => openUpdatePageWhenReady(retry + 1, notBefore), 500)
+			}
 		})
+	}, delay)
+}
+
+/**
+ * 清理历史下载的安装包，避免 _doc 目录长期堆积 APK/wgt。
+ * 只删除本模块生成的 app_update_<时间戳>.<apk|wgt>，且不动当前包。
+ * 纯清理动作，失败静默，不影响主流程。
+ */
+function cleanupOldPackages(keepPath) {
+	// #ifdef APP-PLUS
+	try {
+		plus.io.resolveLocalFileSystemURL('_doc/', (dir) => {
+			const reader = dir.createReader()
+			reader.readEntries((entries) => {
+				(entries || []).forEach((entry) => {
+					if (!entry || !entry.isFile) return
+					if (!/^app_update_\d+\.(apk|wgt)$/i.test(entry.name)) return
+					if (keepPath && '_doc/' + entry.name === keepPath) return
+					entry.remove(() => {}, () => {})
+				})
+			}, () => {})
+		}, () => {})
+	} catch (e) {
+		// 清理失败不影响下载
 	}
-	// 等待首页渲染完成再弹出，避免启动瞬间白屏闪烁
-	setTimeout(nav, 1500)
 	// #endif
 }
 
@@ -168,56 +293,70 @@ export function downloadUpdateFile(url, onProgress, fileExt) {
 		const match = urlPath.match(/\.(wgt|apk)$/i)
 		if (match) ext = match[1].toLowerCase()
 
-		// #ifdef APP-PLUS
-		// 固定落盘到应用私有目录 _doc 下，文件名带时间戳和正确后缀（_doc 目录必然存在，无需创建子目录）
+		// 固定落盘到应用私有目录 _doc 下，文件名带时间戳和正确后缀
 		const savePath = `_doc/app_update_${Date.now()}.${ext}`
+		cleanupOldPackages(savePath)
 		console.log('[AppUpdate] 下载目标路径:', savePath)
+
+		// #ifndef APP-PLUS
+		reject(new Error('应用内自动更新仅支持 APP 端'))
 		// #endif
 
+		// #ifdef APP-PLUS
 		const task = uni.downloadFile({
 			url,
-			// #ifdef APP-PLUS
 			filePath: savePath,
-			// #endif
 			success: (res) => {
-				console.log('[AppUpdate] 下载完成 statusCode=', res.statusCode, '临时路径=', res.tempFilePath, '落盘路径=', res.filePath)
+				console.log('[AppUpdate] 下载完成 statusCode=', res.statusCode, '落盘路径=', res.filePath || res.tempFilePath)
 				if (res.statusCode === 200) {
 					// 优先使用显式落盘路径，部分基础库只返回 tempFilePath
-					resolve(res.filePath || res.tempFilePath)
+					resolve(res.filePath || res.tempFilePath || savePath)
 				} else {
 					reject(new Error('下载失败，HTTP 状态码 ' + res.statusCode))
 				}
 			},
 			fail: (err) => reject(err)
 		})
-		task.onProgressUpdate((p) => {
-			if (typeof onProgress === 'function') onProgress(p.progress)
-		})
+		if (task && task.onProgressUpdate) {
+			task.onProgressUpdate((p) => {
+				if (typeof onProgress === 'function') onProgress(p.progress)
+			})
+		}
+		// #endif
 	})
 }
 
 /**
- * Android 8.0+ 需要"允许安装未知应用"运行时权限
+ * Android 8.0+ 需要「允许安装未知应用」运行时权限（仅 APK 整包需要，wgt 不需要）
  * 返回 Promise<boolean>：true 已授权可继续，false 已引导用户去设置
  */
 export function ensureInstallPermission() {
 	return new Promise((resolve) => {
+		// #ifndef APP-PLUS
+		resolve(true)
+		// #endif
 		// #ifdef APP-PLUS
 		try {
 			const main = plus.android.runtimeMainActivity()
-			const Settings = plus.android.importClass('android.provider.Settings')
 			const Build = plus.android.importClass('android.os.Build')
-
-			if (Build.VERSION.SDK_INT >= 26) {
-				if (!Settings.canRequestPackageInstalls(main)) {
+			if (Build && Build.VERSION && Build.VERSION.SDK_INT >= 26) {
+				const pm = main.getPackageManager()
+				// canRequestPackageInstalls() 为 Android 8+ PackageManager 实例方法
+				const canInstall = pm && typeof pm.canRequestPackageInstalls === 'function'
+					? pm.canRequestPackageInstalls()
+					: true
+				if (!canInstall) {
 					const Uri = plus.android.importClass('android.net.Uri')
-					const intent = new plus.android.content.Intent()
-					intent.setAction(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
-					intent.setData(Uri.parse(`package:${main.getPackageName()}`))
+					const Intent = plus.android.importClass('android.content.Intent')
+					const Settings = plus.android.importClass('android.provider.Settings')
+					const intent = new Intent(
+						Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+						Uri.parse('package:' + main.getPackageName())
+					)
 					main.startActivity(intent)
 					uni.showModal({
 						title: '需要安装权限',
-						content: '请在设置中允许本应用安装未知来源应用，返回后重新点击"立即更新"即可继续',
+						content: '请在设置中允许本应用安装未知来源应用，返回后重新点击「立即更新」即可继续',
 						showCancel: false
 					})
 					resolve(false)
@@ -226,7 +365,7 @@ export function ensureInstallPermission() {
 			}
 			resolve(true)
 		} catch (e) {
-			console.warn('[AppUpdate] 权限检查失败，直接尝试安装:', e)
+			console.warn('[AppUpdate] 安装权限检查失败，直接尝试安装:', e)
 			resolve(true)
 		}
 		// #endif
@@ -271,6 +410,9 @@ function normalizeInstallError(e, filePath) {
  */
 export function installWgt(filePath) {
 	return new Promise((resolve, reject) => {
+		// #ifndef APP-PLUS
+		reject(new Error('wgt 安装仅支持 APP 端'))
+		// #endif
 		// #ifdef APP-PLUS
 		console.log('[AppUpdate] 开始安装 wgt，文件路径:', filePath)
 		plus.runtime.install(filePath, { force: false }, () => {
@@ -288,10 +430,13 @@ export function installWgt(filePath) {
 }
 
 /**
- * 安装 APK 整包（系统安装器接管，应用随安装流程退出）
+ * 安装 APK 整包（拉起系统安装器，由用户确认安装）
  */
 export function installApk(filePath) {
 	return new Promise((resolve, reject) => {
+		// #ifndef APP-PLUS
+		reject(new Error('APK 安装仅支持 APP 端'))
+		// #endif
 		// #ifdef APP-PLUS
 		console.log('[AppUpdate] 开始安装 apk，文件路径:', filePath)
 		plus.runtime.install(filePath, { force: false }, () => resolve(), (e) => reject(normalizeInstallError(e, filePath)))
@@ -300,7 +445,8 @@ export function installApk(filePath) {
 }
 
 /**
- * 失败兜底：跳转浏览器/外部下载
+ * 失败兜底 / 关闭应用内 APK 安装时：跳转浏览器或 App Store
+ * @param {string} url 服务端下发的下载地址
  */
 export function openInBrowser(url) {
 	// #ifdef APP-PLUS

@@ -29,6 +29,9 @@
       <text class="sp-edit-hint-text">编辑模式已开启，点击命令或参数后立即下发</text>
     </view>
 
+    <!-- 重渲染延迟到下一帧：切设置子 tab 时，本帧只留骨架，重内容在 rAF 后再画，
+         消除「设置内部切换」100~170ms 的同步卡顿（功能不变，只是晚一帧出现） -->
+    <block v-if="ready">
     <!-- 组合报文卡片：同组参数（如储能DC开关机 / 充放电选择 / 总功率）合并成一帧下发 -->
     <view
       v-for="b in bundleGroups"
@@ -50,7 +53,9 @@
           <text class="sp-switch-label">{{ p.label }}</text>
           <text v-if="currentLabelOf(p)" class="sp-switch-cur">{{ currentLabelOf(p) }}</text>
         </view>
-        <view class="sp-seg" :class="{ 'sp-seg--wrap': (p.options || []).length > 4 }">
+        <!-- 组合卡里 4 项长文案（并网/离网一键开机）用 2×2 等宽栅格，
+             避免四列单行把文字挤成断字；通用 ≤4 项仍保持 flex:1 单行 -->
+        <view class="sp-seg" :class="{ 'sp-seg--wrap': (p.options || []).length > 4, 'sp-seg--quad': (p.options || []).length === 4 }">
           <view
             v-for="(opt, oi) in (p.options || [])"
             :key="oi"
@@ -133,21 +138,20 @@
     </view>
 
     <!-- 数值分组切换：某个设备的数值项过多时，按 tabCfg.numericGroups 分段，
-         一次只渲染选中那段；只有一段（当前 BMS 就只剩温控 15 项）时不显示这排 -->
-    <scroll-view v-if="numericSections.length > 1" class="sp-num-tabs" scroll-x :show-scrollbar="false">
-      <view class="sp-num-tabs-inner">
+         一次只渲染选中那段；只有一段时不显示这排。
+         与其它分段控件统一：直接复用 .sp-seg / .sp-seg--wrap 的三列等宽栅格，
+         不再横向滚动；也不显示项数徽标（88 这类数字容易被误读成参数设定值） -->
+    <view v-if="numericSections.length > 1" class="sp-num-tabs">
+      <view class="sp-seg" :class="{ 'sp-seg--wrap': numericSections.length > 4 }">
         <view
           v-for="(sec, si) in numericSections"
           :key="sec.key"
-          class="sp-num-tab"
+          class="sp-seg-item"
           :class="{ 'is-active': si === activeNumSection }"
           @click="activeNumSection = si"
-        >
-          <text class="sp-num-tab-text">{{ sec.short || sec.title }}</text>
-          <text class="sp-num-tab-count">{{ sec.items.length }}</text>
-        </view>
+        >{{ sec.short || sec.title }}</view>
       </view>
-    </scroll-view>
+    </view>
 
     <!-- 数值设定：两列栅格，点卡片即可编辑 -->
     <view v-for="(sec, si) in visibleNumericSections" :key="sec.key" class="sp-card" :class="editing ? 'is-editing' : 'is-locked'">
@@ -192,12 +196,23 @@
       <uni-icons type="info" size="26" color="#c6ced8"></uni-icons>
       <text class="sp-empty-text">该设备暂无可配置参数</text>
     </view>
+    </block>
+    <block v-else>
+      <view class="sp-skeleton">
+        <view class="sk-spinner"></view>
+        <text class="sk-text">加载中…</text>
+      </view>
+    </block>
   </view>
 </template>
 
 <script>
 /**
  * 设置面板组件（数据驱动，对应 SETTINGS_TABS 中的一项）
+ * 参数数组来自非响应式 param-store.js（避免每轮 patch 深拷贝几百项参数树），
+ * 回显更新由组件自己订阅 param-store 的通知驱动（不再经父页面 props 下传，
+ * 避免每次回显都让整页 render 一遍）。
+ *
  * 事件: toggle-edit(editKey)       —— 点「修改 / 完成」
  *       need-edit                 —— 未进编辑态就点了命令或数值（页面据此提示）
  *       switch-click({ dataKey, key, optionIndex, value, label })   —— 普通命令卡：点选即下发
@@ -217,12 +232,14 @@
  * 分段控件（segmented）替代原来的独立按钮：选项等宽、选中态一眼可辨，
  * 且 4 个以上选项自动换行，不会因「并网一键开机」这类长文案挤成一团。
  */
+import { paramStore, subscribeParamChange } from './param-store.js'
+
 export default {
   name: 'SettingsPanel',
   props: {
     tabCfg: { type: Object, required: true },
-    // 所有参数数组的映射：{ pcsSwitchParams: [...], bmsNumericParams: [...] }
-    paramsMap: { type: Object, default: () => ({}) },
+    /** 面板是否可见：v-show 常驻后，隐藏时不接收参数回显通知（否则每次回显都要重画几百项） */
+    active: { type: Boolean, default: true },
     isEditing: { type: Boolean, default: false },
     formatCurrentLabel: { type: Function, default: () => '--' },
     formatCurrentValue: { type: Function, default: () => null },
@@ -234,8 +251,31 @@ export default {
       // 避免事件往返期间按钮「点了没反应」；null 表示跟随父组件的 isEditing
       localEditing: null,
       // 当前选中的数值分组（仅当 numericGroups 配了多段时用得上）
-      activeNumSection: 0
+      activeNumSection: 0,
+      // 参数回显版本号：param-store 通知时递增，只驱动本组件重算
+      paramVer: 0,
+      // 内容就绪闸门：切到本面板 / 切设置子 tab 时先置 false（本帧只留骨架），
+      // 下一帧 rAF 再置 true，把几百项参数的重渲染挪出点击帧，消除同步卡顿。
+      ready: false
     }
+  },
+  created() {
+    // 参数数组在非响应式仓库里，写入新值不会通知渲染层；
+    // 订阅后由仓库直接推给本组件，父页面不必再整页 render 一次。
+    // 隐藏期间的通知直接丢弃（面板 v-show 常驻，但没必要陪着刷新）。
+    this._paramUnsubscribe = subscribeParamChange(() => {
+      if (this.active) this.paramVer++
+    })
+  },
+  beforeDestroy() {
+    if (this._paramUnsubscribe) {
+      this._paramUnsubscribe()
+      this._paramUnsubscribe = null
+    }
+  },
+  mounted() {
+    // 首帧只渲染骨架，下一帧再画几百项参数——把重渲染挪出挂载那一帧
+    this._markReady()
   },
   computed: {
     /** 只渲染选中的那一组数值卡片；不足两组时全渲染 */
@@ -254,6 +294,7 @@ export default {
      * 点任意一项，页面都会把同组其它项的当前值一起带出，合成一帧。
      */
     bundleGroups() {
+      void this.paramVer // 参数回显写入非响应式仓库后，由订阅通知触发重算
       const cfg = this.tabCfg || {}
       const specs = cfg.bundleSections
       if (!specs || !specs.length) return []
@@ -281,6 +322,7 @@ export default {
     },
     /** 命令/模式分区：快捷控制是多段，其余是单段（BMS 可能带额外开关段） */
     sections() {
+      void this.paramVer
       const cfg = this.tabCfg || {}
       const skip = k => this.bundleKeys.indexOf(k) !== -1
       if (cfg.switchSections && cfg.switchSections.length) {
@@ -305,6 +347,7 @@ export default {
     },
     /** 数值分区：支持 numericGroups 按 group 标签拆分（如 BMS 阈值 / 温控），否则单段 */
     numericSections() {
+      void this.paramVer
       const cfg = this.tabCfg || {}
       const all = this.getParams(cfg.numericKey).filter(p => this.bundleKeys.indexOf(p.key) === -1)
       if (!all.length) return []
@@ -317,6 +360,9 @@ export default {
         .filter(g => g.items.length)
     },
     heroSub() {
+      // 未就绪（切 tab 本帧）：直接返回占位，避免访问 sections/bundleGroups 等重
+      // computed 把它们提前算出来——那是我们要从点击帧里剥离的成本。
+      if (!this.ready) return '加载中…'
       // 组合卡里的项也要计数，否则顶部会显示「命令 5 项」却看不到那两项
       const bundleSw = this.bundleGroups.reduce((sum, b) => sum + b.switchItems.length, 0)
       const bundleNum = this.bundleGroups.reduce((sum, b) => sum + b.numericItems.length, 0)
@@ -329,6 +375,17 @@ export default {
     }
   },
   watch: {
+    /** 重新激活时补一次刷新：隐藏期间被丢掉的回显变化在这里兜回来 */
+    active(v) {
+      if (v) {
+        this.paramVer++
+      } else {
+        // 切到监测组（面板隐藏）：本地编辑态一并复位，按钮回到初始「修改」。
+        // 父页面在切 tab 时已把所有 editKey 置 false；这里置 null 让 editing
+        // 重新跟随父级，也兜住「点修改的事件没传回父级」时 localEditing 残留为 true 的情况。
+        this.localEditing = null
+      }
+    },
     // 父组件回传的编辑态变化时以父组件为准（切换 tab、下发后自动退出等）
     isEditing(v) {
       this.localEditing = v
@@ -337,9 +394,23 @@ export default {
     'tabCfg.editKey'() {
       this.localEditing = null
       this.activeNumSection = 0
+      // 重渲染延迟到下一帧：本帧先留骨架，消除设置子 tab 切换的同步卡顿
+      this.ready = false
+      this._markReady()
+    },
+    // tabCfg 整体被换（理论上 editKey 已覆盖，这里兜底）
+    tabCfg() {
+      this.ready = false
+      this._markReady()
     }
   },
   methods: {
+    /** 下一帧把 ready 置 true，把重渲染从当前帧挪到 rAF 之后 */
+    _markReady() {
+      const f = () => { this.ready = true }
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(f)
+      else setTimeout(f, 16)
+    },
     /** 「修改 / 完成」按钮：本地先切，再通知页面同步 */
     onToggleEdit() {
       this.localEditing = !this.editing
@@ -347,7 +418,7 @@ export default {
     },
     getParams(key) {
       if (!key) return []
-      return (this.paramsMap && this.paramsMap[key]) || []
+      return paramStore[key] || []
     },
     /** 只保留有选项的开关项：没有 options 的项渲染出来会是空行 */
     withOptions(list) {
@@ -520,7 +591,7 @@ $fill: #f6f8fb;
 }
 
 .sp-hero-title {
-  font-size: 29rpx;
+  font-size: 30rpx;
   font-weight: 600;
   line-height: 1.3;
   color: $text-1;
@@ -532,7 +603,7 @@ $fill: #f6f8fb;
 
 .sp-hero-sub {
   margin-top: 5rpx;
-  font-size: 22rpx;
+  font-size: 27rpx;
   line-height: 1.35;
   color: $text-3;
   letter-spacing: 0.2rpx;
@@ -556,7 +627,7 @@ $fill: #f6f8fb;
 
   text {
     margin-left: 6rpx;
-    font-size: 23rpx;
+    font-size: 27rpx;
     font-weight: 600;
     color: #ffffff;
     letter-spacing: 0.6rpx;
@@ -599,7 +670,7 @@ $fill: #f6f8fb;
   flex: 1;
   min-width: 0;
   margin-left: 10rpx;
-  font-size: 21rpx;
+  font-size: 26rpx;
   line-height: 1.4;
   color: #17734c;
 }
@@ -668,15 +739,97 @@ $fill: #f6f8fb;
 /* 组合下发卡：卡片头做淡蓝底，与普通卡一眼可分（不用渐变、不用顶部色条） */
 .sp-card--bundle {
   overflow: hidden;
-  border-color: #e2ebfa;
+  border-color: #e3ebf8;
+  box-shadow: 0 2rpx 10rpx rgba(28, 54, 96, 0.045);
 
   .sp-card-head {
     margin: 0 -22rpx;
-    padding: 22rpx 22rpx 16rpx;
-    background: #f6f9ff;
+    padding: 24rpx 22rpx 18rpx;
+    background: #f7faff;
     border-radius: 20rpx 20rpx 0 0;
-    border-bottom: 1rpx solid #e6eefb;
+    border-bottom: 1rpx solid #e9eff9;
   }
+
+  .sp-card-bar {
+    width: 5rpx;
+    height: 26rpx;
+    border-radius: 3rpx;
+  }
+
+  .sp-card-title {
+    font-size: 29rpx;
+    letter-spacing: 0.4rpx;
+  }
+
+  .sp-card-hint {
+    font-size: 24rpx;
+    color: #adb7c5;
+  }
+
+  /* 行间距稍放宽，2×2 栅格不挤在一起。
+     后面还有数值卡与底栏，:last-child 不命中，这里统一给上下间距 */
+  .sp-switch-row {
+    padding: 22rpx 0 20rpx;
+  }
+
+  /* 组合卡只有一个数值项：做成「左侧说明 / 右侧大数值」的横向信息卡。
+     不改模板结构，数值行绝对定位到右下，右上角留给圆形编辑按钮。 */
+  .sp-num-grid--bundle .sp-num-item {
+    position: relative;
+    min-height: 126rpx;
+    padding: 20rpx 22rpx;
+    margin-bottom: 4rpx;
+    background: #f8fafd;
+    border: 1rpx solid #e8eef6;
+    border-radius: 16rpx;
+  }
+
+  .sp-num-grid--bundle .sp-num-name {
+    height: auto;
+    padding-right: 220rpx;
+    font-size: 26rpx;
+    line-height: 1.35;
+    color: #6b7688;
+  }
+
+  .sp-num-grid--bundle .sp-num-range {
+    margin-top: 10rpx;
+    padding-right: 220rpx;
+    font-size: 24rpx;
+    color: #a3aebb;
+  }
+
+  .sp-num-grid--bundle .sp-num-value-row {
+    position: absolute;
+    right: 22rpx;
+    bottom: 20rpx;
+    margin-top: 0;
+  }
+
+  .sp-num-grid--bundle .sp-num-value {
+    font-size: 40rpx;
+    letter-spacing: -0.5rpx;
+  }
+
+  .sp-num-grid--bundle .sp-num-unit {
+    font-size: 25rpx;
+  }
+
+  .sp-num-grid--bundle .sp-num-edit {
+    right: 18rpx;
+    top: 18rpx;
+    width: 42rpx;
+    height: 42rpx;
+    border-radius: 50%;
+    background: #eaf2ff;
+    border: 1rpx solid #d9e6fb;
+  }
+}
+
+/* 编辑态沿用浅蓝语义，避免被 .sp-card.is-editing 的通用数值卡规则覆盖 */
+.sp-card--bundle.is-editing .sp-num-grid--bundle .sp-num-item {
+  background: #f5f9ff;
+  border-color: #dde9fb;
 }
 
 .sp-bundle-tag {
@@ -684,73 +837,23 @@ $fill: #f6f8fb;
   margin-left: 10rpx;
   padding: 3rpx 10rpx;
   border-radius: 6rpx;
-  font-size: 18rpx;
+  font-size: 26rpx;
   line-height: 1.4;
   color: $primary;
   background: rgba(47, 124, 246, 0.09);
 }
 
 .sp-num-grid--bundle {
-  padding-top: 14rpx;
-  padding-bottom: 6rpx;
+  padding: 16rpx 0 10rpx;
 }
 
-/* ========== 数值分组切换（设备数值项过多时按 numericGroups 分段） ========== */
+/* ========== 数值分组切换（设备数值项过多时按 numericGroups 分段） ==========
+   直接复用基础分段控件 .sp-seg / .sp-seg--wrap：>4 项固定三列等宽栅格、
+   灰底轨道 + 选中态白底主色字，与 PCS 运行策略等分段控件保持同一套视觉。
+   这里只留外层间距，勿在此重设 background/color（同特异性靠后会覆盖选中态）。 */
 .sp-num-tabs {
   width: 100%;
   margin-bottom: 16rpx;
-  white-space: nowrap;
-  /* 五段在 375pt 屏上会挤，横向滚动而不是换行，保持一行高度一致 */
-  background: transparent;
-}
-
-.sp-num-tabs-inner {
-  display: inline-flex;
-  align-items: center;
-  padding: 6rpx;
-  background: #ffffff;
-  border: 1rpx solid $border;
-  border-radius: 16rpx;
-}
-
-.sp-num-tab {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  padding: 12rpx 18rpx;
-  border-radius: 12rpx;
-  transition: background 0.15s ease;
-
-  &.is-active {
-    background: $primary;
-
-    .sp-num-tab-text,
-    .sp-num-tab-count {
-      color: #ffffff;
-    }
-
-    .sp-num-tab-count {
-      background: rgba(255, 255, 255, 0.22);
-    }
-  }
-}
-
-.sp-num-tab-text {
-  font-size: 24rpx;
-  font-weight: 600;
-  color: $text-2;
-  line-height: 1;
-}
-
-.sp-num-tab-count {
-  margin-left: 8rpx;
-  padding: 2rpx 8rpx;
-  border-radius: 8rpx;
-  font-size: 18rpx;
-  line-height: 1.4;
-  color: $text-3;
-  background: $fill;
-  font-variant-numeric: tabular-nums;
 }
 
 /* ========== 组合卡：状态 + 下发按钮 ========== */
@@ -758,8 +861,8 @@ $fill: #f6f8fb;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18rpx 0;
-  margin-top: 2rpx;
+  padding: 20rpx 0 18rpx;
+  margin-top: 4rpx;
   border-top: 1rpx solid $border-soft;
 }
 
@@ -768,15 +871,15 @@ $fill: #f6f8fb;
   align-items: center;
   flex: 1;
   min-width: 0;
-  font-size: 20rpx;
+  font-size: 24rpx;
   line-height: 1.3;
-  color: $text-3;
+  color: #9aa5b4;
 }
 
 .sp-bundle-dot {
   flex-shrink: 0;
-  width: 8rpx;
-  height: 8rpx;
+  width: 6rpx;
+  height: 6rpx;
   margin-right: 10rpx;
   border-radius: 50%;
   background: #cfd6df;
@@ -795,11 +898,12 @@ $fill: #f6f8fb;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 186rpx;
+  min-width: 196rpx;
   margin-left: 16rpx;
-  padding: 14rpx 24rpx;
-  border-radius: 12rpx;
+  padding: 15rpx 26rpx;
+  border-radius: 14rpx;
   background: $primary;
+  box-shadow: 0 4rpx 12rpx rgba(47, 124, 246, 0.18);
 
   &:active {
     opacity: 0.88;
@@ -807,6 +911,7 @@ $fill: #f6f8fb;
 
   &.is-disabled {
     background: #f0f3f7;
+    box-shadow: none;
 
     .sp-bundle-send-text {
       color: #a8b1bd;
@@ -816,7 +921,7 @@ $fill: #f6f8fb;
 
 .sp-bundle-send-text {
   margin-left: 8rpx;
-  font-size: 23rpx;
+  font-size: 27rpx;
   font-weight: 600;
   color: #ffffff;
   letter-spacing: 0.5rpx;
@@ -856,7 +961,7 @@ $fill: #f6f8fb;
 }
 
 .sp-card-title {
-  font-size: 26rpx;
+  font-size: 28rpx;
   font-weight: 600;
   line-height: 1.3;
   color: $text-1;
@@ -868,7 +973,7 @@ $fill: #f6f8fb;
 .sp-card-hint {
   flex-shrink: 0;
   margin-left: 12rpx;
-  font-size: 20rpx;
+  font-size: 26rpx;
   color: #b3bbc7;
 }
 
@@ -893,22 +998,24 @@ $fill: #f6f8fb;
 .sp-switch-label {
   flex: 1;
   min-width: 0;
-  font-size: 26rpx;
+  font-size: 28rpx;
   font-weight: 500;
   line-height: 1.35;
   color: #2b3240;
 }
 
-/* 当前值做成小胶囊，比裸文字更像正式 App 的状态标注 */
+/* 当前值做成小胶囊，比裸文字更像正式 App 的状态标注；
+   细描边 + 全圆角让它与分段轨道拉开层次，不抢主操作 */
 .sp-switch-cur {
   flex-shrink: 0;
   margin-left: 12rpx;
-  padding: 4rpx 12rpx;
-  font-size: 19rpx;
+  padding: 5rpx 14rpx;
+  font-size: 24rpx;
   line-height: 1.3;
-  color: #6c7787;
-  background: #f2f5f9;
-  border-radius: 8rpx;
+  color: #5f6b7c;
+  background: #f4f7fb;
+  border: 1rpx solid #e8edf5;
+  border-radius: 999rpx;
 }
 
 /* ========== 分段控件 ========== */
@@ -924,7 +1031,7 @@ $fill: #f6f8fb;
   min-width: 0;
   padding: 13rpx 8rpx;
   border-radius: 9rpx;
-  font-size: 22rpx;
+  font-size: 27rpx;
   line-height: 1.3;
   color: $text-2;
   text-align: center;
@@ -951,15 +1058,52 @@ $fill: #f6f8fb;
   }
 }
 
-/* 选项超过 4 个（运行策略 11 项）：改为自适应宽度并允许换行 */
+/* 选项超过 4 个（PCS 运行模式 5 项 / 运行策略 11 项）：固定三列等宽栅格。
+   原来用内容自适应宽度 + 换行，长名撑宽短名收窄，最后一行常只剩一两个标签，
+   两行参差不齐；改成等宽后行列都对齐，与监测页的位状态栅格保持一致。
+   轨道灰底与选中态（白底主色字）沿用基础 .sp-seg / .sp-seg-item.is-active，
+   此处不重设 background，避免同特异性把选中态覆盖掉。 */
 .sp-seg--wrap {
   flex-wrap: wrap;
+  gap: 8rpx;
+
+  .sp-seg-item {
+    /* 三列等宽：(100% - 两个间距) / 3；父级 4rpx padding 已计入内容盒 */
+    flex: 0 0 auto;
+    width: calc((100% - 16rpx) / 3);
+    min-height: 68rpx;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10rpx 4rpx;
+    margin: 0;
+    font-size: 25rpx;
+    line-height: 1.3;
+  }
+}
+
+/* 组合卡 4 项长文案（并网/离网一键开机）：两列等宽、两行整齐，
+   不再被四列单行挤成「…一键开 / 机」。只给布局属性，不重设 background/color，
+   选中态（白底主色字）与危险项（红底白字）仍由 .sp-seg-item.is-active 决定。
+   通用 ≤4 项分段依然 flex:1 单行，这条仅作用于组合卡。 */
+.sp-seg--quad {
+  flex-wrap: wrap;
+  gap: 8rpx;
 
   .sp-seg-item {
     flex: 0 0 auto;
-    padding: 12rpx 20rpx;
-    margin: 3rpx;
-    font-size: 21rpx;
+    width: calc((100% - 8rpx) / 2);
+    min-height: 76rpx;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12rpx 8rpx;
+    margin: 0;
+    font-size: 26rpx;
+    line-height: 1.35;
+    word-break: normal;
   }
 }
 
@@ -997,7 +1141,7 @@ $fill: #f6f8fb;
   display: block;
   height: 58rpx;
   overflow: hidden;
-  font-size: 22rpx;
+  font-size: 27rpx;
   line-height: 29rpx;
   color: $text-2;
 }
@@ -1011,7 +1155,7 @@ $fill: #f6f8fb;
 
 .sp-num-value {
   max-width: 100%;
-  font-size: 33rpx;
+  font-size: 34rpx;
   font-weight: 600;
   line-height: 1.2;
   color: $text-1;
@@ -1026,14 +1170,14 @@ $fill: #f6f8fb;
 .sp-num-unit {
   flex-shrink: 0;
   margin-left: 4rpx;
-  font-size: 19rpx;
+  font-size: 26rpx;
   color: $text-3;
 }
 
 .sp-num-range {
   display: block;
   margin-top: 6rpx;
-  font-size: 19rpx;
+  font-size: 26rpx;
   line-height: 1.3;
   color: #a9b3bf;
   overflow: hidden;
@@ -1070,7 +1214,38 @@ $fill: #f6f8fb;
 
 .sp-empty-text {
   margin-top: 14rpx;
-  font-size: 24rpx;
+  font-size: 28rpx;
   color: $text-3;
+}
+
+/* ========== 骨架屏（重内容在下帧渲染前的占位） ========== */
+.sp-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.sp-skeleton .sk-spinner {
+  width: 56rpx;
+  height: 56rpx;
+  border: 5rpx solid #e3e8ef;
+  border-top-color: #2f7cf6;
+  border-radius: 50%;
+  animation: sp-sk-rotate 0.8s linear infinite;
+}
+
+.sp-skeleton .sk-text {
+  margin-top: 20rpx;
+  font-size: 27rpx;
+  color: #9aa4b1;
+  letter-spacing: 0.5rpx;
+}
+
+@keyframes sp-sk-rotate {
+  to { transform: rotate(360deg); }
 }
 </style>

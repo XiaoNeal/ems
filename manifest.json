@@ -3,8 +3,8 @@
     "name" : "微能站",
     "appid" : "__UNI__D7E714F",
     "description" : "",
-    "versionName" : "V1.0.17",
-    "versionCode" : 188,
+    "versionName" : "V1.0.18",
+    "versionCode" : 189,
     "transformPx" : false,
     "networkTimeout" : {
         "request" : 40000 // 20秒超时 
@@ -53,8 +53,9 @@
                     "<uses-permission android:name=\"android.permission.CHANGE_WIFI_STATE\"/>",
                     "<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"/>",
                     "<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\"/>",
-                    "<uses-permission android:name=\"android.permission.REQUEST_INSTALL_PACKAGES\"/>",
                     "<!-- 以下为移除 uni-app 基座自动注入的高危冗余权限，用于降低厂商安全引擎误报率，业务功能不受影响 -->",
+                    "<!-- REQUEST_INSTALL_PACKAGES：自动更新升级（APK 整包在应用内下载后拉起系统安装器）所需权限，仅用于安装本应用自身的新版本 -->",
+                    "<uses-permission android:name=\"android.permission.REQUEST_INSTALL_PACKAGES\"/>",
                     "<uses-permission android:name=\"android.permission.INSTALL_PACKAGES\" tools:node=\"remove\"/>",
                     "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\" tools:node=\"remove\"/>",
                     "<uses-permission android:name=\"android.permission.DUMP\" tools:node=\"remove\"/>",

@@ -1,23 +1,57 @@
-<template>
+﻿<template>
   <view class="sub-page" :class="platformClass">
-    <DyNavbar title="直连设备监测" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
-    <view class="fixed-placeholder"></view>
+    <!-- ⚡ 吸顶头：navbar + 设备卡 + 标签栏。
+         原实现是 height:100vh + 内部原生 scroll-view，每次 setData 都要让原生
+         scroll-view 重算几千个常驻节点的滚动区域，切 tab 还要靠 scroll-top 翻转
+         强制重排 —— 这就是「 tab 切换 / 点按钮卡 1~2 秒」的来源。
+         现在纵向滚动交给页面本身（WebView 原生滚动，不占 setData 通道），
+         这三块用 sticky 吸顶，功能与视觉完全不变。 -->
+    <view class="sticky-header" @longpress="openPerfLog">
+      <!-- 长按本区域（约 0.35s）打开 APP 内 [perf] 日志面板；
+           只在 ENABLE_IN_APP_PERF_LOG 为 true 时生效，不影响任何业务交互。 -->
+      <!-- 导航栏：标题/返回图标固定深色，主题切到深色时 vuex 的 fontColor 会变白，
+           而 navbar 背景恒为白色，白字白底会让整条导航栏看起来是空的。 -->
+      <DyNavbar
+        title="直连设备监测"
+        :fixed="false"
+        :placeholder="false"
+        bgColor="#ffffff"
+        :titleStyle="navbarTitleStyle"
+        :leftIconColor="'#17202e'"
+      ></DyNavbar>
 
-    <!-- 顶部设备卡片 -->
-    <DeviceCard
-      :connectionState="connectionState"
-      :connecting="connecting"
-      :isConnected="isConnected"
-      :config="config"
-      :deviceName="currentDeviceName"
-      :deviceSubtitle="currentDeviceSubtitle"
-      :statusText="statusText"
-      :lastUpdateText="lastUpdateText"
-      :showDeviceMeta.sync="showDeviceMeta"
-      @refresh="manualRefresh"
-      @go-config="goConfig"
-      @disconnect="onDisconnect"
-    />
+      <!-- 顶部设备卡片 -->
+      <DeviceCard
+        :connectionState="connectionState"
+        :connecting="connecting"
+        :isConnected="isConnected"
+        :deviceName="currentDeviceName"
+        :deviceSubtitle="currentDeviceSubtitle"
+        :statusText="statusText"
+        :showDeviceMeta.sync="showDeviceMeta"
+        @refresh="manualRefresh"
+        @go-config="goConfig"
+        @disconnect="onDisconnect"
+      />
+
+      <!-- 标签栏：只在直连开启时显示（原来在 v-else 的 connected-view 里） -->
+      <view v-if="config.enabled" class="tab-container">
+        <!-- 横向定位一律瞬时完成：带动画的 scroll-into-view 会让微信渲染层在切换帧
+             额外建一层合成层。横向这条只有 12 个节点，不是卡顿源，保留原功能。 -->
+        <scroll-view scroll-x="true" class="tab-scroll" :scroll-into-view="tabScrollIntoView" :scroll-with-animation="false">
+          <view class="tab-list" :class="{ 'tab-list-auto': bottomTab === 'setting' }">
+            <view v-for="index in allTabIndexes" :key="index"
+              :id="'tab-' + index"
+              class="tab-item"
+              :class="{ active: currentTab === index, 'tab-hidden': currentTabGroup.indexOf(index) === -1, 'tab-monitor': bottomTab === 'monitor', 'tab-setting': bottomTab === 'setting' }"
+              @touchstart="premountPanel(index)"
+              @tap="switchTab(index)">
+              <text>{{ getTabTitle(index) }}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
 
     <!-- 离线 / 未配置 提示 -->
     <view v-if="!config.enabled" class="empty-state">
@@ -30,93 +64,74 @@
     </view>
 
     <view v-else class="connected-view">
-    <!-- 标签页 + 数据区 -->
-    <!-- 标签页 -->
-    <view class="tab-container">
-      <scroll-view scroll-x="true" class="tab-scroll" :scroll-into-view="'tab-' + currentTab" :scroll-with-animation="tabScrollAnim">
-        <view class="tab-list" :class="{ 'tab-list-auto': bottomTab === 'setting' }">
-          <view v-for="index in currentTabGroup" :key="index"
-            :id="'tab-' + index"
-            class="tab-item"
-            :class="{ active: currentTab === index, 'tab-monitor': bottomTab === 'monitor', 'tab-setting': bottomTab === 'setting' }"
-            @tap="switchTab(index)">
-            <text>{{ getTabTitle(index) }}</text>
+      <!-- ⚡ APP 端卡顿根治：只挂载当前 tab 的面板。
+           旧实现把 7 个面板全部常驻 DOM（含 367 项设置参数），合计几千个 vnode。
+           Vue 每次 render 都要重建 + diff 整棵树 —— 所以不只是切 tab，
+           点任意按钮、收任意一帧数据都卡 1 秒。数据体积再小也救不了节点规模。
+           APP 端是标准 webview，v-if 的 DOM 增删同步完成，不存在小程序
+           原生 scroll-view 那种 frame 滞后一帧的残影；页面级滚动下也不会闪白。
+           数据本体在非响应式仓库里，新面板挂载瞬间即可读到，无需回显等待。 -->
+      <view class="content-area">
+        <view class="module-scroll">
+
+        <!-- ⚡ 面板缓存：v-if 只负责「是否已挂载」，panel-hidden class 负责「是否可见」。
+             之前每次切 tab 都把旧面板整棵销毁、新面板整棵重建：几百个 vnode +
+             DOM 节点 + 架构图重解码 + 一次整页 reflow，来回切就反复付这份成本。
+             现在首屏只挂概览，其余由空闲预热提前建好（display:none，不参与布局），
+             之后切 tab 只是 display 切换。数据通知由 rtKey 只发给可见面板，
+             隐藏面板常驻也不会被每 1.5s 的收帧叫醒。 -->
+        <!-- 概览标签页 -->
+        <view v-if="panelMounted(0)" class="panel-slot" :class="{ 'panel-hidden': currentTab !== 0 }">
+          <view class="content">
+            <OverviewTab rt-key="overview" :systemRunning="systemRunningStable" @start-stop="onSystemStartStop" />
           </view>
         </view>
-      </scroll-view>
-    </view>
-
-      <!-- 数据区：面板首次进入才创建，之后用 v-show 复用
-           v-if 每次都重建整棵节点树（BMS 近千节点 / 设置面板上百项），微信在创建 scroll-view
-           与大量节点期间会先画一块空白，看起来就是“切一下白几秒”；
-           常驻后只有激活面板拿实时数据（fv/rv 喂冻结空对象给后台面板），既没有重建也不会有逐帧重渲染。 -->
-      <view class="content-area">
-        <!-- 概览标签页 -->
-        <scroll-view v-if="renderedTabs[0]" v-show="currentTab === 0" class="module-scroll" scroll-y="true">
-          <view class="content">
-            <OverviewTab :formattedValues="fv(0)" :systemRunning="systemRunningStable" @start-stop="onSystemStartStop" />
-          </view>
-        </scroll-view>
 
         <!-- PCS标签页 -->
-        <scroll-view v-if="renderedTabs[1]" v-show="currentTab === 1" class="module-scroll" scroll-y="true">
+        <view v-if="panelMounted(1)" class="panel-slot" :class="{ 'panel-hidden': currentTab !== 1 }">
           <view class="content">
-            <PcsTab :formattedValues="fv(1)" :rawValues="rv(1)" :is50KwMode="is50KwMode" />
+            <PcsTab rt-key="pcs" :is50KwMode="is50KwMode" />
           </view>
-        </scroll-view>
+        </view>
 
         <!-- 储能DC标签页 -->
-        <scroll-view v-if="renderedTabs[2]" v-show="currentTab === 2" class="module-scroll" scroll-y="true">
+        <view v-if="panelMounted(2)" class="panel-slot" :class="{ 'panel-hidden': currentTab !== 2 }">
           <view class="content">
-            <StorageDcTab :formattedValues="fv(2)" :rawValues="rv(2)" :is50KwMode="is50KwMode" />
+            <StorageDcTab rt-key="storage" :is50KwMode="is50KwMode" />
           </view>
-        </scroll-view>
+        </view>
 
         <!-- 光伏标签页 -->
-        <scroll-view v-if="renderedTabs[3]" v-show="currentTab === 3" class="module-scroll" scroll-y="true">
+        <view v-if="panelMounted(3)" class="panel-slot" :class="{ 'panel-hidden': currentTab !== 3 }">
           <view class="content">
-            <PvTab :formattedValues="fv(3)" :rawValues="rv(3)" :is50KwMode="is50KwMode" />
+            <PvTab rt-key="pv" :is50KwMode="is50KwMode" />
           </view>
-        </scroll-view>
+        </view>
 
         <!-- BMS标签页 -->
-        <scroll-view v-if="renderedTabs[4]" v-show="currentTab === 4" class="module-scroll" scroll-y="true">
+        <view v-if="panelMounted(4)" class="panel-slot" :class="{ 'panel-hidden': currentTab !== 4 }">
           <view class="content">
             <BmsTab
-              :formattedValues="fv(4)"
-              :rawValues="rv(4)"
+              rt-key="bms"
               :is50KwMode="is50KwMode"
             />
           </view>
-        </scroll-view>
+        </view>
 
-        <!-- 液冷机监测标签页（tab 10，仅 50kW 显示 tab 栏按钮，但内容始终可渲染） -->
-        <scroll-view v-if="renderedTabs[10]" v-show="currentTab === 10" class="module-scroll" scroll-y="true">
+        <!-- 液冷机监测标签页 -->
+        <view v-if="panelMounted(10)" class="panel-slot" :class="{ 'panel-hidden': currentTab !== 10 }">
           <view class="content">
-            <LiquidCoolingTab :rawValues="rv(10)" :is50KwMode="is50KwMode" />
+            <LiquidCoolingTab rt-key="liquid" :is50KwMode="is50KwMode" />
           </view>
-        </scroll-view>
+        </view>
 
-        <!-- 设置标签页：由当前 tab 直接驱动，只渲染一份面板
-             （不再用 v-for 固定槽位 —— 槽位下标与 tab 序号（5~9、11）对不上时整块不渲染，页面就空白）
-             面板常驻：切监测 tab 时只隐藏，切不同设置 tab 只换 tabCfg，不重新创建上百个参数项 -->
-        <scroll-view
-          v-if="settingsRendered && settingsTabCfg"
-          v-show="!!currentSettingsTab"
-          class="module-scroll"
-          scroll-y="true"
-        >
+        <!-- 设置标签页：6 个设置 tab 共用同一个 SettingsPanel 实例（只换 tabCfg）。 -->
+        <view v-if="settingsPanelReady" class="panel-slot" :class="{ 'panel-hidden': !isSettingsTabActive }">
           <view class="content">
-            <!-- 两阶段挂载：先画页头骨架这一帧（点按立即有反馈），下一帧再建参数面板。
-                 BMS 设置 367 项、9 张卡，和「切标签 + 换面板」挤在同一帧里就是几百毫秒空白。 -->
-            <view v-if="!settingsReady && hasAccessCode" class="sp-skeleton">
-              <view class="sp-skeleton-hero"></view>
-              <view v-for="n in 3" :key="n" class="sp-skeleton-card"></view>
-            </view>
             <SettingsPanel
-              v-else-if="hasAccessCode && settingsTabCfg"
+              v-if="hasAccessCode"
+              :active="isSettingsTabActive"
               :tabCfg="settingsTabCfg"
-              :paramsMap="settingsParamsMap"
               :isEditing="isEditing(settingsTabCfg.editKey)"
               :formatCurrentLabel="getParamCurrentLabel"
               :formatCurrentValue="getParamCurrentValue"
@@ -129,36 +144,41 @@
               @bundle-value-edit="onBundleValueEdit"
               @bundle-send="onBundleSend"
             />
-            <!-- 兜底提示：设置模式下若 tab 与配置对不上，给出明确信息而不是白屏 -->
             <view v-else class="settings-placeholder">
               <view class="settings-placeholder-icon">
-                <uni-icons :type="hasAccessCode ? 'info' : 'locked'" size="28" color="#c3cad4"></uni-icons>
+                <uni-icons type="locked" size="28" color="#c3cad4"></uni-icons>
               </view>
-              <text class="settings-placeholder-text">{{ hasAccessCode ? '当前标签页没有可用的参数配置' : '尚未输入操作码' }}</text>
-              <text class="settings-placeholder-sub">{{ hasAccessCode ? '请切换其它设置标签页查看' : '请返回配置页填写操作码后重试' }}</text>
+              <text class="settings-placeholder-text">尚未输入操作码</text>
+              <text class="settings-placeholder-sub">请返回配置页填写操作码后重试</text>
             </view>
           </view>
-        </scroll-view>
+        </view>
+        <!-- 未挂载的当前面板：先用骨架屏顶住，真正挂载在下帧完成（移出点击帧） -->
+        <view v-if="!currentPanelMounted" class="panel-skeleton">
+          <view class="sk-spinner"></view>
+          <text class="sk-text">加载中…</text>
+        </view>
+        </view><!-- module-scroll：普通 view，页面级滚动 -->
       </view>
+    </view>
 
-      <!-- 底部主导航 tab：监测 / 设置 -->
-      <view class="bottom-tabbar">
-        <view class="bottom-tab-item bottom-tab-monitor"
-          :class="{ active: bottomTab === 'monitor' }"
-          @tap="switchBottomTab('monitor')">
-          <view class="bottom-tab-icon">
-            <uni-icons type="list" size="21" :color="bottomTab === 'monitor' ? '#2f7cf6' : '#b0b6c0'"></uni-icons>
-          </view>
-          <text class="bottom-tab-label">监测</text>
+    <!-- 底部主导航 tab：fixed 吸底（页面滚动时固定在视口底部） -->
+    <view v-if="config.enabled" class="bottom-tabbar">
+      <view class="bottom-tab-item bottom-tab-monitor"
+        :class="{ active: bottomTab === 'monitor' }"
+        @tap="switchBottomTab('monitor')">
+        <view class="bottom-tab-icon">
+          <uni-icons type="list" size="24" :color="bottomTab === 'monitor' ? '#2f7cf6' : '#b0b6c0'"></uni-icons>
         </view>
-        <view class="bottom-tab-item bottom-tab-setting"
-          :class="{ active: bottomTab === 'setting' }"
-          @tap="switchBottomTab('setting')">
-          <view class="bottom-tab-icon">
-            <uni-icons type="gear" size="21" :color="bottomTab === 'setting' ? '#2f7cf6' : '#b0b6c0'"></uni-icons>
-          </view>
-          <text class="bottom-tab-label">设置</text>
+        <text class="bottom-tab-label">监测</text>
+      </view>
+      <view class="bottom-tab-item bottom-tab-setting"
+        :class="{ active: bottomTab === 'setting' }"
+        @tap="switchBottomTab('setting')">
+        <view class="bottom-tab-icon">
+          <uni-icons type="gear" size="24" :color="bottomTab === 'setting' ? '#2f7cf6' : '#b0b6c0'"></uni-icons>
         </view>
+        <text class="bottom-tab-label">设置</text>
       </view>
     </view>
 
@@ -173,6 +193,34 @@
 
     <!-- 操作反馈 Toast -->
     <OpToast :visible="showOpToast" :text="opToast" />
+
+    <!-- APP 正式包内查看运行日志。v-if 默认 false，不产生任何节点，
+         因此不会干扰切 tab 的性能测量；长按顶部区域打开。
+         缓冲区同时收 [perf] 性能日志与 [连接]/[权限]/[WiFi]/[网络] 运行日志。 -->
+    <view v-if="showPerfLog" class="perf-log-mask" @tap="closePerfLog">
+      <view class="perf-log-card" @tap.stop>
+        <view class="perf-log-head">
+          <text class="perf-log-title">运行日志（{{ perfLogLines.length }} 条）</text>
+          <view class="perf-log-actions">
+            <text class="perf-log-btn" @tap.stop="refreshPerfLog">刷新</text>
+            <text class="perf-log-btn" @tap.stop="toggleLogFilter">{{ logFilter === 'all' ? '只看连接' : '看全部' }}</text>
+            <text class="perf-log-btn" @tap.stop="copyPerfLog">复制</text>
+            <text class="perf-log-btn" @tap.stop="clearPerfLogView">清空</text>
+            <text class="perf-log-btn" @tap.stop="openPermissionFromLog">权限设置</text>
+            <text class="perf-log-btn perf-log-close" @tap.stop="closePerfLog">关闭</text>
+          </view>
+        </view>
+        <scroll-view scroll-y class="perf-log-body">
+          <view v-if="!perfLogLines.length" class="perf-log-empty">
+            <text class="perf-log-text">暂无日志：进入本页连接设备后点「刷新」</text>
+          </view>
+          <view v-for="(line, i) in perfLogLines" :key="i" class="perf-log-line">
+            <text class="perf-log-text" :selectable="true">{{ line }}</text>
+          </view>
+        </scroll-view>
+        <text class="perf-log-tip">最新在最上 · 复制始终导出全部 · 测耗时请先关闭本面板</text>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -180,6 +228,8 @@
 import { mapState } from 'vuex'
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 import { MqttDirectClient } from '@/service/socket/mqtt-client.js'
+// 仅用于 [perf] 面板显示 APP(Android) TCP 读取循环的桥调用计数；普通对象，非响应式
+import { tcpReadStats } from '@/service/socket/uniapp-tcp-adapter.js'
 import {
   isIemsBinaryFrame,
   parseIemsFrame,
@@ -211,6 +261,10 @@ import {
 // 可复用子组件
 import DeviceCard from './components/direct-device/DeviceCard.vue'
 import SettingsPanel from './components/direct-device/SettingsPanel.vue'
+// 设置参数仓库：非响应式，避免每轮 patch 把几百项参数树深拷贝一遍
+import { paramStore, PARAM_KEYS, resetParamStore, setParamList, notifyParamChange } from './components/direct-device/param-store.js'
+// 实时数据仓库：非响应式，寄存器快照 / 格式化值不再进 Vue data 与 props
+import * as rtStore from './components/direct-device/realtime-store.js'
 import ConfirmDialog from './components/direct-device/ConfirmDialog.vue'
 import OpToast from './components/direct-device/OpToast.vue'
 import OverviewTab from './components/direct-device/tabs/OverviewTab.vue'
@@ -219,6 +273,175 @@ import StorageDcTab from './components/direct-device/tabs/StorageDcTab.vue'
 import PvTab from './components/direct-device/tabs/PvTab.vue'
 import BmsTab from './components/direct-device/tabs/BmsTab.vue'
 import LiquidCoolingTab from './components/direct-device/tabs/LiquidCoolingTab.vue'
+// APP 正式包没有调试控制台，[perf] 日志同时留一份在内存里，页面内长按可看
+import { perfLog, getPerfLogs, clearPerfLogs } from './components/direct-device/perf-log.js'
+// 设备热点检测：连设备前先确认手机在 GCNZ 热点上，未连上可自动重连 / 引导
+import { ensureDeviceWifi } from '@/utils/device-wifi.js'
+// 运行时权限自检 / 主动申请 / 引导去系统设置（卸载重装后「附近的设备」会被重置）
+import {
+  ensureDevicePermissions,
+  getLastPermissionResult,
+  showPermissionGuide,
+  openPermissionSettings
+} from '@/utils/device-permission.js'
+
+/**
+ * 每个监测 tab 的子组件实际会读的 bucket（逐个核对过各 tab 的模板 / computed）。
+ * 只把这些桶放进 activeRv 快照：以前把整个 rawValues（15 个桶、几千个键）
+ * 作为 props 传给每个 tab，小程序端每一轮 setData 都要带上它。
+ */
+const TAB_BUCKETS = {
+  0: [],                                  // 概览只读 formattedValues
+  1: ['1707', '171B'],                    // PCS
+  2: ['170C_STORAGE', '171D'],            // 储能 DC
+  3: ['170C_PV', '171E'],                 // 光伏
+  4: ['171C_V2', '131C', '171C'],         // BMS
+  10: ['0318']                            // 液冷机
+}
+
+/**
+ * 两组标签的固定全集（监测 0~4/10 + 设置 5~9/11）。
+ * 不依赖协议模板或操作码：页面生命周期内标签节点数恒定，
+ * 收帧后 is50KwMode 翻转也不会让整条标签栏增删节点。
+ */
+const ALL_TAB_INDEXES = [0, 1, 2, 3, 4, 10, 5, 6, 7, 8, 9, 11]
+
+/** 监测组 tab；其余（5~9 / 11）全是设置组，共用同一个 SettingsPanel 实例 */
+const MONITOR_TAB_IDS = [0, 1, 2, 3, 4, 10]
+
+/**
+ * 设置组全部编辑态开关（两套协议的 tabCfg 汇总去重）。
+ * 切 tab 时统一复位：右上角按钮回到初始的「修改」，避免编辑态跨 tab 残留。
+ */
+const SETTINGS_EDIT_KEYS = (() => {
+  const seen = {}
+  const out = []
+  ;(SETTINGS_TABS || []).concat(SETTINGS_TABS_50KW || []).forEach(t => {
+    const k = t && t.editKey
+    if (k && !seen[k]) { seen[k] = 1; out.push(k) }
+  })
+  return out
+})()
+
+/**
+ * 控制应答提示的有效窗口（ms）。
+ * 「指令已生效」只能对应一次真实下发：设备会在控制 topic 上周期性回读控制寄存器，
+ * 订阅时也可能推 retained 帧，这些 0x16 帧没有下发动作，旧实现无条件弹 toast，
+ * 表现为「没下发指令，也会报指令已生效」。
+ */
+const CONTROL_ACK_WINDOW_MS = 8000
+
+/**
+ * 设置组可见时的「参数回显心跳」间隔（ms）。
+ * 回显不能只靠「帧提交且值有变化」或「点修改」触发：设备稳态上报 / 重复帧被短路 /
+ * 切 tab 时恰好没有待执行定时器，都会让只读态一直停在初始 '--'。
+ * 1s 与设置页的显示提交间隔（_displayCommitMs = 900ms）对齐；
+ * _syncSettingsCore 内有原始值快照快路径，稳态下不写值、不通知渲染。
+ */
+const SETTINGS_ECHO_INTERVAL_MS = 1000
+
+/**
+ * 设置项下发成功后的「乐观显示」窗口（ms）。
+ * 「当前 xxx」和分段按钮高亮本来读的是设备实时回读值，而回显心跳 1s 一次：
+ * 直接写 currentValue 会在下一拍被设备的旧值刷回去，看起来像「点了没反应」。
+ * 这里改成独立的显示层：下发后 3s 内显示刚下发的值，实时值仍由回显帧在后台
+ * 持续维护；3s 到期直接回落到最新实时值（设备已回读就是新值，没回读就是旧值）。
+ */
+const SETTINGS_OPTIMISTIC_MS = 3000
+
+/**
+ * 乐观显示读取器必须放在模块级、且不能依赖 this：
+ * getParamCurrentValue/Label/Text 会作为 props 函数传给 SettingsPanel，
+ * 小程序端调用时 this 指向的是子组件实例（不是本页面），写成 this._displayXxx()
+ * 会直接报「this._displayLabel is not a function」。勿挪回 methods。
+ */
+function isParamOptimistic(p) {
+  return !!(p && p._optUntil && Date.now() < p._optUntil)
+}
+function paramDisplayValue(p) {
+  if (!p) return undefined
+  return isParamOptimistic(p) ? p._optValue : p.currentValue
+}
+function paramDisplayLabel(p) {
+  if (!p) return '--'
+  return isParamOptimistic(p) ? (p._optLabel || '--') : (p.currentLabel || '--')
+}
+function paramDisplayText(p) {
+  if (!p) return '--'
+  return isParamOptimistic(p) ? (p._optText || '--') : (p.currentText || '--')
+}
+
+/** tab → 面板 rtKey：realtime-store 按这个 key 只通知当前可见的面板 */
+const PANEL_RT_KEYS = {
+  0: 'overview',
+  1: 'pcs',
+  2: 'storage',
+  3: 'pv',
+  4: 'bms',
+  10: 'liquid'
+}
+const SETTINGS_PANEL_KEY = 'settings'
+
+/**
+ * 面板缓存上限 / 空闲预热队列（APP 与小程序统一：7 块全缓存 + 全预热）。
+ *
+ * 真机日志的结论：切 tab 耗时 100% 落在 Vue 的 render/patch 段，准备段恒为 0；
+ * 设置组内部切换时 v-show 对任何面板都不变化（零 display 翻转）仍出现 679ms；
+ * 数据提交平均 0.0ms；同一操作重复执行耗时差 1000 倍；连「纯字符串赋值的
+ * 横向标签定位帧」都会偶发 893ms。排除 reflow / 数据链路 / 重建成本后，
+ * 唯一符合的是 APP webview 的 V8 major GC（stop-the-world）随机冻结主线程。
+ *
+ * 曾尝试 LRU=3（只留最近 3 块）削减常驻堆，第 9 轮日志已证伪：冻结毫无改善，
+ * 反而因频繁淘汰制造大量「缓存=否 → 首次挂载」（实测 200~1304ms）。
+ * 因此 APP 回退并与已验证流畅的小程序路径对齐：进页面后空闲帧把 7 块全建好，
+ * 切 tab 永远命中缓存，永不再有首次挂载。_touchPanel / _trimPanelCache 保留但
+ * 在 7/7 时不会淘汰任何面板。
+ * 真正的处置改在 GC 燃料侧：APP_SKIP_DUPLICATE_FRAMES 短路重复的 MQTT 帧，
+ * 配合 parser 零拷贝与去调试中间对象，减少每帧的短命对象分配。
+ *
+ * A/B：改 3 可复现已被证伪的 LRU 行为（仅诊断用，勿用于发布）；改 1 为极限对比。
+ */
+const PANEL_CACHE_LIMIT = 7
+const WARMUP_QUEUE = [1, 2, 3, 4, 10, SETTINGS_PANEL_KEY]
+
+/**
+ * APP 端诊断开关（只影响 APP，小程序不受影响）。
+ * 置 true 可完全关闭横向标签的自动定位：若关掉后 APP 切 tab 立刻流畅，
+ * 即可确认瓶颈在 uni-app APP 端 scroll-view 的 scroll-into-view 实现，
+ * 下一步把它换成 scroll-left 数值驱动即可。确认后请改回 false。
+ */
+const APP_DISABLE_TAB_SCROLL_INTO = false
+
+/**
+ * APP 端「重复帧短路」总开关（只影响 APP，小程序一行不走）。
+ * 设备以 8~10 帧/s 反复上报同一组寄存器值，帧尾时间戳/CRC 变化但业务数据不变；
+ * 每帧全量解析会产出几百个短命对象，是 V8 major GC（stop-the-world）的主要燃料，
+ * 表现为「纯字符串赋值帧 893ms」「rAF 回调被推迟 1304ms」这类与业务无关的偶发冻结。
+ * 置 false 立即回退到逐帧全量解析，用于 A/B 对比。
+ */
+const APP_SKIP_DUPLICATE_FRAMES = true
+
+/**
+ * APP 正式包内查看 [perf] 日志的总开关。
+ * true：长按顶部标题栏/设备卡区域（约 0.35s）弹出日志面板，可刷新、复制、清空。
+ * false：长按无响应（日志仍会进 console 与 adb logcat），页面零额外节点。
+ * 面板 v-if 默认不渲染，打开它的时候不要测切换耗时（浮层本身会引起一次布局）。
+ */
+const ENABLE_IN_APP_PERF_LOG = true
+
+/** 50kW 新协议桶：协议判定结果需要同步到响应式标量 has50KwMode */
+const KW50_BUCKETS = [
+  '1707', '170C_STORAGE', '170C_PV', '171C_V2',
+  '171C_V2_1', '171C_V2_2', '171C_V2_3', '171C_V2_4'
+]
+
+/** 寄存器仓库的完整 bucket 集合（20kW 旧协议 + 50kW 新协议） */
+const RAW_BUCKET_KEYS = [
+  '171B', '171C', '171D', '171E', '171F',
+  '1707', '170C_STORAGE', '170C_PV', '171C_V2',
+  '171C_V2_1', '171C_V2_2', '171C_V2_3', '171C_V2_4',
+  '0318', '131C'
+]
 
 export default {
   components: {
@@ -238,10 +461,23 @@ export default {
     return {
       currentTab: 0,
       bottomTab: 'monitor',
+      // 已挂载的面板 key（数字 = 监测 tab，'settings' = 设置面板）。
+      // 首屏只有概览；其余由 _startPanelWarmup 在空闲帧陆续建好，
+      // 之后切 tab 只是 v-show 的 display 切换，不再创建/销毁任何节点。
+      mountedTabs: [0],
+      // APP 专用：横向标签的定位目标。小程序直接用 'tab-' + currentTab；
+      // APP 的 scroll-view 是 JS 组件，prop 一变就遍历子节点读 offsetLeft，
+      // 会把整页同步布局压在切换帧上，所以这里推迟一帧再更新。
+      tabScrollTarget: 'tab-0',
+      // APP 内运行日志面板：默认不渲染，只有长按顶部区域打开时才填内容
+      // 缓冲区同时收 [perf] 性能日志与 [连接]/[权限]/[WiFi]/[网络] 运行日志
+      showPerfLog: false,
+      perfLogLines: [],
+      logFilter: 'all',
       config: {
         enabled: false,
         protocol: 'mqtt',
-        deviceType: '20kW',
+        deviceType: '50kW',
         deviceName: '',
         ip: '', port: '1883',
         brokerUrl: '', username: '', password: '',
@@ -250,63 +486,51 @@ export default {
         controlSetTopic: 'neiic/microEnergyStationCtl002',
         controlRespTopic: 'neiic/microEnergyStationCtl002'
       },
-      client: null,
+      // MQTT 客户端不进 data：它是含 socket / 定时器 / 回调的复杂对象，
+      // 放进响应式 data 会被 Vue 深度 observe，并在每轮 patch 里参与遍历。
+      // 改由 beforeCreate 的不可枚举 getter/setter 转发到普通实例属性。
       connecting: false,
       connected: false,
       errorMsg: '',
-      lastUpdate: null,
-      deviceTypes: DEVICE_TYPES,
-      rawValues: {
-        '171B': {}, '171C': {}, '171D': {}, '171E': {}, '171F': {},
-        // 50kW 新协议 bucket（与 getRegisterMap 前缀匹配对应）
-        '1707': {}, '170C_STORAGE': {}, '170C_PV': {}, '171C_V2': {},
-        // 171C 从机（V2.1~V2.4 四级告警阈值，帧头设备地址 02~05）
-        // 必须在这里预声明：Vue2 动态新增属性不是响应式的，运行期才加会读不到更新
-        '171C_V2_1': {}, '171C_V2_2': {}, '171C_V2_3': {}, '171C_V2_4': {},
-        // 液冷机 0318（50kW 站点配置）
-        '0318': {},
-        // 环境监测 131C（50kW BMS 环境数据：温度/湿度）
-        '131C': {}
-      },
-      // 预格式化显示值（key: 'deviceType_field'，直接绑定确保响应式）
-      formattedValues: {
-        archDeviceCounts: { dljQuantity: 0, cdzQuantity: 0, lightQuantity: 0, unknownDeviceQuantity: 0 },
-        archSocNumeric: 0,
-        archStorageStatusGradient: '#8c8c8c'
-      },
-      // 设置面板参数映射的稳定容器（数组内部变更仍响应，但对象引用不变，
-      // 避免参数回显每秒触发 SettingsPanel 整块重渲染）
-      paramsMapRef: null,
-      // 已创建过的标签页面板：首次进入才挂载，之后用 v-show 复用。
-      // 只用 v-if 时，每次切 tab 都要从零创建整棵面板（BMS 近千节点、设置面板上百项），
-      // 微信在创建 scroll-view + 大量节点期间会先画一块空白，就是“切一下白几秒”的来源。
-      renderedTabs: { 0: true },
-      // 设置面板同理：首次进入设置后常驻，切不同设置 tab 只换 tabCfg，不重新创建
-      settingsRendered: false,
-      // 参数面板是否已就绪：切设置 tab 时先渲染一帧骨架，下一帧再建面板（见 currentTab watcher）
-      settingsReady: false,
-      // 标签条滚动动画开关：跨「监测/设置」组切换时用瞬时定位代替滑动，
-      // 否则旧的横向滚动位置会带动画滑到新位置，观感就是整条标签“推片”
-      tabScrollAnim: true,
-      // 刚被切走的 tab：多保留 250ms 真实数据，避免和「建新面板」撞在同一帧
-      keepDataTab: null,
+      // 未连上设备热点而被拦下时置位，设备卡状态直接显示「未连接设备 WiFi」。
+      // 只在状态翻转时写一次，不参与收帧渲染。
+      wifiBlocked: false,
+      // 「更新」时间戳不再放页面 data：它由 DeviceCard 订阅 realtime-store 的帧时钟，
+      // 每秒只改设备卡里的一个文本节点，父页面不参与（否则每秒一次整页 render）。
+      // deviceTypes 是模块常量的副本，模板没用到，不必进响应式 data 每轮被遍历
+      // ⚡ 实时数据全部**不放在 data 里**：15 个寄存器桶 + 格式化值 + 当前 tab 快照
+      //    合计几千个字段，只要进了 Vue data，小程序每次 patch 的 cloneWithData
+      //    都要整体深拷贝 + diff 一遍。现在统一放 realtime-store.js（普通对象），
+      //    页面内部靠 storeVer 触发非渲染类 computed；可见面板自己订阅仓库刷新，
+      //    父页面不再因每 1.5s 一次的数据提交而整页 render。
+      storeVer: 0,
+      // 50kW 协议判定结果（标量）：由收帧路径设置一次，替代 is50KwMode 里
+      // 直接读 rawValues —— 否则父模板会经由它依赖 storeVer，每帧提交都拖整页 render。
+      has50KwMode: false,
+      // 设置面板回显不再走本页 data：参数值变化由 param-store 的通知直接推给
+      // SettingsPanel（见 notifyParamChange），父页面不陪着整页 render。
+      // ⚡ 面板挂载一次后缓存（v-if 只判是否挂载，panel-hidden class 判是否可见）。
+      //    早期 7 个面板常驻且带大对象 props，每帧全量 diff；后来改成 v-if
+      //    按需挂载，切 tab 又要反复创建几百个 DOM 节点。现在两者取长：
+      //    空闲预热建好节点、隐藏时不参与布局、数据通知只发给可见面板。
+      //    滚动位置只记在实例属性 _panelScrollY，不进 data。
       lastSettingsTabCfg: null,
       // 显示用结构（由 updateDisplay 同步重建）
       displayItems: [],
       // 分组显示结构（由 updateDisplay 同步重建，避免 computed 全量重建）
       groupedDisplay: [],
       platformClass: '',
+      // 常量提到 data：模板里内联对象字面量每次 patch 都新建引用，
+      // 会让 DyNavbar 误判 props 变化而整块重渲染（导航在吸顶头里，代价高）
+      navbarTitleStyle: { color: '#17202e', width: '100%' },
       showDeviceMeta: false,
       archRefreshTimer: null,
       // 运行状态防抖后的展示值：单帧毛刺不直接改文案，避免按钮「运行中 / 启动」闪跳
       systemRunningStable: false,
       archRunningTimer: null,
       // ============ 设置面板状态 ============
-      bmsNumericParams: [],
-      bmsSwitchParams: [],
-      bmsPowerParams: [],
-      pcsNumericParams: [],
-      pcsSwitchParams: [],
+      // 13 个参数数组不放在这里：见 beforeCreate 的不可枚举 getter → paramStore。
+      // 编辑开关等标量仍需响应式，保留在 data。
       isEditingBms: false,
       isEditingPcs: false,
       editingParamKey: null,
@@ -322,20 +546,12 @@ export default {
       opToast: '',
       showOpToast: false,
       // PV 设置
-      pvNumericParams: [],
-      pvSwitchParams: [],
       isEditingPv: false,
       // Storage 设置
-      storageNumericParams: [],
-      storageSwitchParams: [],
       isEditingStorage: false,
       // Quick Control
-      quickControlParams: [],
-      quickPowerParams: [],
       isEditingQuickControl: false,
       // 液冷机（0318 V2.3）
-      liquidSwitchParams: [],
-      liquidNumericParams: [],
       isEditingLiquid: false,
       // 缓存当前已初始化的协议模板（'20kw'/'50kw'），避免每次 MQTT 帧都整体重建参数数组
       settingsProtocol: '',
@@ -343,7 +559,7 @@ export default {
   },
   computed: {
     ...mapState({
-      fontColor: state => state.fontColor,
+      // 不再订阅 fontColor：导航栏标题改用固定深色，主题切换时不必让本页整棵树重新求值
       currentSelectDevice: state => state.currentSelectDevice
     }),
     connectionState() {
@@ -351,6 +567,8 @@ export default {
       return this.connected ? 'online' : 'offline'
     },
     statusText() {
+      // 没连设备热点时不该只显示「离线」——用户会以为是设备故障
+      if (this.wifiBlocked && !this.connected) return '未连接设备 WiFi'
       if (this.connecting) return '连接中'
       return this.connected ? '在线' : '离线'
     },
@@ -377,16 +595,46 @@ export default {
     currentTabGroup() {
       return this.bottomTab === 'monitor' ? this.tabGroupMonitor : this.tabGroupControl
     },
+    /**
+     * 两组标签的并集，静态渲染一次。
+     * 以前 v-for 直接绑 currentTabGroup，跨「监测/设置」切换时整批 tab 节点
+     * 在同一帧被销毁重建，scroll-into-view 的目标 id 在那一帧并不存在，
+     * 微信渲染层会先画一块空轨道 —— 就是「点按钮闪一下白」。
+     * 它只依赖协议模板与操作码，不依赖 bottomTab / currentTab，切换时引用恒定。
+     */
+    allTabIndexes() {
+      // 返回模块级常量：引用恒定，v-for 永远不做节点增删
+      return ALL_TAB_INDEXES
+    },
+    /**
+     * 横向标签栏的定位目标。
+     * 小程序：scroll-view 是原生组件，scroll-into-view 由渲染层处理，零成本，
+     *         保持「每次切 tab 都定位」的原行为（已实测不卡，不动它）。
+     * APP：scroll-view 是 JS 组件，scroll-into-view 变化会在 updated 里遍历
+     *      12 个子节点读 offsetLeft / clientWidth，强制一次整页同步布局；
+     *      这正好压在切换帧上，是「只有 APP 切 tab 卡」的主因之一。
+     *      APP 改用 tabScrollTarget，由 _syncTabScrollTarget() 推迟到切换帧
+     *      绘制完成后再更新，功能完全不变（定位晚一帧，肉眼无感）。
+     */
+    tabScrollIntoView() {
+      // #ifdef APP-PLUS
+      return APP_DISABLE_TAB_SCROLL_INTO ? '' : this.tabScrollTarget
+      // #endif
+      // #ifndef APP-PLUS
+      return 'tab-' + this.currentTab
+      // #endif
+    },
     hasAccessCode() {
       return !!(this.config && this.config.accessCode === '123456')
     },
     /** 50kW 大容量站判定：配置 deviceType 或 MQTT 有新协议 bucket 即认为是 50kW */
     is50KwMode() {
       if (this.config && this.config.deviceType === '50kW') return true
-      const rv = this.rawValues || {}
-      const hit = ['1707', '170C_STORAGE', '170C_PV', '171C_V2', '171C_V2_1', '171C_V2_2', '171C_V2_3', '171C_V2_4']
-        .filter(k => rv[k] && Object.keys(rv[k]).length > 0)
-      return hit.length > 0
+      // 只读标量：绝不能在这里读响应式 rawValues getter（它依赖 storeVer），
+      // 否则父模板经由本 computed 建立对 storeVer 的依赖，每次收帧提交都会
+      // 重建 navbar / 设备卡 / 标签栏 / 底部栏的全部 vnode。
+      // 协议识别由 _use50KwProtocol() 在收帧路径里完成，命中后置此标量。
+      return this.has50KwMode
     },
     settingsTabs() {
       return this.is50KwMode ? SETTINGS_TABS_50KW : SETTINGS_TABS
@@ -401,13 +649,22 @@ export default {
      * 这里保留最后一次的设置配置，避免面板在隐藏瞬间被塞进 null 而报错/闪空。
      */
     settingsTabCfg() {
-      return this.currentSettingsTab || this.lastSettingsTabCfg
+      // 首屏就给一个有效配置，让设置面板与 6 个监测面板一起静态常驻。
+      // 否则首次点「设置」才在切换帧里创建整块面板，空白又回来了。
+      return this.currentSettingsTab || this.lastSettingsTabCfg || this.settingsTabs[0] || null
     },
-    /** 设置面板参数映射：供 SettingsPanel 子组件按 key 取参数数组 */
-    settingsParamsMap() {
-      // 返回稳定引用：参数数组内部属性变更照常响应（子组件直接读参数对象），
-      // 但映射对象本身不重建，settingsParamsMap 就不会每秒触发面板整块重渲染
-      return this.paramsMapRef || this._buildParamsMap()
+    /** 当前是否处于设置组（6 个设置 tab 共享一块 SettingsPanel） */
+    isSettingsTabActive() {
+      return MONITOR_TAB_IDS.indexOf(this.currentTab) === -1 && !!this.settingsTabCfg
+    },
+    /** 设置面板是否已预热/访问过 */
+    settingsPanelReady() {
+      return this.mountedTabs.indexOf(SETTINGS_PANEL_KEY) !== -1
+    },
+    /** 当前 tab 对应的面板此刻是否已经挂载（未挂载→显示骨架屏） */
+    currentPanelMounted() {
+      if (this.isSettingsTabActive) return this.settingsPanelReady
+      return this.panelMounted(this.currentTab)
     },
     currentDeviceType() {
       // 设置面板：按当前协议模板取 deviceType（50kW → 1707/170C_STORAGE/170C_PV/171C_V2）
@@ -421,39 +678,19 @@ export default {
       const types = this.is50KwMode ? DEVICE_TYPES_50KW : DEVICE_TYPES
       return types[this.currentTab] || null
     },
-    /** 设备卡片副标题：用户可读的设备说明（不暴露内部编号） */
+    /** 设备卡片副标题：按用户要求不再显示任何副标题（含兜底「设备监测」）。
+     *  返回空串，DeviceCard 用 v-if="deviceSubtitle" 整行不渲染，卡片头部不留空白。 */
     currentDeviceSubtitle() {
-      // 概览
-      if (this.currentTab === 0) return '场站综合监测'
-      // 设置面板（tab >= 5）：取当前协议模板的标题去掉 "(171X)" 后缀
-      const settingTab = this.settingsTabs.find(t => t.tab === this.currentTab)
-      if (settingTab) return settingTab.title.replace(/\s*\([^)]*\)\s*$/, '')
-      // 液冷机监测 tab 10
-      if (this.currentTab === 10) return '液冷机组运行参数'
-      // 监控面板（tab 1-4）：按当前协议模板取 bucket key → DEVICE_NAME_MAP
-      const types = this.is50KwMode ? DEVICE_TYPES_50KW : DEVICE_TYPES
-      const dt = types[this.currentTab]
-      if (dt && DEVICE_NAME_MAP[dt]) return DEVICE_NAME_MAP[dt]
-      return '设备监测'
+      return ''
     },
     /** 液冷机监测 tab 数据由 LiquidCoolingTab 直接读 rawValues['0318']（0318 V2.3 字段表驱动） */
     currentDeviceName() {
-      return this.config.deviceName || 'IEMS 微能量站'
-    },
-    lastUpdateText() {
-      if (!this.lastUpdate) return '--'
-      const d = new Date(this.lastUpdate)
-      const pad = n => String(n).padStart(2, '0')
-      return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-    },
-    kpiList() {
-      const pick = (field) => {
-        const it = this.displayItems.find(i => i.field === field)
-        return it || { name: '', value: '--', unit: '', field }
-      }
-      const map = getRegisterMap(this.currentDeviceType)
-      const kpiFields = map.monitor.slice(0, 4).map(p => p.field)
-      return kpiFields.map(f => pick(f))
+      const name = (this.config.deviceName || '').trim()
+      // 正式产品名是「微能站」（manifest.json / 隐私政策 / 用户协议一致）。
+      // 旧默认值写成「IEMS 微能量站」多了一个「量」字；配置里若曾存过旧名也一并纠正，
+      // 避免升级后仍显示错名。用户自定义名称原样保留。
+      if (!name || name === 'IEMS 微能量站' || name === '微能量站') return '微能站'
+      return name
     },
     archSoc() {
       return this.getVal('171F', 'B128', 1) !== '--'
@@ -524,72 +761,66 @@ export default {
       })
     }
   },
+  /**
+   * 只用于分段计时：Vue 在 DOM patch 完成后同步回调，正好是
+   * 「render + vnode diff + dom 操作（含 v-show 的 display 翻转）」的分界点。
+   * 不读写任何布局属性，不触发额外 reflow。
+   */
+  updated() {
+    if (this._swT0 && !this._swPatched) this._swPatched = Date.now()
+  },
   watch: {
+    /**
+     * 切 tab 只做三件事：复位编辑态（纯标量写入） + 换当前面板的数据快照 + 把重活排到切换帧之后。
+     * 以前这里同步做 LRU 淘汰、骨架挂载、强制 flush、两阶段挂载、参数回显，
+     * 再叠加 48 / 50 / 80 / 90 / 250 / 1500ms 六个定时器 —— 一次点击会产生
+     * 8 次以上跨 1.5 秒的 setData，任何一帧渲染层没画完就是空白或残影。
+     */
     currentTab() {
+      // 兜底：正常路径已在 switchTab 里同步复位编辑态（右上角「✓ 完成」回到初始「修改」）。
+      // 编辑态按 editKey 分 tab 存放，不清会一直挂着，切回来仍显示「完成」，
+      // 且可能在用户以为只读的状态下允许下发。此处已复位时为零写入。
+      this._resetEditingOnTabChange()
       const tab = this.currentTab
-      // 首次进入某个面板时才创建它，之后复用（v-show），避免每次切换都重建整棵节点树造成白屏
-      if ([0, 1, 2, 3, 4, 10].indexOf(tab) !== -1 && !this.renderedTabs[tab]) {
-        this.$set(this.renderedTabs, tab, true)
+      const cfg = this.currentSettingsTab
+      if (cfg) this.lastSettingsTabCfg = cfg
+      // 兜底：正常路径已在 switchTab 里设好，这里覆盖其它赋值入口
+      rtStore.setActiveKey(this._rtKeyOf(this._panelKey(tab)))
+      // 静默重建当前 tab 的显示值。以前放在 $nextTick 且会 notify，等于
+      // 新面板刚画完又被叫起来重渲染一次（「点一下卡两下」）。silent 只写
+      // 仓库：新面板首帧 render 直接读到最新值，不产生额外一次 patch。
+      if (!cfg) {
+        if (this.is50KwMode) {
+          if (tab === 0) this.rebuildFormattedValues(['171F'], true)
+        } else {
+          const dt = this.currentDeviceType
+          this.rebuildFormattedValues(dt && dt !== '171F' ? [dt, '171F'] : ['171F'], true)
+        }
       }
-      if (this.currentSettingsTab) {
-        this.lastSettingsTabCfg = this.currentSettingsTab
-        this.settingsRendered = true
-        // 设置页用不到这些监测结构，顺手清空：它们常驻在页面数据里，
-        // 200 多项 × 8 个字段每秒都要参与小程序的数据 diff。
+      // 换当前面板的桶快照（新面板挂载瞬间就要读它）
+      this._rebuildActiveRv()
+      // 收尾重活排到「宏任务」而不是 $nextTick：$nextTick 与切换帧同属
+      // 一批 microtask，在展示日志回调附近就会执行；这里任何一次响应式写入
+      // （displayItems / groupedDisplay 清空、参数模板兜底构建）都可能再排
+      // 一轮 render。挪到 setTimeout(0) 后，切换帧只剩 display 翻转这一件事。
+      setTimeout(() => {
+        if (this._unloaded || this.currentTab !== tab) return // 快速连切：只让最后一次生效
+        if (cfg && !this._settingsParamsReady) {
+          // 参数模板正常已在 onLoad 的空闲帧预热，这里只是兜底
+          this._settingsParamsReady = true
+          this.initSettingsParams()
+        }
+        // displayItems / groupedDisplay 是早期遗留结构，模板不读，只做清空
         if (this.displayItems.length) {
           this.displayItems = []
           this.groupedDisplay = []
         }
-        const key = this.currentSettingsTab.editKey
-        const echo = () => {
-          if (this._settingsEchoTimer) clearTimeout(this._settingsEchoTimer)
-          this._settingsEchoTimer = setTimeout(() => {
-            this._settingsEchoTimer = null
-            this.flushPendingFramesNow()
-            // flush 收尾会排一个 1s 后的回显定时器，这里要立即同步一次，先把它撤掉
-            if (this._syncSettingsTimer) {
-              clearTimeout(this._syncSettingsTimer)
-              this._syncSettingsTimer = null
-            }
-            this._doSyncSettingsFromRealtime()
-          }, 90)
-        }
-        // 已挂载过同一个面板（预热过 tab5，或从监测切回来）→ 只翻 v-show，直接出内容
-        if (this._mountedSettingsKey === key && this.settingsReady) {
-          echo()
-          return
-        }
-        // ⚡ 两阶段挂载：这一帧只画标签栏 + 骨架，下一帧再建参数面板。
-        //   以前切设置是「切 tab + 建 367 项面板 + 强制提交一帧数据 + 逐项回显」
-        //   全压在同一帧里，点按后要等几百毫秒才有画面，期间还会出现推片/白块。
-        this.settingsReady = false
-        this._mountedSettingsKey = key
-        if (this._settingsMountTimer) clearTimeout(this._settingsMountTimer)
-        this._settingsMountTimer = setTimeout(() => {
-          this._settingsMountTimer = null
-          this.settingsReady = true
-          // 面板建好后再提交暂存帧 + 回显一次，两步都排在面板首次绘制之后
-          echo()
-        }, 48)
-        return
-      }
-      this.settingsReady = true
-      this.flushPendingFramesNow()
-      // 50kW：监测面板全部直接读 rawValues（见各 tab 的 bucket50），
-      // displayItems / formattedValues 在这套协议下没有任何模板读它，
-      // 建一次就是 200 多项 × 8 个字段写进页面 data，之后每轮 setData 都要带着走。
-      if (this.is50KwMode) {
-        if (this.displayItems.length) {
-          this.displayItems = []
-          this.groupedDisplay = []
-        }
-        // 只有「概览」tab 用 formattedValues（架构图 KPI 来自 171F）
-        if (this.currentTab === 0) this.rebuildFormattedValues(['171F'])
-        return
-      }
-      this.updateDisplay()
-      const dt = this.currentDeviceType
-      this.rebuildFormattedValues(dt && dt !== '171F' ? [dt, '171F'] : ['171F'])
+      }, 0)
+      // 设置组可见期间开回显心跳，切回监测组立即停（监测页零额外开销）
+      if (cfg) this._startSettingsEchoLoop()
+      else this._stopSettingsEchoLoop()
+      // 参数回显排到用户已看到新面板之后，只排一次
+      this._schedulePostSwitch()
     },
     /** 运行状态只有连续 800ms 稳定后才落到按钮上，防止帧级毛刺造成文案闪跳 */
     archSystemRunning(v) {
@@ -600,13 +831,106 @@ export default {
       }, 800)
     }
   },
+  beforeCreate() {
+    // MQTT 客户端：普通实例属性 + 不可枚举转发，业务代码 this.client 读写不变，
+    // 但不会进 Vue 的 observe，也不会出现在每轮 patch 的数据快照里。
+    this._mqttClient = null
+    Object.defineProperty(this, 'client', {
+      configurable: true,
+      enumerable: false,
+      get() { return this._mqttClient },
+      set(v) { this._mqttClient = v }
+    })
+    /**
+     * rawValues 既不能放 data、也不能放 computed：
+     * uni-app 小程序运行时的 cloneWithData() 会把 vm._data 和
+     * vm._computedWatchers 的**每一个键**深拷贝后再逐键 diff，
+     * 放哪儿都会让几千个寄存器键每轮 patch 都过一遍逻辑层（真正的卡顿源）。
+     * 这里用实例上的不可枚举 getter：业务代码 `this.rawValues[...]` 照常可用，
+     * 运行时收集数据时完全看不到它。
+     * getter 里读一下 storeVer，让依赖它的 computed 在提交后照常失效重算。
+     *
+     * 必须放在 beforeCreate：uni-app 的 onLoad 可能早于 created，
+     * 那时 resetRawValues / rebuildFormattedValues 就要读 rawValues 了。
+     */
+    this._rawStore = rtStore.getAllBuckets()
+    for (let i = 0; i < RAW_BUCKET_KEYS.length; i++) {
+      if (!this._rawStore[RAW_BUCKET_KEYS[i]]) {
+        this._rawStore[RAW_BUCKET_KEYS[i]] = Object.freeze({})
+      }
+    }
+    Object.defineProperty(this, 'rawValues', {
+      configurable: true,
+      enumerable: false,
+      get() {
+        void this.storeVer
+        return this._rawStore || {}
+      }
+    })
+
+    /**
+     * 快照与格式化值同样走不可枚举 getter：
+     * 页面业务代码 `this.formattedValues[...]` / `this.activeRv` 一行不改，
+     * 但 cloneWithData 看不到它们。面板组件改由 realtime-store 订阅通知刷新，
+     * 父模板不再读这些 getter；getter 里保留一次 storeVer 读取，
+     * 是为了让页面内部那些非渲染类 computed 在提交后照常失效重算。
+     */
+    Object.defineProperty(this, 'activeRv', {
+      configurable: true,
+      enumerable: false,
+      get() {
+        void this.storeVer
+        return rtStore.getSnapshot()
+      }
+    })
+    Object.defineProperty(this, 'formattedValues', {
+      configurable: true,
+      enumerable: false,
+      get() {
+        void this.storeVer
+        return rtStore.getFormatted()
+      }
+    })
+    Object.defineProperty(this, '_fmtVer', {
+      configurable: true,
+      enumerable: false,
+      get() {
+        void this.storeVer
+        return rtStore.getFmtVer()
+      }
+    })
+    Object.defineProperty(this, '_snapVer', {
+      configurable: true,
+      enumerable: false,
+      get() {
+        void this.storeVer
+        return rtStore.getSnapVer()
+      }
+    })
+
+    /**
+     * 13 个设置参数数组同样用不可枚举 getter 指向非响应式 paramStore。
+     * 这样 `this.bmsNumericParams` / `this[cfg.dataKey]` 等既有读写代码一行不用改，
+     * 但 vm._data / vm._computedWatchers 里再没有这几棵树 —— cloneWithData 每轮
+     * patch 不再深拷贝几百项参数。回显变化由 param-store 直接通知 SettingsPanel。
+     */
+    for (let i = 0; i < PARAM_KEYS.length; i++) {
+      const key = PARAM_KEYS[i]
+      Object.defineProperty(this, key, {
+        configurable: true,
+        enumerable: false,
+        get() { return paramStore[key] },
+        set(v) { setParamList(key, v) }
+      })
+    }
+  },
   created() {
-    // 参数映射容器（SettingsPanel 的 props 依赖它，必须在首次渲染前就绪）
-    this.paramsMapRef = this._buildParamsMap()
     // 冻结的空对象：喂给「后台标签页」当 props 用。
     // 引用恒定 + 不被 Vue 观测，后台面板的 computed 永远不会被逐帧失效，
     // 既不会因为每 800ms 一次落库而重渲染，也不会拖慢当前页。
     this._emptyRef = Object.freeze({})
+    rtStore.setActiveKey('overview')
+    this._rebuildActiveRv()
   },
   onLoad() {
     uni.getSystemInfo({
@@ -615,7 +939,17 @@ export default {
       }
     })
     this.loadConfig()
-    this.initSettingsParams()
+    // 参数模板在进页面后的空闲帧预热（不在切 tab 帧）。
+    // 设置面板已静态常驻，但参数数组是空的；若等首次点「设置」才填充，
+    // 那一帧会一口气创建几百个节点，表现仍是空白/残影。
+    // 放到首屏画完 + 首帧数据到达之后，用户正在看概览，感知不到。
+    this._settingsParamsReady = false
+    this._paramsWarmTimer = setTimeout(() => {
+      this._paramsWarmTimer = null
+      if (this._settingsParamsReady) return
+      this._settingsParamsReady = true
+      this.initSettingsParams()
+    }, 1500)
     // 直连模式下 rawValues 必须为空，所有数据只能来自 MQTT 帧；
     // 不要从 realtimeDataProvider（云端 WebSocket）同步数据——那是另一路数据源，
     // 会让页面在 MQTT 还没连上时就显示"假数据"
@@ -624,18 +958,22 @@ export default {
     // 50kW 只需要架构图那几个值（概览 tab 用），其它 tab 直接读 rawValues
     this.rebuildFormattedValues(this.is50KwMode ? ['171F'] : undefined)
     if (this.config.enabled) {
-      // 进入页面即尝试连接
-      this.$nextTick(() => this.start())
-      // 首屏画完 2.4s 后，按 500ms 间隔把还没建过的监测面板逐个「预挂载」。
-      // 后台面板拿到的是冻结空数据（不会逐帧重渲染），代价只有一次性建节点；
-      // 换来的是第一次点某个 tab 时不必从零创建整棵面板 —— 那一步正是“白屏几秒”的来源。
-      this._prewarmBootTimer = setTimeout(() => {
-        this._prewarmBootTimer = null
-        this._prewarmTabs()
-      }, 2400)
+      // 进入页面即检查设备热点并尝试连接。首屏只挂概览，其余面板在空闲帧里
+      // 一个个建好，用户点到时只需切 display，不再有节点增删 / 整页 reflow。
+      this.$nextTick(() => this.startWithWifiCheck())
+      this._startPanelWarmup()
     }
   },
   onUnload() {
+    this._unloaded = true
+    // 清掉本页刚弹的浮层：APP 端 toast 不随页面销毁，会残留到登录页
+    this._clearOwnToast()
+    this._stopSettingsEchoLoop()
+    this._stopPanelWarmup()
+    if (this._tabScrollTimer) {
+      clearTimeout(this._tabScrollTimer)
+      this._tabScrollTimer = null
+    }
     this.stopArchRefreshTimer()
     if (this.archRunningTimer) {
       clearTimeout(this.archRunningTimer)
@@ -647,30 +985,28 @@ export default {
     }
     this._frameBatches = {}
     this._frameDirty = {}
-    if (this._prewarmTimer) {
-      clearTimeout(this._prewarmTimer)
-      this._prewarmTimer = null
+    if (this._postSwitchTimer) {
+      clearTimeout(this._postSwitchTimer)
+      this._postSwitchTimer = null
     }
-    if (this._prewarmBootTimer) {
-      clearTimeout(this._prewarmBootTimer)
-      this._prewarmBootTimer = null
+    if (this._paramsWarmTimer) {
+      clearTimeout(this._paramsWarmTimer)
+      this._paramsWarmTimer = null
     }
-    if (this._settingsMountTimer) {
-      clearTimeout(this._settingsMountTimer)
-      this._settingsMountTimer = null
+    if (this._permGuideTimer) {
+      clearTimeout(this._permGuideTimer)
+      this._permGuideTimer = null
     }
-    if (this._settingsEchoTimer) {
-      clearTimeout(this._settingsEchoTimer)
-      this._settingsEchoTimer = null
+    if (this._needEditTimer) {
+      clearTimeout(this._needEditTimer)
+      this._needEditTimer = null
     }
-    if (this._tabAnimTimer) {
-      clearTimeout(this._tabAnimTimer)
-      this._tabAnimTimer = null
+    if (this._premountTimer) {
+      clearTimeout(this._premountTimer)
+      this._premountTimer = null
     }
-    if (this._keepDataTimer) {
-      clearTimeout(this._keepDataTimer)
-      this._keepDataTimer = null
-    }
+    // 清空非响应式参数仓库，避免下次进页面残留上一台设备的参数
+    resetParamStore()
     this.stop()
   },
   onShow() {
@@ -678,25 +1014,49 @@ export default {
     // MQTT 连接成功后会自动 subscribe 并在 applyIemsFrame 中填充 rawValues
     // 从后台返回：恢复收帧处理（onHide 里暂停过），并把暂停期间丢弃后的第一帧立即提交
     this._paused = false
+    // 后台回来若仍停在设置组：恢复回显心跳并立刻刷新一次当前值
+    if (this.currentSettingsTab) {
+      this._startSettingsEchoLoop()
+      this._doSyncSettingsFromRealtime()
+    }
+    // 预热已结束、但操作码是后来才填的：趁页面可见把设置面板补挂好，
+    // 免得用户首次点「设置」时那一帧要现建几百项参数节点。
+    if (this._warmDone && this.hasAccessCode && !this.settingsPanelReady) {
+      this._touchPanel(SETTINGS_PANEL_KEY)
+      this._mountPanelByKey(SETTINGS_PANEL_KEY)
+    }
 
     // 息屏回来后 MQTT 连接可能已被系统断开，主动检查并重连
     // （LightMqttClient 有 autoReconnect，但微信息屏期间定时器会被挂起，
     //  回来时可能已经撞了 maxReconnectAttempts 上限停止重连）
     if (this.config.enabled) {
+      // 之前因没连设备热点被拦下：从系统 WiFi 设置回来时静默重试，
+      // 连上了就自动继续，不再重复弹同一个引导弹窗。
+      const guide = !this._wifiBlocked
       if (!this.client) {
-        this.start()
+        this.startWithWifiCheck({ guide })
       } else if (!this.connected || !this.client.connected) {
         console.log('[direct-device] onShow: MQTT 未连接，主动重连')
-        this.start()
+        this.startWithWifiCheck({ guide })
       }
     }
   },
+  /**
+   * 页面级滚动位置：只记在实例属性上，不进 data（不产生 setData）。
+   * 切 tab 时据此决定是否回顶，在顶部切 tab 时零原生属性变更。
+   */
+  onPageScroll(e) {
+    this._panelScrollY = (e && e.scrollTop) || 0
+  },
   onHide() {
     this.stopArchRefreshTimer()
+    // 页面切走时立刻收起本页的浮层，避免出现在下一个页面上
+    this._clearOwnToast()
     // 页面不可见时不再解析/合并/渲染：MQTT 连接保持不断（回来即用），
     // 但每帧解析 + 定时 flush + setData 在小程序里照样要过 JS/渲染桥，
     // 后台持续跑只会让返回页面那一下更卡。数据帧丢了无所谓，回来 1s 内就有新帧。
     this._paused = true
+    this._stopSettingsEchoLoop()
     this._frameBatches = {}
     this._frameDirty = {}
     if (this._frameFlushTimer) {
@@ -705,87 +1065,178 @@ export default {
     }
   },
   methods: {
-    /**
-     * 预热监测面板：逐个把未创建的 tab 设为已渲染（隐藏状态下建节点，用户看不到）。
-     * 一次只建一个，间隔 500ms，避免和收帧/flush 抢主线程。
-     */
-    _prewarmTabs() {
-      const queue = [1, 2, 3, 4, 10].filter(t => !this.renderedTabs[t])
-      if (!queue.length) {
-        this._prewarmSettingsPanel()
-        return
-      }
-      const t = queue[0]
-      this.$set(this.renderedTabs, t, true)
-      if (queue.length > 1) {
-        this._prewarmTimer = setTimeout(() => this._prewarmTabs(), 500)
-      } else {
-        // 监测面板建完后，再空一帧去预建设置面板，别和最后一块监测面板挤在一起
-        this._prewarmTimer = setTimeout(() => {
-          this._prewarmTimer = null
-          this._prewarmSettingsPanel()
-        }, 500)
-      }
+    /** v-if：该监测面板是否已挂载（模板调用，依赖 mountedTabs） */
+    panelMounted(index) {
+      return this.mountedTabs.indexOf(index) !== -1
+    },
+    /** tab 序号 → 面板 key（设置组 6 个 tab 共用一个 key） */
+    _panelKey(index) {
+      return PANEL_RT_KEYS[index] ? index : SETTINGS_PANEL_KEY
+    },
+    /** 面板 key → realtime-store 的订阅 key */
+    _rtKeyOf(key) {
+      return key === SETTINGS_PANEL_KEY ? SETTINGS_PANEL_KEY : PANEL_RT_KEYS[key]
+    },
+    /** 挂载面板（幂等）；返回本次是否首次挂载 */
+    _mountPanelByKey(key) {
+      if (this.mountedTabs.indexOf(key) !== -1) return false
+      this.mountedTabs.push(key)
+      return true
     },
     /**
-     * 预热设置面板（默认第一个设置 tab，即「快捷控制」）。
-     * 面板在隐藏状态下建好（v-show=false），点「设置」时只需翻 v-show，
-     * 不必在同一帧里创建 scroll-view + 参数卡片 —— 那一步正是首次进入卡顿的来源。
-     * 只有拿到操作码才建，否则渲染的是占位提示，不预热。
+     * 记录 LRU 使用顺序。刻意放在普通实例属性而不是 data：
+     * 调整顺序不该触发父页面 render（mountedTabs 的内容才决定 DOM）。
      */
-    _prewarmSettingsPanel() {
-      if (this.settingsRendered || !this.hasAccessCode) return
-      const first = this.settingsTabs[0]
-      if (!first) return
-      this.lastSettingsTabCfg = first
-      this.settingsReady = true
-      this._mountedSettingsKey = first.editKey
-      this.settingsRendered = true
+    _touchPanel(key) {
+      if (!this._lruOrder) this._lruOrder = []
+      const i = this._lruOrder.indexOf(key)
+      if (i !== -1) this._lruOrder.splice(i, 1)
+      this._lruOrder.push(key)
     },
     /**
-     * 标签页取数：只有当前激活的那个面板拿真实数据，
-     * 常驻的后台面板一律喂冻结空对象（引用不变 → computed 不重算 → 不重渲染）。
-     * keepDataTab：刚被切走的那个面板还能多留 250ms 真实数据。
-     *   否则一切 tab，上一块面板的 props 立刻从 rawValues 变成空对象 →
-     *   BMS 近千个文本同时变成「--」，这一下和「建新面板」撞在同一帧里就是明显掉帧。
-     *   留 250ms 后再置空，用户已经看不到它了，置空的代价落在空闲帧。
+     * 淘汰最久未用的面板。只在切换帧之后的宏任务里调用：
+     * 销毁组件本身会再触发一次 render，绝不能压在用户看到新面板的那一帧。
+     * keepKey 是当前可见面板，任何情况下都不淘汰，避免出现白屏。
      */
-    fv(tab) {
-      const active = this.currentTab === tab || this.keepDataTab === tab
-      return active ? this.formattedValues : this._emptyRef
-    },
-    rv(tab) {
-      const active = this.currentTab === tab || this.keepDataTab === tab
-      return active ? this.rawValues : this._emptyRef
-    },
-    /**
-     * 构建参数映射（仅在协议模板重建数组时调用）
-     * 必须放在 methods 里：它是函数，不是计算属性
-     */
-    _buildParamsMap() {
-      // 旧协议和 50kW 协议共用 data() 里的同名数组 key
-      // syncSettingsFromRealtime 会根据检测到的协议类型初始化/填充这些数组
-      return {
-        bmsNumericParams: this.bmsNumericParams,
-        bmsSwitchParams: this.bmsSwitchParams,
-        bmsPowerParams: this.bmsPowerParams,
-        pcsNumericParams: this.pcsNumericParams,
-        pcsSwitchParams: this.pcsSwitchParams,
-        pvNumericParams: this.pvNumericParams,
-        pvSwitchParams: this.pvSwitchParams,
-        storageNumericParams: this.storageNumericParams,
-        storageSwitchParams: this.storageSwitchParams,
-        quickControlParams: this.quickControlParams,
-        quickPowerParams: this.quickPowerParams,
-        liquidSwitchParams: this.liquidSwitchParams,
-        liquidNumericParams: this.liquidNumericParams
+    _trimPanelCache(keepKey) {
+      const order = this._lruOrder || []
+      let guard = 12
+      while (this.mountedTabs.length > PANEL_CACHE_LIMIT && guard-- > 0) {
+        let victim = null
+        for (let i = 0; i < order.length; i++) {
+          const k = order[i]
+          if (k === keepKey) continue
+          if (this.mountedTabs.indexOf(k) !== -1) { victim = k; break }
+        }
+        // 兜底：LRU 顺序里没记录到（例如 onShow 直接补挂的设置面板），
+        // 就从已挂载列表里挑一个非当前面板淘汰，避免上限永远降不下来。
+        if (victim === null) {
+          for (let i = 0; i < this.mountedTabs.length; i++) {
+            if (this.mountedTabs[i] !== keepKey) { victim = this.mountedTabs[i]; break }
+          }
+        }
+        if (victim === null) break
+        const j = this.mountedTabs.indexOf(victim)
+        if (j !== -1) this.mountedTabs.splice(j, 1)
+        const oi = order.indexOf(victim)
+        if (oi !== -1) order.splice(oi, 1)
       }
     },
     /**
-     * 架构图启停按钮 handler — 下发 171F.B12 策略运行指令
-     * 对齐 architecture-diagram.vue handleStartStop 逻辑
+     * 手指按下时就把目标面板挂好（display:none，不参与布局）。
+     * touchstart → tap 通常有 80~150ms，足够把几百个 vnode 的创建成本
+     * 挪出切换帧；滑动标签栏时最多多挂一块，随后由 LRU 淘汰，代价可控。
+     */
+    premountPanel(index) {
+      // 触摸即预挂载面板（display:none，不参与布局）。小程序与 APP 共用：
+      // 触摸到点击通常有 80~150ms，足够把面板节点创建成本挪出切换帧，
+      // 切换时只剩 v-show 翻转。APP 有 V8 GC 卡顿、预挂收益更大；小程序无 GC 问题，
+      // 但同样能消除「首挂同步建几百节点」的瞬间开销，且让 switchTab 命中缓存只翻 v-show。
+      if (index === this.currentTab) return
+      if (this._premountTimer) clearTimeout(this._premountTimer)
+      this._premountTimer = setTimeout(() => {
+        this._premountTimer = null
+        if (this._unloaded) return
+        const key = this._panelKey(index)
+        this._touchPanel(key)
+        this._mountPanelByKey(key)
+      }, 0)
+    },
+    /**
+     * 空闲预热：首屏画完、MQTT 首帧到达后，逐个建好其余面板。
+     * 预热时面板是 display:none，webview 只创建 DOM / vnode，不做布局与绘制，
+     * 代价被摊到进页面后的几秒；等用户点 tab 时就只剩 display 切换。
+     * 页面切到后台、或用户刚点过 tab 时自动顺延，不跟交互抢主线程。
+     */
+    _startPanelWarmup() {
+      this._warmIndex = 0
+      this._warmDone = false
+      const step = () => {
+        this._warmTimer = null
+        if (this._unloaded || this._warmDone) return
+        if (this._warmIndex >= WARMUP_QUEUE.length) {
+          this._warmDone = true
+          perfLog('面板预热完成，已缓存 ' + this.mountedTabs.length + ' 块')
+          return
+        }
+        if (this._paused || Date.now() - (this._tabSwitchAt || 0) < 800) {
+          this._warmTimer = setTimeout(step, 400)
+          return
+        }
+        const key = WARMUP_QUEUE[this._warmIndex++]
+        // 没操作码时设置区只显示占位提示，没必要预建几百项参数节点
+        if (key !== SETTINGS_PANEL_KEY || this.hasAccessCode) {
+          this._mountPanelByKey(key)
+        }
+        this._warmTimer = setTimeout(step, 350)
+      }
+      this._warmTimer = setTimeout(step, 2000)
+    },
+    _stopPanelWarmup() {
+      if (this._warmTimer) {
+        clearTimeout(this._warmTimer)
+        this._warmTimer = null
+      }
+      this._warmDone = true
+    },
+    /**
+     * 切换帧之后的一次性收尾：参数回显（不再强制提交暂存帧）。
+     * 220ms 后用户已经看到新面板，这时再来一次 setData 不会造成可见的空白。
+     * 连续快切只保留最后一次。
+     */
+    _schedulePostSwitch() {
+      if (this._postSwitchTimer) clearTimeout(this._postSwitchTimer)
+      this._postSwitchTimer = setTimeout(() => {
+        this._postSwitchTimer = null
+        // ⚡ 切 tab 不再强制 flush 暂存帧：800ms 的常规 flush 本来就在跑，
+        //    这里再 flushPendingFramesNow() 等于切换帧刚画完 220ms 就追加一次
+        //    整树提交 + 参数回显 —— 正是「点完 tab 过一秒又卡一下」的来源。
+        //    新面板的数据在切换瞬间已由 _rebuildActiveRv() 从仓库读好，不依赖这次强制提交。
+        if (!this.currentSettingsTab) return
+        // 进入设置组（含设置组内部切子 tab）必须无条件回显一次：
+        // 旧逻辑只在「恰好有等待中的节流定时器」时才同步，稳态下这个定时器
+        // 通常不存在，于是只读态一整屏 '--'，直到用户点「修改」才看到当前值。
+        // 同时收掉待执行的节流同步，避免 1s 后重复跑一遍。
+        if (this._syncSettingsTimer) {
+          clearTimeout(this._syncSettingsTimer)
+          this._syncSettingsTimer = null
+        }
+        this._doSyncSettingsFromRealtime()
+      }, 220)
+    },
+    /**
+     * ⚡ 数据刷新不再经过父页面：模板不再向面板传 fmtVer / snapVer。
+     *    每个面板通过 realtime-subscribe mixin 订阅仓库，数据变化时只递增
+     *    自己内部的 rtVer，只有这一个面板重渲染；父页面的 navbar / 设备卡 /
+     *    标签栏 / 底部栏不再被每 1.5s 一次的数据提交拖着重建 vnode。
+     *    _fmtVer / _snapVer 仅保留作调试读取，不参与模板依赖收集。
+     */
+    /** 重建「当前可见面板」的数据快照：只含当前 tab 真正会读的 1~3 个桶 */
+    _rebuildActiveRv() {
+      const keys = TAB_BUCKETS[this.currentTab] || []
+      const store = this._rawStore || {}
+      const snap = {}
+      for (let i = 0; i < keys.length; i++) {
+        const k = keys[i]
+        if (snap[k] === undefined) snap[k] = store[k] || this._emptyRef
+      }
+      rtStore.setSnapshot(snap)
+    },
+    /**
+     * 架构图启停按钮 handler — 下发策略运行指令
+     * 对齐 architecture-diagram.vue handleStartStop / systemStartAddress 逻辑
+     *
+     * ⚠️ 必须按容量选择寄存器地址：
+     *   - 20kW 旧协议站 → EMS 地址 112
+     *   - 50kW 大容量站 → EMS 地址 343
+     *   统一靠 is50KwMode 判定（收帧命中过新协议 bucket 或配置标记）
      */
     onSystemStartStop() {
+      // MQTT 连接状态前置检测
+      if (!this.client || !this.connected || !this.client.connected) {
+        uni.showModal({ title: '提示', content: '设备连接中，请稍候', showCancel: false })
+        return
+      }
       const running = this.systemRunningStable
       const title = running ? '策略停止' : '策略启动'
       const content = running ? '确定要停止策略吗？' : '确定要启动策略吗？'
@@ -795,12 +1246,25 @@ export default {
         success: async (res) => {
           if (!res.confirm) return
           try {
-            // 171F 启动按钮（运行策略总开关）= 0x3401 附件2 EMS 地址 112
+            // 按容量选地址：50kW=343，20kW=112
+            const regAddr = this.is50KwMode ? '343' : '112'
+            console.log('[direct-device] onSystemStartStop:',
+              'is50KwMode=' + this.is50KwMode,
+              'registerAddress=' + regAddr)
             this.client.setDeviceType('171F')
-            await this.client.sendControl('B12', running ? 0 : 1, '171F', { registerAddress: '112' })
+            await this.client.sendControl('B12', running ? 0 : 1, '171F', { registerAddress: regAddr })
             uni.showToast({ title: '指令已下发', icon: 'none' })
+            // 下发后不立即更新按钮状态（乐观更新），等 MQTT 推送设备真实回传
+            // 10s 兜底：主动触发一次状态刷新（防止设备响应超时未推）
+            setTimeout(() => {
+              // 直连模式下 MQTT 自动推送帧，按钮状态靠 rawValues['171F'].C_B12 变化驱动
+              // 这里只打日志便于排查，不需要额外调用
+              console.log('[direct-device] onSystemStartStop: 10s 后检查 C_B12 回显',
+                this.rawValues['171F'] && this.rawValues['171F']['C_B12'])
+            }, 10000)
           } catch (e) {
-            uni.showModal({ title: '下发失败', content: e.message || '请重试', showCancel: false })
+            console.error('[direct-device] onSystemStartStop error:', e)
+            uni.showModal({ title: '下发失败', content: this.friendlyErrorText(e, '设备连接已断开，请重新连接后重试'), showCancel: false })
           }
         }
       })
@@ -856,83 +1320,44 @@ export default {
       this._frameDirty = {}
       this._stage = {}
       this._lastCommitAt = 0
-      this._lastUpdateAt = 0
+      // 清空/重连后页头「更新」回到 '--'，不许沿用上一个连接的时间
+      rtStore.resetFrameTick()
       if (this._frameFlushTimer) {
         clearTimeout(this._frameFlushTimer)
         this._frameFlushTimer = null
       }
-      const newBuckets = {}
-      for (const key of Object.keys(this.rawValues || {})) {
-        newBuckets[key] = {}
+      // 原地清空非响应式仓库（冻结空桶），保持 _rawStore 与仓库同一引用
+      const store = rtStore.getAllBuckets()
+      const oldKeys = Object.keys(store)
+      for (let i = 0; i < oldKeys.length; i++) delete store[oldKeys[i]]
+      for (let i = 0; i < RAW_BUCKET_KEYS.length; i++) {
+        store[RAW_BUCKET_KEYS[i]] = Object.freeze({})
       }
-      if (Object.keys(newBuckets).length === 0) {
-        // 首次调用时初始化 bucket key 集合（兼容 20kW + 50kW 全部 bucket）
-        newBuckets['171B'] = {}
-        newBuckets['171C'] = {}
-        newBuckets['171D'] = {}
-        newBuckets['171E'] = {}
-        newBuckets['171F'] = {}
-        newBuckets['1707'] = {}
-        newBuckets['170C_STORAGE'] = {}
-        newBuckets['170C_PV'] = {}
-        newBuckets['171C_V2'] = {}
-        newBuckets['171C_V2_1'] = {}
-        newBuckets['171C_V2_2'] = {}
-        newBuckets['171C_V2_3'] = {}
-        newBuckets['171C_V2_4'] = {}
-        newBuckets['0318'] = {}
-        newBuckets['131C'] = {}
-      }
-      this.rawValues = newBuckets
+      this.storeVer++
+      this._rebuildActiveRv()
       // 桶被清空 → 50kW 判定缓存失效，下次收帧重新识别协议
       this._has50KwData = false
+      this.has50KwMode = false
       this._fieldRegCache = {}
       this._candCache = {}
       this._paramSeen = {}
     },
-    updateDisplay(deviceType) {
-      // 50kW 协议不走这套「寄存器 → 卡片」显示结构（各 tab 直接读 rawValues），
-      // 这里再建一遍纯属把几百项死数据塞进页面 data
-      if (this.is50KwMode) {
-        if (this.displayItems.length) {
-          this.displayItems = []
-          this.groupedDisplay = []
-        }
-        return
-      }
-      const dtype = deviceType || this.currentDeviceType
-      // 概览标签页没有对应的设备类型，清空显示列表
-      if (!dtype) {
-        this.displayItems = []
-        this.groupedDisplay = []
-        return
-      }
-      const map = getRegisterMap(dtype)
-      const bucket = this.rawValues[dtype] || {}
-      this.displayItems = map.monitor.map(p => this._formatOneItem(p, bucket))
-      const groupsConfig = DEVICE_GROUPS[dtype] || []
-      const groups = {}
-      this.displayItems.forEach(item => {
-        const g = item.group || 'system'
-        if (groupsConfig.length > 0 && !groupsConfig.includes(g)) return
-        if (!groups[g]) groups[g] = { title: GROUP_TITLE[g] || '其他', items: [] }
-        groups[g].items.push(item)
-      })
-      const orderMap = {}
-      map.monitor.forEach((p, i) => { orderMap[p.field] = i })
-      Object.keys(groups).forEach(k => {
-        groups[k].items.sort((a, b) => (orderMap[a.field] ?? 999) - (orderMap[b.field] ?? 999))
-      })
-      this.groupedDisplay = Object.values(groups)
+    updateDisplay() {
+      // ⚡ 历史遗留：displayItems / groupedDisplay 是早期「寄存器 → 卡片」结构的产物。
+      //    现在所有 tab 都走 formattedValues 或 activeRv 快照，模板与子组件
+      //    没有任何一处读它们。构建出来只是 200 多项 × 8 字段的死数据，
+      //    却被 uni-app 的 cloneWithData 每轮 patch 深拷贝 + 逐键 diff 一遍。
+      //    这里只保证清空，不再重建；方法保留是为了不改动各处的调用点。
+      if (this.displayItems.length) this.displayItems = []
+      if (this.groupedDisplay.length) this.groupedDisplay = []
     },
     /** BMS V2 位字段打包：把同地址所有 bit 当前值合成一个整字节
      *  参考 community/settings BmsSettings.vue packHcByte 实现
      *  查找当前参数面板中 deviceType 相同、address 相同、bit !== null 的所有参数
      */
     _packBmsByte(param, optValue) {
-      // 从 settingsParamsMap 找所有同 deviceType + 同 address 的参数
-      const paramsMap = this.settingsParamsMap
-      const allLists = Object.values(paramsMap).filter(Array.isArray)
+      // 从非响应式 paramStore 找所有同 deviceType + 同 address 的参数
+      const allLists = PARAM_KEYS.map(k => paramStore[k]).filter(Array.isArray)
       const sameAddr = allLists
         .flat()
         .filter(x =>
@@ -964,7 +1389,7 @@ export default {
      * 模板直接绑定 formattedValues['171B_B0'] 以确保响应式更新
      * @param {string|string[]} [deviceType] 设备类型或类型数组；不传则全量重建
      */
-    rebuildFormattedValues(deviceType) {
+    rebuildFormattedValues(deviceType, silent) {
       const ALL_BUCKETS = ['171B', '171C', '171D', '171E', '171F', '1707', '170C_STORAGE', '170C_PV', '171C_V2', '0318', '131C']
       // 需要 rebuild 的 bucket 列表：
       //   - 数组 → 原样；传单个 → 该 bucket + 171F（架构图）
@@ -973,69 +1398,76 @@ export default {
       if (Array.isArray(deviceType)) types = deviceType
       else if (deviceType) types = deviceType === '171F' ? ['171F'] : [deviceType, '171F']
       else types = ALL_BUCKETS
-      this._applyFormattedValues(this._buildFormattedValues(types))
+      // 只传 171F = 只有概览在用，走精简构建（只算 arch*，不摊 171F_B* 与 50kW 别名）
+      const archOnly = types.length === 1 && types[0] === '171F'
+      this._applyFormattedValues(this._buildFormattedValues(archOnly ? [] : types, archOnly), silent)
     },
     /** 纯计算：把若干 bucket 的原始值格式化成显示值（不做响应式赋值，供 flush 合并成一次赋值） */
-    _buildFormattedValues(types) {
+    _buildFormattedValues(types, archOnly) {
       const newVals = {}
-      types.forEach(dt => {
-        const bucket = this.rawValues[dt] || {}
-        const map = getRegisterMap(dt)
-        // 不管 map 有没有 monitor 定义，都遍历 bucket 里的所有字段（直连 MQTT 帧字段 key 就是 B 号）
-        if (map && map.monitor && map.monitor.length > 0) {
-          map.monitor.forEach(p => {
-            const raw = bucket[p.field]
-            if (raw === undefined) return
-            const decimals = p.decimals !== undefined ? p.decimals : 2
-            newVals[`${dt}_${p.field}`] = this.formatValue(raw, decimals)
+      // 概览 tab 只读 arch* 这 30 来个键。以前每轮都把 171F 桶 + 50kW 别名
+      // 摊成上千个 `${dt}_B{n}` 键，这些键没有任何模板读，却每次提交都要 diff/序列化。
+      // archOnly 时直接跳到下面的 arch* 计算。
+      if (!archOnly) {
+        types.forEach(dt => {
+          const bucket = this.rawValues[dt] || {}
+          const map = getRegisterMap(dt)
+          // 不管 map 有没有 monitor 定义，都遍历 bucket 里的所有字段（直连 MQTT 帧字段 key 就是 B 号）
+          if (map && map.monitor && map.monitor.length > 0) {
+            map.monitor.forEach(p => {
+              const raw = bucket[p.field]
+              if (raw === undefined) return
+              const decimals = p.decimals !== undefined ? p.decimals : 2
+              newVals[`${dt}_${p.field}`] = this.formatValue(raw, decimals)
+            })
+          }
+          Object.keys(bucket).forEach(field => {
+            // 只保留 B 号字段：控制帧/状态帧键（C_/S_ 前缀）和寄存器号别名（纯数字）没有任何模板读取，
+            // 保留它们会把 formattedValues 撑到上千个 key（每次 setData 都要 diff/serialize），
+            // 是小程序里最容易被忽略的渲染层开销
+            if (/^[SC]_/.test(field) || /^\d+$/.test(field)) return
+            const key = `${dt}_${field}`
+            if (newVals[key] === undefined) {
+              const val = bucket[field]
+              const isBitField = field.includes('b')
+              newVals[key] = this.formatValue(val, isBitField ? 0 : 2)
+            }
+          })
+        })
+        // === 50kW bucket → 20kW 旧码前缀别名 ===
+        // tab 组件模板硬编码了 20kW 旧协议 key 前缀（'171B', '171C', '171D', '171E'），
+        // 50kW bucket 数据虽然 bucket 名不同（'1707', '171C_V2', '170C_STORAGE', '170C_PV'），
+        // 但字段 key（B 号）一致。这里为 50kW bucket 的每个字段值生成一份旧码前缀的别名 key，
+        // 让 tab 组件在不改动模板的情况下也能显示 50kW 数据。
+        // 注意：新旧协议某些 B 号含义不完全一致，alias 能保证数据显出来，但个别字段名可能对不上。
+        const ALIAS_MAP = {
+          '1707': '171B',         // 50kW PCS → 20kW PCS 别名
+          '170C_STORAGE': '171D', // 50kW 储能DC → 20kW 储能DC 别名
+          '170C_PV': '171E',      // 50kW 光伏DC → 20kW 光伏 别名
+          '171C_V2': '171C'       // 50kW BMS → 20kW BMS 别名
+        }
+        for (const [newPrefix, oldPrefix] of Object.entries(ALIAS_MAP)) {
+          // 只为本次要重建的前缀做别名：tab 组件按旧前缀 '171C_*' 取值的，需要由 50kW bucket 生成
+          if (types.indexOf(oldPrefix) === -1 && types.indexOf(newPrefix) === -1) continue
+          const aliasBucket = this.rawValues[newPrefix] || {}
+          Object.keys(aliasBucket).forEach(field => {
+            if (/^[SC]_/.test(field) || /^\d+$/.test(field)) return
+            const aliasKey = `${oldPrefix}_${field}`
+            // 仅当 20kW bucket 没有同名 key 时才用 50kW bucket 的数据覆盖
+            // （20kW bucket 优先，避免 alias 覆盖掉真实的 20kW 数据）
+            if (this.rawValues[oldPrefix] && this.rawValues[oldPrefix][field] !== undefined) {
+              // 20kW bucket 有数据，跳过 alias
+              return
+            }
+            const val = aliasBucket[field]
+            if (val === undefined || val === null) return
+            const isBitField = field.includes('b')
+            const decimals = isBitField ? 0 : 2
+            if (newVals[aliasKey] === undefined) {
+              newVals[aliasKey] = this.formatValue(val, decimals)
+            }
           })
         }
-        Object.keys(bucket).forEach(field => {
-          // 只保留 B 号字段：控制帧/状态帧键（C_/S_ 前缀）和寄存器号别名（纯数字）没有任何模板读取，
-          // 保留它们会把 formattedValues 撑到上千个 key（每次 setData 都要 diff/serialize），
-          // 是小程序里最容易被忽略的渲染层开销
-          if (/^[SC]_/.test(field) || /^\d+$/.test(field)) return
-          const key = `${dt}_${field}`
-          if (newVals[key] === undefined) {
-            const val = bucket[field]
-            const isBitField = field.includes('b')
-            newVals[key] = this.formatValue(val, isBitField ? 0 : 2)
-          }
-        })
-      })
-      // === 50kW bucket → 20kW 旧码前缀别名 ===
-      // tab 组件模板硬编码了 20kW 旧协议 key 前缀（'171B', '171C', '171D', '171E'），
-      // 50kW bucket 数据虽然 bucket 名不同（'1707', '171C_V2', '170C_STORAGE', '170C_PV'），
-      // 但字段 key（B 号）一致。这里为 50kW bucket 的每个字段值生成一份旧码前缀的别名 key，
-      // 让 tab 组件在不改动模板的情况下也能显示 50kW 数据。
-      // 注意：新旧协议某些 B 号含义不完全一致，alias 能保证数据显出来，但个别字段名可能对不上。
-      const ALIAS_MAP = {
-        '1707': '171B',         // 50kW PCS → 20kW PCS 别名
-        '170C_STORAGE': '171D', // 50kW 储能DC → 20kW 储能DC 别名
-        '170C_PV': '171E',      // 50kW 光伏DC → 20kW 光伏 别名
-        '171C_V2': '171C'       // 50kW BMS → 20kW BMS 别名
-      }
-      for (const [newPrefix, oldPrefix] of Object.entries(ALIAS_MAP)) {
-        // 只为本次要重建的前缀做别名：tab 组件按旧前缀 '171C_*' 取值的，需要由 50kW bucket 生成
-        if (types.indexOf(oldPrefix) === -1 && types.indexOf(newPrefix) === -1) continue
-        const aliasBucket = this.rawValues[newPrefix] || {}
-        Object.keys(aliasBucket).forEach(field => {
-          if (/^[SC]_/.test(field) || /^\d+$/.test(field)) return
-          const aliasKey = `${oldPrefix}_${field}`
-          // 仅当 20kW bucket 没有同名 key 时才用 50kW bucket 的数据覆盖
-          // （20kW bucket 优先，避免 alias 覆盖掉真实的 20kW 数据）
-          if (this.rawValues[oldPrefix] && this.rawValues[oldPrefix][field] !== undefined) {
-            // 20kW bucket 有数据，跳过 alias
-            return
-          }
-          const val = aliasBucket[field]
-          if (val === undefined || val === null) return
-          const isBitField = field.includes('b')
-          const decimals = isBitField ? 0 : 2
-          if (newVals[aliasKey] === undefined) {
-            newVals[aliasKey] = this.formatValue(val, decimals)
-          }
-        })
       }
       const f = this.formatValue.bind(this)
       const r = (t, k) => (this.rawValues[t] && this.rawValues[t][k])
@@ -1116,29 +1548,9 @@ export default {
       }
       return newVals
     },
-    /** 增量落值：已有 key 逐键触发响应式（setData 只带变化的字段），仅当出现全新 key 时才整包替换 */
-    _applyFormattedValues(newVals) {
-      const fv = this.formattedValues
-      let changed = false
-      let added = false
-      for (const k of Object.keys(newVals)) {
-        const oldVal = fv[k]
-        const newVal = newVals[k]
-        if (oldVal === newVal) continue
-        if (oldVal === undefined) {
-          // Vue2 里给已有对象加属性必须 $set，否则新键不是响应式的、不会通知面板
-          this.$set(fv, k, newVal)
-          added = true
-        } else if (newVal !== undefined) {
-          fv[k] = newVal
-        }
-        changed = true
-      }
-      // 只有「出现新键」才整包替换一次（首帧、切设备时会发生，之后基本不会）。
-      // 以前每次 flush 都 `{...fv}`：formattedValues 有上千个键，等于每 800ms 把整个对象
-      // 序列化给渲染层一次 —— 这是监测页和设置页共同卡顿的源头之一。
-      if (added) this.formattedValues = { ...fv }
-      return changed
+    /** 增量落值：只把变化的键写进非响应式仓库，并递增 fmtVer 推一次面板刷新 */
+    _applyFormattedValues(newVals, silent) {
+      return rtStore.patchFormatted(newVals, silent)
     },
     getArchValue(deviceType, field) {
       const bucket = this.rawValues[deviceType] || {}
@@ -1189,28 +1601,229 @@ export default {
       return TAB_TITLES[index] || ''
     },
     switchTab(index) {
-      console.log('[tab] switchTab 点击: index=', index, '当前 currentTab=', this.currentTab, 'bottomTab=', this.bottomTab)
-      if (index !== this.currentTab) {
-        // 记住旧 tab，让它的面板晚 250ms 再置空（见 fv/rv 的 keepDataTab）
-        const prev = this.currentTab
-        this.keepDataTab = prev
-        if (this._keepDataTimer) clearTimeout(this._keepDataTimer)
-        this._keepDataTimer = setTimeout(() => {
-          this._keepDataTimer = null
-          this.keepDataTab = null
-        }, 250)
-        this.currentTab = index
-        console.log('[tab] currentTab 已更新为=', index, 'is50Kw=', this.is50KwMode)
-        const types = this.is50KwMode ? DEVICE_TYPES_50KW : DEVICE_TYPES
-        const bucket = types[index]
-        console.log('[tab] 对应 bucket=', bucket, 'rawValues[bucket] keys=', bucket ? Object.keys(this.rawValues[bucket] || {}).length : 'N/A')
-        // 设置面板的「提交暂存帧 + 参数回显」改由 currentTab watcher 在面板挂载后触发
-        // （见 settingsReady 两阶段挂载），这里不再 nextTick 立即执行——
-        // 那一步会把「渲染新面板」排在几百项回显之后，表现就是点一下白几百毫秒。
+      if (index === this.currentTab) return
+      const t0 = Date.now()
+      // 分段打点：把「切换帧」拆成 准备 → render/patch → nextTick 回调 三段。
+      // 慢帧若落在 patch 段，是整页 reflow；落在准备段，是 watcher/仓库的同步逻辑。
+      this._swT0 = t0
+      this._swPrepared = 0
+      this._swPatched = 0
+      // 两个时间差用来验证「偶发慢帧是否撞上空闲降频 / 数据提交」：
+      // gap 是距上次切 tab，commitGap 是距上次 _commitStaged 提交。
+      const gap = this._tabSwitchAt ? t0 - this._tabSwitchAt : -1
+      const commitGap = this._lastCommitAt ? t0 - this._lastCommitAt : -1
+      const key = this._panelKey(index)
+      const rtKey = this._rtKeyOf(key)
+      // ① 先切订阅目标，必须早于 currentTab watcher 的 _rebuildActiveRv()：
+      //    旧面板不再收到本次快照通知（白 render 一次）；新面板若已缓存，
+      //    在这里补一次刷新，把隐藏期间的数据变化带回来。
+      rtStore.setActiveKey(rtKey)
+      // ② 已缓存面板：本帧只翻 display（v-show），并刷新隐藏期间的数据。
+      //    未挂载面板：把「挂载 + 创建几百个 DOM 节点」整体挪到下一帧（rAF），
+      //    点击帧里只剩 tab 高亮 + sticky + 已缓存面板的 display 翻转，
+      //    彻底消除 bms/liquid 那种 1s+ 的「点一下冻住」体感（挂载改在点击帧之后）。
+      const alreadyMounted = this.mountedTabs.indexOf(key) !== -1
+      this._touchPanel(key)
+      if (alreadyMounted) {
+        // 已缓存：本帧只翻 display（v-show），无需挂载
       } else {
-        console.log('[tab] switchTab 跳过：index 与 currentTab 相同')
+        // #ifndef APP-PLUS
+        // 小程序直连：同步挂载面板。requestAnimationFrame 在小程序逻辑层时序不可靠，
+        // 把它用在「首挂」上会把面板挂载推迟到不可预期的时机，表现为
+        // 「切到储能DC，内容却仍停在概览」。原 HEAD（已验证流畅的小程序路径）即同步挂载，
+        // 小程序无 APP 那种 V8 主线程 GC 卡顿，同步建几百节点完全可接受。
+        this._mountPanelByKey(key)
+        if (!this._unloaded) this._trimPanelCache(key)
+        perfLog('小程序同步挂载 ' + key + ' → ' + rtKey)
+        // #endif
+        // #ifdef APP-PLUS
+        // APP：把首次挂载挪出点击帧，规避 bms/liquid 那种 1s+ 的「点一下冻住」。
+        // 小程序无此问题，走上面的同步路径。
+        this._pendingMountKey = key
+        const self = this
+        const doMount = () => {
+          self._pendingMountKey = null
+          if (self._unloaded) return
+          // 用户在 rAF 前又切走了：放弃本次挂载，避免把不可见面板的节点建出来
+          if (self.currentTab !== index) return
+          self._touchPanel(key)
+          self._mountPanelByKey(key)
+          if (!self._unloaded) self._trimPanelCache(key)
+          perfLog('延迟挂载 ' + key + ' → ' + rtKey + ' 耗时 ' + (Date.now() - t0) + 'ms（已移出点击帧）')
+        }
+        if (typeof requestAnimationFrame === 'function') requestAnimationFrame(doMount)
+        else setTimeout(doMount, 16)
+        // #endif
+      }
+      // 淘汰放到切换帧之后，且绝不淘汰当前可见面板
+      setTimeout(() => {
+        if (!this._unloaded) this._trimPanelCache(key)
+      }, 0)
+      this._tabSwitchAt = t0
+      let backTop = false
+
+      // #ifdef APP-PLUS
+      // APP 专属：切 v-show 会改变页面内容高度。若此时还停在页面中部，
+      // webview 要先 clamp 滚动位置、再重算 sticky 头，等于一次额外的整页
+      // reflow；之后 uni.pageScrollTo 又是一次 JS→原生跨桥回顶，两次都撞在
+      // 切换帧上。APP 页面就是标准 webview，直接滚 document 即可：同步完成、
+      // 零跨桥，且放在 currentTab 赋值「之前」，换内容时页面已经在顶部。
+      if (this._panelScrollY > 1) {
+        backTop = true
+        this._panelScrollY = 0
+        try {
+          window.scrollTo(0, 0)
+          if (document.documentElement) document.documentElement.scrollTop = 0
+          if (document.body) document.body.scrollTop = 0
+        } catch (e) {}
+        // 兜底：少数机型页面滚动容器不是 document，这时再补一次原生回顶
+        setTimeout(() => {
+          const y = window.pageYOffset ||
+            (document.documentElement && document.documentElement.scrollTop) || 0
+          if (y > 1) uni.pageScrollTo({ scrollTop: 0, duration: 0 })
+        }, 0)
+      }
+      // #endif
+      // #ifndef APP-PLUS
+      if (this._panelScrollY > 1) {
+        backTop = true
+        this._panelScrollY = 0
+        this.$nextTick(() => {
+          uni.pageScrollTo({ scrollTop: 0, duration: 0 })
+        })
+      }
+      // #endif
+
+      // 切 tab 同步退出编辑态：与 currentTab 赋值合并进同一次 render，
+      // 不额外多一轮 setData（watch currentTab 里的同名调用只作其它入口的兜底）。
+      this._resetEditingOnTabChange()
+      this._swPrepared = Date.now()
+      this.currentTab = index
+
+      // #ifdef APP-PLUS
+      // 横向定位推迟一帧：切换帧里 scroll-into-view 保持旧值，uni-app 的
+      // scroll-view 组件就不会在 updated 里做那次强制同步布局。
+      this._syncTabScrollTarget(index)
+      // #endif
+
+      // 日志必须注册在赋值「之后」：这样回调排在 render watcher 后面，
+      // 测到的才是真实渲染帧。以前放在赋值前，恒为 0ms，误导了排查。
+      this.$nextTick(() => {
+        const now = Date.now()
+        const prepared = (this._swPrepared || t0) - t0
+        const patched = (this._swPatched || now) - t0
+        perfLog('切 tab ' + index + ' → ' + rtKey +
+          '，切换帧 ' + (now - t0) + 'ms（准备 ' + prepared +
+          ' / patch ' + (patched - prepared) + ' / 回调 ' + (now - t0 - patched) + '）' +
+          '，缓存=' + (alreadyMounted ? '是' : '否') +
+          '，挂载=' + (alreadyMounted ? '即时' : '延迟') +
+          '，回顶=' + (backTop ? '是' : '否') +
+          '，日志面板=' + (this.showPerfLog ? '开' : '关') +
+          '，距上次=' + gap + 'ms，距提交=' + commitGap + 'ms' +
+          '，已缓存=' + this.mountedTabs.length)
+        this._swT0 = 0
+      })
+      // 数据快照由 currentTab watcher 同步换；参数回显排在切换帧之后
+    },
+    /**
+     * APP 专用：把横向 scroll-into-view 的更新推到切换帧绘制完成之后。
+     * 功能与「每次切 tab 都定位」完全一致，只是晚一帧；快速连切只留最后一次。
+     */
+    _syncTabScrollTarget(index) {
+      if (APP_DISABLE_TAB_SCROLL_INTO) return
+      if (this._tabScrollTimer) clearTimeout(this._tabScrollTimer)
+      const target = 'tab-' + index
+      this._tabScrollTimer = setTimeout(() => {
+        this._tabScrollTimer = null
+        if (this.currentTab !== index) return
+        if (this.tabScrollTarget === target) return
+        const t1 = Date.now()
+        this.tabScrollTarget = target
+        // 量化「延后后的定位帧」：uni-app APP 的 scroll-view 会在 updated 里
+        // 遍历子节点算位置，这一帧的耗时可直接判定它是不是卡顿元凶。
+        this.$nextTick(() => {
+          perfLog('APP 横向标签定位帧 ' + (Date.now() - t1) + 'ms → ' + target)
+        })
+      }, 32)
+    },
+    /** APP 正式包内查看 [perf] 日志：长按顶部标题栏/设备卡区域打开 */
+    openPerfLog() {
+      if (!ENABLE_IN_APP_PERF_LOG) return
+      this.perfLogLines = getPerfLogs(this.logFilter)
+      this.showPerfLog = true
+    },
+    closePerfLog() {
+      this.showPerfLog = false
+    },
+    refreshPerfLog() {
+      this.perfLogLines = getPerfLogs(this.logFilter)
+    },
+    /** 只看连接/权限/WiFi 日志，或看全部（含 [perf] 性能日志） */
+    toggleLogFilter() {
+      this.logFilter = this.logFilter === 'all' ? 'connect' : 'all'
+      this.refreshPerfLog()
+    },
+    copyPerfLog() {
+      // 现场排障要的是完整时间线，复制始终取全量，不受当前筛选影响
+      const all = getPerfLogs('all').join('\n')
+      if (!all) {
+        uni.showToast({ title: '暂无日志', icon: 'none' })
+        return
+      }
+      uni.setClipboardData({
+        data: all,
+        success: () => uni.showToast({ title: '日志已复制', icon: 'none' }),
+        fail: () => uni.showToast({ title: '复制失败', icon: 'none' })
+      })
+    },
+    clearPerfLogView() {
+      clearPerfLogs()
+      this.perfLogLines = []
+    },
+    /** 日志面板里直达系统权限页：现场把「附近的设备」改成「允许」后返回即自动重试 */
+    openPermissionFromLog() {
+      const ok = openPermissionSettings()
+      if (!ok) {
+        uni.showToast({
+          title: '请到系统设置里把「附近的设备」设为允许',
+          icon: 'none'
+        })
       }
     },
+
+    /**
+     * 连接失败后延迟判定是否弹权限引导：先给底层自动重连一点时间，
+     * 几秒后仍离线且「疑似权限受限」才打扰用户，避免首连偶发超时就弹框。
+     */
+    _schedulePermissionGuide() {
+      // #ifdef APP-PLUS
+      if (this._permGuideTimer) clearTimeout(this._permGuideTimer)
+      this._permGuideTimer = setTimeout(() => {
+        this._permGuideTimer = null
+        if (this._unloaded || this._paused) return
+        if (this.connected && this.client && this.client.connected) return
+        this._maybeGuidePermission()
+      }, 4000)
+      // #endif
+    },
+    _maybeGuidePermission() {
+      // #ifdef APP-PLUS
+      const p = getLastPermissionResult() || {}
+      // 「附近的设备」是国产 ROM 聚合开关，没有公开 API 可查，只能用间接判据：
+      // 标准权限缺失 / 权限状态未知 / 被永久拒绝 / 读不到热点名称。
+      const wifiUnknown = !this._lastWifiStatus || this._lastWifiStatus === 'unknown'
+      const suspect = (p.missing && p.missing.length > 0) ||
+        p.unknown === true || p.permanentlyDenied === true || wifiUnknown
+      return showPermissionGuide({
+        suspect,
+        isActive: () => !this._unloaded && !this._paused
+      })
+      // #endif
+      // #ifndef APP-PLUS
+      return false
+      // #endif
+    },
+
     /** 底部主导航切换：监测 / 设置 */
     switchBottomTab(type) {
       if (this.bottomTab === type) return
@@ -1220,15 +1833,10 @@ export default {
         return
       }
       // 跨组切换时标签条内容整体换一批（监测 0~4/10 ↔ 设置 5~9/11）。
-      // 若保留 scroll-with-animation，旧滚动位置会带动画滑向新标签 —— 观感就是“推片”。
-      // 先关掉动画瞬时定位，再把动画恢复给同组内的点击。
-      this.tabScrollAnim = false
-      if (this._tabAnimTimer) clearTimeout(this._tabAnimTimer)
-      this._tabAnimTimer = setTimeout(() => {
-        this._tabAnimTimer = null
-        this.tabScrollAnim = true
-      }, 260)
+      // 横向定位已统一为无动画瞬时跳转（见模板），这里只需换组，
+      // 不再用定时器反复翻动画开关 —— 那两次 setData 正好落在切换帧上。
       this.bottomTab = type
+      // 设置面板首次进入后常驻，切回监测只翻 display，不再排队销毁
       // 跳到对应组的首个子 tab
       this.switchTab(type === 'monitor' ? 0 : 5)
     },
@@ -1250,8 +1858,9 @@ export default {
           this.config = {
             enabled: !!cfg.enabled,
             protocol: 'mqtt',
-            deviceType: cfg.deviceType || '20kW',
+            deviceType: cfg.deviceType || '50kW',
             deviceName: cfg.deviceName || '',
+            wifiSsid: cfg.wifiSsid || '',
             ip: cfg.ip || '',
             port: cfg.port || '1883',
             brokerUrl,
@@ -1267,6 +1876,93 @@ export default {
         console.error('加载直连配置失败:', e)
       }
     },
+    /**
+     * 底层连接/下发异常会带 Broker / MQTT / TCP / WebSocket / Topic 等协议术语，
+     * 用户看不懂：界面统一换成「下一步该做什么」的提示，原始错误只写控制台。
+     * 不含术语的错误（如数值越界）原样返回，便于现场定位。
+     */
+    friendlyErrorText(err, fallback) {
+      const raw = String((err && err.message) || err || '').trim()
+      if (!raw) return fallback || '请稍后重试'
+      console.warn('[直连] 原始错误：', raw)
+      if (/broker|mqtt|tcp|websocket|topic|主题|0x[0-9a-f]/i.test(raw)) {
+        return fallback || '请稍后重试'
+      }
+      return raw
+    },
+    /**
+     * 连接设备前的 WiFi 前置检查。
+     * - 已在 GCNZ 设备热点上 → 直接走原来的 start()
+     * - 连的是别的 WiFi → 用本地保存的热点名称/密码尝试自动重连，成功再 start()
+     * - 自动重连失败 / 没有凭据 → 标记 wifiBlocked（设备卡显示状态）并弹窗引导
+     * - 读不到当前 WiFi（定位权限未授 / 平台限制）→ 放行，绝不误报把用户卡住
+     *
+     * 从系统 WiFi 设置返回时 onShow 静默重试（guide=false），不重复弹窗；
+     * 用户主动点刷新则忽略冷却时间，强制再试一次自动连接。
+     */
+    async startWithWifiCheck(options = {}) {
+      if (!this.config.enabled) return
+      // onLoad 的 nextTick 与 onShow 可能几乎同时触发；检测是异步的，
+      // 不加锁会并发发起两次自动连接、弹两个引导框。
+      if (this.connecting || this._wifiChecking) return
+      // 在线时不需要检测：切后台回来 / 点刷新都不该反复读 SSID
+      if (this.connected && this.client && this.client.connected) return
+
+      this._wifiChecking = true
+      let res
+      try {
+        // 卸载重装后运行时权限被清空：先做一次自检与主动申请。
+        // 带 2.5s 超时保底，用户不点系统授权框也继续连接，绝不拦截流程。
+        // #ifdef APP-PLUS
+        await ensureDevicePermissions()
+        // #endif
+        // 异步授权期间页面可能已退出 / 切后台，回来时 onShow 会重新检测
+        if (this._unloaded || this._paused) return
+        res = await ensureDeviceWifi({
+          autoConnect: true,
+          guide: options.guide !== false,
+          forceConnect: !!options.forceConnect,
+          ssid: this.config.wifiSsid || '',
+          // 检测是异步的，页面可能已退出或切后台；此时工具里不再弹窗 / loading
+          isActive: () => !this._unloaded && !this._paused
+        })
+      } finally {
+        this._wifiChecking = false
+      }
+      // 异步返回时页面可能已卸载（弹窗没关就返回上一页）或已切后台，
+      // 不要再改本页状态、不要再发起连接；回来时 onShow 会重新检测。
+      if (this._unloaded || this._paused) return
+      // 供连接失败时判定「是否疑似权限受限」：读不到热点名称（unknown）时，
+      // 国产 ROM 把「附近的设备」设为禁止是最常见的原因。
+      this._lastWifiStatus = res && res.status
+      if (!res.ok) {
+        this.wifiBlocked = true
+        this._wifiBlocked = true
+        return
+      }
+      this.wifiBlocked = false
+      this._wifiBlocked = false
+      return this.start()
+    },
+    /**
+     * 只在直连页仍可见时弹提示。
+     * APP 端 uni.showToast 是应用级浮层，页面销毁 / 切后台后不会自动消失；
+     * 异步连接失败若照常弹，提示会残留在登录页等无关页面上。
+     */
+    _showDirectToast(title, duration) {
+      if (this._unloaded || this._paused) return
+      this._ownToastAt = Date.now()
+      const opts = { title, icon: 'none' }
+      if (duration) opts.duration = duration
+      uni.showToast(opts)
+    },
+    /** 页面离开时只清掉自己刚弹的浮层（3s 内），避免误伤其它页面的提示 */
+    _clearOwnToast() {
+      if (this._ownToastAt && Date.now() - this._ownToastAt < 3000) {
+        this._ownToastAt = 0
+        try { uni.hideToast() } catch (e) {}
+      }
+    },
     async start() {
       if (!this.config.enabled) return
       this.errorMsg = ''
@@ -1274,8 +1970,17 @@ export default {
       try {
         await this.startMqtt()
       } catch (e) {
-        this.errorMsg = e.message || '连接失败'
-        uni.showToast({ title: this.errorMsg, icon: 'none' })
+        const text = this.friendlyErrorText(e, '设备没有响应，请检查 WiFi 连接')
+        this.errorMsg = text
+        this._schedulePermissionGuide()
+        // 原始错误只进控制台；异步失败时页面可能已退出，绝不能弹到别的页面上。
+        // 同一文案 8s 内只提示一次，避免自动重连循环反复刷新同一个 toast。
+        console.warn('[直连] 连接失败:', text)
+        const now = Date.now()
+        if (!this._lastConnectErrorToastAt || now - this._lastConnectErrorToastAt > 8000) {
+          this._lastConnectErrorToastAt = now
+          this._showDirectToast(text)
+        }
       } finally {
         this.connecting = false
       }
@@ -1288,11 +1993,8 @@ export default {
       this.connected = false
       // 清空所有 bucket（保留 50kW bucket key，下次 MQTT 重连时能正确识别新协议）
       this.resetRawValues()
-      this.formattedValues = {
-        archDeviceCounts: { dljQuantity: 0, cdzQuantity: 0, lightQuantity: 0, unknownDeviceQuantity: 0 },
-        archSocNumeric: 0,
-        archStorageStatusGradient: '#8c8c8c'
-      }
+      rtStore.resetFormatted()
+      this._rebuildActiveRv()
       this.displayItems = []
       this.groupedDisplay = []
       this._deviceCountsComputed = false
@@ -1313,6 +2015,18 @@ export default {
     // ============ MQTT 路径 ============
     async startMqtt() {
       await this.connectMqtt()
+      // 首连超时/失败时 connectMqtt 已吞掉错误，底层会按退避策略自动重连。
+      // 此时 client.connected=false，继续订阅只会抛「设备连接已断开」，被 start()
+      // 当成用户可见错误弹成 toast。APP 端 toast 是应用级浮层，页面退出后仍会
+      // 残留在登录页等无关页面上（且每次重连都会再弹一次，看起来「一直显示」）。
+      // 这里静默跳过，订阅统一交给 onConnect 在连接真正建立后补。
+      if (!this.client || !this.client.connected) {
+        console.warn('[直连] 连接尚未建立，等待自动重连后补订阅')
+        // 给底层自动重连一点时间；几秒后仍没连上且判定疑似权限受限，
+        // 再弹「去设置允许」引导，避免首连偶发超时就打扰用户。
+        this._schedulePermissionGuide()
+        return
+      }
       await this.subscribeMqttTopics()
       // MQTT 推流模式：连接后无需主动拉取，等模拟器定时 publish
       // initSettingsParams 已在 onLoad 执行，这里仅同步实时值
@@ -1349,12 +2063,41 @@ export default {
       this.client.onError = (err) => {
         console.warn('MQTT error:', err.message)
       }
-      await this.client.connect()
-      this.connected = true
-      // MQTT 重新连上：清空旧数据（可能来自上一次连接的不同 broker），等新帧到了再填
-      this.resetRawValues()
-      this.updateDisplay()
-      this.rebuildFormattedValues()
+      // 连接/重连成功回调：CONNACK 0 时触发（含客户端自动重连成功那一次）。
+      // 首连超时被 reject 后 start() 的 await 已结束，客户端会继续按退避策略自动重连，
+      // 只有在这里才能把 UI 切回「在线」——否则头部一直显示离线，而数据实际已经在跑。
+      this.client.onConnect = () => {
+        const wasOffline = !this.connected
+        this.connected = true
+        this.connecting = false
+        this.errorMsg = ''
+        // 已连上就撤掉待弹的权限引导（首连超时后自动重连成功属于正常恢复）
+        if (this._permGuideTimer) {
+          clearTimeout(this._permGuideTimer)
+          this._permGuideTimer = null
+        }
+        if (wasOffline) {
+          // 首次连上/断线重连：清空旧数据（可能来自上一次连接的不同 broker），等新帧到了再填
+          this.resetRawValues()
+          this.updateDisplay()
+          this.rebuildFormattedValues()
+        }
+        // 底层自动重连（含首连超时后自行重连的那一次）不重建 MqttDirectClient，
+        // connectionSeq 不变，但旧订阅已随 socket 销毁。强制重订阅，
+        // 否则会出现「头部显示在线、一帧数据都收不到」。
+        this._subscribedSeq = null
+        this.subscribeMqttTopics().catch(e => {
+          console.warn('[直连] 连接建立后订阅失败:', e && e.message)
+        })
+      }
+      try {
+        await this.client.connect()
+      } catch (e) {
+        // 首连失败不终结流程：客户端自动重连，成功后上面的 onConnect 会把头部切回在线
+        console.warn('[MQTT] 首连失败，等待自动重连:', e.message)
+        return
+      }
+      // （数据清空/回显刷新已在 onConnect 回调里统一处理）
       // 激活直连模式——只有真正连上 MQTT 才打激活标记
       try {
         uni.setStorageSync('direct_device_activated', true)
@@ -1362,6 +2105,8 @@ export default {
       } catch (e) { }
     },
     async subscribeMqttTopics() {
+      // onConnect 与 startMqtt 可能在同一条连接上并发进来，加锁避免重复注册 handler
+      if (this._subscribing || this._unloaded) return
       const realtimeTopic = this.config.realtimeTopic
       const controlTopic = this.config.controlSetTopic
       const c = this.client
@@ -1372,17 +2117,22 @@ export default {
         console.log('[MQTT] 该连接已订阅过，跳过重复订阅 seq=' + c.connectionSeq)
         return
       }
-      console.log('[MQTT] 订阅主题: realtime=' + realtimeTopic + ' control=' + controlTopic)
-      c.setTopics({
-        realtime: realtimeTopic,
-        controlSet: controlTopic,
-        controlResp: controlTopic
-      })
-      await c.subscribeAll({
-        onRealtime: (payloadStr, topic, payloadBytes) => this.handleMqttRealtime(payloadStr, payloadBytes),
-        onControlResp: (payloadStr, topic, payloadBytes) => this.handleMqttControlResp(payloadStr, topic, payloadBytes)
-      })
-      this._subscribedSeq = c.connectionSeq
+      this._subscribing = true
+      try {
+        console.log('[MQTT] 订阅主题: realtime=' + realtimeTopic + ' control=' + controlTopic)
+        c.setTopics({
+          realtime: realtimeTopic,
+          controlSet: controlTopic,
+          controlResp: controlTopic
+        })
+        await c.subscribeAll({
+          onRealtime: (payloadStr, topic, payloadBytes) => this.handleMqttRealtime(payloadStr, payloadBytes),
+          onControlResp: (payloadStr, topic, payloadBytes) => this.handleMqttControlResp(payloadStr, topic, payloadBytes)
+        })
+        this._subscribedSeq = c.connectionSeq
+      } finally {
+        this._subscribing = false
+      }
     },
     /**
      * 处理 MQTT 实时数据 payload
@@ -1416,7 +2166,6 @@ export default {
 
         if (realBytes && isIemsBinaryFrame(realBytes)) {
           // console.log('[MQTT] 收到 IEMS 状态帧, 长度=' + realBytes.length + ' 字节')
-          // lastUpdate 不在这里写：每秒多帧都改会让页头文案跟着重渲染，统一在 flush 里更新
           this.applyIemsFrame(realBytes)
           return
         }
@@ -1481,10 +2230,12 @@ export default {
       return result
     },
     _applyJsonRealtime(data) {
+      // 模拟器 JSON 帧同样算一次上报，页头时钟跟着走
+      rtStore.markFrame()
       const fields = data.fields || {}
       const rawDt = (data.deviceType || '171C').toUpperCase()
       const deviceType = this._normalizeDeviceType(rawDt, data.address)
-      if (!this.rawValues[deviceType]) this.rawValues[deviceType] = {}
+      if (!this._rawStore[deviceType]) this._rawStore[deviceType] = Object.freeze({})
 
       const bucket = this.rawValues[deviceType]
       const batch = {}
@@ -1519,11 +2270,13 @@ export default {
       // 上千个键的数组分配 × 每秒多帧，纯属浪费。
       if (this._has50KwData) return true
       const rv = this.rawValues || {}
-      const keys = ['1707', '170C_STORAGE', '170C_PV', '171C_V2', '171C_V2_1', '171C_V2_2', '171C_V2_3', '171C_V2_4']
+      const keys = KW50_BUCKETS
       for (let i = 0; i < keys.length; i++) {
         const b = rv[keys[i]]
         if (b && Object.keys(b).length > 0) {
           this._has50KwData = true
+          // 同步到响应式标量：is50KwMode / tab 分组 / 设置模板随即翻转一次
+          this.has50KwMode = true
           return true
         }
       }
@@ -1544,8 +2297,115 @@ export default {
       if (dt.startsWith('171C')) return '171C_V2'
       return ''
     },
+    /**
+     * APP 专用：判断本帧是否与上一次同类型帧的业务数据完全一致。
+     *
+     * 为什么能安全地「跳过解析」：设备 8~10 帧/s 反复上报同一组寄存器，
+     * 帧尾只有时间戳 / CRC 变化。协议解析的输出只取决于
+     *   deviceType(帧[1..2]) + address(帧[5]) + dataType(帧[7])
+     *   + startAddr(帧[8]) + payload(帧[9..9+datacount-2])
+     * 这几段完全相同 ⇒ parsed.data 必然相同 ⇒ 跳过不会丢任何值。
+     * 每 2s 强制放行一次，保证协议判定、控制帧回显、状态刷新等副作用照常触发。
+     *
+     * 只比较字节，不建对象（除一个分桶快照），因此本身几乎不制造 GC 压力。
+     * @returns {boolean} true = 本帧可跳过
+     */
+    _shouldSkipDuplicateFrame(frameBytes) {
+      if (!frameBytes || frameBytes.length < 11) return false
+      const now = Date.now()
+      const headLen = Math.min(frameBytes.length,
+        9 + Math.max(0, (frameBytes[6] || 0) - 2))
+      // 帧头 9 字节全部纳入签名（frameType / deviceType / factorySign /
+      // address / datacount / dataType / startAddr），杜绝跨设备或跨帧型碰撞
+      let sig = ''
+      for (let i = 0; i < 9; i++) sig += frameBytes[i] + ','
+      const cache = this._frameDupCache || (this._frameDupCache = {})
+      if (this._frameDupCacheSize === undefined) this._frameDupCacheSize = 0
+      const rec = cache[sig]
+      let same = !!rec && rec.arr.length === headLen
+      if (same) {
+        for (let i = 0; i < headLen; i++) {
+          if (rec.arr[i] !== frameBytes[i]) { same = false; break }
+        }
+      }
+      const forceParse = !rec || now - rec.at >= 2000
+      if (same && !forceParse) {
+        this._perfDupFrames = (this._perfDupFrames || 0) + 1
+        return true
+      }
+      const snap = new Array(headLen)
+      for (let i = 0; i < headLen; i++) snap[i] = frameBytes[i]
+      if (!rec) this._frameDupCacheSize++
+      cache[sig] = { arr: snap, at: now }
+      // 分桶种类异常增长（协议切换 / 多设备扫描）时清空，避免缓存无限膨胀
+      if (this._frameDupCacheSize > 64) {
+        this._frameDupCache = {}
+        this._frameDupCacheSize = 0
+      }
+      return false
+    },
+    /**
+     * APP 专用：10s 聚合诊断日志（由「收帧」驱动，而不是「提交」驱动）。
+     *
+     * 为什么必须挪出 _commitStaged()：APP_SKIP_DUPLICATE_FRAMES 把重复帧短路后，
+     * 静止设备可能连续十几秒都没有 hasNewValue，scheduleFrameFlush 不会触发、
+     * _commitStaged 也不会执行，挂在提交里的聚合日志会整段消失——恰好看不到
+     * 「跳过重复帧」这个用于验收本轮优化的关键指标。
+     * 改为每帧一次时间比较（8~10 次/s，纯数值比较，不建对象、不碰响应式数据），
+     * 只要还在收帧就一定按窗口出日志；断流时不出日志也符合预期。
+     */
+    _maybePerfReport(now) {
+      if (!this._perfAt) { this._perfAt = now; return }
+      const secs = Math.round((now - this._perfAt) / 1000)
+      if (secs < 10) return
+      const frames = this._perfFrames || 0
+      const commits = this._perfCommits || 0
+      const dup = this._perfDupFrames || 0
+      // APP(Android) plus.android 轮询读 TCP 的桥调用量：小程序走事件回调，这里恒为 0，
+      // 因此无需条件编译——有值就追加，没值就不出现，不影响已验证流畅的小程序路径。
+      // 11:08 日志已定量确认根因：桥读≈4000/s 而 TCP轮询仅 1~19/s ⇒ 单次 readLoop
+      // 连做几千次同步桥调用，是秒级同步长任务，把切 tab 的 patch 整段吞掉。
+      // 长任务切片后验收看两项：单片最长 ≤128B、长任务=0；桥读总量不会下降。
+      let tcpText = ''
+      if (tcpReadStats && (tcpReadStats.polls || tcpReadStats.reads)) {
+        tcpText = '，TCP轮询=' + Math.round(tcpReadStats.polls / secs) + '/s' +
+          '，桥读=' + Math.round(tcpReadStats.reads / secs) + '/s' +
+          '，单片最长=' + (tcpReadStats.maxPerTick || 0) + 'B' +
+          '，长任务=' + (tcpReadStats.longTasks || 0)
+        tcpReadStats.polls = 0
+        tcpReadStats.reads = 0
+        tcpReadStats.bytes = 0
+        tcpReadStats.chunks = 0
+        tcpReadStats.maxPerTick = 0
+        tcpReadStats.longTasks = 0
+      }
+      perfLog(secs + 's：收帧 ' + frames + '（' +
+        Math.round(frames / secs) + '/s），跳过重复帧 ' + dup +
+        '，实际解析 ' + Math.max(0, frames - dup) +
+        '，提交 ' + commits +
+        ' 次，平均提交 ' + ((this._perfBuildMs || 0) / Math.max(1, commits)).toFixed(1) +
+        'ms，常驻面板=' + this.mountedTabs.length + '，tab=' + this.currentTab +
+        '，有变化=' + (this._perfHasChanged ? '是' : '否') + tcpText)
+      this._perfAt = now
+      this._perfFrames = 0
+      this._perfCommits = 0
+      this._perfBuildMs = 0
+      this._perfDupFrames = 0
+      this._perfHasChanged = false
+    },
     applyIemsFrame(frameBytes) {
+      // 页头「更新」按真实收帧打点（同一秒多帧只通知一次，且只刷新设备卡一个文本）。
+      // 放在 APP 重复帧过滤之前：帧被去重只是渲染优化，设备确实又上报了一次，
+      // 稳态数值不变时时间戳也必须继续走。与 800ms 合并 / 1.5s 提交节流完全解耦。
+      rtStore.markFrame()
+      // #ifdef APP-PLUS
+      // 放在自增之前：窗口切换时本帧计入新窗口，不丢计数
+      this._maybePerfReport(Date.now())
+      // #endif
       this._perfFrames = (this._perfFrames || 0) + 1
+      // #ifdef APP-PLUS
+      if (APP_SKIP_DUPLICATE_FRAMES && this._shouldSkipDuplicateFrame(frameBytes)) return
+      // #endif
       try {
         // 50kW 微能站：新协议与旧协议共用同一设备类型码（170C/171C），
         // 必须显式指定协议模块，否则会落到 170C_000A / 171C_000A 旧布局上解析错位
@@ -1553,7 +2413,7 @@ export default {
         const parsed = parseIemsFrame(frameBytes, protocolKey ? { protocolKey } : undefined)
         const rawDt = (parsed.deviceType || '171C').toUpperCase()
         const deviceType = this._normalizeDeviceType(rawDt, parsed.address)
-        if (!this.rawValues[deviceType]) this.rawValues[deviceType] = {}
+        if (!this._rawStore[deviceType]) this._rawStore[deviceType] = Object.freeze({})
         if (parsed._dataTypeNum === IEMS_DATA_TYPE.DEVICEINFO) return
 
         const map = getRegisterMap(deviceType)
@@ -1600,11 +2460,39 @@ export default {
           : dataTypeNum === IEMS_DATA_TYPE.STATE ? 'S_'
           : dataTypeNum === IEMS_DATA_TYPE.CONTROL ? 'C_' : ''
 
+        // 170C 状态区长期显示「当前 --」时，用这条日志区分三种情况：
+        //   ① 根本没有 dataType=0x03 的行 → 设备未上报状态帧；
+        //   ② 有 0x03 但 startAddr>0 / B8/B10 缺失 → 分段上报或地址错位；
+        //   ③ 有 0x03 且 B8/B10 齐全 → 问题在展示层取数。
+        // 按「设备+帧型」10s 聚合一次，正式包不会刷屏。
+        if (deviceType === '170C_PV' || deviceType === '170C_STORAGE') {
+          const logKey = deviceType + '/' + dataTypeNum
+          const nowTs = Date.now()
+          if (!this._dcFrameLog) this._dcFrameLog = {}
+          if (!this._dcFrameLog[logKey] || nowTs - this._dcFrameLog[logKey] > 10000) {
+            this._dcFrameLog[logKey] = nowTs
+            const ks = Object.keys(data)
+            const st = ks.filter(k => /^B8|^B10/.test(k)).slice(0, 12)
+            // console.log('[170C] ' + logKey +
+            //   ' frameType=0x' + (parsed._frameTypeNum || 0).toString(16) +
+            //   ' addr=' + parsed.address +
+            //   ' startAddr=' + (parsed._startAddrNum || 0) +
+            //   ' payload=' + (parsed.payload ? parsed.payload.length : 0) +
+            //   ' fields=' + ks.length +
+            //   ' B8/B10=' + (st.join(',') || '(无)') +
+            //   ' prefix=' + (keyPrefix || 'none') +
+            //   ' protocol=' + (protocolKey || 'auto'))
+          }
+        }
+
         const batch = {}
         let hasNewValue = false
-        Object.keys(data).forEach(field => {
+        // 用 for...in 代替 Object.keys().forEach：每帧少建一个数组和一个闭包，
+        // 8~10 帧/s 累积下来同样是 GC 压力。data 恒为解析器新建的普通对象字面量，
+        // 原型链上无可枚举属性，遍历结果与 Object.keys 完全一致。
+        for (const field in data) {
           const v = data[field]
-          if (v === undefined || v === null) return
+          if (v === undefined || v === null) continue
           const storeKey = keyPrefix + field
           batch[storeKey] = v
           // 寄存器号别名仅对未加前缀的键（ENERGY/旧协议）生成，避免污染 reg 号索引
@@ -1612,7 +2500,7 @@ export default {
             batch[fieldToReg[field]] = v
           }
           if (bucket[storeKey] !== v) hasNewValue = true
-        })
+        }
 
         if (hasNewValue) {
           // ⚡ 性能关键：设备每秒上报多路帧，这里不再同步写 rawValues / 重建显示值，
@@ -1720,37 +2608,34 @@ export default {
       if (!onSettings) {
         // 50kW 的监测 tab 全部直接读 rawValues（BMS/PCS/储能DC/光伏/液冷），只有「概览」用
         // formattedValues；20kW 旧协议各 tab 仍走 formattedValues。
-        // 以前不分模式每次都格式化上千个键，等于给没人读的对象白做一轮响应式写入。
         const needFv = !this.is50KwMode || this.currentTab === 0
         if (needFv) {
+          const archOnly = this.currentTab === 0
+          // 概览只算 arch*（30 来个键）；其它 tab 只重建本次有变化的当前设备桶。
+          // 不再把 171F 的几百个 `171F_B{n}` 键塞进 formattedValues ——
+          // 没有任何模板读它们，却每轮都要参与 diff / setData 序列化。
           const cur = this.currentDeviceType
-          const visible = types.filter(t => t === '171F' || t === cur)
-          if (visible.indexOf('171F') === -1) visible.push('171F')
-          this._applyFormattedValues(this._buildFormattedValues(visible))
+          const visible = archOnly ? [] : types.filter(t => t === cur)
+          this._applyFormattedValues(this._buildFormattedValues(visible, archOnly))
         }
       }
-      // 3) 设置面板参数回显：只在设置 tab 可见时同步
-      if (onSettings) this.syncSettingsFromRealtime()
-      // 「最后更新 16:24:30」这行文案一到点就要整页重渲染一次（页面 data 里有 rawValues /
-      // 参数树，diff 一遍不便宜），4s 刷一次足够看出在线，没必要跟着每次提交走
-      if (!this._lastUpdateAt || now - this._lastUpdateAt >= 4000) {
-        this._lastUpdateAt = now
-        this.lastUpdate = now
-      }
-      // 诊断：每 10 秒一行。卡顿时先看这行：收帧正常而提交耗时长 → 瓶颈在面板渲染；
-      // 收帧很少 → 瓶颈在解析/映射。
+      // 3) 设置面板参数回显：本次确实提交了新值时确保回显心跳在跑。
+      //    实际回显由 _startSettingsEchoLoop 的 1s 心跳统一驱动，不再靠
+      //    「帧值变化」这一偶发条件——稳态上报时只读态也必须显示当前值。
+      //    没有新帧的那几轮不会把几百项参数树过一遍。
+      if (onSettings && changed) this.syncSettingsFromRealtime()
+      // 「更新」时间戳不在这里写：它已在 applyIemsFrame 按收帧打点，由 DeviceCard
+      // 自己订阅帧时钟刷新。这里只管数据提交（1.5s 节流），两者互不牵连。
+      // 诊断计数：APP 的 10s 聚合日志由 applyIemsFrame → _maybePerfReport 输出（收帧驱动），
+      // 这里只负责累加；否则重复帧被短路、长时间无提交时日志会整段消失。
       this._perfFrames = this._perfFrames || 0
       this._perfCommits = (this._perfCommits || 0) + 1
-      this._perfBuildMs = (this._perfBuildMs || 0) + (now - t0)
-      if (!this._perfAt) this._perfAt = now
-      if (now - this._perfAt >= 10000) {
-        const secs = Math.max(1, Math.round((now - this._perfAt) / 1000))
-        console.log('[perf] ' + secs + 's：收帧 ' + this._perfFrames + '（' +
-          Math.round(this._perfFrames / secs) + '/s），提交 ' + this._perfCommits +
-          ' 次，平均提交 ' + (this._perfBuildMs / Math.max(1, this._perfCommits)).toFixed(1) +
-          'ms，tab=' + this.currentTab + '，有变化=' + (changed ? '是' : '否'))
-        this._perfAt = now; this._perfFrames = 0; this._perfCommits = 0; this._perfBuildMs = 0
-      }
+      this._perfBuildMs = (this._perfBuildMs || 0) + (Date.now() - t0)
+      if (changed) this._perfHasChanged = true
+      // #ifndef APP-PLUS
+      // 小程序维持原「提交驱动」的诊断节奏，已验证流畅的路径一行不改
+      this._maybePerfReport(now)
+      // #endif
     },
     /**
      * 写入「暂存区」（非响应式）。收帧再频繁也只是几次属性赋值，
@@ -1764,45 +2649,63 @@ export default {
     },
     /**
      * 把暂存区提交进 rawValues（唯一触发渲染的地方）。
-     * 不用整对象替换：171C 主机 224 字段、四台阈值从机各 176 字段，`{...old, ...batch}`
-     * 每次新建上千键对象，Vue2 要逐键 defineProperty。这里值相同跳过、已有键直接赋值
-     * （只通知真正变化的键）、新键用 $set，新键很多（首帧/控制帧第一次到）时才整体替换。
+     *
+     * ⚡ 整桶替换 + 冻结：桶是 Object.freeze 的普通对象，Vue2 不会给它内部字段
+     *    建 getter/setter，于是没有上千个 Dep，也没有逐键 dep.notify。
+     *    一次提交只改 rawValues[dt] 这一个顶层键（一次 setter / 一次通知），
+     *    子组件依赖这一层即可在换桶时重算。值完全没变的桶连这一步都跳过。
+     *    代价是每次提交序列化一个几百键的桶（约十几 KB），远小于原来
+     *    「上千次响应式通知 + 整棵 vdom 深层 diff」。
      * @returns {boolean} 是否有值真的变了
      */
     _commitStaged() {
       const stage = this._stage
-      if (!stage) return false
+      if (!stage) {
+        this._lastChangedTypes = []
+        return false
+      }
       this._stage = {}
-      const rv = this.rawValues
-      let changed = false
+      const rv = this._rawStore || (this._rawStore = {})
+      const changedTypes = []
       for (const dt in stage) {
         const src = stage[dt]
-        const bucket = rv[dt]
-        if (!bucket) {
-          this.$set(rv, dt, Object.assign({}, src))
-          changed = true
-          continue
-        }
+        const bucket = rv[dt] || {}
         const keys = Object.keys(src)
-        let newKeys = 0
+        let diff = false
         for (let i = 0; i < keys.length; i++) {
-          if (!(keys[i] in bucket)) newKeys++
+          if (bucket[keys[i]] !== src[keys[i]]) { diff = true; break }
         }
-        if (newKeys > 8) {
-          rv[dt] = Object.assign({}, bucket, src)
-          changed = true
-          continue
-        }
-        for (let i = 0; i < keys.length; i++) {
-          const k = keys[i]
-          const v = src[k]
-          if (bucket[k] === v) continue
-          if (k in bucket) bucket[k] = v
-          else this.$set(bucket, k, v)
-          changed = true
-        }
+        if (!diff) continue
+        // 普通对象赋值：不触发任何响应式通知，也不进 setData
+        rv[dt] = Object.freeze(Object.assign({}, bucket, src))
+        changedTypes.push(dt)
       }
-      return changed
+      this._lastChangedTypes = changedTypes
+      if (changedTypes.length) {
+        // 一次版本号递增 → 所有依赖 rawValues 的非渲染类 computed 重算
+        this.storeVer++
+        // 兜底：协议判定标记与 is50KwMode 保持同步。
+        // is50KwMode 现在只读标量（不能再扫描 rawValues，否则父模板会依赖 storeVer），
+        // 正常由 _use50KwProtocol() 在解析时置位；这里防止有写入路径绕过它。
+        if (!this.has50KwMode) {
+          for (let i = 0; i < changedTypes.length; i++) {
+            if (KW50_BUCKETS.indexOf(changedTypes[i]) !== -1) {
+              this._has50KwData = true
+              this.has50KwMode = true
+              break
+            }
+          }
+        }
+        // 只有变化的桶属于当前 tab 才重建快照。设备多台、帧分散到达时，
+        // 别的设备的帧不应把当前面板整片重刷一遍（这是实时态卡顿的放大器）。
+        const needed = TAB_BUCKETS[this.currentTab] || []
+        let relevant = false
+        for (let i = 0; i < changedTypes.length; i++) {
+          if (needed.indexOf(changedTypes[i]) !== -1) { relevant = true; break }
+        }
+        if (relevant) this._rebuildActiveRv()
+      }
+      return changedTypes.length > 0
     },
     handleMqttStatus(payloadStr) {
       try {
@@ -1847,7 +2750,10 @@ export default {
               if (ctrlFrame.registers) {
                 const changes = Object.entries(ctrlFrame.registers).map(([field, newValue]) => ({ field, newValue }))
                 changes.forEach(c => this._applyControlChange(c))
-                uni.showToast({ title: '指令已生效', icon: 'success' })
+                // 回显照常同步，但只有确有待应答的下发才提示「已生效」
+                if (changes.length && this._shouldHintControlAck()) {
+                  uni.showToast({ title: '指令已生效', icon: 'success' })
+                }
               }
             } catch (e) {
               // console.warn('[MQTT CONTROL RESP] parseIemsControlFrame 失败:', e.message)
@@ -1857,7 +2763,9 @@ export default {
                 const changes = this._extractRegisterChangesFromFrame(frame)
                 if (changes.length > 0) {
                   changes.forEach(c => this._applyControlChange(c))
-                  uni.showToast({ title: '指令已生效', icon: 'success' })
+                  if (this._shouldHintControlAck()) {
+                    uni.showToast({ title: '指令已生效', icon: 'success' })
+                  }
                 }
               } catch (e2) {
                 console.warn('[MQTT CONTROL RESP] parseIemsFrame fallback 失败:', e2.message)
@@ -1866,10 +2774,12 @@ export default {
             return
           }
 
-          // 0x17 = COMMON_STATUS（实时数据帧，设备收到控制后在同一 topic 上回发当前状态）
-          // 0x07 = DEVICE_REPORT / 0x18 = PROJECT_REGISTER
+          // 0x17 = COMMON_STATUS / 0x07 = DEVICE_REPORT / 0x18 = PROJECT_REGISTER
+          // 以前这里直接 return，假设 realtime topic 一定会同时收到同一帧。现场若设备
+          // 只在控制 topic 回状态帧，0x03 就被整帧丢掉，170C「机器运行状态」长期全灰。
+          // 转交实时解析链路写入 bucket（同一帧两路都收到时由 _forwardRespStateFrame 去重）。
           if (ft === 0x17 || ft === 0x07 || ft === 0x18) {
-            // console.log('[MQTT CONTROL RESP] 收到状态帧 0x' + ft.toString(16) + ' (realtime handler 也会收到)')
+            this._forwardRespStateFrame(bytes)
             return
           }
 
@@ -1890,22 +2800,31 @@ export default {
       if (payloadBytes && payloadBytes.length >= 9) {
         const ft = payloadBytes[0]
         if (ft === 0x16) {
+          // 与 hex 路径一样先剔除本机回环帧（二进制形态），否则自己发的帧会被当成设备应答
+          let binHex = ''
+          for (let i = 0; i < payloadBytes.length; i++) {
+            binHex += payloadBytes[i].toString(16).padStart(2, '0')
+          }
+          if (this._isOwnControlEcho(binHex.toUpperCase())) {
+            console.log('[MQTT CONTROL RESP] 忽略本机回环帧(二进制): ' + binHex.slice(0, 80))
+            return
+          }
           try {
             const ctrlFrame = parseIemsControlFrame(payloadBytes)
             if (ctrlFrame && ctrlFrame.registers) {
-              Object.entries(ctrlFrame.registers)
+              const changes = Object.entries(ctrlFrame.registers)
                 .map(([field, newValue]) => ({ field, newValue }))
-                .forEach(c => this._applyControlChange(c))
-              uni.showToast({ title: '指令已生效', icon: 'success' })
+              changes.forEach(c => this._applyControlChange(c))
+              if (changes.length && this._shouldHintControlAck()) {
+                uni.showToast({ title: '指令已生效', icon: 'success' })
+              }
             }
             return
           } catch (e) { /* fallthrough */ }
         }
         if (ft === 0x17 || ft === 0x07 || ft === 0x18) {
-          try {
-            const frame = parseIemsFrame(payloadBytes)
-            if (frame) return
-          } catch (e) { /* fallthrough */ }
+          this._forwardRespStateFrame(payloadBytes)
+          return
         }
       }
 
@@ -1927,6 +2846,44 @@ export default {
         this._ctlWarnAt = nowTs
         this._ctlWarnCount = 0
       }
+    },
+    /**
+     * 控制 topic 上回发的 0x03 状态帧 / 0x04 控制帧也要进实时仓库。
+     * 只对这两类帧转发，避免把控制应答的普通杂帧算进收帧统计；
+     * 同一帧被 realtime / controlResp 两路都收到时按整帧 hex 去重，
+     * 即便重复进入，applyIemsFrame 的 hasNewValue 也会短路，不会多触发渲染。
+     */
+    _forwardRespStateFrame(bytes) {
+      if (!bytes || bytes.length < 9) return
+      const dt = bytes[7]
+      if (dt !== 0x03 && dt !== 0x04) return
+      let key = ''
+      for (let i = 0; i < bytes.length; i++) key += bytes[i].toString(16).padStart(2, '0')
+      if (key === this._lastRespFrameHex) return
+      this._lastRespFrameHex = key
+      try {
+        this.applyIemsFrame(bytes)
+      } catch (e) {
+        console.warn('[MQTT CONTROL RESP] 状态帧转交实时解析失败:', e && e.message)
+      }
+    },
+    /**
+     * 是否允许为这条 0x16 应答弹「指令已生效」。
+     * 门槛：本机在 CONTROL_ACK_WINDOW_MS 内确实下发过指令，且这次下发还没提示过。
+     * client._lastControlAt / _lastControlHex 由 sendControl / sendControlBatch 在 publish 时写入，
+     * 组合 token 保证「一次下发最多提示一次」；设备周期性控制回读帧、订阅时的 retained 帧
+     * 都没有对应的下发动作，一律静默。
+     * 注意：回显（_applyControlChange）不受此限制，控制寄存器状态仍照常同步。
+     */
+    _shouldHintControlAck() {
+      const c = this.client
+      const sentAt = c && c._lastControlAt
+      if (!sentAt) return false
+      if (Date.now() - sentAt > CONTROL_ACK_WINDOW_MS) return false
+      const token = sentAt + '|' + (c._lastControlHex || '')
+      if (this._lastControlAckToken === token) return false
+      this._lastControlAckToken = token
+      return true
     },
     /**
      * 判断是否是本机刚下发的控制帧（同 topic 订阅回环）
@@ -2033,10 +2990,12 @@ export default {
       }
     },
     syncParamFromResp(params, data) {
+      let changed = false
       params.forEach(p => {
         // 组合卡里待下发的本地改动优先，别被回执刷掉
         if (p._pending) return
         if (p.field === data.field && data.newValue !== undefined) {
+          changed = true
           const raw = data.newValue
           p.currentValue = raw
           if (p.options) {
@@ -2051,6 +3010,7 @@ export default {
           }
         }
       })
+      if (changed) this._bumpEcho()
     },
     syncAllParamsFromResp(data) {
       SETTINGS_PANELS.forEach(cfg => {
@@ -2059,37 +3019,73 @@ export default {
     },
     reconnect() {
       this.stop()
-      this.start()
+      this.startWithWifiCheck()
     },
     onDisconnect() {
       this.stop()
-      uni.showToast({ title: '已断开连接', icon: 'none' })
+      this._showDirectToast('已断开连接')
     },
     async manualRefresh() {
       if (this.connecting) return
       if (!this.connected) {
-        await this.start()
+        // 用户主动点刷新：忽略冷却时间再试一次自动连接，并重新给出引导
+        await this.startWithWifiCheck({ guide: true, forceConnect: true })
         return
       }
-      // MQTT 推流模式：数据自动到达，无需主动刷新
-      uni.showToast({ title: 'MQTT 推流模式，数据自动到达', icon: 'none' })
+      // 设备数据主动上报，无需手动刷新；提示文案面向用户，不出现协议术语
+      // uni.showToast({ title: '监测数据自动更新，无需手动刷新', icon: 'none' })
     },
     // ============ 设置面板方法 ============
 
     initSettingsParams() {
-      SETTINGS_PANELS.forEach(cfg => this._clonePanelParams(cfg))
+      // 由 onLoad 的空闲帧预热调用（currentTab watcher 里还有兜底）。
+      // 按当前判定的协议模板初始化；若预热时帧还没到而判成 20kW，
+      // _doSyncSettingsFromRealtime 里的协议切换分支会自动整体重建。
+      const has50Kw = this.is50KwMode
+      const panels = has50Kw ? SETTINGS_PANELS_50KW : SETTINGS_PANELS
+      panels.forEach(cfg => this._clonePanelParams(cfg))
+      this.settingsProtocol = has50Kw ? '50kw' : '20kw'
+      this._bumpEcho()
       this.syncSettingsFromRealtime()
     },
     syncSettingsFromRealtime() {
-      // 节流：设置面板 1s 合并更新一次。
-      // 数值设定（告警阈值 / 温控）根本不需要秒级刷新，而每次同步都要遍历几百项参数，
-      // 写回显字段 → 小程序要重新 diff 一遍参数树。以前 500ms 一次（实际上是 0ms 空转，
-      // 见 _doSyncSettingsFromRealtime 的注释），是设置页持续卡顿的主要来源之一。
+      // 只要当前在设置组，就确保回显心跳在跑；心跳负责「只读态也持续有实时值」。
+      // 心跳在跑时不再另排节流定时器，避免一秒里同步两次。
+      this._startSettingsEchoLoop()
+      if (this._settingsEchoTimer) return
+      // 非设置组（连接成功 / 预热时的调用）：保留原来的一次性节流同步。
+      // 数值设定（告警阈值 / 温控）不需要秒级刷新，每次同步都要遍历几百项参数，
+      // 写回显字段 → 小程序要重新 diff 一遍参数树；1s 合并一次即可。
       if (this._syncSettingsTimer || this._inSettingsSync) return
       this._syncSettingsTimer = setTimeout(() => {
         this._syncSettingsTimer = null
         this._doSyncSettingsFromRealtime()
-      }, 1000)
+      }, SETTINGS_ECHO_INTERVAL_MS)
+    },
+    /**
+     * 设置组可见期间的回显心跳。
+     *
+     * 以前回显只由「帧提交且值有变化」或「点『修改』进入编辑态」触发：设备稳态上报、
+     * APP 重复帧短路、切 tab 时恰好没有待执行定时器，都会让只读态一直停在初始 '--'，
+     * 用户看到的就是「设置页没有实时数据，只有点修改才有」。
+     *
+     * 心跳只在设置组且页面可见时运行，切回监测页 / 页面隐藏立即停；
+     * _syncSettingsCore 有原始值快照快路径 + 只在值变化时 notifyParamChange，
+     * 稳态下只是几百次普通对象查找，不写值、不触发任何渲染。
+     */
+    _startSettingsEchoLoop() {
+      if (this._settingsEchoTimer || this._unloaded || this._paused) return
+      if (!this.currentSettingsTab) return
+      this._settingsEchoTimer = setInterval(() => {
+        if (this._unloaded || this._paused || !this.currentSettingsTab) return
+        this._doSyncSettingsFromRealtime()
+      }, SETTINGS_ECHO_INTERVAL_MS)
+    },
+    _stopSettingsEchoLoop() {
+      if (this._settingsEchoTimer) {
+        clearInterval(this._settingsEchoTimer)
+        this._settingsEchoTimer = null
+      }
     },
     /** 按面板配置深克隆一份参数数组（重置回显值），供协议切换 / 自愈复用 */
     _clonePanelParams(cfg) {
@@ -2099,10 +3095,15 @@ export default {
         ...p,
         currentValue: null,
         currentLabel: hasOptions ? '--' : undefined,
-        currentText: hasOptions ? undefined : '--'
+        currentText: hasOptions ? undefined : '--',
+        // 协议切换 / 面板重建时清掉上一套参数的乐观显示残留
+        _optUntil: 0,
+        _optValue: undefined,
+        _optLabel: undefined,
+        _optText: undefined,
+        _optTimer: null
       }))
-      // 数组被整体替换 → 映射容器指向新数组（引用变化只发生在协议切换/初始化这一次）
-      this.paramsMapRef = this._buildParamsMap()
+      // 数组整体替换已由不可枚举 setter 写进 paramStore，不再需要重建响应式映射。
       // 回显用的两个缓存必须一起清：候选键依赖协议模式（100 段 / 331 段），
       // 原始值快照依赖参数集合，不清会把上一套参数的判断结果套到新参数上
       this._candCache = {}
@@ -2186,8 +3187,14 @@ export default {
       return arr
     },
     _syncSettingsCore() {
-      // 设置面板读的是 rawValues：先把暂存帧合并进来，保证回显用的是最新帧
-      this.flushPendingFramesNow()
+      // ⚡ 不在设置 tab 时直接返回：参数模板与回显只对当前设置面板有意义，
+      //    监测态跑它等于每轮把几百项参数树填进 data 再被深拷贝一遍。
+      if (!this.currentSettingsTab) return
+      // ⚡ 这里不再 force flush。以前「800ms flush → 排 1s 同步 → 同步里又 force flush
+      //    → force flush 又排一次同步 …」形成自激循环，即使一帧新数据都没有，
+      //    也在每秒把几百项参数全量遍历一遍。现在回显直接读上一次提交的值
+      //    （最多滞后一次显示提交，数值设定类参数本就是慢变量）。
+      //    真正要保证读到最新值的入口（切 tab / 编辑 / 下发）各自调 flushPendingFramesNow()。
       // 50kW 判定：配置页选择 50kW，或已收到新协议 bucket 数据
       const has50Kw = this.is50KwMode
       const rv = this.rawValues || {}
@@ -2202,7 +3209,9 @@ export default {
         const hasCtlFrame = Object.keys(bmsBucket).some(k => k.indexOf('C_') === 0)
         if (hasAnyFrame && !hasCtlFrame && !this._bmsCtlTipShown) {
           this._bmsCtlTipShown = true
-          uni.showToast({ title: 'BMS 未上报控制帧（0x04），温控参数暂不可读', icon: 'none', duration: 2600 })
+          // 协议层细节只进日志，不给用户看「控制帧 / 0x04」这类术语
+          console.warn('[settings] 171C_V2 未收到 0x04 控制帧（bucket 无 C_ 键），温控参数不可读')
+          uni.showToast({ title: '暂时读不到温控参数，请稍后重试', icon: 'none', duration: 2600 })
         }
       }
 
@@ -2210,16 +3219,19 @@ export default {
       // 检测到 50kW 后必须整体重建，否则永远显示 20kW 参数
       const targetProtocol = has50Kw ? '50kw' : '20kw'
       const sourcePanels = has50Kw ? SETTINGS_PANELS_50KW : SETTINGS_PANELS
+      let rebuilt = false
       if (this.settingsProtocol !== targetProtocol) {
         sourcePanels.forEach(cfg => this._clonePanelParams(cfg))
         this.settingsProtocol = targetProtocol
+        rebuilt = true
       }
       // 自愈：任何面板数组为空都按当前协议模板补一次
       // （协议切换时序、页面重进等情况下漏初始化会让设置页整页空白，这里兜住）
       sourcePanels.forEach(cfg => {
         const arr = this[cfg.dataKey]
-        if (!arr || arr.length === 0) this._clonePanelParams(cfg)
+        if (!arr || arr.length === 0) { this._clonePanelParams(cfg); rebuilt = true }
       })
+      if (rebuilt) this._bumpEcho()
 
       // 只同步「当前设置 tab 真正用到的数组」。
       // 以前每次同步都把 9 个面板全遍历一遍（BMS 367 项 + PCS/光伏/储能/液冷上百项），
@@ -2230,6 +3242,8 @@ export default {
       const panels = sourcePanels.filter(c => needKeys.indexOf(c.dataKey) !== -1)
       // 原始值快照：值没变就整项跳过（见下面快路径）
       const seenCache = this._paramSeen || (this._paramSeen = {})
+      // 参数对象已非响应式：只有确实写回了新值，才递增一次版本号通知面板重渲染
+      let echoChanged = false
 
       panels.forEach(cfg => {
         const params = this[cfg.dataKey]
@@ -2288,38 +3302,86 @@ export default {
           }
           // 只在真的变了才写：BMS 数值设定有 367 项，每秒无条件赋值 700 多次
           // 会白白触发一轮响应式通知（小程序里就是一层层 setData）
-          if (p.currentValue !== nextValue) p.currentValue = nextValue
-          if (p.currentText !== nextText) p.currentText = nextText
+          if (p.currentValue !== nextValue) { p.currentValue = nextValue; echoChanged = true }
+          if (p.currentText !== nextText) { p.currentText = nextText; echoChanged = true }
           if (p.options) {
             // 位命令：帧上报单比特 0/1，选项值为 0x00000000/0x00010000，先归一化再匹配
             const matchRaw = p.bitHex ? (Number(raw) ? '0x00010000' : '0x00000000') : raw
             const opt = p.options.find(o => String(o.value) === String(matchRaw))
             const nextLabel = opt ? opt.label : (raw !== undefined ? String(raw) : '--')
-            if (p.currentLabel !== nextLabel) p.currentLabel = nextLabel
-            if (p.bitHex && p.currentValue !== matchRaw) p.currentValue = matchRaw
+            if (p.currentLabel !== nextLabel) { p.currentLabel = nextLabel; echoChanged = true }
+            if (p.bitHex && p.currentValue !== matchRaw) { p.currentValue = matchRaw; echoChanged = true }
           } else {
             // 记下这次的原始值 + 落库值，下次同步就能用快路径直接跳过
             seenCache[seenKey] = { raw: raw, v: nextValue }
           }
         })
       })
+      // 一次同步哪怕改了 300 项，也只通知一次；面板自己重渲染，父页面不参与
+      if (echoChanged) this._bumpEcho()
+    },
+    /**
+     * 参数树已移出响应式，值写回后必须显式通知，SettingsPanel 才会重渲染。
+     * 这是「参数对象 → 渲染层」的唯一通知出口，所有写 currentValue/currentText/
+     * currentLabel/_pending 的地方都要调用一次（同步侧已合并成一次）。
+     */
+    _bumpEcho() {
+      notifyParamChange()
+    },
+    /**
+     * 设置项显示层：下发后的 3s 乐观窗口内读 _opt*（刚下发的值），其余时间读实时回读值。
+     * 不直接改 currentValue / currentLabel / currentText 的原因：
+     *   1) 实时帧不被污染，设备在这 3s 内回读的新值会原样留在 currentValue 上；
+     *   2) 回显心跳、控制回读帧一行都不用动，3s 到期自动就是最新实时值，
+     *      设备不上报时也不会一直假显示下发值。
+     * 三个 getter 只调模块级纯函数（见上方注释），不碰 this。
+     */
+    /** 下发成功后挂 3s 乐观显示；到期清标记并通知面板重读实时值 */
+    _holdOptimistic(p, value, label, text) {
+      if (!p || this._unloaded) return
+      if (p._optTimer) { clearTimeout(p._optTimer); p._optTimer = null }
+      p._optValue = value
+      p._optLabel = label
+      p._optText = text
+      p._optUntil = Date.now() + SETTINGS_OPTIMISTIC_MS
+      p._optTimer = setTimeout(() => {
+        p._optTimer = null
+        p._optUntil = 0
+        p._optValue = undefined
+        p._optLabel = undefined
+        p._optText = undefined
+        if (this._unloaded) return
+        // 参数树非响应式：必须显式通知，面板才会重新调用 getter 读实时值
+        this._bumpEcho()
+      }, SETTINGS_OPTIMISTIC_MS)
+      this._bumpEcho()
     },
     getParamCurrentValue(p) {
-      return p.currentValue
+      return paramDisplayValue(p)
     },
     /** 模板辅助：通过 dataKey 动态获取参数数组（小程序模板不支持 this[变量]） */
     getParams(dataKey) {
       return this[dataKey] || []
+    },
+    /**
+     * 切 tab 时把所有设置分组的编辑开关复位，按钮统一回到初始「修改」。
+     * 只写当前为 true 的项：稳态下零响应式写入，不给切换帧增加渲染负担。
+     */
+    _resetEditingOnTabChange() {
+      for (let i = 0; i < SETTINGS_EDIT_KEYS.length; i++) {
+        const k = SETTINGS_EDIT_KEYS[i]
+        if (this[k]) this[k] = false
+      }
     },
     /** 模板辅助：通过 editKey 动态获取编辑状态 */
     isEditing(editKey) {
       return !!this[editKey]
     },
     getParamCurrentLabel(p) {
-      return p.currentLabel || '--'
+      return paramDisplayLabel(p)
     },
     getParamCurrentText(p) {
-      return p.currentText || '--'
+      return paramDisplayText(p)
     },
     toggleEdit(editKey) {
       // editKey 从子组件事件传回，万一取不到（事件桥丢参）就退回当前 tab 的 editKey，
@@ -2330,9 +3392,11 @@ export default {
       }
       if (!key) return
       this[key] = !this[key]
-      console.log('[SettingsPanel] 编辑态切换:', key, '=', this[key])
       if (this[key]) {
-        this.syncSettingsFromRealtime()
+        // 进入编辑态前把暂存帧落库：编辑/下发读的必须是最新一帧
+        this.flushPendingFramesNow()
+        // 立即回显一次，不再等 1s 节流定时器（点「修改」当帧就能看到当前值）
+        this._doSyncSettingsFromRealtime()
       }
     },
     /**
@@ -2525,7 +3589,7 @@ export default {
         await this.client.sendControlBatch(bundle.commands, deviceType)
         return { ok: true, fallbacks: bundle.fallbacks }
       } catch (e) {
-        uni.showModal({ title: '下发失败', content: e.message || '请重试', showCancel: false })
+        uni.showModal({ title: '下发失败', content: this.friendlyErrorText(e, '设备连接已断开，请重新连接后重试'), showCancel: false })
         return { ok: false }
       }
     },
@@ -2539,6 +3603,7 @@ export default {
       p.currentValue = opt.value
       p.currentLabel = opt.label
       p._pending = true
+      this._bumpEcho()
       console.log('[BUNDLE] 本地选择:', p.label, '=', opt.label, '（待下发）')
     },
     /** 组合卡：本地改数值（只弹输入框，不下发） */
@@ -2568,6 +3633,7 @@ export default {
           p.currentValue = newVal
           p.currentText = this.formatValue(newVal, p.decimals !== undefined ? p.decimals : 1)
           p._pending = true
+          this._bumpEcho()
           console.log('[BUNDLE] 本地改值:', p.label, '=', p.currentText, p.unit || '', '（待下发）')
         }
       })
@@ -2604,6 +3670,7 @@ export default {
           (this.quickPowerParams || []).find(x => x.key === k)
         if (p) p._pending = false
       })
+      this._bumpEcho()
     },
     async onSwitchParamClick(payload, legacyOpt) {
       // 门禁放最前：未点「修改」时连解析都不做，直接提示
@@ -2628,7 +3695,8 @@ export default {
         uni.showToast({ title: '设备未连接', icon: 'none' })
         return
       }
-      if (String(p.currentValue) === String(opt.value)) {
+      // 用「显示值」判断：3s 乐观窗口内用户看到的就是刚下发的值，重复点同一项直接提示
+      if (String(paramDisplayValue(p)) === String(opt.value)) {
         this.showOpToast = true
         this.opToast = `${p.label} 当前已是“${opt.label}”`
         setTimeout(() => { this.showOpToast = false }, 2000)
@@ -2677,13 +3745,13 @@ export default {
           console.log('===========================================')
 
           await this.client.sendControl(sendField, sendValue, deviceType, overrides)
-          // Optimistic update：本地立即更新，设备回显后再校准
-          p.currentValue = opt.value
-          p.currentLabel = opt.label
-          // 脉冲型命令（故障复位/启动/停机…）：值只在动作瞬间有效，
-          // 1.2s 后本地回落到「不执行」，否则会一直亮着「执行」，且再次点击会被
-          // 「当前已是 执行」的守卫拦掉，导致无法重复下发。
           if (p.pulse && p.options) {
+            // 脉冲型命令（故障复位/启动/停机…）保持原行为：值只在动作瞬间有效，
+            // 1.2s 后本地回落到「不执行」，否则会一直亮着「执行」，且再次点击会被
+            // 「当前已是 执行」的守卫拦掉，导致无法重复下发。这类项不进 3s 乐观窗口。
+            p.currentValue = opt.value
+            p.currentLabel = opt.label
+            this._bumpEcho()
             const idle = p.options.find(o => String(o.value) === '0')
             if (idle) {
               if (p._pulseTimer) clearTimeout(p._pulseTimer)
@@ -2691,14 +3759,20 @@ export default {
                 p.currentValue = idle.value
                 p.currentLabel = idle.label
                 p._pulseTimer = null
+                this._bumpEcho()
               }, 1200)
             }
+          } else {
+            // 3s 乐观显示：期间「当前 xxx」与分段按钮高亮保持刚下发的值；
+            // 不写 currentValue/currentLabel，实时回读值继续由回显帧维护，
+            // 3s 到期后 getter 自动回落到最新实时值（设备已回读就是新值）。
+            this._holdOptimistic(p, opt.value, opt.label)
           }
           this.opToast = `已下发：${p.label} - ${opt.label}`
           this.showOpToast = true
           setTimeout(() => { this.showOpToast = false }, 2500)
         } catch (e) {
-          uni.showModal({ title: '下发失败', content: e.message || '请重试', showCancel: false })
+          uni.showModal({ title: '下发失败', content: this.friendlyErrorText(e, '设备连接已断开，请重新连接后重试'), showCancel: false })
         }
       }
 
@@ -2787,11 +3861,12 @@ export default {
               const scaled = rawVal / (p.scale || 1) + (p.offset || 0)
               p.currentValue = scaled
               p.currentText = this.formatValue(scaled, p.decimals !== undefined ? p.decimals : 1)
+              this._bumpEcho()
               this.opToast = `${p.label}已修改为 ${p.currentText}${p.unit ? ' ' + p.unit : ''}`
               this.showOpToast = true
               setTimeout(() => { this.showOpToast = false }, 2500)
             } catch (e) {
-              uni.showModal({ title: '下发失败', content: e.message || '请重试', showCancel: false })
+              uni.showModal({ title: '下发失败', content: this.friendlyErrorText(e, '设备连接已断开，请重新连接后重试'), showCancel: false })
             }
           }
         }
@@ -2822,22 +3897,35 @@ export default {
     'HarmonyOS Sans', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
   color: #17202e;
   -webkit-font-smoothing: antialiased;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  /* ⚡ 页面级滚动：不再写死 100vh + overflow:hidden。滚动交给 WebView 原生页面滚动，
+     不占 setData 通道，也没有原生 scroll-view 每次重算几千节点滚动区域的开销。 */
+  min-height: 100vh;
+  /* 给吸底导航留位置，避免最后一张卡片被盖住 */
+  padding-bottom: 132rpx;
+  padding-bottom: calc(132rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(132rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* ⚡ 吸顶头：navbar + 设备卡 + 标签栏作为一个整体吸顶。
+   sticky 在页面滚动时由 WebView 合成，不产生独立原生 frame，
+   所以不会出现旧实现里 scroll-view 原生层滞后一帧的白色残影。
+
+   ⚠️ 必须给 z-index：页面级滚动下，后面的 .connected-view 是普通流内容，
+   一旦里面的卡片带了自身层叠上下文（阴影/圆角/border），滚动经过吸顶头时
+   就会绘制在它之上 —— 现象是「往上划时概览卡片盖住导航栏，只剩蓝色设备卡
+   和 tab 栏露出来」。这里的 z-index 是 sticky 正常工作的必要条件，
+   和旧实现「原生 scroll-view 的合成层残影」不是同一个问题，不会复发残影。 */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #f4f6f9;
 }
 
 .connected-view {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-  position: relative;
-  /* 用 calc 明确高度，让内部 flex 子元素能正确分配空间 */
-  /* 100vh - fixed-placeholder(~69px) - DeviceCard(~120px) - 给 20px 余量 */
-  height: calc(100vh - 209px);
+  /* 页面级滚动后不再需要 flex 高度约束，内容自然撑开 */
+  width: 100%;
 }
 
 /* ========== 标签栏（分段控件式） ==========
@@ -2849,11 +3937,9 @@ export default {
 .tab-container {
   flex-shrink: 0;
   background-color: #f4f6f9;
-  padding: 10rpx 0 14rpx;
+  padding: 0rpx 0 14rpx;
   border-bottom: none;
   box-shadow: none;
-  position: relative;
-  z-index: 2;
 }
 
 .tab-scroll {
@@ -2888,7 +3974,7 @@ export default {
   flex: 0 0 auto;
   text-align: center;
   padding: 12rpx 18rpx;
-  font-size: 26rpx;
+  font-size: 28rpx;
   line-height: 1.25;
   letter-spacing: 0.4rpx;
   color: #5f6a79;
@@ -2897,7 +3983,6 @@ export default {
   border: none;
   border-radius: 999rpx;
   white-space: nowrap;
-  transition: color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
 
   /* 监测组标题较短：等分宽度铺满 */
   &.tab-monitor {
@@ -2909,8 +3994,10 @@ export default {
     margin-left: 4rpx;
   }
 
+  /* 点击反馈只改背景色：opacity / transform 会把元素提升为合成层，
+     微信渲染层在切 tab 那一帧提升合成层就会留下白色残影 */
   &:active {
-    opacity: 0.7;
+    background: #eef4ff;
   }
 
   /* 激活态：轨道内的主色滑块。
@@ -2923,6 +4010,12 @@ export default {
     background: #2f7cf6;
     box-shadow: 0 2rpx 5rpx rgba(20, 32, 52, 0.14);
   }
+}
+
+/* 静态渲染的两组标签：不属于当前组的用 display:none 隐藏，
+   切换组时节点不增删，避免整批重建造成的空轨道 */
+.tab-item.tab-hidden {
+  display: none;
 }
 
 /* 空状态：白色卡片承载，与全站卡片风格保持一致 */
@@ -2949,14 +4042,14 @@ export default {
   }
 
   .empty-text {
-    font-size: 32rpx;
+    font-size: 34rpx;
     font-weight: 500;
     color: #2b2f36;
   }
 
   .empty-sub {
     margin-top: 14rpx;
-    font-size: 24rpx;
+    font-size: 28rpx;
     line-height: 1.6;
     color: #8a9099;
     text-align: center;
@@ -2974,23 +4067,25 @@ export default {
   align-items: center;
   padding: 80rpx 40rpx;
   color: #8a9099;
-  font-size: 26rpx;
+  font-size: 28rpx;
 }
 
-/* swiper content area */
+/* 数据区：普通流，不再撑满剩余高度，由页面整体滚动 */
 .content-area {
-  flex: 1;
   width: 100%;
-  min-height: 0;
-  position: relative;
   background: #f4f6f9;
-  z-index: 1;
-  overflow: hidden;
 }
 
 /* ========== 底部主导航 tab：监测 / 设置 ========== */
 .bottom-tabbar {
-  flex-shrink: 0;
+  /* 页面级滚动：吸底导航改为 fixed，始终停在视口底部。
+     z-index 必须高于内容流：否则滚动到底时最后一张卡片会盖住吸底栏。
+     与吸顶头同为 100，两者分居上下、没有重叠区域，不会互相遮挡。 */
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   background-color: #ffffff;
   border-top: 1rpx solid #eef0f4;
@@ -2998,8 +4093,6 @@ export default {
   /* iOS 安全区适配 */
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);
-  position: relative;
-  z-index: 2;
 }
 
 .bottom-tab-item {
@@ -3010,11 +4103,11 @@ export default {
   justify-content: center;
   height: 88rpx;
   gap: 2rpx;
-  transition: all 0.25s ease;
 
+  /* 不用 transform / opacity：点「监测/设置」的瞬间提升合成层，
+     会连带上方 navbar 与设备卡片出现一帧白色残影 */
   &:active {
-    opacity: 0.7;
-    transform: scale(0.96);
+    background: #f4f6f9;
   }
 
   /* 激活态：图标加浅色底，文字加粗并转主色 */
@@ -3037,48 +4130,77 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s ease;
 }
 
 .bottom-tab-label {
-  font-size: 22rpx;
+  font-size: 27rpx;
   line-height: 1;
   letter-spacing: 0.4rpx;
   color: #8a94a1;
 }
 
+/* 数据容器：普通 view + 页面级滚动。面板挂载后靠 panel-hidden class 缓存，只有一块可见。 */
 .module-scroll {
-  height: 100%;
-  min-height: 0;
-  touch-action: pan-y;
-  /* 显式底色：面板创建/切换的瞬间若还没画内容，露出的是与标签栏一致的浅灰，
-     而不是微信默认的白色块（之前那种“白一块”的观感就是底色透出来的） */
+  width: 100%;
+  min-height: 100rpx;
+  box-sizing: border-box;
+  /* 显式底色：切 tab 的瞬间若还没画内容，露出的是浅灰而非默认白块 */
   background: #f4f6f9;
+}
+.panel-slot {
+  display: block;
+  width: 100%;
+  /* CSS containment：把每块面板声明为独立的布局根。
+     7 块面板常驻 DOM 时，任意一块 display:none ↔ block 都可能让 webview
+     重算整页布局（sticky 头、吸底栏、页面滚动高度全部跟着过一遍）。
+     contain:layout 告诉浏览器这块子树内部怎么排都不影响外部兄弟节点，
+     重排范围收敛到面板自身。老内核不支持时该声明被忽略，退回原行为。 */
+  contain: layout style;
+}
+/* ⚡ 面板可见性：不能用 v-show。
+   微信小程序平台把 v-show 编译成 `hidden` 属性，而 `hidden` 的 display:none
+   会被元素上任意 CSS `display` 规则（如 .panel-slot{display:block}）覆盖，
+   导致所有面板永远显示、切 tab 内容不切换。改用 class 切换，特异性高于
+   .panel-slot，MP / APP 双端都可靠生效。 */
+.panel-slot.panel-hidden {
+  display: none;
+}
+
+/* 未挂载面板占位：点击帧里先顶住高度，真正的挂载在下帧完成，避免「点一下冻住」 */
+.panel-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.sk-spinner {
+  width: 56rpx;
+  height: 56rpx;
+  border: 5rpx solid #e3e8ef;
+  border-top-color: #2f7cf6;
+  border-radius: 50%;
+  animation: sk-rotate 0.8s linear infinite;
+}
+
+.sk-text {
+  margin-top: 20rpx;
+  font-size: 27rpx;
+  color: #9aa4b1;
+  letter-spacing: 0.5rpx;
+}
+
+@keyframes sk-rotate {
+  to { transform: rotate(360deg); }
 }
 
 .content {
   /* 与 DeviceCard 的 20rpx 外边距对齐 */
   padding: 20rpx;
-}
-
-/* 设置面板两阶段挂载时的骨架：与真实面板同尺寸的浅色块，
-   只画一帧，代价接近 0，避免点按后出现空白/推片 */
-.sp-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 18rpx;
-}
-.sp-skeleton-hero {
-  height: 106rpx;
-  border-radius: 20rpx;
-  background: #ffffff;
-  border: 1rpx solid #eceff4;
-}
-.sp-skeleton-card {
-  height: 220rpx;
-  border-radius: 20rpx;
-  background: #ffffff;
-  border: 1rpx solid #eceff4;
+  padding-top: unset;
 }
 
 /* 设置区兜底提示（配置未命中时也要有可见内容，不能白屏） */
@@ -3103,14 +4225,14 @@ export default {
 }
 
 .settings-placeholder-text {
-  font-size: 27rpx;
+  font-size: 28rpx;
   font-weight: 500;
   color: #6b7480;
 }
 
 .settings-placeholder-sub {
   margin-top: 10rpx;
-  font-size: 22rpx;
+  font-size: 27rpx;
   color: #a8b1bd;
   text-align: center;
 }
@@ -3143,27 +4265,105 @@ export default {
   }
 
   &:active {
-    opacity: 0.9;
-    transform: scale(0.98);
+    background: #2770e0;
   }
 }
 
-/* 平台占位 */
-.sub-page {
-  .fixed-placeholder {
-    height: calc(25px + 44px);
-  }
-
-  &.android-platform {
-    .fixed-placeholder { height: calc(25px + 44px + 20px); }
-  }
-
-  &.ios-platform {
-    .fixed-placeholder { height: calc(44px); background: #fff; }
-  }
-}
+/* 平台占位：已删除。
+   导航栏改为流内后不再需要手写 placeholder。旧的 iOS 分支只有 44px 且自带白底，
+   与 header 实际 103px 严重不符，白色块就是从这个差值里漏下去盖住设备卡片的。
+   platformClass 仅保留给后续平台差异化样式使用。 */
 
 /* ========== 设置面板样式 ========== */
 /* ========== 确认弹窗 ========== */
 /* ========== 操作反馈 Toast ========== */
+
+/* ========== APP 内 [perf] 日志面板（默认不渲染，仅长按顶部区域时显示） ========== */
+.perf-log-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  /* 不用半透明遮罩：全屏 rgba 层会让底层每次 display 翻转都触发整屏混合，
+     开着面板切 tab 时反而会把测量的耗时放大。改成透明 + 卡片投影。 */
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.perf-log-card {
+  width: 92%;
+  background: #ffffff;
+  border: 1rpx solid #dfe3e9;
+  border-radius: 16rpx;
+  box-shadow: 0 12rpx 48rpx rgba(16, 24, 38, 0.28);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.perf-log-head {
+  padding: 20rpx 24rpx 16rpx;
+  border-bottom: 1rpx solid #e8ebf0;
+}
+
+.perf-log-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #17202e;
+}
+
+.perf-log-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin-top: 18rpx;
+}
+
+.perf-log-btn {
+  font-size: 26rpx;
+  color: #2f7cf6;
+  padding: 8rpx 22rpx;
+  margin-right: 16rpx;
+  margin-bottom: 10rpx;
+  border: 1rpx solid #d6e2fb;
+  border-radius: 8rpx;
+}
+
+.perf-log-close {
+  color: #6b7280;
+  border-color: #dfe3e9;
+}
+
+.perf-log-body {
+  height: 56vh;
+  padding: 8rpx 20rpx;
+}
+
+.perf-log-line {
+  padding: 10rpx 0;
+  border-bottom: 1rpx solid #f0f2f5;
+}
+
+.perf-log-text {
+  font-size: 23rpx;
+  line-height: 1.5;
+  color: #333b47;
+  word-break: break-all;
+}
+
+.perf-log-empty {
+  padding: 48rpx 0;
+  text-align: center;
+}
+
+.perf-log-tip {
+  font-size: 22rpx;
+  color: #9099a6;
+  padding: 14rpx 24rpx;
+  border-top: 1rpx solid #e8ebf0;
+}
 </style>

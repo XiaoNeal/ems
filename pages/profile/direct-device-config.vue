@@ -1,6 +1,6 @@
 <template>
   <view class="sub-page" :class="platformClass">
-    <DyNavbar title="设备直连配置" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :placeholder="true"
+    <DyNavbar title="连接设备" :titleStyle="{ 'color': fontColor, 'width': '100%' }" :placeholder="true"
       :leftIconColor="fontColor"></DyNavbar>
     <view class="fixed-placeholder"></view>
 
@@ -12,28 +12,39 @@
         </view>
         <view class="hero-info">
           <view class="hero-title-row">
-            <text class="hero-title">MQTT 直连</text>
+            <text class="hero-title">本地连接</text>
             <view class="hero-badge">
               <view class="hero-pulse-dot"></view>
               <text class="hero-badge-text">已启用</text>
             </view>
           </view>
-          <text class="hero-desc">填写设备 IP 后即可直连监测</text>
+          <text class="hero-desc">连上设备 WiFi，即可进入监测</text>
         </view>
       </view>
     </view>
 
-    <!-- 扫码连 WiFi -->
+    <!-- 扫码连 WiFi：隐藏设备类型/地址后，这是本页唯一的主操作，
+         用大卡片承载，整块仍是同一个点击入口（handleScanWifi 未改）。 -->
     <view class="scan-bar">
-      <view class="scan-btn" @click="handleScanWifi">
-        <uni-icons type="scan" size="22" color="#007AFF" />
-        <text class="scan-btn-text">扫码连接 WiFi</text>
-        <uni-icons type="right" size="14" color="#c9cdd4" />
+      <view class="scan-card" @click="handleScanWifi">
+        <view class="scan-icon-wrap">
+          <uni-icons type="scan" size="36" color="#007AFF" />
+        </view>
+        <view class="scan-content">
+          <text class="scan-title">扫码连接 WiFi</text>
+          <text class="scan-desc">扫描设备二维码，自动连接</text>
+        </view>
+        <view class="scan-action">
+          <text class="scan-action-text">立即扫码</text>
+          <uni-icons type="right" size="14" color="#fff" />
+        </view>
       </view>
     </view>
 
 
-    <!-- MQTT 参数 -->
+    <!-- 型号由 WiFi 名称确定、设备地址现场固定，这两块不再对用户显示。
+         需要现场调试时把 data 里的 showAdvancedFields 改成 true 即可恢复。 -->
+    <block v-if="showAdvancedFields">
     <view class="section">
       <view class="section-title">
         <text class="title-bar"></text>
@@ -45,7 +56,7 @@
           <view class="form-item item-block">
             <view class="form-label-row">
               <uni-icons type="settings" size="14" color="#86909c" />
-              <text class="form-label">选择微能量站型号</text>
+              <text class="form-label">选择微能站型号</text>
             </view>
             <view class="device-type-chips">
               <view
@@ -53,11 +64,17 @@
                 :key="t.value"
                 class="dt-chip"
                 :class="{ active: form.deviceType === t.value }"
-                @click="form.deviceType = t.value"
+                @click="pickDeviceType(t.value)"
               >
                 <text class="dt-chip-title">{{ t.label }}</text>
                 <text class="dt-chip-desc">{{ t.desc }}</text>
               </view>
+            </view>
+            <!-- 识别结果可见：便于现场核对 WiFi 名称与自动选中的型号。
+                 用户手动点过型号后不再显示，避免提示与实际选中态矛盾。 -->
+            <view v-if="wifiAutoHint && !userPickedType" class="wifi-hint">
+              <uni-icons type="wifi" size="13" color="#007AFF" />
+              <text class="wifi-hint-text">{{ wifiAutoHint }}</text>
             </view>
           </view>
         </view>
@@ -106,9 +123,10 @@
       <!-- 默认参数说明 -->
       <view class="defaults-info">
         <uni-icons type="info" size="13" color="#86909c" />
-        <text class="defaults-text">仅需填写 IP 和端口，主题等参数使用默认值</text>
+        <text class="defaults-text">只需填写设备地址和端口，其他参数已默认配好</text>
       </view>
     </view>
+    </block>
 
     <!-- 操作码 -->
     <view class="section">
@@ -148,13 +166,15 @@
       </view>
     </view>
 
-    <!-- 底部操作栏 -->
+    <!-- 底部操作栏：用户不需要「测试连接」，只保留一个满宽的「进入监测」主按钮。
+         footer-actions 是 flex 容器，btn-primary 的 flex:1.6 在单子元素下自然占满整行，
+         样式无需改动。测试按钮与方法原样保留在 showTestButton 后面，现场排障时可恢复。 -->
     <view class="footer-actions">
       <button class="btn btn-primary" @click="handleEnter" hover-class="btn-hover">
         <uni-icons type="power" size="18" color="#fff" />
         <text class="btn-text">进入监测</text>
       </button>
-      <button class="btn btn-secondary" :disabled="testing" @click="handleTest"
+      <button v-if="showTestButton" class="btn btn-secondary" :disabled="testing" @click="handleTest"
         hover-class="btn-hover">
         <uni-icons :type="testing ? 'spinner-cycle' : 'search'" size="18"
           :color="'#007AFF'" />
@@ -168,16 +188,28 @@
 import { mapState } from 'vuex'
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 import { testMqttConnection } from '@/service/socket/mqtt-client.js'
+import { saveWifiCredential, getSavedWifi } from '@/utils/device-wifi.js'
 
 const STORAGE_KEY = 'direct_device_config'
 const ACCESS_CODE = '123456'
+
+/**
+ * 现场设备地址是固定的，用户无需（也不该）修改。
+ * 两个输入区块隐藏后仍必须保证 form.ip / form.port / brokerUrl 有效，
+ * 因此旧本地配置与二维码里的 IP / PORT 一律忽略，统一以此处为准。
+ * 现场换网段时只改这两个常量即可，不必恢复输入框。
+ */
+const FIXED_DEVICE_IP = '192.168.88.1'
+const FIXED_DEVICE_PORT = '1883'
+const FIXED_IP_SEG = [192, 168, 88, 1]
+
 const DEFAULT_CONFIG = {
   enabled: true,
-  deviceType: '20kW',
+  deviceType: '50kW',
   deviceName: '',
   protocol: 'mqtt',
-  ip: '',
-  port: '1883',
+  ip: FIXED_DEVICE_IP,
+  port: FIXED_DEVICE_PORT,
   username: '',
   password: '',
   accessCode: '',
@@ -192,13 +224,24 @@ export default {
   data() {
     return {
       form: { ...DEFAULT_CONFIG },
-      ipSeg: [192, 168, 88, 1],
+      ipSeg: [...FIXED_IP_SEG],
       testing: false,
       platformClass: '',
+      // 型号由 WiFi 名称确定、设备地址固定，两个输入区块默认不渲染。
+      // 现场临时调试时改成 true 即可恢复（模板与方法一直保留）。
+      showAdvancedFields: false,
+      // 用户明确不需要「测试连接」按钮，默认不渲染；现场排查连不上设备时
+      // 改成 true 可恢复该入口（handleTest / testConnection 一直保留）。
+      showTestButton: false,
       deviceTypes: [
         { value: '20kW', label: '20kW', desc: '微能站' },
         { value: '50kW', label: '50kW', desc: '能源站' }
-      ]
+      ],
+      // WiFi 自动识别：GCNZ-<功率kW>-<容量kWh>-<设备编号>
+      wifiSsid: '',        // 识别到的设备热点名称（保存进配置便于追溯）
+      wifiPassword: '',    // 扫码拿到的热点密码，供监测页自动重连使用
+      wifiAutoHint: '',    // 型号卡片下方的识别结果提示
+      userPickedType: false // 本次是否手动点过型号（手动优先，不被自动识别覆盖）
     }
   },
   computed: {
@@ -214,6 +257,10 @@ export default {
     })
     this.loadConfig()
   },
+  /** 首次进入、扫码或切换 WiFi 后返回本页都会重新识别，保证型号跟随当前热点 */
+  onShow() {
+    this.syncDeviceTypeFromWifi()
+  },
   watch: {
     ipSeg: {
       handler(arr) {
@@ -225,6 +272,131 @@ export default {
     }
   },
   methods: {
+    /**
+     * 解析设备热点名称：GCNZ-<功率kW>-<容量kWh>-<设备编号>，如 GCNZ-50-129-01
+     *   50  → 功率 50kW，据此选择 50kW 能源站
+     *   129 → 电池容量 129kWh（仅用于展示核对，不参与型号判断）
+     *   01  → 设备编号（仅用于展示核对）
+     * 兼容：Android getSSID() 带双引号、大小写、下划线分隔、功率段带 kW、
+     *       尾部附加 _5G 等后缀、设备编号省略。解析不出返回 null。
+     */
+    parseSsid(ssid) {
+      let s = String(ssid || '').trim()
+      if (s.length > 1 && s.charAt(0) === '"' && s.charAt(s.length - 1) === '"') {
+        s = s.slice(1, -1).trim()
+      }
+      // 未授予定位权限 / WiFi 关闭时 Android 会返回 <unknown ssid> 或 0x
+      if (!s || /^<unknown|^0x/i.test(s)) return null
+      const m = s.match(/^GCNZ[-_\s]?(\d{1,4})\s*(?:kw)?[-_\s](\d{1,5})(?:[-_\s](\d{1,4}))?/i)
+      if (!m) return null
+      const powerKw = parseInt(m[1], 10)
+      if (!isFinite(powerKw) || powerKw <= 0) return null
+      return {
+        ssid: s,
+        powerKw,
+        capacityKwh: parseInt(m[2], 10) || 0,
+        deviceNo: m[3] || '',
+        deviceType: powerKw >= 50 ? '50kW' : '20kW'
+      }
+    },
+
+    /** 供扫码路径复用的简化入口：只要型号 */
+    inferDeviceTypeFromSsid(ssid) {
+      const p = this.parseSsid(ssid)
+      return p ? p.deviceType : ''
+    },
+
+    /**
+     * 应用 WiFi 识别结果。
+     * @param {string} ssid 当前热点名称
+     * @param {boolean} applyType 是否改动型号；扫码时二维码里可能已显式指定 DT，传 false 只刷新提示
+     */
+    applyWifiSsid(ssid, applyType) {
+      const p = this.parseSsid(ssid)
+      if (!p) {
+        // 不在设备热点上：清掉上次的提示，型号保持当前值（默认 50kW）
+        this.wifiSsid = ''
+        this.wifiAutoHint = ''
+        return false
+      }
+      this.wifiSsid = p.ssid
+      // 记下当前设备热点：监测页发现没连上时会用这个名称自动重连。
+      // 手动在系统设置里连热点时拿不到密码，工具内部会保留已存密码。
+      saveWifiCredential(p.ssid)
+      const parts = [p.powerKw + 'kW']
+      if (p.capacityKwh) parts.push(p.capacityKwh + 'kWh')
+      if (p.deviceNo) parts.push(p.deviceNo + ' 号设备')
+      this.wifiAutoHint = 'WiFi ' + p.ssid + '：' + parts.join(' / ') + '，自动选择 ' + p.deviceType
+      if (applyType !== false && !this.userPickedType &&
+          this.deviceTypes.some(t => t.value === p.deviceType)) {
+        this.form.deviceType = p.deviceType
+      }
+      return true
+    },
+
+    /** 手动选择型号：本次页面生命周期内优先于 WiFi 自动识别 */
+    pickDeviceType(value) {
+      this.form.deviceType = value
+      this.userPickedType = true
+    },
+
+    // #ifdef APP-PLUS
+    /**
+     * APP-Android 用 WifiManager 直读 SSID。
+     * 不走 uni-wifi 插件的原因：其 getConnectedWifi 要求先 startWifi（会弹定位权限、
+     * 注册广播并触发扫描），且权限未授予或 BSSID 异常时直接 fail(12000/12005)，
+     * 在配置页首屏会静默失败。直读只需已声明的 ACCESS_WIFI_STATE / 定位权限。
+     */
+    readAndroidSsid() {
+      try {
+        const main = plus.android.runtimeMainActivity()
+        if (!main) return ''
+        const wm = plus.android.invoke(main, 'getSystemService', 'wifi')
+        if (!wm) return ''
+        const info = plus.android.invoke(wm, 'getConnectionInfo')
+        if (!info) return ''
+        return String(plus.android.invoke(info, 'getSSID') || '')
+      } catch (e) {
+        return ''
+      }
+    },
+    // #endif
+
+    /** 读取当前已连接的 WiFi，按其名称预设型号（无权限/未连接时静默跳过） */
+    syncDeviceTypeFromWifi() {
+      // #ifdef APP-PLUS
+      const ssid = this.readAndroidSsid()
+      if (ssid) {
+        this.applyWifiSsid(ssid)
+        return
+      }
+      // iOS 或原生直读失败时退 uni.getConnectedWifi（此前若已 startWifi 就能成功）。
+      // 这里刻意不主动 startWifi —— 它会弹定位权限、注册广播并触发扫描。
+      this.readConnectedWifiViaUni()
+      return
+      // #endif
+      // #ifndef APP-PLUS
+      this.readConnectedWifiViaUni()
+      // #endif
+    },
+
+    /** uni.getConnectedWifi 兜底（小程序主力、APP 备用）。
+     *  partialInfo=true 只取 SSID：APP 的 uni-wifi 插件据此跳过 BSSID 校验，
+     *  小程序端在无定位权限时也能拿到 SSID。 */
+    readConnectedWifiViaUni() {
+      if (typeof uni.getConnectedWifi !== 'function') return
+      try {
+        uni.getConnectedWifi({
+          partialInfo: true,
+          success: (res) => {
+            const ssid = (res && res.wifi && res.wifi.SSID) || ''
+            if (ssid) this.applyWifiSsid(ssid)
+          },
+          fail: () => { }
+        })
+      } catch (e) { }
+    },
+
     /**
      * 扫二维码连接 WiFi
      * 支持标准 WiFi 二维码格式：WIFI:S:<SSID>;T:<WPA|WEP|nopass>;P:<password>;H:<hidden>;;
@@ -256,15 +428,17 @@ export default {
     /**
      * 解析二维码内容并连接 WiFi
      * 支持三种格式：
-     * 1. JSON 格式（扩展最丰富）：{"SSID":"xxx","P":"xxx","T":"WPA","deviceType":"20kW","ip":"192.168.1.100","port":"1883","realtimeTopic":"..."}
-     * 2. 标准 WIFI: 格式 + 扩展字段：WIFI:S:xxx;P:xxx;T:WPA;DT:20kW;IP:192.168.1.100;;
+     * 1. JSON 格式（扩展最丰富）：{"SSID":"xxx","P":"xxx","T":"WPA","deviceType":"20kW","realtimeTopic":"..."}
+     * 2. 标准 WIFI: 格式 + 扩展字段：WIFI:S:xxx;P:xxx;T:WPA;DT:20kW;TOPIC:xxx;;
      * 3. 纯 SSID 文本（兼容旧格式）
+     * 注：设备地址固定为 FIXED_DEVICE_IP / FIXED_DEVICE_PORT，二维码里的 IP / PORT
+     *     字段会被忽略（不再回填、也不出现在确认弹窗里）。
      */
     parseAndConnectWifi(raw) {
       let ssid = ''
       let password = ''
       let security = ''
-      let extra = {} // 扩展字段：deviceType / ip / port / realtimeTopic / controlSetTopic / controlRespTopic
+      let extra = {} // 扩展字段：deviceType / deviceName / realtimeTopic / controlSetTopic / controlRespTopic
 
       // 1. 尝试 JSON 格式
       if (raw.trim().startsWith('{')) {
@@ -276,8 +450,7 @@ export default {
           // 扩展字段回填
           if (json.deviceType) extra.deviceType = String(json.deviceType)
           if (json.deviceName) extra.deviceName = String(json.deviceName)
-          if (json.ip) extra.ip = String(json.ip)
-          if (json.port) extra.port = String(json.port)
+          // 设备地址固定：二维码里的 ip / port 不再回填
           if (json.realtimeTopic) extra.realtimeTopic = String(json.realtimeTopic)
           if (json.controlSetTopic) extra.controlSetTopic = String(json.controlSetTopic)
           if (json.controlRespTopic) extra.controlRespTopic = String(json.controlRespTopic)
@@ -297,16 +470,13 @@ export default {
           // 扩展字段
           const dtMatch = fields.match(/DT:([^;]*)/i) || fields.match(/DEVICETYPE:([^;]*)/i)
           const dnMatch = fields.match(/DN:([^;]*)/i) || fields.match(/DEVICENAME:([^;]*)/i)
-          const ipMatch = fields.match(/IP:([^;]*)/i)
-          const portMatch = fields.match(/PORT:([^;]*)/i)
+          // 设备地址固定：IP / PORT 字段不解析、不回填
           const rtMatch = fields.match(/TOPIC:([^;]*)/i) || fields.match(/RT:([^;]*)/i)
           if (ssidMatch) ssid = ssidMatch[1]
           if (passMatch) password = passMatch[1]
           if (typeMatch) security = typeMatch[1]
           if (dtMatch) extra.deviceType = dtMatch[1]
           if (dnMatch) extra.deviceName = dnMatch[1]
-          if (ipMatch) extra.ip = ipMatch[1]
-          if (portMatch) extra.port = portMatch[1]
           if (rtMatch) extra.realtimeTopic = rtMatch[1]
         }
       }
@@ -321,6 +491,16 @@ export default {
         return
       }
 
+      // 二维码里没写型号时，按 WiFi 名称推断（GCNZ-50-129-01 → 50kW），并同步识别提示；
+      // 二维码显式写了 DT 时以二维码为准，不显示 WiFi 提示，避免两者矛盾。
+      if (!extra.deviceType) {
+        const inferred = this.inferDeviceTypeFromSsid(ssid)
+        if (inferred) extra.deviceType = inferred
+        this.applyWifiSsid(ssid, false)
+      } else {
+        this.wifiAutoHint = ''
+      }
+
       // 回填扩展字段到表单
       let filledExtra = []
       if (extra.deviceType && this.deviceTypes.some(t => t.value === extra.deviceType)) {
@@ -331,22 +511,13 @@ export default {
         this.form.deviceName = extra.deviceName
         filledExtra.push('设备名称: ' + extra.deviceName)
       }
-      if (extra.ip) {
-        this.form.ip = extra.ip
-        // 同步 ipSeg
-        const segs = extra.ip.split('.')
-        if (segs.length === 4) {
-          this.ipSeg = segs.map(s => parseInt(s, 10) || 0)
-        }
-        filledExtra.push('IP: ' + extra.ip)
-      }
-      if (extra.port) {
-        this.form.port = extra.port
-        filledExtra.push('端口: ' + extra.port)
-      }
+      // 设备地址固定：二维码里的 IP / PORT 不回填、也不出现在确认弹窗里，
+      // 否则会出现「弹窗提示已自动填充，实际却被固定值覆盖」的矛盾。
+      this.applyFixedDeviceAddress()
       if (extra.realtimeTopic) {
         this.form.realtimeTopic = extra.realtimeTopic
-        filledExtra.push('Topic: ' + extra.realtimeTopic)
+        // 数据通道名称属协议内部信息，只回填不进确认弹窗：
+        // 用户看不懂 Topic，也无需对这一项做确认。
       }
       if (extra.controlSetTopic) this.form.controlSetTopic = extra.controlSetTopic
       if (extra.controlRespTopic) this.form.controlRespTopic = extra.controlRespTopic
@@ -364,11 +535,14 @@ export default {
         confirmText: '连接',
         success: (modalRes) => {
           if (!modalRes.confirm) return
+          const noPass = !!(security && security.toLowerCase() === 'nopass')
+          // 记住热点名称与密码：监测页发现没连上设备 WiFi 时会用它自动重连。
+          // 无密码热点显式清空旧密码，避免把上一台设备的密码带过来。
+          this.wifiPassword = noPass ? '' : password
+          saveWifiCredential(ssid, this.wifiPassword, { clearPassword: noPass })
           const params = { SSID: ssid }
           if (password) params.password = password
-          if (security && security.toLowerCase() === 'nopass') {
-            delete params.password
-          }
+          if (noPass) delete params.password
           this.doConnectWifi(params)
         }
       })
@@ -411,11 +585,33 @@ export default {
       })
     },
 
+    /**
+     * 强制使用固定设备地址。
+     * 输入框隐藏后，旧本地配置 / 二维码扩展字段都不应再改动地址，
+     * 否则用户既看不到也没法纠正，实际却连到了另一个 IP。
+     */
+    applyFixedDeviceAddress() {
+      this.form.ip = FIXED_DEVICE_IP
+      this.form.port = FIXED_DEVICE_PORT
+      for (let i = 0; i < 4; i++) {
+        this.$set(this.ipSeg, i, FIXED_IP_SEG[i])
+      }
+    },
+
     loadConfig() {
       try {
         const cfg = uni.getStorageSync(STORAGE_KEY)
         if (cfg) {
           this.form = { ...DEFAULT_CONFIG, ...cfg, protocol: 'mqtt', accessCode: '' }
+          // 热点密码只保存在本地配置里，不进表单、不显示在界面上；
+          // 进入监测页时原样带回，避免因整份配置覆盖而丢失自动重连凭据。
+          this.wifiPassword = String(cfg.wifiPassword || '')
+          // 迁移：旧版默认型号是 20kW 且不记录来源。用户要求现在默认 50kW，
+          // 因此把这种「旧默认残留」纠正掉；新版保存的手选 / WiFi 识别结果都带
+          // deviceTypeSource，一律原样保留。
+          if (!cfg.deviceTypeSource && cfg.deviceType === '20kW') {
+            this.form.deviceType = '50kW'
+          }
           // 迁移：旧版错误地把 realtimeTopic 填成了 Ctl 主题，修正为实时数据主题 001
           // （控制主题由 controlSetTopic/controlRespTopic 单独承载）
           const rt = this.form.realtimeTopic || ''
@@ -443,6 +639,21 @@ export default {
       } catch (e) {
         console.error('加载直连配置失败:', e)
       }
+      // 无论有没有旧配置，地址一律以固定值为准
+      this.applyFixedDeviceAddress()
+      // 旧配置里若存过别的 IP，静默纠正并写回：这样即使从「我的」入口直接
+      // 跳到监测页（不经过本页），读到的也是固定地址。
+      try {
+        const saved = uni.getStorageSync(STORAGE_KEY)
+        if (saved && (saved.ip !== FIXED_DEVICE_IP || saved.port !== FIXED_DEVICE_PORT)) {
+          uni.setStorageSync(STORAGE_KEY, {
+            ...saved,
+            ip: FIXED_DEVICE_IP,
+            port: FIXED_DEVICE_PORT,
+            brokerUrl: `tcp://${FIXED_DEVICE_IP}:${FIXED_DEVICE_PORT}`
+          })
+        }
+      } catch (e) { }
     },
     onIpSegBlur(idx, e) {
       let v = e && e.detail != null ? e.detail.value : this.ipSeg[idx]
@@ -470,12 +681,11 @@ export default {
           this.form = { ...DEFAULT_CONFIG, ...cfg, protocol: 'mqtt' }
         }
       } catch (e) { }
+      this.applyFixedDeviceAddress()
     },
-    /** 由 IP + 端口拼出 tcp://brokerUrl（微信小程序原生 TCP MQTT） */
+    /** 由固定设备地址拼出 tcp://brokerUrl（微信小程序原生 TCP MQTT） */
     buildBrokerUrl() {
-      const ip = (this.form.ip || '').trim()
-      const port = (this.form.port || '').trim() || '1883'
-      const url = `tcp://${ip}:${port}`
+      const url = `tcp://${FIXED_DEVICE_IP}:${FIXED_DEVICE_PORT}`
       console.log('[buildBrokerUrl]', url)
       return url
     },
@@ -512,7 +722,7 @@ export default {
           uni.vibrateShort({ type: 'medium' })
           uni.showModal({
             title: '连接成功',
-            content: 'MQTT Broker 连接成功',
+            content: '已连上设备，可以进入监测查看实时数据',
             confirmText: '进入监测',
             cancelText: '关闭',
             success: (res) => {
@@ -526,9 +736,12 @@ export default {
           uni.hideLoading()
           this.testing = false
           uni.vibrateShort({ type: 'heavy' })
+          // 底层错误含 Broker / TCP / MQTT 等内部术语，只写控制台供现场排障；
+          // 弹窗给用户看的是「下一步该做什么」，不再把原始报错直接抛给用户。
+          console.warn('[测试连接] 原始错误：', (e && e.message) || e)
           uni.showModal({
             title: '连接失败',
-            content: e.message || '无法连接到 MQTT Broker，请检查参数',
+            content: '设备没有响应，请确认手机与设备连的是同一个 WiFi，并核对设备地址',
             showCancel: false
           })
         })
@@ -536,14 +749,22 @@ export default {
     buildConfig() {
       const rawCode = (this.form.accessCode || '').trim()
       const accessCode = rawCode === ACCESS_CODE ? rawCode : ''
+      // enterMonitor 会整份覆盖本地配置，热点凭据必须在这里带回去，
+      // 否则扫一次码再进监测页就把可自动重连的名称/密码抹掉了。
+      const savedWifi = getSavedWifi()
       const cfg = {
         enabled: this.form.enabled,
         deviceType: this.form.deviceType,
+        // 型号来源：user=手动点选 / wifi=热点识别 / default=默认值。
+        // 下次进入时据此判断旧配置是否要迁移，也便于追溯现场连的是哪台设备。
+        deviceTypeSource: this.userPickedType ? 'user' : (this.wifiSsid ? 'wifi' : 'default'),
+        wifiSsid: this.wifiSsid || savedWifi.ssid,
+        wifiPassword: this.wifiPassword || savedWifi.password,
         deviceName: (this.form.deviceName || '').trim(),
         protocol: 'mqtt',
         brokerUrl: this.buildBrokerUrl(),
-        ip: (this.form.ip || '').trim(),
-        port: (this.form.port || '').trim() || '1883',
+        ip: FIXED_DEVICE_IP,
+        port: FIXED_DEVICE_PORT,
         username: '',
         password: '',
         accessCode,
@@ -714,30 +935,76 @@ export default {
   }
 }
 
-/* ========== 扫码连 WiFi ========== */
+/* ========== 扫码连 WiFi（本页主操作，大卡片） ==========
+   设备类型 / 设备地址两块隐藏后，扫码是这一页唯一的用户动作。
+   原来是一条 88rpx 高的细横条，视觉权重甚至低于下方的「操作码」输入框，
+   这里放大到 176rpx 并补齐「图标 + 主标题 + 说明 + 行动按钮」四段结构。
+   整块仍是同一个 @click 入口，扫码逻辑零改动。 */
 .scan-bar {
-  margin: 0 20rpx 20rpx;
+  margin: 0 20rpx 24rpx;
 }
-.scan-btn {
+.scan-card {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  padding: 24rpx 28rpx;
-  background: linear-gradient(135deg, rgba(0, 122, 255, 0.08), rgba(0, 122, 255, 0.03));
-  border: 2rpx solid rgba(0, 122, 255, 0.15);
-  border-radius: 14rpx;
+  gap: 24rpx;
+  min-height: 176rpx;
+  padding: 28rpx 24rpx;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.10), rgba(0, 122, 255, 0.04));
+  border: 2rpx solid rgba(0, 122, 255, 0.20);
+  border-radius: 20rpx;
   transition: all 0.2s ease;
 
   &:active {
-    transform: scale(0.98);
-    background: rgba(0, 122, 255, 0.1);
+    transform: scale(0.985);
+    background: rgba(0, 122, 255, 0.14);
   }
 }
-.scan-btn-text {
+.scan-icon-wrap {
+  flex: none;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 24rpx;
+  background: #fff;
+  border: 2rpx solid rgba(0, 122, 255, 0.12);
+  box-shadow: 0 6rpx 18rpx rgba(0, 122, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scan-content {
   flex: 1;
-  font-size: 28rpx;
-  font-weight: 500;
-  color: #007AFF;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+.scan-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #1d2129;
+  line-height: 1.3;
+}
+.scan-desc {
+  font-size: 24rpx;
+  color: #86909c;
+  line-height: 1.4;
+}
+.scan-action {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 12rpx 18rpx;
+  background: #007AFF;
+  border-radius: 999rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.24);
+}
+.scan-action-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
 }
 
 /* ========== 通用 section ========== */
@@ -935,6 +1202,23 @@ export default {
 .dt-chip-desc {
   font-size: 22rpx;
   color: #86909c;
+}
+
+/* ========== WiFi 自动识别结果 ========== */
+.wifi-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8rpx;
+  margin-top: 16rpx;
+  padding: 12rpx 16rpx;
+  background: rgba(0, 122, 255, 0.06);
+  border-radius: 10rpx;
+}
+.wifi-hint-text {
+  flex: 1;
+  font-size: 22rpx;
+  color: #4e5969;
+  line-height: 1.5;
 }
 
 /* ========== 默认参数说明 ========== */

@@ -16,36 +16,36 @@
 
 // ==================== PCS 1707 V3.5 ====================
 
-// 设备状态位 0/1 → 文案
-// ⚠ 位状态的 0 是「有效读数」而不是「没有数据」：
-//   以前把 0 映射成 '--'，页面就和「帧没收到」长得一模一样，
-//   导致 PCS 停机/待机/运行、总故障、并网等 10 项长期显示 `--`。
-//   现在 0 一律给反向文案，只有「整个字节没上报」才走 '--'（见 readRaw 返回 undefined）。
-//   dangerOn：命中这些值才标红（DataGrid 的 item.danger），正常态保持黑色。
-const REMOTE_LOCAL = { 0: '本地', 1: '远程' }
+// 设备状态位 0/1 → 文案（PCS 1707 点表口径）
+// ⚠ 点表只给「1」定义了状态名称，位 =0 表示该状态未置位，统一显示 '/'；
+//   唯一例外是「远程/就地状态」，点表写明 1-远程;0-就地，两个值都有含义。
+//   0 是「有效读数」而不是「没有数据」：只有整个字节没上报（readRaw 返回 undefined）
+//   才显示 '--'，否则会把未置位误读成通讯中断。
+//   dangerOn：命中这些值才标红（DataGrid 的 item.danger），'/' 不染色。
+const REMOTE_LOCAL = { 0: '就地', 1: '远程' }
 
 // 交流侧 / 直流侧 / 温度 / 电量 / 版本
 const PCS_AC = [
-  { key: 'B4', label: 'PCS端口A相电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B6', label: 'PCS端口B相电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B8', label: 'PCS端口C相电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B10', label: 'PCS输出A相电流(A)', scale: 10, decimals: 1, unit: 'A' },
-  { key: 'B12', label: 'PCS输出B相电流(A)', scale: 10, decimals: 1, unit: 'A' },
-  { key: 'B14', label: 'PCS输出C相电流(A)', scale: 10, decimals: 1, unit: 'A' },
-  { key: 'B96', label: 'N相电流有效值(A)', scale: 10, decimals: 1, unit: 'A' },
-  { key: 'B16', label: '电网频率(Hz)', scale: 100, decimals: 2, unit: 'Hz' },
-  { key: 'B18', label: 'PCSA相输出有功功率(kW)', scale: 10, decimals: 1, unit: 'kW' },
-  { key: 'B20', label: 'PCSB相输出有功功率(kW)', scale: 10, decimals: 1, unit: 'kW' },
-  { key: 'B22', label: 'PCSC相输出有功功率(kW)', scale: 10, decimals: 1, unit: 'kW' },
-  { key: 'B24', label: 'PCS总输出有功功率(kW)', scale: 10, decimals: 1, unit: 'kW' },
-  { key: 'B26', label: 'PCSA相输出无功功率(kVar)', scale: 10, decimals: 1, unit: 'kVar' },
-  { key: 'B28', label: 'PCSB相输出无功功率(kVar)', scale: 10, decimals: 1, unit: 'kVar' },
-  { key: 'B30', label: 'PCSC相输出无功功率(kVar)', scale: 10, decimals: 1, unit: 'kVar' },
-  { key: 'B32', label: 'PCS总输出无功功率(kVar)', scale: 10, decimals: 1, unit: 'kVar' },
-  { key: 'B34', label: 'PCSA相输出视在功率(kVA)', scale: 10, decimals: 1, unit: 'kVA' },
-  { key: 'B36', label: 'PCSB相输出视在功率(kVA)', scale: 10, decimals: 1, unit: 'kVA' },
-  { key: 'B38', label: 'PCSC相输出视在功率(kVA)', scale: 10, decimals: 1, unit: 'kVA' },
-  { key: 'B40', label: 'PCS总输出视在功率(kVA)', scale: 10, decimals: 1, unit: 'kVA' },
+  { key: 'B4', label: 'PCS端口A相电压', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B6', label: 'PCS端口B相电压', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B8', label: 'PCS端口C相电压', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B10', label: 'PCS输出A相电流', scale: 10, decimals: 1, unit: 'A' },
+  { key: 'B12', label: 'PCS输出B相电流', scale: 10, decimals: 1, unit: 'A' },
+  { key: 'B14', label: 'PCS输出C相电流', scale: 10, decimals: 1, unit: 'A' },
+  { key: 'B96', label: 'N相电流有效值', scale: 10, decimals: 1, unit: 'A' },
+  { key: 'B16', label: '电网频率', scale: 100, decimals: 2, unit: 'Hz' },
+  { key: 'B18', label: 'PCSA相输出有功功率', scale: 10, decimals: 1, unit: 'kW' },
+  { key: 'B20', label: 'PCSB相输出有功功率', scale: 10, decimals: 1, unit: 'kW' },
+  { key: 'B22', label: 'PCSC相输出有功功率', scale: 10, decimals: 1, unit: 'kW' },
+  { key: 'B24', label: 'PCS总输出有功功率', scale: 10, decimals: 1, unit: 'kW' },
+  { key: 'B26', label: 'PCSA相输出无功功率', scale: 10, decimals: 1, unit: 'kVar' },
+  { key: 'B28', label: 'PCSB相输出无功功率', scale: 10, decimals: 1, unit: 'kVar' },
+  { key: 'B30', label: 'PCSC相输出无功功率', scale: 10, decimals: 1, unit: 'kVar' },
+  { key: 'B32', label: 'PCS总输出无功功率', scale: 10, decimals: 1, unit: 'kVar' },
+  { key: 'B34', label: 'PCSA相输出视在功率', scale: 10, decimals: 1, unit: 'kVA' },
+  { key: 'B36', label: 'PCSB相输出视在功率', scale: 10, decimals: 1, unit: 'kVA' },
+  { key: 'B38', label: 'PCSC相输出视在功率', scale: 10, decimals: 1, unit: 'kVA' },
+  { key: 'B40', label: 'PCS总输出视在功率', scale: 10, decimals: 1, unit: 'kVA' },
   { key: 'B42', label: 'PCS输出A相功率因数', scale: 1000, decimals: 3, unit: '' },
   { key: 'B44', label: 'PCS输出B相功率因数', scale: 1000, decimals: 3, unit: '' },
   { key: 'B46', label: 'PCS输出C相功率因数', scale: 1000, decimals: 3, unit: '' },
@@ -53,14 +53,14 @@ const PCS_AC = [
 ]
 
 const PCS_DC = [
-  { key: 'B50', label: 'PCS输入功率(kW)', scale: 10, decimals: 1, unit: 'kW' },
-  { key: 'B52', label: 'PCS输入电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B54', label: 'PCS输入电流(A)', scale: 10, decimals: 1, unit: 'A' }
+  { key: 'B50', label: 'PCS输入功率', scale: 10, decimals: 1, unit: 'kW' },
+  { key: 'B52', label: 'PCS输入电压', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B54', label: 'PCS输入电流', scale: 10, decimals: 1, unit: 'A' }
 ]
 
 const PCS_TEMP = [
-  { key: 'B56', label: 'PCS散热器温度(℃)', scale: 1, decimals: 0, unit: '℃' },
-  { key: 'B116', label: '片上SOC温度(℃)', scale: 10, decimals: 1, unit: '℃' },
+  { key: 'B56', label: 'PCS散热器温度', scale: 1, decimals: 0, unit: '℃' },
+  { key: 'B116', label: '片上SOC温度', scale: 10, decimals: 1, unit: '℃' },
   { key: 'B118', label: 'IGBT温度1-1', scale: 1, decimals: 0, unit: '℃' },
   { key: 'B119', label: 'IGBT温度1-2', scale: 1, decimals: 0, unit: '℃' },
   { key: 'B120', label: 'IGBT温度2-1', scale: 1, decimals: 0, unit: '℃' },
@@ -97,22 +97,27 @@ const PCS_VERSION = [
 
 /**
  * PCS 设备状态位（1707 V3.5 能源帧 0x02）
- * 字节位 → 设备状态；0/1 两种取值都给明确文案，dangerOn 命中即标红。
+ * 点表口径：只有位 =1 时才有状态名称，=0 一律显示 '/'（未置位）；
+ * 「远程就地状态」是唯一双态位（1-远程;0-就地）。
+ * 帧未上报该字节时 fmtItem 返回 '--'，与 '/' 严格区分，不得混淆。
+ * dangerOn：=1 且语义为故障/告警类时标红，'/' 不染色。
  * 位定义见 1707 点表 B1/B2/B3，与 1707V3_5-model.js 的字段命名一一对应。
+ * ⚠ 与 community/monitor-data/monitor-data.vue 的 PCS1707_STATUS_VALUE_MAP 同步维护。
  */
 const PCS_STATUS = [
-  { key: 'B2b0', label: '停机状态', map: { 0: '未停机', 1: '停机' }, dangerOn: [1] },
-  { key: 'B2b1', label: '待机状态', map: { 0: '未待机', 1: '待机' } },
-  { key: 'B2b2', label: '运行状态', map: { 0: '未运行', 1: '运行' } },
-  { key: 'B2b3', label: '总故障状态', map: { 0: '无故障', 1: '故障' }, dangerOn: [1] },
-  { key: 'B2b4', label: '总报警状态', map: { 0: '无告警', 1: '告警' } },
+  { key: 'B2b0', label: '停机状态', map: { 0: '/', 1: '停机' }, dangerOn: [1] },
+  { key: 'B2b1', label: '待机状态', map: { 0: '/', 1: '待机' } },
+  { key: 'B2b2', label: '运行状态', map: { 0: '/', 1: '运行' } },
+  { key: 'B2b3', label: '总故障状态', map: { 0: '/', 1: '故障' }, dangerOn: [1] },
+  { key: 'B2b4', label: '总报警状态', map: { 0: '/', 1: '告警' } },
   { key: 'B2b5', label: '远程就地状态', map: REMOTE_LOCAL },
-  { key: 'B2b6', label: '急停输入状态', map: { 0: '未触发', 1: '已触发' }, dangerOn: [1] },
-  { key: 'B2b7', label: '并网状态', map: { 0: '离网', 1: '并网' } },
-  { key: 'B3b0', label: 'VF离网状态', map: { 0: '未启用', 1: 'VF离网' } },
-  { key: 'B3b1', label: '过载降容', map: { 0: '未过载', 1: '过载降容' }, dangerOn: [1] },
-  { key: 'B3b5', label: 'BMS干接点输入', map: { 0: '未动作', 1: '故障有效' }, dangerOn: [1] },
-  { key: 'B1b0', label: '外部电操开关', map: { 0: '分闸', 1: '合闸' } }
+  { key: 'B2b6', label: '急停输入状态', map: { 0: '/', 1: '急停有效' }, dangerOn: [1] },
+  { key: 'B2b7', label: '并网状态', map: { 0: '/', 1: '并网' } },
+  { key: 'B3b0', label: 'VF离网状态', map: { 0: '/', 1: 'VF 离网' } },
+  { key: 'B3b1', label: '过载降容', map: { 0: '/', 1: '过载发生' }, dangerOn: [1] },
+  { key: 'B3b5', label: 'BMS干接点输入', map: { 0: '/', 1: '故障有效' }, dangerOn: [1] }
+  // B1b0「外部电操开关」是控制位（下发地址 339），按要求不在监测页展示，仅保留在参数设置
+  // B3b2/b3/b4、B3b6/b7 为点表「保留」位，不展示
 ]
 
 // 故障信息（FPGA 硬件故障 / ARM 软件故障）
@@ -236,13 +241,13 @@ const PCS_FAULTS = PCS_FAULT_GROUPS.reduce((acc, g) => acc.concat(g.items), [])
 // ==================== 储能 / 光伏 170C V1.1 ====================
 
 const DC_RUN = [
-  { key: 'B30', label: 'BAT侧电压显示(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B32', label: 'BUS侧电压显示(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B34', label: 'BUS侧电流显示(A)', scale: 10, decimals: 1, unit: 'A' },
-  { key: 'B36', label: 'BAT侧电流显示(A)', scale: 10, decimals: 1, unit: 'A' },
-  { key: 'B38', label: '模块最高温度(℃)', scale: 1, decimals: 0, unit: '℃' },
-  { key: 'B40', label: '允许运行功率(kW)', scale: 10, decimals: 1, unit: 'kW' },
-  { key: 'B42', label: '当前运行功率(kW)', scale: 10, decimals: 1, unit: 'kW' }
+  { key: 'B30', label: 'BAT侧电压显示', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B32', label: 'BUS侧电压显示', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B34', label: 'BUS侧电流显示', scale: 10, decimals: 1, unit: 'A' },
+  { key: 'B36', label: 'BAT侧电流显示', scale: 10, decimals: 1, unit: 'A' },
+  { key: 'B38', label: '模块最高温度', scale: 1, decimals: 0, unit: '℃' },
+  { key: 'B40', label: '允许运行功率', scale: 10, decimals: 1, unit: 'kW' },
+  { key: 'B42', label: '当前运行功率', scale: 10, decimals: 1, unit: 'kW' }
 ]
 
 // 机器运行状态（状态帧 B8 掩码，BIT0~BIT7 可多位同时置位）
@@ -295,27 +300,27 @@ const DC_ERROR_GROUPS = [
 // 点表 B70=「BMS最大单体值」（本次上电，重启失效）、B72=最大单体值位置、B74=单体压差（1mV）。
 // 注意：点表里没有「单体最大压差」字段，旧界面把 B74 标成了「单体最大压差」，已纠正。
 const BMS_CELL = [
-  { key: 'B14', label: '电池平均电压(mV)', scale: 1, decimals: 0, unit: 'mV' },
-  { key: 'B27', label: '电池平均温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
+  { key: 'B14', label: '电池平均电压', scale: 1, decimals: 0, unit: 'mV' },
+  { key: 'B27', label: '电池平均温度', scale: 1, decimals: 0, offset: -50, unit: '℃' },
   { key: 'B72', label: '本次上电累计最大单体位置', scale: 1, decimals: 0, unit: '' },
-  { key: 'B70', label: '本次上电累计最大单体值(mV)', scale: 1, decimals: 0, unit: 'mV' },
+  { key: 'B70', label: '本次上电累计最大单体值', scale: 1, decimals: 0, unit: 'mV' },
   { key: 'B20', label: '最大电压电池位置', scale: 1, decimals: 0, unit: '' },
-  { key: 'B16', label: '最高单体电压(mV)', scale: 1, decimals: 0, unit: 'mV' },
+  { key: 'B16', label: '最高单体电压', scale: 1, decimals: 0, unit: 'mV' },
   { key: 'B22', label: '最小电压电池位置', scale: 1, decimals: 0, unit: '' },
-  { key: 'B18', label: '最低单体电压(mV)', scale: 1, decimals: 0, unit: 'mV' },
-  { key: 'B74', label: '单体压差(mV)', scale: 1, decimals: 0, unit: 'mV' },
+  { key: 'B18', label: '最低单体电压', scale: 1, decimals: 0, unit: 'mV' },
+  { key: 'B74', label: '单体压差', scale: 1, decimals: 0, unit: 'mV' },
   { key: 'B28', label: '最高电芯温度位置', scale: 1, decimals: 0, unit: '' },
-  { key: 'B24', label: '最高电芯温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
+  { key: 'B24', label: '最高电芯温度', scale: 1, decimals: 0, offset: -50, unit: '℃' },
   { key: 'B30', label: '最低电芯温度位置', scale: 1, decimals: 0, unit: '' },
-  { key: 'B25', label: '最低电芯温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
-  { key: 'B26', label: '单体最大温差(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' }
+  { key: 'B25', label: '最低电芯温度', scale: 1, decimals: 0, offset: -50, unit: '℃' },
+  { key: 'B26', label: '单体最大温差', scale: 1, decimals: 0, offset: -50, unit: '℃' }
 ]
 
 // 系统配置（状态帧 0x03 S_B70~S_B80，6 项）
 const BMS_CONFIG = [
-  { key: 'S_B72', label: '标称容量(Ah)', scale: 10, decimals: 1, unit: 'Ah' },
-  { key: 'S_B70', label: '额定电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'S_B74', label: '电池串数', scale: 1, decimals: 0, unit: '' },
+  { key: 'S_B72', label: '标称容量', scale: 10, decimals: 1, unit: 'Ah' },
+  { key: 'S_B70', label: '额定电压', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'S_B74', label: '单体数量', scale: 1, decimals: 0, unit: '' },
   { key: 'S_B76', label: '温感数量', scale: 1, decimals: 0, unit: '' },
   { key: 'S_B78', label: '从机(pack)数量', scale: 1, decimals: 0, unit: '' },
   { key: 'S_B80', label: '极柱温感数', scale: 1, decimals: 0, unit: '' }
@@ -323,34 +328,34 @@ const BMS_CONFIG = [
 
 // 设备信息·电气量（能源数据）：限制值 / 总压总流 / 绝缘 / HV / 分流器
 const BMS_MEASURE = [
-  { key: 'B32', label: 'SOC(%)', scale: 10, decimals: 1, unit: '%' },
-  { key: 'B112', label: 'SOH(%)', scale: 10, decimals: 1, unit: '%' },
-  { key: 'B114', label: 'pack总容量(Ah)', scale: 10, decimals: 1, unit: 'Ah' },
-  { key: 'B2', label: '充电最大电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B4', label: '最大放电电流(A)', scale: 10, decimals: 1, unit: 'A' },
-  { key: 'B6', label: '放电最小电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B8', label: '最大充电电流(A)', scale: 10, decimals: 1, unit: 'A' },
-  { key: 'B10', label: '电池电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B12', label: '电池电流(A)', scale: 10, offset: -1000, decimals: 1, unit: 'A' },
-  { key: 'B36', label: '正绝缘电阻(kΩ)', scale: 1, decimals: 0, unit: 'kΩ' },
-  { key: 'B38', label: '负绝缘电阻(kΩ)', scale: 1, decimals: 0, unit: 'kΩ' },
-  { key: 'B40', label: 'HV1电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B42', label: 'HV2电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B44', label: 'BAT+电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B48', label: '电池累计电压(V)', scale: 10, decimals: 1, unit: 'V' },
-  { key: 'B56', label: '分流器电流(A)', scale: 10, offset: -1000, decimals: 1, unit: 'A' }
+  { key: 'B32', label: 'SOC', scale: 10, decimals: 1, unit: '%' },
+  { key: 'B112', label: 'SOH', scale: 10, decimals: 1, unit: '%' },
+  { key: 'B114', label: 'pack总容量', scale: 10, decimals: 1, unit: 'Ah' },
+  { key: 'B2', label: '充电最大电压', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B4', label: '最大放电电流', scale: 10, decimals: 1, unit: 'A' },
+  { key: 'B6', label: '放电最小电压', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B8', label: '最大充电电流', scale: 10, decimals: 1, unit: 'A' },
+  { key: 'B10', label: '电池电压', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B12', label: '电池电流', scale: 10, offset: -1000, decimals: 1, unit: 'A' },
+  { key: 'B36', label: '正绝缘电阻', scale: 1, decimals: 0, unit: 'kΩ' },
+  { key: 'B38', label: '负绝缘电阻', scale: 1, decimals: 0, unit: 'kΩ' },
+  { key: 'B40', label: 'HV1电压', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B42', label: 'HV2电压', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B44', label: 'BAT+电压', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B48', label: '电池累计电压', scale: 10, decimals: 1, unit: 'V' },
+  { key: 'B56', label: '分流器电流', scale: 10, offset: -1000, decimals: 1, unit: 'A' }
 ]
 
 // 设备信息·电量与时长（能源数据）：累计电量 32 位；时间点表单位 5min（显示 = 原始值 × 5 min）
 const BMS_ENERGY = [
   { key: 'B128', label: '累计充电次数(循环次数)', scale: 1, decimals: 0, unit: '' },
-  { key: 'B130', label: '总使用时间(min)', scale: 0.2, decimals: 0, unit: 'min' },
-  { key: 'B116', label: '单次放电累计电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' },
-  { key: 'B118', label: '单次充电累计电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' },
-  { key: 'B120', label: '放电累计电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' },
-  { key: 'B134', label: '总放电时间(min)', scale: 0.2, decimals: 0, unit: 'min' },
-  { key: 'B138', label: '总充电时间(min)', scale: 0.2, decimals: 0, unit: 'min' },
-  { key: 'B124', label: '充电累计电量(kWh)', scale: 10, decimals: 1, unit: 'kWh' }
+  { key: 'B130', label: '总使用时间', scale: 5, decimals: 0, unit: 'min' },
+  { key: 'B116', label: '单次放电累计电量', scale: 10, decimals: 1, unit: 'kWh' },
+  { key: 'B118', label: '单次充电累计电量', scale: 10, decimals: 1, unit: 'kWh' },
+  { key: 'B120', label: '放电累计电量', scale: 10, decimals: 1, unit: 'kWh' },
+  { key: 'B134', label: '总放电时间', scale: 5, decimals: 0, unit: 'min' },
+  { key: 'B138', label: '总充电时间', scale: 5, decimals: 0, unit: 'min' },
+  { key: 'B124', label: '充电累计电量', scale: 10, decimals: 1, unit: 'kWh' }
 ]
 
 // 运行状态参数（能源数据）：B0 接触器状态整字节枚举 0~4，B47 位组，B50 自检，B53/B55 继电器
@@ -408,7 +413,7 @@ const BMS_PDU = [
   { key: 'B156', label: 'PDU温度数量', scale: 1, decimals: 0, unit: '' }
 ].concat([1, 2, 3, 4, 5, 6].map(n => ({
   key: 'B' + (157 + n),
-  label: 'PDU' + n + '极柱温度(℃)',
+  label: 'PDU' + n + '极柱温度',
   scale: 1,
   decimals: 0,
   offset: -50,
@@ -425,15 +430,15 @@ const BMS_PACK = [
   const base = 176 + i * 16
   const B = n => 'B' + (base + n)
   return acc.concat([
-    { key: B(0), label: name + '总压(V)', scale: 10, decimals: 1, unit: 'V' },
+    { key: B(0), label: name + '总压', scale: 10, decimals: 1, unit: 'V' },
     { key: B(4), label: name + '最高温度位置', scale: 1, decimals: 0, unit: '' },
-    { key: B(2), label: name + '最高单体温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
-    { key: B(3), label: name + '最低单体温度(℃)', scale: 1, decimals: 0, offset: -50, unit: '℃' },
+    { key: B(2), label: name + '最高单体温度', scale: 1, decimals: 0, offset: -50, unit: '℃' },
+    { key: B(3), label: name + '最低单体温度', scale: 1, decimals: 0, offset: -50, unit: '℃' },
     { key: B(6), label: name + '最低温度位置', scale: 1, decimals: 0, unit: '' },
     { key: B(8), label: name + '最高电压位置', scale: 1, decimals: 0, unit: '' },
-    { key: B(12), label: name + '最高单体电压(mV)', scale: 1, decimals: 0, unit: 'mV' },
+    { key: B(12), label: name + '最高单体电压', scale: 1, decimals: 0, unit: 'mV' },
     { key: B(10), label: name + '最低电压位置', scale: 1, decimals: 0, unit: '' },
-    { key: B(14), label: name + '最低单体电压(mV)', scale: 1, decimals: 0, unit: 'mV' }
+    { key: B(14), label: name + '最低单体电压', scale: 1, decimals: 0, unit: 'mV' }
   ])
 }, []))
 
@@ -503,8 +508,8 @@ export const BMS_FAULT_WORDS = [
 
 // 环境监测 131C（float32，传输值=实际值，不缩放）
 const ENV_ITEMS = [
-  { key: 'S_B0', label: '温度(℃)', scale: 1, decimals: 1, unit: '℃' },
-  { key: 'S_B4', label: '湿度(%RH)', scale: 1, decimals: 1, unit: '%RH' }
+  { key: 'S_B0', label: '温度', scale: 1, decimals: 1, unit: '℃' },
+  { key: 'S_B4', label: '湿度', scale: 1, decimals: 1, unit: '%RH' }
 ]
 
 export {

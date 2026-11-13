@@ -44,8 +44,8 @@ export function fmtItem(item, bucket) {
   const raw = readRaw(item, bucket)
 
   // 枚举：直接映射文案
-  // dangerOn：位/枚举命中这些取值时给 DataGrid 加红底（如「停机」「故障」「已触发」），
-  // 正常态不染色，避免整片彩色噪音。
+  // dangerOn：位/枚举命中这些取值时给 DataGrid 加红底（如「停机」「故障」「急停有效」），
+  // 未置位的 '/' 不染色，避免整片彩色噪音。
   if (item.map) {
     if (raw === undefined) return { label: item.label, value: '--', unit: '' }
     const txt = item.map[String(raw)]
@@ -62,12 +62,11 @@ export function fmtItem(item, bucket) {
   if (raw === undefined) return { label: item.label, value: '--', unit: '' }
   const num = Number(raw)
   if (!Number.isFinite(num)) return { label: item.label, value: '--', unit: '' }
-  // 点表用 (实际值 + N) 编码的字段：偏移 -1000 的电流、偏移 -50 的温度
-  // 原始值 0 的语义不同：
-  //   电流（offset ≤ -1000）：0 = 未采集/无效，照公式会显示 -1000.0A，吞掉显示 '--'
-  //   温度（offset = -50）：0 是真实读数（-50℃，通常意味着未接传感器），
-  //     现场《电池簇信息记录》里就按 -50 展示，不吞
-  if (item.offset && item.offset <= -1000 && num === 0) return { label: item.label, value: '--', unit: '' }
+  // 点表用 (实际值 + N) 编码的字段：偏移 -1000 的电流、偏移 -50 的温度。
+  // 原始值 0 一律按点表公式换算，不做「无效值」吞掉：
+  //   电池电流 / 分流器电流（offset -1000）现场原始值就是 0 → -1000.0 A，是有效读数；
+  //   温度（offset -50）0 → -50℃，同样照常展示。
+  // 早期版本把「offset ≤ -1000 且 num === 0」判成 '--'，会把真实数据藏掉，勿恢复。
   const scale = item.scale || 1
   let val = num / scale
   if (item.offset) val += item.offset

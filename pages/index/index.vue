@@ -232,8 +232,9 @@ export default {
     if (!this.isDeviceListLoaded) {
       this._initEsIds()
     }
-    // 回到前台：恢复订阅者通知、确保回调已注册并立即刷新一次
-    realtimeDataProvider.setSubscribersPaused(false)
+    // 回到前台：解除订阅暂停 + 补发当前快照 + 重放设备注册（服务端收到 register 会立刻推一帧），
+    // 否则后台期间被暂停/超时的实时值一直是 '--'，要手动刷新才恢复
+    realtimeDataProvider.resumeRealtime()
     // 确保订阅者已注册（onShow 可能在 mounted 之前触发？uni-app 通常是 mounted → onShow，
     // 但 reLaunch/redirectTo 后新页的 onShow 先于旧页销毁，做个兜底）
     if (!this._unsubscribeRealtime) {
@@ -634,6 +635,18 @@ export default {
 
       // 切换tab
       this.currentTab = index
+
+      // 切回监测：v-if 会重建 Monitor 及其子组件。等新组件挂载完再补发一次快照并重放注册，
+      // 避免「从我的切回来全是 --、必须重新加载刷新」的问题；
+      // 设备列表被清空过（退出登录/切换站点）时补建一次，否则重放注册也没有目标。
+      if (index === 0) {
+        this.$nextTick(() => {
+          realtimeDataProvider.resumeRealtime()
+          if (!realtimeDataProvider.getDeviceList().length && !this.deviceListLoading) {
+            this.fetchDeviceList()
+          }
+        })
+      }
 
       // 滚动到顶部
       this.scrollToTop()

@@ -13,7 +13,6 @@
 
     <template v-else>
       <!-- 未收到数据时仍显示完整参数模板，仅数值为 -- -->
-      <view v-if="!hasData" class="tip-banner">尚未接收到液冷机数据，数值显示为 --</view>
 
       <!-- 运行状态：机组运行状态 + 电平/输出开关量 -->
       <DataGroup title="运行状态">
@@ -38,17 +37,17 @@
 
       <!-- 设备信息 -->
       <DataGroup title="设备信息">
-        <DataGrid :items="runItems" />
+        <DataGrid :items="runItems || []" />
       </DataGroup>
 
-      <!-- 故障报警 -->
+      <!-- 故障报警：空态与储能DC / 光伏DC 故障码区完全一致（同一句极简灰字）。
+           无数据、或设备回了数据但故障字未上报，都统一显示「暂无故障码数据」。 -->
       <DataGroup title="故障报警">
-        <view v-if="!hasData" class="fault-empty">等待液冷机故障数据</view>
-        <view v-else-if="!faultReported" class="fault-empty">故障字未上报（设备未返回有效故障数据）</view>
+        <view v-if="!hasData || !faultReported" class="fault-empty">暂无故障码数据</view>
         <FaultBoard
           v-else
-          :groups="faultGroups"
-          hint="暂无故障位数据"
+          :groups="faultGroups || []"
+          hint="暂无故障码数据"
         />
       </DataGroup>
     </template>
@@ -65,27 +64,32 @@ import {
 } from '../../../direct-device-0318-fields.js'
 import { fmtItems } from '../../../direct-device-50kw-format.js'
 import FaultBoard from '../FaultBoard.vue'
+import { getSnapshot } from '../realtime-store.js'
+import { realtimeSubscribe } from '../realtime-subscribe.js'
 
 /**
  * 液冷机（0318 V2.3）监测标签页
  * 分组与云端监控页「液冷机运行数据」一致：
  *   运行状态 / 开关量 / 运行参数 / 故障等级与代码 / 累计运行时长 / 故障报警
  * 数据源：rawValues['0318']（B 号为字节地址，B38/B39/B41 为单字节位信号）
+ *
+ * ⚡ 实时数据由 realtime-subscribe mixin 订阅仓库驱动，父页面不参与收帧渲染。
  */
 export default {
+  mixins: [realtimeSubscribe],
   name: 'LiquidCoolingTab',
   components: { DataGroup, DataGrid, StatusGrid, FaultBoard },
   props: {
-    rawValues: {
-      type: Object,
-      default: () => ({})
-    },
     is50KwMode: {
       type: Boolean,
       default: false
     }
   },
   computed: {
+    rawValues() {
+      void this.rtVer
+      return getSnapshot()
+    },
     bucket() {
       return (this.rawValues && this.rawValues['0318']) || {}
     },
@@ -213,18 +217,6 @@ export default {
   padding: 0 0 16rpx;
 }
 
-/* 无数据提示条 */
-.tip-banner {
-  margin: 0 0 16rpx;
-  padding: 16rpx 20rpx;
-  font-size: 22rpx;
-  color: #8a6d3b;
-  background: #fffbe6;
-  border: 1rpx solid #ffe58f;
-  border-radius: 14rpx;
-  line-height: 1.5;
-}
-
 /* 运行状态卡片：与 DataGrid 同一套栅格语言（白底 + 细横线） */
 .state-cards {
   display: flex;
@@ -246,14 +238,14 @@ export default {
   border-bottom: 1rpx solid #f3f5f8;
 }
 .state-label {
-  font-size: 22rpx;
+  font-size: 27rpx;
   color: #78838f;
   letter-spacing: 0.2rpx;
   margin-bottom: 8rpx;
   text-align: center;
 }
 .state-value {
-  font-size: 27rpx;
+  font-size: 28rpx;
   color: #1d2430;
   font-weight: 600;
   text-align: center;
@@ -281,14 +273,14 @@ export default {
   flex-direction: column;
   align-items: center;
   .signal-name {
-    font-size: 21rpx;
+    font-size: 26rpx;
     color: #78838f;
     text-align: center;
     margin-bottom: 8rpx;
     line-height: 1.3;
   }
   .signal-value {
-    font-size: 24rpx;
+    font-size: 28rpx;
     /* 未命中的位不再用近乎不可见的浅灰，保持中性但可读 */
     color: #9aa4b1;
     font-weight: 600;
@@ -312,7 +304,7 @@ export default {
 /* 故障报警：列表由 FaultBoard 渲染，此处仅保留空态文案 */
 .fault-empty {
   padding: 20rpx 12rpx;
-  font-size: 24rpx;
+  font-size: 28rpx;
   color: #8a94a1;
   text-align: center;
 }

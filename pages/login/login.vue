@@ -674,6 +674,20 @@ export default {
                 setTimeout(() => {
                     uni.reLaunch({ url: '/pages/index/index' });
                 }, 50);
+
+                // #ifdef APP-PLUS
+                // 启动时若尚未登录，检查更新请求可能因缺少 token 失败；登录态就绪后补查一次。
+                // 启动检查已成功时模块内去重会自动跳过，不会重复弹窗；
+                // 延到 reLaunch 之后，避免刚打开的升级弹窗被页面栈重置清掉。
+                setTimeout(() => {
+                    try {
+                        const { checkAppUpdate } = require('@/utils/appUpdate.js');
+                        checkAppUpdate();
+                    } catch (e) {
+                        console.warn('[AppUpdate] 登录后补查失败（可忽略）:', e);
+                    }
+                }, 1500);
+                // #endif
             } catch (e) {
                 console.error('存储登录状态失败:', e);
             }

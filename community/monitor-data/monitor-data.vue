@@ -1285,28 +1285,29 @@ const LIQUID_FAULT_BYTES = [
 ];
 
 // 50kW PCS 展示分组（依据《PCS数据页面调整》文档的数据分类）
-// 设备状态：0/1 按文档映射为文案
+// 设备状态：按 1707 点表口径映射（1 = 状态名称，0 = '/'）
 const PCS1707_STATUS_KEYS = [
   'Shutdown_Status', 'Standby_Status', 'Operation_Status',
   'Total_Fault_Status', 'Total_Alarm_Status', 'Remote_Local_Status',
   'E_Stop_Input_Status', 'Grid_Connected_Status', 'VF_Off_Grid_Status',
   'Overload_Derating', 'BMS_Dry_Contact_Input'
 ];
-// ⚠ 位状态的 0 是「有效读数」而不是「没有数据」：0 一律给反向文案，
-//   只有模型层未收到帧（value 为 '--'/undefined）才显示 '--'，
-//   避免待机/运行/总故障/并网等 10 项与「无数据」混淆（与直连设备页 PCS_STATUS 口径一致）。
+// ⚠ 点表只给「1」定义状态名称，=0 表示该位未置位，统一显示 '/'；
+//   唯一例外 Remote_Local_Status（1-远程;0-就地）是双态位，两个值都有含义。
+//   0 是有效读数，只有模型层未收到帧（value 为 '--'/undefined）才显示 '--'，
+//   避免未置位与「无数据」混淆（与直连设备页 PCS_STATUS 口径一致，两处须同步维护）。
 const PCS1707_STATUS_VALUE_MAP = {
-  Shutdown_Status: { '0': '未停机', '1': '停机' },
-  Standby_Status: { '0': '未待机', '1': '待机' },
-  Operation_Status: { '0': '未运行', '1': '运行' },
-  Total_Fault_Status: { '0': '无故障', '1': '故障' },
-  Total_Alarm_Status: { '0': '无告警', '1': '告警' },
-  Remote_Local_Status: { '0': '本地', '1': '远程' },
-  E_Stop_Input_Status: { '0': '未触发', '1': '已触发' },
-  Grid_Connected_Status: { '0': '离网', '1': '并网' },
-  VF_Off_Grid_Status: { '0': '未启用', '1': 'VF 离网' },
-  Overload_Derating: { '0': '未过载', '1': '过载降容' },
-  BMS_Dry_Contact_Input: { '0': '未动作', '1': '故障有效' }
+  Shutdown_Status: { '0': '/', '1': '停机' },
+  Standby_Status: { '0': '/', '1': '待机' },
+  Operation_Status: { '0': '/', '1': '运行' },
+  Total_Fault_Status: { '0': '/', '1': '故障' },
+  Total_Alarm_Status: { '0': '/', '1': '告警' },
+  Remote_Local_Status: { '0': '就地', '1': '远程' },
+  E_Stop_Input_Status: { '0': '/', '1': '急停有效' },
+  Grid_Connected_Status: { '0': '/', '1': '并网' },
+  VF_Off_Grid_Status: { '0': '/', '1': 'VF 离网' },
+  Overload_Derating: { '0': '/', '1': '过载发生' },
+  BMS_Dry_Contact_Input: { '0': '/', '1': '故障有效' }
 };
 // 交流侧：电压/电流/频率/有功/无功/视在功率/功率因数
 const PCS1707_AC_KEYS = [
@@ -1553,7 +1554,7 @@ export default {
       };
       const pick = keys => keys.map(buildField).filter(Boolean);
 
-      // 设备状态：0/1 按文档映射为文案
+      // 设备状态：按点表口径映射（1 = 状态名称，0 = '/'，未收到帧 = '--'）
       const deviceStatus = PCS1707_STATUS_KEYS.map(key => {
         const f = energy[key];
         if (!f) return null;
@@ -2330,6 +2331,44 @@ export default {
   &.badge-primary { color: #0f766e; background: #ccfbf1; }
   &.badge-muted { color: #64748b; background: #f1f5f9; }
   &.badge-default { color: #475569; background: #e2e8f0; }
+}
+
+/* 多徽标状态项（如「机器运行状态」同时命中 运行 / BAT 主接 / BUS 主接）：
+   模板已带 state-grid-item 类，这里让它占满整行、标签与徽标同一行横排。
+   否则三个徽标挤在 1/3 窄格里会竖排成三行，右侧留出一大片空白。
+   储能DC / 光伏DC 两处「状态参数」模板共用，改一条即可同时生效。 */
+.grid-item.state-grid-item {
+  width: 100%;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12rpx;
+  padding: 20rpx 16rpx;
+
+  .item-label {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    text-align: left;
+  }
+
+  .item-value {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8rpx;
+    font-size: 22rpx;
+    text-align: left;
+  }
+
+  /* 徽标自身 margin 会与 gap 叠加，归零；短名不折行 */
+  .state-badge {
+    margin: 0;
+    white-space: nowrap;
+  }
 }
 
 .status-grid {

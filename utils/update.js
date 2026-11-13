@@ -1,56 +1,17 @@
-export let appUpdate = ()=>{
-	plus.runtime.getProperty(plus.runtime.appid, (widgetInfo) => {
-		let version = widgetInfo.version
-		let osName = plus.os.name;
-		var server = `https://serviceiems.gree.com/appletAPI/downloadAPK?version=${version}&osName=${osName}`; //检查新地址
-		
-		uni.request({
-			url: server,
-			// data: req,
-			success: (res) => {
-				console.log(res);
-				if (res.statusCode == 200 && res.data.data.updateStatus == 3) return
-		
-				// 整包更新 
-				if (res.statusCode == 200 && res.data.data.updateStatus === 1) {
-					console.log('整包更新2.02');
-					uni.showModal({ //提醒用户更新  
-						title: "更新提示",
-						content: res.data.data.note,
-						success: (res) => {
-							if (res.confirm) {
-								plus.runtime.openURL(res.data.url);
-							}
-						},
-						complete: (com) => {
-							console.log(com);
-						}
-					})
-				}
-	
-				// 热更新
-				if (res.statusCode == 200 && res.data.data.updateStatus === 2) {
-					console.log('热更新');
-					uni.downloadFile({
-						url: res.data.url,
-						success: (downloadResult) => {
-							if (downloadResult.statusCode === 200) {
-								plus.runtime.install(downloadResult
-									.tempFilePath, {
-										force: false
-									},
-									function() {
-										plus.runtime.restart();
-									},
-									function(e) {});
-							}
-						}
-					});
-				}
-	
-	
-			}
-		
-		})
-	})
-}
+/**
+ * @deprecated 旧版更新入口，业务代码已不再引用（App.vue / about.vue 均使用 utils/appUpdate.js）。
+ *
+ * 说明（2026-11-09）：业务要求保留「自动更新升级」，完整能力已恢复在 utils/appUpdate.js：
+ *   checkAppUpdate / downloadUpdateFile / ensureInstallPermission / installWgt / installApk。
+ * 此处保留导出名仅为向后兼容，不再重复实现旧的下载安装逻辑 —— 旧实现同时存在两处缺陷：
+ *   1) 读取 res.data.url 而非 res.data.data.url，整包更新地址取不到；
+ *   2) 使用已废弃的 serviceiems.gree.com 域名，且无签名校验 / 无进度 / 无失败兜底。
+ * 静态扫描仍会扫描本文件，故保持为薄转发层，不含 plus.runtime.install 等重复实现。
+ * 详见 .workbuddy/docs/APK安全误报处置方案.md B3 节。
+ */
+import { checkAppUpdate } from '@/utils/appUpdate.js'
+
+export { checkAppUpdate }
+
+/** 兼容旧调用名：转发到统一的自动更新检查入口 */
+export let appUpdate = () => checkAppUpdate()

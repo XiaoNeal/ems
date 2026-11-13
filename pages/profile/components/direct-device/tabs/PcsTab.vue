@@ -1,22 +1,23 @@
 <template>
-  <scroll-view class="module-scroll" scroll-y="true">
+  <!-- 滚动由页面外层 scroll-view 统一负责，避免嵌套滚动容器 -->
+  <view class="panel-root">
     <view class="content">
       <view class="module">
         <view class="module-title">PCS</view>
         <DataGroup v-for="g in displayGroups" :key="g.title" :title="g.title">
-          <StatusGrid v-if="g.variant" :variant="g.variant" :items="g.items" />
+          <StatusGrid v-if="g.variant" :variant="g.variant" :items="g.items || []" />
           <!-- 50kW：故障信息按字节分组，汇总条 + 双列网格 -->
           <FaultBoard
             v-else-if="g.faultGroups"
-            :groups="g.faultGroups"
+            :groups="g.faultGroups || []"
             :has-data="bucket50HasData"
             hint="暂无故障位数据"
           />
-          <DataGrid v-else :items="g.items" />
+          <DataGrid v-else :items="g.items || []" />
         </DataGroup>
       </view>
     </view>
-  </scroll-view>
+  </view>
 </template>
 
 <script>
@@ -29,30 +30,35 @@ import DataGroup from '../DataGroup.vue'
 import DataGrid from '../DataGrid.vue'
 import StatusGrid from '../StatusGrid.vue'
 import FaultBoard from '../FaultBoard.vue'
+import { getFormatted, getSnapshot } from '../realtime-store.js'
+import { realtimeSubscribe } from '../realtime-subscribe.js'
 
 /**
  * PCS tab 组件
  * 20kW：旧协议 171B（B64 状态位 + 电气参数）
  * 50kW：新协议 1707 V3.5（按点表分组：设备状态 / 交流侧 / 直流侧 / 温度测点 / 累计电量 / 版本与通讯 / 故障信息）
+ *
+ * ⚡ 实时数据由 realtime-subscribe mixin 订阅仓库驱动，父页面不参与收帧渲染。
  */
 export default {
+  mixins: [realtimeSubscribe],
   name: 'PcsTab',
   components: { DataGroup, DataGrid, StatusGrid, FaultBoard },
   props: {
-    formattedValues: {
-      type: Object,
-      default: () => ({})
-    },
-    rawValues: {
-      type: Object,
-      default: () => ({})
-    },
     is50KwMode: {
       type: Boolean,
       default: false
     }
   },
   computed: {
+    formattedValues() {
+      void this.rtVer
+      return getFormatted()
+    },
+    rawValues() {
+      void this.rtVer
+      return getSnapshot()
+    },
     /** 50kW PCS 原始寄存器 bucket（1707 帧，B 号为字节地址） */
     bucket50() {
       return this.rawValues['1707'] || {}
@@ -199,8 +205,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.module-scroll {
-  height: 100%;
+.panel-root {
+  width: 100%;
 }
 .content {
   padding: 0 20rpx 32rpx;

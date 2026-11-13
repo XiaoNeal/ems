@@ -51,7 +51,7 @@
 				</button>
 
 				<!-- 次按钮：失败时浏览器下载（wgt 热更新不支持浏览器安装，不显示） -->
-				<button v-if="status === 'failed' && info.updateStatus !== 2" class="btn btn-plain" @tap="handleBrowser">浏览器下载</button>
+				<button v-if="status === 'failed' && !isWgt" class="btn btn-plain" @tap="handleBrowser">浏览器下载</button>
 
 				<!-- 次按钮：稍后再说（强制更新不显示） -->
 				<button v-if="!isForce && status !== 'installing'" class="btn btn-plain" @tap="handleCancel">稍后再说</button>
@@ -66,11 +66,13 @@
 <script>
 import {
 	PENDING_UPDATE_KEY,
+	ALLOW_IN_APP_APK_INSTALL,
 	downloadUpdateFile,
 	ensureInstallPermission,
 	installWgt,
 	installApk,
-	openInBrowser
+	openInBrowser,
+	snoozeUpdateVersion
 } from '@/utils/appUpdate.js'
 
 export default {
@@ -89,12 +91,21 @@ export default {
 		isForce() {
 			return !!this.info.force
 		},
+		// updateStatus: 1 整包 APK / 2 wgt 热更新 / 3 无更新
+		isWgt() {
+			return Number(this.info.updateStatus) === 2
+		},
+		// APK 整包是否走浏览器下载（关闭应用内安装开关时）
+		useBrowserForApk() {
+			return !this.isWgt && !ALLOW_IN_APP_APK_INSTALL
+		},
 		mainBtnText() {
 			if (this.status === 'downloading') return '下载中...'
 			if (this.status === 'installing') return '安装中...'
 			if (this.status === 'failed') return '重试'
 			if (this.isIOS) return '前往 App Store 更新'
-			if (this.info.updateStatus === 2) return '立即升级'
+			if (this.useBrowserForApk) return '前往浏览器下载'
+			if (this.isWgt) return '立即升级'
 			return '立即更新'
 		}
 	},
@@ -136,11 +147,25 @@ export default {
 			this.startUpdate()
 		},
 
-		/** Android 下载 + 安装主流程 */
+		/** Android 自动更新主流程：下载 → 进度 → 安装（wgt 自动重启 / APK 系统安装器） */
 		async startUpdate() {
-			// Android 8+ 先确认安装权限（wgt 热更新不需要安装未知应用权限）
-			const isWgt = this.info.updateStatus === 2
-			if (!isWgt) {
+			const url = this.info && this.info.url
+			if (!url) {
+				this.failReason = '未获取到下载地址，请联系管理员'
+				this.status = 'failed'
+				return
+			}
+
+			// 回退路径：关闭应用内 APK 安装开关时，整包更新交给浏览器 + 系统安装器
+			if (this.useBrowserForApk) {
+				openInBrowser(url)
+				uni.showToast({ title: '已打开下载页，请在浏览器中完成安装', icon: 'none', duration: 3000 })
+				if (!this.isForce) this.handleCancel()
+				return
+			}
+
+			// Android 8+ 先确认「允许安装未知应用」权限（wgt 热更新不需要）
+			if (!this.isWgt) {
 				const granted = await ensureInstallPermission()
 				if (!granted) return
 			}
@@ -149,19 +174,18 @@ export default {
 			this.progress = 0
 			this.failReason = ''
 			try {
-				const filePath = await downloadUpdateFile(this.info.url, (p) => {
+				const filePath = await downloadUpdateFile(url, (p) => {
 					this.progress = p
-				}, isWgt ? 'wgt' : 'apk')
+				}, this.isWgt ? 'wgt' : 'apk')
 				this.status = 'installing'
-				if (isWgt) {
+				if (this.isWgt) {
 					// wgt 热更新：安装后提示重启
 					await installWgt(filePath)
-					this.status = 'confirm'
 				} else {
-					// APK 整包：系统安装器接管
+					// APK 整包：系统安装器接管，需用户确认
 					await installApk(filePath)
-					this.status = 'confirm'
 				}
+				this.status = 'confirm'
 			} catch (e) {
 				console.error('[AppUpdate] 下载/安装失败:', e)
 				this.failReason = (e && e.message) || '请重试或前往浏览器下载'
@@ -174,10 +198,10 @@ export default {
 			openInBrowser(this.info.url)
 		},
 
-		/** 稍后再说：记录忽略版本并退出弹窗 */
+		/** 稍后再说：仅本次运行内不再提醒，下次进入 APP 重新提示 */
 		handleCancel() {
 			if (!this.isForce && this.info.version) {
-				uni.setStorageSync('ignored_version', this.info.version)
+				snoozeUpdateVersion(this.info.version)
 			}
 			uni.navigateBack()
 		}

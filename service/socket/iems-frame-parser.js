@@ -131,8 +131,13 @@ export function parseIemsFrame(frame, options) {
     }
   }
 
-  // 提取原始 payload 字节（供协议模块使用）
-  const payload = frame.slice(9, 9 + actualPayloadLen)
+  // 提取原始 payload 字节（供协议模块使用）。
+  // subarray 是零拷贝视图，每帧省一次数组复制；本协议帧解析只读不写，
+  // 且 parsed 用完即弃，共享底层 buffer 不会造成内存驻留。
+  // 普通 Array（少数模拟器路径）没有 subarray，回退 slice。
+  const payload = typeof frame.subarray === 'function'
+    ? frame.subarray(9, 9 + actualPayloadLen)
+    : frame.slice(9, 9 + actualPayloadLen)
 
   const payloadEnd = 9 + actualPayloadLen
   const dateTimeStart = payloadEnd
@@ -170,28 +175,26 @@ export function parseIemsFrame(frame, options) {
   // 解析 payload → B 字段
   // 优先使用协议模块（含缩放/偏移/位域），回退到通用 16 位解析
   const deviceTypeHex = padHex(deviceType, 4)
-  const data = parsePayloadWithProtocol(payload, deviceTypeHex, dataType, options && options.protocolKey)
+  const protocolKey = options && options.protocolKey
+  // 帧头 startAddr 是 payload 的起始字节地址：下行控制帧解析（parseControlFrame）
+  // 早已按 startAddr + i 计算寄存器号，上行却一直把 payload[0] 当地址 0，
+  // 而 50kW 新协议（parseAddrFields）是「按绝对字节地址」读字段的。
+  // 设备分段上报（例如状态帧只带地址 8 起的 4 字节）时，地址 8 会因越界被
+  // 整个跳过，状态字/故障码静默丢失，页面只剩全灰徽标。
+  // 这里仅在显式指定新协议模块且 startAddr>0 时前置补 0 对齐到绝对地址；
+  // startAddr=0 的整帧上报零开销、行为完全不变，旧协议与通用解析也不受影响。
+  let alignedPayload = payload
+  if (protocolKey && startAddr > 0) {
+    const buf = new Uint8Array(startAddr + payload.length)
+    buf.set(payload, startAddr)
+    alignedPayload = buf
+  }
+  const data = parsePayloadWithProtocol(alignedPayload, deviceTypeHex, dataType, protocolKey)
 
-  // 打印解析后的数据
-  const dataTypeName = dataType === 2 ? '能源' : dataType === 4 ? '控制' : dataType === 1 ? '设备信息' : '未知'
-  // console.log(`[IEMS解析] ${deviceTypeHex} addr=${padHex(address, 2)} ${dataTypeName}帧 dataType=${dataType} dateTime=${dateTimeStr} CRC=${crcOk ? 'OK' : 'FAIL'} 字段数=${Object.keys(data).length}`)
-  // 打印前若干个 B 字段（避免日志过长）
-  const fieldEntries = Object.entries(data).slice(0, 12)
-  fieldEntries.forEach(([k, v]) => {
-    // v 可能是纯数字（协议模块 parseStruct），也可能是对象（带 eng/unit/name 的扩展格式）
-    let displayVal, unit, name
-    if (v !== null && v !== undefined && typeof v === 'object') {
-      displayVal = v.eng !== undefined ? v.eng : (v.value !== undefined ? v.value : v.raw)
-      unit = v.unit || ''
-      name = v.name || ''
-    } else {
-      displayVal = v
-      unit = ''
-      name = ''
-    }
-    // console.log(`    ${k}: ${name} = ${displayVal}${unit ? ' ' + unit : ''}`)
-  })
-  // if (Object.keys(data).length > 12) // console.log(`    ... 共 ${Object.keys(data).length} 个字段`)
+  // ⚡ 性能：曾经这里有一段「打印前 12 个字段」的调试代码，虽然 console.log
+  //    全被注释掉了，但 Object.entries + slice + forEach + 12 次解构/对象判断
+  //    仍然每帧执行（8~10 帧/s），白白制造短命对象喂给 V8 GC。整段删除，
+  //    解析结果完全不变，只是不再构建这些永远不会被读取的中间对象。
 
   // 输出与 GetParseStringWithTimeStamp 一致的结构
   return {

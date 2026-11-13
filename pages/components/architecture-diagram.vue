@@ -864,7 +864,8 @@ export default {
     // 确认启动
     async confirmStart() {
       this.showModal = false;
-      const success = await this.executeCommand({
+      // 不立即更新状态，10s 后由 executeCommand 从实时数据(B12)同步真实状态
+      await this.executeCommand({
         title: '策略启动',
         content: '确定要启动策略吗？',
         apiSufix: 'systemControl',
@@ -872,15 +873,13 @@ export default {
         action: 'start',
         stateKey: 'systemRunning'
       });
-      if (success) {
-        this.systemRunning = true;
-      }
     },
 
     // 确认停止
     async confirmStop() {
       this.showStopModal = false;
-      const success = await this.executeCommand({
+      // 不立即更新状态，10s 后由 executeCommand 从实时数据(B12)同步真实状态
+      await this.executeCommand({
         title: '策略停止',
         content: '确定要停止策略吗？',
         apiSufix: 'systemControl',
@@ -888,9 +887,6 @@ export default {
         action: 'stop',
         stateKey: 'systemRunning'
       });
-      if (success) {
-        this.systemRunning = false;
-      }
     },
 
     handleStartStop() {

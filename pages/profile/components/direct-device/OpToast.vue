@@ -33,7 +33,7 @@ export default {
   background: rgba(24, 32, 44, 0.88);
   color: #fff;
   border-radius: 999rpx;
-  font-size: 26rpx;
+  font-size: 28rpx;
   line-height: 1.4;
   text-align: center;
   box-shadow: 0 12rpx 32rpx rgba(15, 23, 42, 0.18);

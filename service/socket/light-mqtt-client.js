@@ -15,6 +15,7 @@
 
 import { UniappWebSocketAdapter } from './uniapp-websocket-shim.js'
 import { UniappTcpAdapter } from './uniapp-tcp-adapter.js'
+import { logLine } from '../../utils/device-log.js'
 import { buildIemsCommandFrame, normalizeRegisterAddress } from './iems-frame-parser.js'
 import { resolveDeviceProfile } from './control-device-profile.js'
 
@@ -25,6 +26,9 @@ import { resolveDeviceProfile } from './control-device-profile.js'
  */
 const CONTROL_PAYLOAD_MODE = 'hex'
 const CONTROL_HEX_SEPARATOR = ' '
+
+/** 下发报文日志开关：正式包关闭（拼 hex 字符串 + console.log 都压在点击帧上） */
+const DEBUG_PUBLISH_LOG = false
 
 /**
  * 根据 brokerUrl 协议自动选择传输适配器
@@ -40,15 +44,18 @@ function createTransport(brokerUrl) {
   }
   const isTcp = /^tcp:\/\//i.test(url)
   console.log('[MQTT] createTransport, url=', url, 'isTcp=', isTcp)
+  logLine('连接', '开始建立连接：' + url + '（' + (isTcp ? '原生通道' : 'WebSocket 通道') + '）')
   if (isTcp) {
     // 尝试原生 TCP，不可用时降级 WebSocket
     try {
       const adapter = new UniappTcpAdapter(url, null)
       console.log('[MQTT] 使用 UniappTcpAdapter')
+      logLine('连接', '原生 TCP 通道已创建')
       return adapter
     } catch (e) {
       const msg = String((e && e.message) || e)
       console.warn('[MQTT] TCP 适配器创建失败:', msg)
+      logLine('连接', '原生通道创建失败：' + msg)
       // 仅「平台不支持原生 TCP」才降级 ws://；
       // 像「并发数超限」这类是资源问题，降级到 ws 打 tcp 端口必然握手失败，只会制造更多无效连接
       if (/不支持原生 TCP/.test(msg)) {
@@ -242,6 +249,8 @@ export class LightMqttClient {
       this._reconnectTimer = null
     }
     this.connecting = true
+    logLine('连接', (isRetry ? '自动重连' : '首次连接') + '开始，第 ' +
+      this._reconnectAttempts + ' 次重连，超时 ' + this.connectTimeout + 'ms')
     const p = new Promise((resolve, reject) => {
       // 关闭旧传输层（如果还活着），避免 TCPSocket 泄漏
       this._disposeTransport()
@@ -255,13 +264,18 @@ export class LightMqttClient {
         this.connecting = false
         this._connectResolve = null
         this._connectReject = null
+        logLine('连接', '通道创建失败：' + String((e && e.message) || e))
         reject(e)
+        // 首连失败也必须排重连：以前只 reject，页面 connectMqtt 又把错误吞掉，
+        // 结果「有时候连不上」就一直连不上，只能手动点刷新 / 切后台回来。
+        this._scheduleReconnect()
         return
       }
       // console.log('[MQTT] ws created, type=', this.ws.constructor.name, 'readyState=', this.ws.readyState)
 
       this.ws.onopen = () => {
         // console.log('[MQTT] ws.onopen fired, sending CONNECT...')
+        logLine('连接', '通道已打开，发送握手报文')
         this._sendConnect()
       }
 
@@ -272,6 +286,7 @@ export class LightMqttClient {
 
       this.ws.onerror = (evt) => {
         const msg = evt && evt.message ? evt.message : 'WebSocket error'
+        logLine('连接', '通道错误：' + msg)
         if (!this.connected) {
           this.connecting = false
           if (this._connectReject) {
@@ -280,11 +295,17 @@ export class LightMqttClient {
             this._connectReject = null
             this._connectResolve = null
           }
+          // 释放已建了一半的通道，并主动排重连。
+          // APP 端 Java Socket 失败时只上报 error、不会上报 close，
+          // 仅靠 onclose 里的 _scheduleReconnect 会永远等不到重连。
+          this._disposeTransport()
+          this._scheduleReconnect()
         }
         if (typeof this.onError === 'function') this.onError(new Error(msg))
       }
 
       this.ws.onclose = () => {
+        logLine('连接', '通道关闭' + (this.connected ? '（曾连接成功）' : '（连接未建立）'))
         const wasConnected = this.connected
         this.connected = false
         this.connecting = false
@@ -301,11 +322,14 @@ export class LightMqttClient {
         if (!this.connected && this.connecting) {
           this.connecting = false
           this._disposeTransport()
+          logLine('连接', '连接超时（' + this.connectTimeout + 'ms），释放通道并排重连')
           if (this._connectReject) {
             this._connectReject(new Error(`连接超时（${this.connectTimeout}ms），请检查 Broker URL 与 WiFi`))
             this._connectReject = null
             this._connectResolve = null
           }
+          // 超时分支的 _disposeTransport 会解绑 onclose，不排重连就彻底断线
+          this._scheduleReconnect()
         }
       }, this.connectTimeout)
     })
@@ -326,6 +350,7 @@ export class LightMqttClient {
     if (this._reconnectTimer) return
     if (this._reconnectAttempts >= this._maxReconnectAttempts) {
       console.warn('[mqtt] 达到最大重连次数，停止重连')
+      logLine('连接', '达到最大重连次数（' + this._maxReconnectAttempts + '），停止重连')
       if (typeof this.onError === 'function') {
         this.onError(new Error('达到最大重连次数，已停止重连'))
       }
@@ -338,6 +363,8 @@ export class LightMqttClient {
       30000
     )
     console.log(`[mqtt] ${delay}ms 后重连（第 ${this._reconnectAttempts}/${this._maxReconnectAttempts} 次）`)
+    logLine('连接', delay + 'ms 后自动重连（第 ' +
+      this._reconnectAttempts + '/' + this._maxReconnectAttempts + ' 次）')
     this._reconnectTimer = setTimeout(() => {
       // 重新订阅需保留的 handler 由调用方在 onConnect 中处理
       this._reconnectTimer = null
@@ -372,7 +399,11 @@ export class LightMqttClient {
    * 订阅主题（仅支持 QoS 0，简化实现）
    */
   async subscribe(topic, handler) {
-    if (!this.connected) throw new Error('未连接到 Broker')
+    if (!this.connected) {
+      // 协议术语只留在控制台供排障；抛出的文案会被上层 toast / 弹窗直接展示
+      console.warn('[MQTT] 操作被拦截：未连接到 Broker')
+      throw new Error('设备连接已断开，请重新连接后重试')
+    }
     this._sendSubscribePacket(topic)
 
     if (handler) {
@@ -410,6 +441,9 @@ export class LightMqttClient {
    */
   _resendSubscriptions() {
     if (!this.ws || !this.connected) return
+    if (this._topicHandlers.size) {
+      logLine('连接', '恢复 ' + this._topicHandlers.size + ' 路数据订阅')
+    }
     this._topicHandlers.forEach((handlers, topic) => {
       if (handlers && handlers.size > 0) {
         try { this._sendSubscribePacket(topic) } catch (e) { /* 忽略单条失败 */ }
@@ -422,7 +456,11 @@ export class LightMqttClient {
    * message 可以是 string / Uint8Array / ArrayBuffer / plain object(会 JSON.stringify)
    */
   async publish(topic, message, opts = {}) {
-    if (!this.connected) throw new Error('未连接到 Broker')
+    if (!this.connected) {
+      // 协议术语只留在控制台供排障；抛出的文案会被上层 toast / 弹窗直接展示
+      console.warn('[MQTT] 操作被拦截：未连接到 Broker')
+      throw new Error('设备连接已断开，请重新连接后重试')
+    }
     let payloadBytes
     if (message instanceof Uint8Array) {
       payloadBytes = message
@@ -436,8 +474,10 @@ export class LightMqttClient {
     const qos = (opts && opts.qos) || 0
     const flags = (opts.retain ? 0x01 : 0) | ((qos & 0x03) << 1)
     this._sendPublishRaw(topic, payloadBytes, flags, qos)
-    const hex = Array.from(payloadBytes).map(b => b.toString(16).padStart(2, '0')).join(' ')
-    console.log('[MQTT] PUBLISH → topic=' + topic + ' qos=' + qos + ' payload=' + payloadBytes.length + 'B hex=' + hex)
+    if (DEBUG_PUBLISH_LOG) {
+      const hex = Array.from(payloadBytes).map(b => b.toString(16).padStart(2, '0')).join(' ')
+      console.log('[MQTT] PUBLISH → topic=' + topic + ' qos=' + qos + ' payload=' + payloadBytes.length + 'B hex=' + hex)
+    }
     return true
   }
 
@@ -662,6 +702,7 @@ export class LightMqttClient {
     const hexStr = Array.from(packet).map(b => b.toString(16).padStart(2, '0')).join(' ')
     console.log('[mqtt] Sending CONNECT packet hex:', hexStr)
     console.log('[mqtt] CONNECT summary: protocol=MQTT version=4 flags=0x' + flags.toString(16) + ' keepalive=' + this.keepalive + ' clientId=' + this.clientId)
+    logLine('连接', '握手报文已发出（' + packet.length + 'B，会话标识 ' + this.clientId + '）')
     this.ws.send(packet)
   }
 
@@ -824,6 +865,7 @@ export class LightMqttClient {
       this.connecting = false
       this._reconnectAttempts = 0
       this._startPing()
+      logLine('连接', '设备已应答，连接建立成功')
       // 重连成功（CleanSession）后 broker 已丢掉订阅，必须补发 SUBSCRIBE，
       // 否则表现为「已连接但没有任何数据」，页面看起来像卡死
       this._resendSubscriptions()
@@ -838,6 +880,7 @@ export class LightMqttClient {
       this.connected = false
       const codes = { 1: '协议版本不支持', 2: 'Client ID 不合法', 3: '服务器不可用', 4: '用户名或密码错误', 5: '未授权' }
       const errMsg = 'MQTT CONNACK 失败: ' + (codes[returnCode] || '未知错误')
+      logLine('连接', '设备拒绝连接：' + errMsg)
       if (this._connectReject) {
         this._connectReject(new Error(errMsg))
         this._connectReject = null

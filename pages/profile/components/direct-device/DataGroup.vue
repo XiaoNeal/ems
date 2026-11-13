@@ -104,7 +104,7 @@ export default {
 
 .group-summary {
   margin-right: 8rpx;
-  font-size: 22rpx;
+  font-size: 27rpx;
   color: #8a94a1;
 }
 

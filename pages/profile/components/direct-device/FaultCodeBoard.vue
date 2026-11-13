@@ -3,41 +3,20 @@
     <!-- 未收到数据：不能把 0 当成「无故障」 -->
     <view v-if="!hasData || !valid" class="cb-empty">{{ hint }}</view>
 
-    <template v-else>
-      <!-- 当前码：整块只有 1 个有效码，顶部给足信息量 -->
-      <view class="cb-hero" :class="isFault ? 'is-bad' : 'is-ok'">
-        <view class="cb-hero-code">
-          <text class="cb-code-num">{{ isFault ? pad(current) : '00' }}</text>
-        </view>
-        <view class="cb-hero-info">
-          <text class="cb-hero-name">{{ currentName }}</text>
-          <text class="cb-hero-sub">{{ isFault ? '设备存在故障，请及时排查' : '设备运行正常' }}</text>
-        </view>
-        <view class="cb-hero-tag">
-          <view class="cb-hero-dot"></view>
-          <text>{{ isFault ? '故障' : '正常' }}</text>
-        </view>
+    <!-- 与 FaultBoard（BMS / 液冷机）完全相同的三列等宽标签栅格：
+         编号独立一行、名称居中，行列都对齐；命中项红底红字。
+         不再有「当前故障码」大卡和分组码表，界面不再层层嵌套。 -->
+    <view v-else class="cb-tags">
+      <view
+        v-for="(it, i) in flatItems"
+        :key="it.code + '-' + i"
+        class="cb-tag"
+        :class="{ active: it.active }"
+      >
+        <text class="cb-tag-code">{{ pad(it.code) }}</text>
+        <text class="cb-tag-text">{{ it.name }}</text>
       </view>
-
-      <!-- 码表：按保护对象分组，命中项红底 -->
-      <view v-for="(g, gi) in normalized" :key="gi" class="cb-group">
-        <view class="cb-head">
-          <text class="cb-title">{{ g.title }}</text>
-          <text class="cb-count" :class="{ hit: g.hit > 0 }">{{ g.hit }}/{{ g.items.length }}</text>
-        </view>
-        <view class="cb-grid">
-          <view
-            v-for="(it, ii) in g.items"
-            :key="ii"
-            class="cb-cell"
-            :class="{ active: it.active }"
-          >
-            <text class="cb-cell-code">{{ pad(it.code) }}</text>
-            <text class="cb-cell-name">{{ it.name }}</text>
-          </view>
-        </view>
-      </view>
-    </template>
+    </view>
   </view>
 </template>
 
@@ -45,26 +24,36 @@
 /**
  * 故障码看板（170C 储能/光伏 DC-DC）
  *
- * 与 FaultBoard 的区别：
- *   - 170C 的故障是「单值枚举码」（0~41），同一时刻只会命中 1 个；
- *   - PCS / BMS / 液冷机的故障是「位状态」，可同时命中多个。
- * 所以这里顶部做成「当前故障码」大卡，下面用分组码表把全部可用码列出来，
- * 命中项红底，一眼能看出「现在报的是哪个码、属于哪一类保护」。
+ * 与 FaultBoard 的区别只在数据语义：这里同一时刻只会命中 1 个枚举码，
+ * 但展示层统一为「三列等宽标签栅格」，视觉与 BMS / 液冷机一致。
+ * 标签内保留两位码号，命中项高亮即为当前故障码，不再单独放大卡。
  *
  * 用法：<FaultCodeBoard :groups="DC_ERROR_GROUPS" :current="code" :has-data="true" />
  */
+
+/**
+ * 按故障码数值升序平铺。
+ * 分组 title 从来不渲染（见 FaultBoard 注释），分组顺序在这里不携带任何信息，
+ * 却会让编号出现 02/06 → 08/13 → 07/09 → … → 28/04/41 的跳跃，视觉上很乱。
+ * 升序后编号连续递增，现场按故障码查表也更快。
+ * A/B：改回 false = 恢复「按点表分组顺序」的旧排列。
+ */
+const SORT_BY_CODE = true
+
 export default {
   name: 'FaultCodeBoard',
   props: {
+    // 不声明 type：小程序端 setData 会把 undefined 序列化成 null，
+    // 微信基础库会对 Array / Number 类型刷「type-uncompatible」警告。
+    // 值统一在 computed 里规范化，H5 / APP 行为不变。
     // [{ title, items: [{ code, name }] }]
     groups: {
-      type: Array,
       default: () => []
     },
-    /** 当前故障码（状态帧 B10） */
+    /** 当前故障码（状态帧 B10）；-1 = 暂无有效故障码。
+     *  不能用 NaN：小程序 setData 会把它序列化成 null，还会刷 NaN/Infinity 警告。 */
     current: {
-      type: Number,
-      default: NaN
+      default: -1
     },
     hasData: {
       type: Boolean,
@@ -77,31 +66,38 @@ export default {
   },
   computed: {
     valid() {
-      return Number.isFinite(this.current)
+      // -1 / null / 非数字都表示「没拿到故障码」，不能把 0 当成「无故障」
+      return Number.isFinite(this.current) && this.current >= 0
     },
     isFault() {
       return this.valid && this.current !== 0
     },
-    currentName() {
-      if (!this.valid) return '--'
-      if (this.current === 0) return '无故障'
-      const all = this.groups.reduce((acc, g) => acc.concat(g.items || []), [])
-      const hit = all.find(it => it.code === this.current)
-      return hit ? hit.name : '未知故障码'
-    },
-    normalized() {
-      return (this.groups || [])
-        .map(g => {
-          const items = (g.items || [])
-            .filter(it => it && it.name)
-            .map(it => ({ code: it.code, name: it.name, active: this.isFault && it.code === this.current }))
-          return {
-            title: g.title || '',
-            items,
-            hit: items.filter(it => it.active).length
-          }
+    /** 展平成单个标签数组；分组只用于取数据，顺序统一按码号升序 */
+    flatItems() {
+      const out = []
+      const groups = Array.isArray(this.groups) ? this.groups : []
+      for (let i = 0; i < groups.length; i++) {
+        const items = groups[i].items || []
+        for (let j = 0; j < items.length; j++) {
+          const it = items[j]
+          if (!it || !it.name) continue
+          out.push({
+            code: it.code,
+            name: it.name,
+            active: this.isFault && it.code === this.current
+          })
+        }
+      }
+      if (SORT_BY_CODE) {
+        out.sort((a, b) => {
+          const ca = Number(a.code)
+          const cb = Number(b.code)
+          if (!Number.isFinite(ca)) return 1
+          if (!Number.isFinite(cb)) return -1
+          return ca - cb
         })
-        .filter(g => g.items.length > 0)
+      }
+      return out
     }
   },
   methods: {
@@ -116,161 +112,60 @@ export default {
 
 <style lang="scss" scoped>
 .code-board {
-  padding: 4rpx;
+  padding: 6rpx 2rpx;
 }
 
-/* ---------- 当前故障码 ---------- */
-.cb-hero {
-  display: flex;
-  align-items: center;
-  padding: 18rpx 20rpx;
-  margin: 6rpx 4rpx 4rpx;
-  border-radius: 14rpx;
-  background: #f7f9fb;
-  border: 1rpx solid #edf1f5;
-
-  &.is-bad {
-    background: #fff5f4;
-    border-color: #ffd9d4;
-    .cb-code-num { color: #e6434a; }
-    .cb-hero-name { color: #c9333a; }
-    .cb-hero-tag { background: rgba(230, 67, 74, 0.08); color: #e6434a; }
-  }
-  &.is-ok {
-    background: #f5fbf6;
-    border-color: #d8efdc;
-    .cb-code-num { color: #2f9e63; }
-    .cb-hero-name { color: #2b8a58; }
-    .cb-hero-tag { background: rgba(47, 158, 99, 0.08); color: #2f9e63; }
-  }
-}
-.cb-hero-code {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 74rpx;
-  padding-right: 18rpx;
-  margin-right: 18rpx;
-  border-right: 1rpx solid rgba(0, 0, 0, 0.06);
-}
-.cb-code-num {
-  font-size: 46rpx;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -1rpx;
-}
-.cb-hero-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-.cb-hero-name {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #333a44;
-  line-height: 1.3;
-}
-.cb-hero-sub {
-  font-size: 20rpx;
-  color: #9aa1aa;
-  margin-top: 6rpx;
-}
-.cb-hero-tag {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  padding: 6rpx 14rpx;
-  border-radius: 20rpx;
-  font-size: 20rpx;
-  line-height: 1.4;
-}
-.cb-hero-dot {
-  width: 8rpx;
-  height: 8rpx;
-  border-radius: 50%;
-  background: currentColor;
-  margin-right: 6rpx;
-}
-
-/* ---------- 分组码表 ---------- */
-.cb-group {
-  margin-top: 18rpx;
-}
-.cb-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 6rpx 10rpx;
-  margin-bottom: 12rpx;
-  border-bottom: 1rpx solid #f2f4f7;
-}
-.cb-title {
-  font-size: 24rpx;
-  font-weight: 600;
-  color: #5a6270;
-  letter-spacing: 0.5rpx;
-}
-.cb-count {
-  font-size: 21rpx;
-  color: #b3b9c1;
-  &.hit {
-    color: #e6434a;
-    font-weight: 600;
-  }
-}
-.cb-grid {
+/* ---------- 三列等宽标签栅格（与 FaultBoard / StatusGrid 同一套） ---------- */
+.cb-tags {
   display: flex;
   flex-wrap: wrap;
-  margin: -4rpx;
+  gap: 12rpx;
 }
-.cb-cell {
-  display: flex;
-  align-items: center;
-  /* 编号 + 名称作为整体居中：双列卡片宽度固定，左对齐时右半边留白，
-     两组并排看起来会「一边挤一边空」，居中后左右两列视觉重心一致 */
-  justify-content: center;
-  width: calc(50% - 8rpx);
-  min-height: 54rpx;
-  margin: 4rpx;
-  padding: 0 12rpx;
+.cb-tag {
+  /* 等宽是关键：以前按内容自适应，长名字撑宽、短名字收窄，每行个数忽多忽少。
+     flex 默认 align-items:stretch，同行格子会被拉到同一高度，行列都对齐。 */
+  width: calc((100% - 24rpx) / 3);
+  min-height: 104rpx;
+  padding: 10rpx 6rpx;
   box-sizing: border-box;
-  border-radius: 10rpx;
-  background: #f7f8fa;
-  border: 1rpx solid #f0f2f5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 1rpx solid #e3e8ee;
+  border-radius: 8rpx;
+  background: #fafbfc;
+  line-height: 1.3;
 
   &.active {
     background: #fff2f0;
-    border-color: #ffd3cd;
-    .cb-cell-code { color: #d93a32; }
-    .cb-cell-name { color: #d93a32; font-weight: 600; }
+    border-color: #ffc9c2;
+    .cb-tag-code { color: #d93a32; }
+    .cb-tag-text { color: #d93a32; font-weight: 600; }
   }
 }
-.cb-cell-code {
+.cb-tag-code {
   flex-shrink: 0;
-  font-size: 19rpx;
-  color: #b9bfc7;
-  margin-right: 10rpx;
+  font-size: 24rpx;
+  color: #b3bac4;
+  margin-bottom: 4rpx;
   font-variant-numeric: tabular-nums;
 }
-.cb-cell-name {
-  /* 不再 flex:1 撑满剩余宽度，否则文字被拉到左侧、居中失效 */
-  flex: 0 1 auto;
-  min-width: 0;
-  max-width: 100%;
-  font-size: 21rpx;
-  color: #8d949e;
+.cb-tag-text {
+  font-size: 28rpx;
+  color: #7a828c;
   line-height: 1.3;
   text-align: center;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  /* 不裁剪：长名称折行完整显示，同行其它格子由 stretch 补齐高度 */
+  word-break: break-all;
 }
 
-/* ---------- 空态 ---------- */
+/* ---------- 空态（与液冷机页 .fault-empty 同一套最小化灰字风格，保持跨页一致） ---------- */
 .cb-empty {
-  font-size: 24rpx;
-  color: #9aa1aa;
-  padding: 24rpx 12rpx;
+  font-size: 28rpx;
+  color: #8a94a1;
+  padding: 20rpx 12rpx;
   text-align: center;
 }
 </style>

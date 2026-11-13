@@ -93,9 +93,11 @@ export default {
 }
 
 .header {
-  z-index: 100;
   background-color: #fff;
   pointer-events: auto;
+  /* z-index 只给 fixed 模式：流内模式下微信渲染层也会为带 z-index 的元素
+     额外建合成层，与页面里其它 transform / 动画层叠加时出现白色残影。
+     fixed 模式仍需要盖住页面内容，层级保留在 .navbar-fixed 上。 */
   // height: calc(25px + 44px);
 }
 
@@ -124,6 +126,7 @@ export default {
   top: 0px;
   left: 0;
   right: 0;
+  z-index: 100;
 }
 
 .header-content {

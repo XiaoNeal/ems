@@ -70,8 +70,8 @@ export default {
     flex: 1;
     min-width: 0;
   }
-  .control-name { font-size: 26rpx; color: #2b3240; font-weight: 500; }
-  .control-current { font-size: 21rpx; color: #98a2ae; }
+  .control-name { font-size: 28rpx; color: #2b3240; font-weight: 500; }
+  .control-current { font-size: 26rpx; color: #98a2ae; }
   .control-btns {
     display: flex;
     gap: 8rpx;
@@ -83,7 +83,7 @@ export default {
     line-height: 56rpx;
     text-align: center;
     padding: 0 18rpx;
-    font-size: 23rpx;
+    font-size: 27rpx;
     color: #5c6673;
     background: #f2f4f8;
     border-radius: 10rpx;

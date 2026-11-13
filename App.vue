@@ -37,7 +37,8 @@ export default {
 		// #endif
 
 		// #ifdef APP-PLUS
-		// APP 升级更新：整包/wgt 热更新/强制更新/进度下载，见 utils/appUpdate.js
+		// APP 升级更新：每次冷启动都必须真正发起一次检查（模块内只做进程级去重）
+		// 整包/wgt 热更新/强制更新/进度下载，见 utils/appUpdate.js
 		checkAppUpdate()
 		// #endif
 	},

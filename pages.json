@@ -280,14 +280,18 @@
 			"path": "direct-device-config",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "直连设备配置"
+				"navigationBarTitleText": "连接设备"
 			}
 		},
 		{
 			"path": "direct-device",
 			"style": {
 				"navigationStyle": "custom",
-				"navigationBarTitleText": "直连设备监测"
+				"navigationBarTitleText": "直连设备监测",
+				"backgroundColor": "#f4f6f9",
+				"backgroundColorTop": "#f4f6f9",
+				"backgroundColorBottom": "#f4f6f9",
+				"enablePullDownRefresh": false
 			}
 		}
 	]

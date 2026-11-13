@@ -68,9 +68,26 @@ export class RealtimeDataProviderService {
 	// 兼容旧代码 realtimeDataProvider.onDataUpdate = fn / null 的单回调写法
 	_legacyListener = null
 
-	/** 暂停/恢复 subscribe() 多订阅者通知（宿主页面 onHide/onShow 调用） */
+	/** 暂停 subscribe() 多订阅者通知（宿主页面 onHide 调用；恢复请用 resumeRealtime） */
 	setSubscribersPaused(paused) {
 		this._subscribersPaused = !!paused
+	}
+
+	/**
+	 * 页面回到前台 / 切回监测 tab 时调用：解除暂停 → 立即补发一次当前快照 → 重放设备注册。
+	 * 解决「停留其它 tab 期间通知被暂停吞掉、实时值超时被清成 '--'，切回来一直没数据、
+	 * 必须手动刷新」的问题；服务端收到 register 会立刻推一帧全量数据。
+	 */
+	resumeRealtime() {
+		this._subscribersPaused = false
+		this._notifyNow()
+		// onShow 与切 tab 可能在同一帧连续触发，800ms 内只重放一次 register，
+		// 避免服务端收到重复注册（数据超时是分钟级，短间隔内无需重放）
+		const now = Date.now()
+		if (!this._lastResumeAt || now - this._lastResumeAt > 800) {
+			this._lastResumeAt = now
+			this.reRegisterAllDevices()
+		}
 	}
 
 	get onDataUpdate() {
@@ -86,7 +103,13 @@ export class RealtimeDataProviderService {
 	 * @returns {Function} 取消订阅函数
 	 */
 	subscribe(cb) {
-		if (typeof cb === 'function') this._dataListeners.add(cb)
+		if (typeof cb === 'function') {
+			this._dataListeners.add(cb)
+			// 注册即同步一次当前快照：切 tab 时监测页及其子组件被 v-if 销毁重建，
+			// 若只等下一次实时帧通知，界面会一直停在初始值 '--'（需手动刷新才恢复）。
+			// 所有订阅者都只是「读 getDeviceList() 写本地 data」，立即回调安全。
+			try { cb() } catch (e) { console.warn('[RealtimeDataProvider] replay error', e) }
+		}
 		return () => this._dataListeners.delete(cb)
 	}
 
@@ -94,15 +117,25 @@ export class RealtimeDataProviderService {
 		if (this._notifyTimer) return
 		this._notifyTimer = setTimeout(() => {
 			this._notifyTimer = null
-			if (!this._subscribersPaused) {
-				this._dataListeners.forEach(cb => {
-					try { cb() } catch (e) { console.error('[RealtimeDataProvider] listener error', e) }
-				})
+			if (this._subscribersPaused) {
+				// 暂停期间只保留 legacy 单回调（活动页需要），多订阅者由 resumeRealtime 补发
+				if (typeof this._legacyListener === 'function') {
+					try { this._legacyListener() } catch (e) { console.error('[RealtimeDataProvider] listener error', e) }
+				}
+				return
 			}
-			if (typeof this._legacyListener === 'function') {
-				try { this._legacyListener() } catch (e) { console.error('[RealtimeDataProvider] listener error', e) }
-			}
+			this._notifyNow()
 		}, RealtimeDataProviderService.NOTIFY_INTERVAL_MS)
+	}
+
+	/** 立即广播当前数据给全部监听者（不节流、不判暂停） */
+	_notifyNow() {
+		this._dataListeners.forEach(cb => {
+			try { cb() } catch (e) { console.error('[RealtimeDataProvider] listener error', e) }
+		})
+		if (typeof this._legacyListener === 'function') {
+			try { this._legacyListener() } catch (e) { console.error('[RealtimeDataProvider] listener error', e) }
+		}
 	}
 
 	/**
@@ -464,13 +497,16 @@ export class RealtimeDataProviderService {
 	 * 避免空 barCode 被注册到服务端。
 	 */
 	reRegisterAllDevices() {
+		if (!socket) return;
+		// 合并 store 登记与实例已注册的两组 barCode：页面重建 / 切 tab 后
+		// store 可能被 CLEAR_DEVICE_STATE 清过，只取 store 会漏注册、服务端不推帧。
+		const codes = new Set();
 		const storeBarCodes = store.state.barCodes;
-		if (!storeBarCodes || storeBarCodes.size === 0) return;
-		storeBarCodes.forEach((value) => {
-			if (socket && value) {
-				socket.emit('register', value);
-			}
-		});
+		if (storeBarCodes && typeof storeBarCodes.forEach === 'function') {
+			storeBarCodes.forEach(v => { if (v) codes.add(v) });
+		}
+		this.registeredBarCodes.forEach(v => { if (v) codes.add(v) });
+		codes.forEach(value => socket.emit('register', value));
 	}
 
 

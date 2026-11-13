@@ -4,11 +4,11 @@
     <view class="status-container">
       <view class="status-content">
         <view class="status-indicator">
-          <image class="battery-icon" src="/static/images/img-storage.png" />
+          <image class="battery-icon" src="/static/images/img-storage.png" mode="aspectFit" />
           <view class="soc-container">
             <!-- <view class="soc-progress-container"> -->
             <view class="soc-progress" style="display: flex; align-items: center; gap: 16rpx;">
-              <image src="/static/images/storage.svg" style="width: 40rpx; height: 40rpx;" />
+              <image src="/static/images/storage.svg" style="width: 40rpx; height: 40rpx;" mode="aspectFit" />
               <view class="progress-track" style="flex: 1;">
                 <view class="progress-fill" :style="{
                   width: `${device171F && device171F.energyData && device171F.energyData.B128 ? parseFloat(device171F.energyData.B128.value) : 0}%`,

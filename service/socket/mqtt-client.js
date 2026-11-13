@@ -12,6 +12,7 @@
  */
 
 import { LightMqttClient, testMqttConnection as _testMqttConnection } from './light-mqtt-client.js'
+import { logLine } from '../../utils/device-log.js'
 import { buildIemsCommandFrame, normalizeRegisterAddress } from './iems-frame-parser.js'
 import { resolveDeviceProfile } from './control-device-profile.js'
 
@@ -29,6 +30,15 @@ const CONTROL_PAYLOAD_MODE = 'hex'
 /** hex 文本的字节分隔符（' ' → "16 34 01"；'' → "163401"） */
 const CONTROL_HEX_SEPARATOR = ' '
 
+/**
+ * 下发链路调试日志总开关，正式包必须为 false。
+ * 每次点击「修改/下发」都会走 publish → sendControl，旧实现无条件打 15~20 行日志，
+ * 且为拼 hex 字符串要对整个帧 Array.from().map().join()。APP 端 console.log 要过
+ * 原生日志桥，这一串同步调用正压在点击那一帧上，是「点按钮也卡 1~2s」的直接来源。
+ * 需要抓包比对时临时改 true 即可，控制帧内容本身不变。
+ */
+const MQTT_DEBUG_LOG = false
+
 export class MqttDirectClient {
   constructor(config = {}) {
     this.brokerUrl = config.brokerUrl || ''
@@ -39,7 +49,15 @@ export class MqttDirectClient {
     this.clientId = config.clientId || ('app_' + Math.random().toString(16).slice(2, 10))
     this.username = config.username || ''
     this.password = config.password || ''
+    // APP 冷启动时 plus.android 首次 importClass / Java Socket 初始化明显更慢，
+    // 4s 首连超时率偏高（真机表现为「卸载重装后有时连不上」）。小程序路径已验证，
+    // 用条件编译隔离，只放宽 APP 端，小程序仍保持 4s。
+    // #ifdef APP-PLUS
+    this.connectTimeout = parseInt(config.connectTimeout) || 6000
+    // #endif
+    // #ifndef APP-PLUS
     this.connectTimeout = parseInt(config.connectTimeout) || 4000
+    // #endif
     this.keepalive = parseInt(config.keepalive) || 30
     this.autoReconnect = config.autoReconnect !== false
     this.reconnectInterval = parseInt(config.reconnectInterval) || 3000
@@ -93,6 +111,7 @@ export class MqttDirectClient {
 
   async _doConnect() {
     console.log('[MQTT-client] connect() brokerUrl=', this.brokerUrl, 'realtimeTopic=', this.realtimeTopic, 'controlSetTopic=', this.controlSetTopic, 'clientId=', this.clientId)
+    logLine('连接', '客户端发起连接（会话标识 ' + this.clientId + '）')
 
     // 重建前必须先销毁旧实例：旧 LightMqttClient 自带重连定时器和 TCPSocket，
     // 不销毁则每次重连都多一个“幽灵客户端”，很快耗尽微信 TCPSocket 的并发名额（5 个）
@@ -139,47 +158,62 @@ export class MqttDirectClient {
       if (typeof this.onError === 'function') this.onError(err)
     }
     this.client.onMessage = (topic, payloadStr, payloadBytes) => {
+      // console.log(11111111111111111111111111111)
+      // console.log(topic, payloadStr, payloadBytes,new Date())
       if (typeof this.onMessage === 'function') {
+        console.log('[MQTT-client---------] onMessage() topic=', topic, 'payloadStr=', payloadStr, 'payloadBytes=', payloadBytes)
         this.onMessage(topic, payloadStr, payloadBytes)
       }
     }
 
     try {
       await this.client.connect()
+      logLine('连接', '客户端连接成功，准备订阅数据通道')
       return true
     } catch (e) {
       this.connecting = false
       this.connected = false
+      logLine('连接', '客户端首连失败：' + String((e && e.message) || e) + '，由底层自动重连接管')
       throw this._wrapError(e)
     }
   }
 
   async subscribe(topic, handler) {
-    if (!this.client || !this.connected) throw new Error('未连接到 Broker')
+    if (!this.client || !this.connected) {
+      // 协议术语只留在控制台供排障；抛出的文案会被上层 toast / 弹窗直接展示
+      console.warn('[MQTT] 操作被拦截：未连接到 Broker')
+      throw new Error('设备连接已断开，请重新连接后重试')
+    }
     return this.client.subscribe(topic, handler)
   }
 
   async publish(topic, message, opts = { qos: 1 }) {
-    if (!this.client || !this.connected) throw new Error('未连接到 Broker')
-    // 报文日志：hex 字符串原样输出，二进制转 hex，方便与设备侧抓包比对
-    let payloadLog
-    let payloadLen
-    if (typeof message === 'string') {
-      payloadLog = message
-      payloadLen = message.length
-    } else if (message && message.length !== undefined) {
-      payloadLog = Array.from(message).map(b => b.toString(16).padStart(2, '0')).join(' ')
-      payloadLen = message.length
-    } else {
-      payloadLog = String(message)
-      payloadLen = payloadLog.length
+    if (!this.client || !this.connected) {
+      // 协议术语只留在控制台供排障；抛出的文案会被上层 toast / 弹窗直接展示
+      console.warn('[MQTT] 操作被拦截：未连接到 Broker')
+      throw new Error('设备连接已断开，请重新连接后重试')
     }
-    console.log('---------- MQTT PUBLISH ----------')
-    console.log('[PUBLISH] topic  :', topic)
-    console.log('[PUBLISH] qos    :', (opts && opts.qos), '| retain:', (opts && opts.retain) || false)
-    console.log('[PUBLISH] length :', payloadLen)
-    console.log('[PUBLISH] payload:', payloadLog)
-    console.log('----------------------------------')
+    // 报文日志：正式包关闭（开关见 MQTT_DEBUG_LOG），避免点击帧被日志桥拖慢
+    if (MQTT_DEBUG_LOG) {
+      let payloadLog
+      let payloadLen
+      if (typeof message === 'string') {
+        payloadLog = message
+        payloadLen = message.length
+      } else if (message && message.length !== undefined) {
+        payloadLog = Array.from(message).map(b => b.toString(16).padStart(2, '0')).join(' ')
+        payloadLen = message.length
+      } else {
+        payloadLog = String(message)
+        payloadLen = payloadLog.length
+      }
+      console.log('---------- MQTT PUBLISH ----------')
+      console.log('[PUBLISH] topic  :', topic)
+      console.log('[PUBLISH] qos    :', (opts && opts.qos), '| retain:', (opts && opts.retain) || false)
+      console.log('[PUBLISH] length :', payloadLen)
+      console.log('[PUBLISH] payload:', payloadLog)
+      console.log('----------------------------------')
+    }
     return this.client.publish(topic, message, opts)
   }
 
@@ -254,19 +288,22 @@ export class MqttDirectClient {
     this._lastControlHex = frameHex.replace(/[\s,]/g, '').toUpperCase()
     this._lastControlAt = Date.now()
 
-    console.log('========== MQTT 命令帧下发 (MqttDirectClient) ==========')
-    console.log('[MQTT] topic        :', topic)
-    console.log('[MQTT] frameDeviceType (帧头) : 3401  dataType=0xC2')
-    console.log('[MQTT] deviceCategory (命令)  :', command.deviceCategory,
-      ' 索引号:', command.addr, ' 设备ID:', command.deviceId)
-    console.log('[MQTT] field        :', field)
-    console.log('[MQTT] registerAddr :', regAddress, '(十进制) → 0x' + regAddress.toString(16).toUpperCase().padStart(8, '0'))
-    console.log('[MQTT] registerValue:', value)
-    console.log('[MQTT] registerType :', command.registerType)
-    console.log('[MQTT] frame length :', frame.length, 'bytes')
-    console.log('[MQTT] payload mode :', CONTROL_PAYLOAD_MODE)
-    console.log('[MQTT] hex string   :', frameHex)
-    console.log('=======================================================')
+    // frameHex 本身是下发载荷，必须照常计算；仅日志整块关闭
+    if (MQTT_DEBUG_LOG) {
+      console.log('========== MQTT 命令帧下发 (MqttDirectClient) ==========')
+      console.log('[MQTT] topic        :', topic)
+      console.log('[MQTT] frameDeviceType (帧头) : 3401  dataType=0xC2')
+      console.log('[MQTT] deviceCategory (命令)  :', command.deviceCategory,
+        ' 索引号:', command.addr, ' 设备ID:', command.deviceId)
+      console.log('[MQTT] field        :', field)
+      console.log('[MQTT] registerAddr :', regAddress, '(十进制) → 0x' + regAddress.toString(16).toUpperCase().padStart(8, '0'))
+      console.log('[MQTT] registerValue:', value)
+      console.log('[MQTT] registerType :', command.registerType)
+      console.log('[MQTT] frame length :', frame.length, 'bytes')
+      console.log('[MQTT] payload mode :', CONTROL_PAYLOAD_MODE)
+      console.log('[MQTT] hex string   :', frameHex)
+      console.log('=======================================================')
+    }
 
     // 按设备侧实际协议下发：默认 hex 文本
     if (CONTROL_PAYLOAD_MODE === 'binary') {
@@ -328,18 +365,20 @@ export class MqttDirectClient {
     this._lastControlHex = frameHex.replace(/[\s,]/g, '').toUpperCase()
     this._lastControlAt = Date.now()
 
-    console.log('========== MQTT 组合命令帧下发 (MqttDirectClient) ==========')
-    console.log('[MQTT] topic       :', topic)
-    console.log('[MQTT] deviceType  :', dt, ' 命令条数:', commands.length)
-    console.log('[MQTT] 设备身份    :', profile.category, '索引号', profile.addr, '设备ID', profile.deviceId)
-    commands.forEach((c, i) => {
-      console.log('[MQTT] 命令' + (i + 1) + '       : 寄存器', c.registerAddress,
-        '→ 0x' + Number(c.registerAddress).toString(16).toUpperCase().padStart(8, '0'),
-        ' 值:', c.registerValue, ' 类型:', c.registerType)
-    })
-    console.log('[MQTT] frame length:', frame.length, 'bytes')
-    console.log('[MQTT] frame hex   :', frameHex)
-    console.log('============================================================')
+    if (MQTT_DEBUG_LOG) {
+      console.log('========== MQTT 组合命令帧下发 (MqttDirectClient) ==========')
+      console.log('[MQTT] topic       :', topic)
+      console.log('[MQTT] deviceType  :', dt, ' 命令条数:', commands.length)
+      console.log('[MQTT] 设备身份    :', profile.category, '索引号', profile.addr, '设备ID', profile.deviceId)
+      commands.forEach((c, i) => {
+        console.log('[MQTT] 命令' + (i + 1) + '       : 寄存器', c.registerAddress,
+          '→ 0x' + Number(c.registerAddress).toString(16).toUpperCase().padStart(8, '0'),
+          ' 值:', c.registerValue, ' 类型:', c.registerType)
+      })
+      console.log('[MQTT] frame length:', frame.length, 'bytes')
+      console.log('[MQTT] frame hex   :', frameHex)
+      console.log('============================================================')
+    }
 
     if (CONTROL_PAYLOAD_MODE === 'binary') {
       return this.publish(topic, frame, { qos: 1 })

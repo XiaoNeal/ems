@@ -1,7 +1,7 @@
 <template>
   <view class="data-grid" :class="{ 'data-grid--bare': bare }">
     <view
-      v-for="(item, index) in items"
+      v-for="(item, index) in safeItems"
       :key="index"
       class="grid-item"
       :class="{ 'grid-item--wide': item.wide, 'grid-item--alarm': item.danger }"
@@ -12,7 +12,7 @@
         <text v-if="item.unit" class="item-unit">{{ item.unit }}</text>
       </view>
     </view>
-    <text v-if="items.length === 0" class="grid-empty">暂无数据</text>
+    <text v-if="safeItems.length === 0" class="grid-empty">暂无数据</text>
   </view>
 </template>
 
@@ -27,8 +27,9 @@
 export default {
   name: 'DataGrid',
   props: {
+    // 不声明 type: Array：小程序端 setData 会把 undefined 序列化成 null，
+    // 微信基础库会对 Array 类型刷「type-uncompatible」警告；值统一由 safeItems 兜底。
     items: {
-      type: Array,
       default: () => []
       // item: { label, value, unit?, danger?, wide? }
     },
@@ -36,6 +37,11 @@ export default {
     bare: {
       type: Boolean,
       default: false
+    }
+  },
+  computed: {
+    safeItems() {
+      return Array.isArray(this.items) ? this.items : []
     }
   },
   methods: {
@@ -87,7 +93,7 @@ export default {
 
 .item-label {
   max-width: 100%;
-  font-size: 22rpx;
+  font-size: 27rpx;
   line-height: 1.35;
   color: #78838f;
   letter-spacing: 0.2rpx;
@@ -114,7 +120,7 @@ export default {
 
 .item-value {
   max-width: 100%;
-  font-size: 32rpx;
+  font-size: 34rpx;
   font-weight: 600;
   color: #16202d;
   /* 数字等宽：刷新时宽度不跳动，但不使用 mono 字体 ——
@@ -133,7 +139,7 @@ export default {
 .item-unit {
   flex-shrink: 0;
   margin-left: 5rpx;
-  font-size: 21rpx;
+  font-size: 26rpx;
   font-weight: 500;
   color: #8a94a1;
 }
@@ -150,7 +156,7 @@ export default {
   width: 100%;
   padding: 36rpx 0;
   text-align: center;
-  font-size: 24rpx;
+  font-size: 28rpx;
   color: #8a94a1;
 }
 </style>

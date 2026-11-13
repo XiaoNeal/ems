@@ -1,5 +1,6 @@
 <template>
-  <scroll-view class="module-scroll" scroll-y="true">
+  <!-- 滚动由页面外层 scroll-view 统一负责，避免嵌套滚动容器 -->
+  <view class="panel-root">
     <view class="content">
       <!-- 50kW：170C V1.1 协议面板（bucket 170C_PV） -->
       <view v-if="is50KwMode" class="module">
@@ -11,7 +12,7 @@
       <view v-else class="module">
         <view class="module-title">光伏</view>
         <DataGroup title="运行状态">
-          <DataGrid :items="pvRunStatusItems" />
+          <DataGrid :items="pvRunStatusItems || []" />
         </DataGroup>
         <DataGroup title="电气参数">
           <DataGrid :items="[
@@ -28,11 +29,11 @@
           ]" />
         </DataGroup>
         <DataGroup title="告警状态">
-          <StatusGrid variant="fault" :items="pvAlarmStatus" />
+          <StatusGrid variant="fault" :items="pvAlarmStatus || []" />
         </DataGroup>
       </view>
     </view>
-  </scroll-view>
+  </view>
 </template>
 
 <script>
@@ -41,30 +42,35 @@ import DataGroup from '../DataGroup.vue'
 import DataGrid from '../DataGrid.vue'
 import StatusGrid from '../StatusGrid.vue'
 import Dc170cPanel from './Dc170cPanel.vue'
+import { getFormatted, getSnapshot } from '../realtime-store.js'
+import { realtimeSubscribe } from '../realtime-subscribe.js'
 
 /**
  * 光伏 tab 组件
  * 20kW：旧协议 171E（B56 状态位 + 电气参数）
  * 50kW：新协议 170C V1.1（bucket 170C_PV，与储能 DC 同一张点表）
+ *
+ * ⚡ 实时数据由 realtime-subscribe mixin 订阅仓库驱动，父页面不参与收帧渲染。
  */
 export default {
+  mixins: [realtimeSubscribe],
   name: 'PvTab',
   components: { DataGroup, DataGrid, StatusGrid, Dc170cPanel },
   props: {
-    formattedValues: {
-      type: Object,
-      default: () => ({})
-    },
-    rawValues: {
-      type: Object,
-      default: () => ({})
-    },
     is50KwMode: {
       type: Boolean,
       default: false
     }
   },
   computed: {
+    formattedValues() {
+      void this.rtVer
+      return getFormatted()
+    },
+    rawValues() {
+      void this.rtVer
+      return getSnapshot()
+    },
     bucket50() {
       return this.rawValues['170C_PV'] || {}
     },
@@ -98,8 +104,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.module-scroll {
-  height: 100%;
+.panel-root {
+  width: 100%;
 }
 .content {
   padding: 0 20rpx 32rpx;

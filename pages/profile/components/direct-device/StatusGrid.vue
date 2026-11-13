@@ -3,7 +3,7 @@
     <!-- status 模式：带名称+值+颜色的状态卡 -->
     <template v-if="variant === 'status'">
       <view
-        v-for="(status, index) in items"
+        v-for="(status, index) in safeItems"
         :key="index"
         class="status-item"
         :style="{ backgroundColor: status.bgColor, borderColor: status.borderColor }"
@@ -15,7 +15,7 @@
     <!-- fault 模式：故障/告警标签，active 时高亮 -->
     <template v-else>
       <view
-        v-for="(status, index) in items"
+        v-for="(status, index) in safeItems"
         :key="index"
         class="fault-item"
         :class="{ active: status.isAlarm || status.active }"
@@ -24,7 +24,7 @@
         <text class="fault-name">{{ status.name }}</text>
       </view>
     </template>
-    <text v-if="items.length === 0" class="status-empty">暂无数据</text>
+    <text v-if="safeItems.length === 0" class="status-empty">暂无数据</text>
   </view>
 </template>
 
@@ -37,8 +37,16 @@
 export default {
   name: 'StatusGrid',
   props: {
-    items: { type: Array, default: () => [] },
+    // 不声明 type: Array：小程序端 setData 会把 undefined 序列化成 null，
+    // 微信基础库每次首帧都会刷「type-uncompatible: expected <Array>」警告。
+    // 值统一由 safeItems 规范化，H5 / APP 行为不变。
+    items: { default: () => [] },
     variant: { type: String, default: 'status' } // 'status' | 'fault'
+  },
+  computed: {
+    safeItems() {
+      return Array.isArray(this.items) ? this.items : []
+    }
   }
 }
 </script>
@@ -63,7 +71,7 @@ export default {
 }
 
 .status-name {
-  font-size: 21rpx;
+  font-size: 26rpx;
   font-weight: 500;
   line-height: 1.3;
   margin-bottom: 6rpx;
@@ -71,7 +79,7 @@ export default {
 }
 
 .status-value {
-  font-size: 26rpx;
+  font-size: 28rpx;
   font-weight: 600;
   color: #1f9254;
   font-variant-numeric: tabular-nums;
@@ -120,12 +128,15 @@ export default {
 .fault-name {
   flex: 1;
   min-width: 0;
-  font-size: 21rpx;
+  font-size: 26rpx;
   line-height: 1.3;
   color: #8d949e;
+  /* 字号上调后三列里长名称单行必然被截断，改为最多两行完整显示 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: break-all;
 }
 
 .status-empty {
@@ -133,6 +144,6 @@ export default {
   padding: 40rpx 0;
   text-align: center;
   color: #8a94a1;
-  font-size: 26rpx;
+  font-size: 28rpx;
 }
 </style>
