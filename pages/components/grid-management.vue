@@ -375,7 +375,7 @@ export default {
           this.powerCurveSeries = series;
           this.powerCurveReverseSeries = reverseSeries;
 
-          console.log('电网功率曲线数据:', this.powerCurveCategories, this.powerCurveSeries, this.powerCurveReverseSeries);
+          // console.log('电网功率曲线数据:', this.powerCurveCategories, this.powerCurveSeries, this.powerCurveReverseSeries);
         } else {
           this.powerCurveCategories = [];
           this.powerCurveSeries = [];

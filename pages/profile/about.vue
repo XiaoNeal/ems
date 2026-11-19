@@ -6,7 +6,7 @@
 		<!-- 品牌区：应用图标 + 名称 + 标语 -->
 		<view class="hero">
 			<image class="hero-logo" src="/static/logo.png" mode="aspectFill"></image>
-			<text class="hero-name">微能站</text>
+			<text class="hero-name">能源站</text>
 			<view class="hero-slogan">
 				<view class="slogan-line"></view>
 				<text class="slogan-text">光储直柔 · 奋力零碳中国</text>
@@ -180,7 +180,8 @@
 					confirmText: '我知道了'
 				})
 			},
-			/** 计算机软件著作权登记信息（APP 端展示） */
+			/** 计算机软件著作权登记信息（APP 端展示）
+			 *  登记证书上的软件全称沿用「微能站」，属法定登记名称，不随应用展示名变更。 */
 			showCopyrightInfo() {
 				uni.showModal({
 					title: '软件著作权',

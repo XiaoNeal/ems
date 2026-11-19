@@ -124,7 +124,6 @@ export class DeviceFactory {
 				break;
 			}
 			case '171C':{
-				console.log(jsonData,"----------171C-------------")
 				dev = new Model171C()
 				break;
 			}
@@ -157,11 +156,10 @@ export class DeviceFactory {
 				break;
 			}
 			case '171F':{
-				console.log(jsonData,"----------171F-------------")
 				dev = new Model171F()
 				break;
 			}
-			// 50kW 微能站：EMS 网关 typeCode 带版本后缀（171F_V2），协议见 171F.js protocol_171F_V2
+			// 50kW 能源站：EMS 网关 typeCode 带版本后缀（171F_V2），协议见 171F.js protocol_171F_V2
 			case '171F_V2':{
 				dev = new Model171F_V2()
 				break;
@@ -175,7 +173,6 @@ export class DeviceFactory {
 				break;
 			}
 			case '1712':{
-				console.log(jsonData,"----------1712-------------")
 				dev = new Model1712()
 				break;
 			}

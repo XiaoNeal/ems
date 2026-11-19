@@ -77,3 +77,68 @@ export const findPhotovoltaicEnergyInfo = (params) => {
 		params
 	})
 }
+
+// 查询分时电价（按区域）
+export const getPriceByAreaId = (areaId, startDate) => {
+	const params = { areaId }
+	if (startDate) params.startDate = startDate
+	return request({
+		url: '/chargePile/GetPrice',
+		method: 'GET',
+		params
+	})
+}
+
+// 母线电压历史统计：日
+export const getPerHourBusVolte = (areaLevelIds, date) => {
+	return request({
+		url: '/api/energyStation/getPerHourBusVolte',
+		method: 'GET',
+		params: { areaLevelIds, date }
+	})
+}
+
+// 母线电压历史统计：月
+export const getPerDayBusVolte = (areaLevelIds, startDate, endDate) => {
+	return request({
+		url: '/api/energyStation/getPerDayBusVolte',
+		method: 'GET',
+		params: { areaLevelIds, startDate, endDate }
+	})
+}
+
+// 母线电压历史统计：年
+export const getPerMonthBusVolte = (areaLevelIds, year) => {
+	return request({
+		url: '/api/energyStation/getPerMonthBusVolte',
+		method: 'GET',
+		params: { areaLevelIds, year }
+	})
+}
+
+// 理论负荷用电费 / 综合节省电费：日
+export const queryPerHourFee = (areaLevelId, date) => {
+	return request({
+		url: '/api/energyStation/queryPerHourFee',
+		method: 'GET',
+		params: { areaLevelId, date }
+	})
+}
+
+// 理论负荷用电费 / 综合节省电费：月
+export const queryPerDayFee = (areaLevelId, startDate, endDate) => {
+	return request({
+		url: '/api/energyStation/queryPerDayFee',
+		method: 'GET',
+		params: { areaLevelId, startDate, endDate }
+	})
+}
+
+// 理论负荷用电费 / 综合节省电费：年
+export const queryPerMonthFee = (areaLevelId, year) => {
+	return request({
+		url: '/api/energyStation/queryPerMonthFee',
+		method: 'GET',
+		params: { areaLevelId, year }
+	})
+}

@@ -77,7 +77,7 @@ export default {
       }
 
       const currentDevice = this.$store.state.currentSelectDevice || {};
-      console.log('注册171F设备:', currentDevice);
+      // console.log('注册171F设备:', currentDevice);
 
       let address = '';
       let barCode = '';
@@ -93,7 +93,7 @@ export default {
           address = foundDevice.address || address;
           barCode = foundDevice.barCode || foundDevice.homeBarCode || barCode;
           gatewayType = (foundDevice.typeCode || foundDevice.deviceType || '171F').trim() || '171F';
-          console.log('找到171F设备:', foundDevice);
+          // console.log('找到171F设备:', foundDevice);
         }
       }
 
@@ -105,11 +105,11 @@ export default {
         deviceId: '171F001',
         name: 'DCDC设备171F'
       };
-      console.log('注册171F设备:', deviceConfig);
+      // console.log('注册171F设备:', deviceConfig);
       realtimeDataProvider.initDeviceList([deviceConfig]);
       this.device171FList = [...realtimeDataProvider.getDeviceList()];
       this.device171FRegistered = true;
-      console.log('171F设备注册完成:', this.device171FList);
+      // console.log('171F设备注册完成:', this.device171FList);
       return this.device171FList;
     },
     get171FDeviceList() {
@@ -186,9 +186,25 @@ export default {
     }
     this.device171FList = [...realtimeDataProvider.getDeviceList()];
   },
+  /** 独立页面形态下的下拉刷新兜底：只补发一次实时快照，不重建连接、不重复拉接口 */
+  onPullDownRefresh() {
+    try {
+      realtimeDataProvider.resumeRealtime();
+    } catch (e) {
+      console.warn('[monitor] 下拉刷新失败:', e && e.message);
+    }
+    this._pullTimer = setTimeout(() => {
+      this._pullTimer = null;
+      uni.stopPullDownRefresh();
+    }, 400);
+  },
   beforeDestroy() {
     // 移除监听器
     uni.offWindowResize(this.onOrientationChange);
+    if (this._pullTimer) {
+      clearTimeout(this._pullTimer);
+      this._pullTimer = null;
+    }
     if (typeof this._unsubscribeRealtime === 'function') {
       this._unsubscribeRealtime();
       this._unsubscribeRealtime = null;
@@ -212,8 +228,7 @@ $card-hover-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.12);
 .container {
   width: 100%;
   // min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  // APP 端 scroll-view 内嵌 flex 容器会把内容高度裁剪，导致滑不到底，改用普通文档流由外层 scroll-view 滚动
   background: #EFF4FB;
   box-sizing: border-box;
 }
@@ -243,10 +258,9 @@ $card-hover-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.12);
 
 
 // 内容区域
+// APP 端勿加 overflow:hidden / flex:1（会裁剪内容导致无法滑到底），滚动交给外层 scroll-view
 .device-content {
-  flex: 1;
   width: 100%;
-  overflow: hidden;
 }
 
 .content-swiper {

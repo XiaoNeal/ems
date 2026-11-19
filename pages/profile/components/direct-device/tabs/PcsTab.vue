@@ -6,14 +6,15 @@
         <view class="module-title">PCS</view>
         <DataGroup v-for="g in displayGroups" :key="g.title" :title="g.title">
           <StatusGrid v-if="g.variant" :variant="g.variant" :items="g.items || []" />
-          <!-- 50kW：故障信息按字节分组，汇总条 + 双列网格 -->
+          <!-- 50kW 故障信息：先列 DCDC 故障字 1~4 的整字读数，再平铺按位定义的故障位 -->
+          <DataGrid v-if="!g.variant && g.items" :items="g.items || []" />
           <FaultBoard
-            v-else-if="g.faultGroups"
+            v-if="!g.variant && g.faultGroups"
             :groups="g.faultGroups || []"
+            :show-group-titles="is50KwMode"
             :has-data="bucket50HasData"
             hint="暂无故障位数据"
           />
-          <DataGrid v-else :items="g.items || []" />
         </DataGroup>
       </view>
     </view>
@@ -23,7 +24,8 @@
 <script>
 import { PCS_B64_BITS, PCS_B64_STATUS_MAP, PCS_MODE_MAP } from '../../../direct-device-constants.js'
 import {
-  PCS_AC, PCS_DC, PCS_TEMP, PCS_ENERGY, PCS_VERSION, PCS_STATUS, PCS_FAULT_GROUPS
+  PCS_AC, PCS_DC, PCS_TEMP, PCS_ENERGY, PCS_VERSION, PCS_STATUS,
+  PCS_FAULT_GROUPS, PCS_FAULT_WORD_META, PCS_FAULT_WORDS
 } from '../../../direct-device-50kw-fields.js'
 import { fmtItems } from '../../../direct-device-50kw-format.js'
 import DataGroup from '../DataGroup.vue'
@@ -173,8 +175,25 @@ export default {
         { title: '温度测点', items: fmtItems(PCS_TEMP, b) },
         { title: '累计电量（电度统计）', items: fmtItems(PCS_ENERGY, b) },
         { title: '版本与通讯', items: fmtItems(PCS_VERSION, b) },
-        { title: '故障信息', faultGroups: this.buildFaultGroups(b) }
+        {
+          title: '故障信息',
+          items: this.buildFaultWordItems(b),
+          faultGroups: this.buildFaultGroups(b)
+        }
       ]
+    },
+    /**
+     * DCDC 故障字 1~4（B154/B156/B158/B160）：点表只有整字读数、没有位名，
+     * 按「有位名的位才列、没有就算了」的口径不展开位标签；非 0 表示该字有故障位 → 标红。
+     * 与液冷机 / BMS 的「故障字N」编号一致，只是内容由位标签换成整字数值。
+     */
+    buildFaultWordItems(bucket) {
+      return fmtItems(PCS_FAULT_WORDS, bucket).map((item, i) => {
+        const raw = bucket[PCS_FAULT_WORDS[i].key]
+        const num = Number(raw)
+        if (Number.isFinite(num) && num !== 0) item.danger = true
+        return item
+      })
     },
     /**
      * 按字节分组组装故障看板数据（组内 active 为该位是否为 1）
@@ -191,13 +210,18 @@ export default {
       })
       if (sig === this._faultSig && this._faultGroups) return this._faultGroups
       this._faultSig = sig
-      this._faultGroups = PCS_FAULT_GROUPS.map(g => ({
-        title: g.title,
-        items: g.items.map(f => ({
-          name: f.name,
-          active: Number(bucket[f.key]) === 1
-        }))
-      }))
+      this._faultGroups = PCS_FAULT_GROUPS.map((g, i) => {
+        const meta = PCS_FAULT_WORD_META[i] || {}
+        return {
+          // 分组标题用「故障字N」（与液冷机/BMS、云端监控页一致），类别放到标题右侧徽标
+          title: meta.word || g.title,
+          category: meta.category || '',
+          items: g.items.map(f => ({
+            name: f.name,
+            active: Number(bucket[f.key]) === 1
+          }))
+        }
+      })
       return this._faultGroups
     }
   }

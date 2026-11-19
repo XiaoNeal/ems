@@ -3,8 +3,23 @@
     <!-- 未收到数据 / 无位定义：不能把「全 0」当成全部正常 -->
     <view v-if="!hasData || totalCount === 0" class="fb-empty">{{ hint }}</view>
 
-    <!-- 全部故障位平铺成一行行紧凑标签：没有汇总条、分组标题、双列网格和圆点，
-         命中的项用红底红字标出，其余保持浅灰描边，一眼扫完即可。 -->
+    <!-- 分组模式（PCS 故障字1~N）：标题给出「故障字N + 点表类别」，组内仍是三列等宽标签 -->
+    <view v-else-if="showGroupTitles" class="fb-groups">
+      <view v-for="(g, gi) in normalizedGroups" :key="gi" class="fb-group">
+        <view class="fb-group-title">
+          <text>{{ g.title }}</text>
+          <text v-if="g.category" class="fb-group-category">{{ g.category }}</text>
+        </view>
+        <view class="fb-tags">
+          <view v-for="(it, i) in g.items" :key="i" class="fb-tag" :class="{ active: it.active }">
+            <text class="fb-tag-text">{{ it.name }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 默认模式：全部故障位平铺成紧凑标签，无汇总条 / 双列网格 / 圆点，
+         命中的项用红底红字标出，其余保持浅灰描边 -->
     <view v-else class="fb-tags">
       <view
         v-for="(it, i) in flatItems"
@@ -22,14 +37,13 @@
 /**
  * 故障位看板（PCS / BMS / 液冷机等「位状态」告警）
  *
- * 视觉按现场习惯简化为「平铺标签流」：
- *   1. 不做汇总大卡、不做分组标题、不做双列网格、不做状态圆点；
- *   2. 所有位按原有分组顺序平铺，自动换行；
- *   3. 命中项红底红字，未命中项浅灰描边灰字 —— 信息一点不少，但界面不再层层嵌套。
+ * 默认按现场习惯简化为「平铺标签流」：不做汇总大卡、不做分组标题、不做双列网格、
+ * 不做状态圆点；命中项红底红字，未命中项浅灰描边灰字。
+ * 传 showGroupTitles 时按组渲染「故障字N + 类别」标题（PCS 50kW 专用，
+ * 与液冷机/BMS 及云端监控页的分组口径一致），其他设备不传 → 行为不变。
  *
  * 用法：
- *   <FaultBoard :groups="[{ title: '功率模块', items: [{ name: 'A相IGBT故障', active: true }] }]" />
- * 分组的 title 现在只用于保持原有数据顺序，不再渲染成标题。
+ *   <FaultBoard :groups="[{ title: '故障字1', category: 'ARM软件故障', items: [...] }]" :show-group-titles="true" />
  */
 export default {
   name: 'FaultBoard',
@@ -47,14 +61,27 @@ export default {
     hasData: {
       type: Boolean,
       default: true
+    },
+    /** 是否显示分组标题（故障字N + 类别）；默认 false，保持其他设备的平铺样式 */
+    showGroupTitles: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
-    /** 过滤空名位；title 只用于维持顺序，不再渲染 */
-    normalized() {
+    /** 过滤空名位；分组模式下 title/category 会渲染成标题 */
+    normalizedGroups() {
       return (this.groups || [])
-        .map(g => (g.items || []).filter(it => it && it.name))
-        .filter(items => items.length > 0)
+        .map(g => ({
+          title: g && g.title ? g.title : '',
+          category: g && g.category ? g.category : '',
+          items: ((g && g.items) || []).filter(it => it && it.name)
+        }))
+        .filter(g => g.items.length > 0)
+    },
+    /** 平铺模式：只取组内的项，title 仅用于维持顺序 */
+    normalized() {
+      return this.normalizedGroups.map(g => g.items)
     },
     /** 展平成单个标签数组：模板只有一个 v-for，节点数比原来的分组网格少约 40% */
     flatItems() {
@@ -75,6 +102,32 @@ export default {
 <style lang="scss" scoped>
 .fault-board {
   padding: 6rpx 2rpx;
+}
+
+/* ---------- 分组模式：故障字N 标题 + 类别徽标（PCS 50kW） ---------- */
+.fb-groups {
+  width: 100%;
+}
+.fb-group + .fb-group {
+  margin-top: 20rpx;
+}
+.fb-group-title {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #666;
+}
+.fb-group-category {
+  font-size: 22rpx;
+  font-weight: 400;
+  color: #8a94a1;
+  background: #f2f4f7;
+  border-radius: 6rpx;
+  padding: 2rpx 10rpx;
+  line-height: 1.5;
 }
 
 /* ---------- 平铺标签流：固定三列等宽，行列都对齐 ---------- */

@@ -4,39 +4,29 @@
       :leftIconColor="fontColor"></DyNavbar>
     <view class="fixed-placeholder"></view>
 
-    <!-- Hero 状态卡 -->
-    <view class="hero-card hero-on">
-      <view class="hero-left">
-        <view class="hero-icon hero-icon-on">
-          <uni-icons type="wifi" size="28" color="#fff" />
+    <!-- 原型中「本地连接」与「扫码连接」同属一张白色卡片，中间一条分割线。
+         两块都只是展示/点击入口，handleScanWifi 未改。 -->
+    <view class="connect-card">
+      <view class="connect-head">
+        <view class="connect-icon">
+          <image class="connect-icon-img" src="/static/images/icon-wifi.png" mode="aspectFit"></image>
         </view>
-        <view class="hero-info">
-          <view class="hero-title-row">
-            <text class="hero-title">本地连接</text>
-            <view class="hero-badge">
-              <view class="hero-pulse-dot"></view>
-              <text class="hero-badge-text">已启用</text>
-            </view>
-          </view>
-          <text class="hero-desc">连上设备 WiFi，即可进入监测</text>
+        <view class="connect-info">
+          <text class="connect-title">本地连接</text>
+          <text class="connect-desc">接入设备WiFi，可进入监测</text>
         </view>
       </view>
-    </view>
 
-    <!-- 扫码连 WiFi：隐藏设备类型/地址后，这是本页唯一的主操作，
-         用大卡片承载，整块仍是同一个点击入口（handleScanWifi 未改）。 -->
-    <view class="scan-bar">
-      <view class="scan-card" @click="handleScanWifi">
-        <view class="scan-icon-wrap">
-          <uni-icons type="scan" size="36" color="#007AFF" />
-        </view>
-        <view class="scan-content">
-          <text class="scan-title">扫码连接 WiFi</text>
+      <view class="connect-divider"></view>
+
+      <view class="scan-row" @click="handleScanWifi">
+        <view class="scan-copy">
+          <text class="scan-title">扫码连接设备WiFi</text>
           <text class="scan-desc">扫描设备二维码，自动连接</text>
         </view>
         <view class="scan-action">
+          <uni-icons type="scan" size="22" color="#fff" />
           <text class="scan-action-text">立即扫码</text>
-          <uni-icons type="right" size="14" color="#fff" />
         </view>
       </view>
     </view>
@@ -56,7 +46,7 @@
           <view class="form-item item-block">
             <view class="form-label-row">
               <uni-icons type="settings" size="14" color="#86909c" />
-              <text class="form-label">选择微能站型号</text>
+              <text class="form-label">选择能源站型号</text>
             </view>
             <view class="device-type-chips">
               <view
@@ -128,41 +118,21 @@
     </view>
     </block>
 
-    <!-- 操作码 -->
-    <view class="section">
-      <view class="section-title">
-        <text class="title-bar"></text>
-        <text>操作码</text>
-        <text class="title-hint-optional">选填</text>
-      </view>
-      <view class="card form-card">
-        <view class="form-group">
-          <view class="form-item item-inline">
-            <view class="form-label-row">
-              <uni-icons type="locked" size="14" color="#86909c" />
-              <text class="form-label">操作码</text>
-            </view>
-            <view class="form-control">
-              <input class="form-input" type="text" v-model="form.accessCode" placeholder="请输入操作码" />
-            </view>
-          </view>
-        </view>
-      </view>
+    <!-- 操作码：原型为单行白卡（名称 + 输入 + 选填），不再另起 section 标题 -->
+    <view class="code-card">
+      <text class="code-label">操作码</text>
+      <input class="code-input" type="text" v-model="form.accessCode" placeholder="请输入操作码" placeholder-style="color: #c9cdd4; font-weight: 400;" />
+      <text class="code-optional">选填</text>
     </view>
 
     <!-- 使用提示 / 注意事项 -->
     <view class="help-section">
       <view class="tips-card">
         <view class="tips-header">
-          <uni-icons type="info-filled" size="16" color="#007AFF" />
+          <image class="tips-icon" src="/static/images/icon-notice.png" mode="aspectFit"></image>
           <text class="tips-title">注意事项</text>
         </view>
-        <view class="tips-list">
-          <view class="tips-item">
-            <view class="tips-icon"><uni-icons type="wifi" size="14" color="#86909c" /></view>
-            <text class="tips-text">手机需与设备在同一 WiFi 网段</text>
-          </view>
-        </view>
+        <text class="tips-text">手机需与设备连接同一WiFi</text>
       </view>
     </view>
 
@@ -170,9 +140,9 @@
          footer-actions 是 flex 容器，btn-primary 的 flex:1.6 在单子元素下自然占满整行，
          样式无需改动。测试按钮与方法原样保留在 showTestButton 后面，现场排障时可恢复。 -->
     <view class="footer-actions">
-      <button class="btn btn-primary" @click="handleEnter" hover-class="btn-hover">
-        <uni-icons type="power" size="18" color="#fff" />
-        <text class="btn-text">进入监测</text>
+      <button class="btn btn-primary" :disabled="entering" @click="handleEnter" hover-class="btn-hover">
+        <image class="btn-primary-bg" src="/static/images/login-button-capsule.png" mode="scaleToFill"></image>
+        <text class="btn-text">{{ entering ? '正在进入…' : '进入监测' }}</text>
       </button>
       <button v-if="showTestButton" class="btn btn-secondary" :disabled="testing" @click="handleTest"
         hover-class="btn-hover">
@@ -188,7 +158,15 @@
 import { mapState } from 'vuex'
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 import { testMqttConnection } from '@/service/socket/mqtt-client.js'
-import { saveWifiCredential, getSavedWifi } from '@/utils/device-wifi.js'
+import {
+  saveWifiCredential,
+  getSavedWifi,
+  normalizeSsid,
+  readCurrentSsid,
+  describeWifiError,
+  showManualWifiGuide,
+  DEFAULT_DEVICE_WIFI_PASSWORD
+} from '@/utils/device-wifi.js'
 
 const STORAGE_KEY = 'direct_device_config'
 const ACCESS_CODE = '123456'
@@ -226,6 +204,8 @@ export default {
       form: { ...DEFAULT_CONFIG },
       ipSeg: [...FIXED_IP_SEG],
       testing: false,
+      // 进入监测的即时反馈：点击后立刻变「正在进入…」，避免大页面创建期间无响应
+      entering: false,
       platformClass: '',
       // 型号由 WiFi 名称确定、设备地址固定，两个输入区块默认不渲染。
       // 现场临时调试时改成 true 即可恢复（模板与方法一直保留）。
@@ -234,12 +214,12 @@ export default {
       // 改成 true 可恢复该入口（handleTest / testConnection 一直保留）。
       showTestButton: false,
       deviceTypes: [
-        { value: '20kW', label: '20kW', desc: '微能站' },
+        { value: '20kW', label: '20kW', desc: '能源站' },
         { value: '50kW', label: '50kW', desc: '能源站' }
       ],
       // WiFi 自动识别：GCNZ-<功率kW>-<容量kWh>-<设备编号>
       wifiSsid: '',        // 识别到的设备热点名称（保存进配置便于追溯）
-      wifiPassword: '',    // 扫码拿到的热点密码，供监测页自动重连使用
+      wifiPassword: '',    // 热点密码（扫码时自动使用内置密码），供监测页自动重连
       wifiAutoHint: '',    // 型号卡片下方的识别结果提示
       userPickedType: false // 本次是否手动点过型号（手动优先，不被自动识别覆盖）
     }
@@ -250,6 +230,11 @@ export default {
     })
   },
   onLoad() {
+    this._unloaded = false
+    this._paused = false
+    this._wifiConnectTimer = null
+    this._wifiConnectSettled = false
+    this._pendingManualWifi = ''
     uni.getSystemInfo({
       success: (res) => {
         this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform"
@@ -257,9 +242,24 @@ export default {
     })
     this.loadConfig()
   },
-  /** 首次进入、扫码或切换 WiFi 后返回本页都会重新识别，保证型号跟随当前热点 */
+  /** 首次进入、扫码或从系统 WiFi 设置返回本页都会重新识别热点 */
   onShow() {
+    this._paused = false
     this.syncDeviceTypeFromWifi()
+    // #ifdef APP-PLUS
+    this._checkPendingWifi(2)
+    // #endif
+  },
+  onHide() {
+    // 跳到系统 WiFi 设置时应用级 loading 不会自动消失，先清掉；
+    // 页面在后台时不弹任何全局弹窗（异步回调可能晚到十几秒）
+    this._paused = true
+    try { uni.hideLoading() } catch (e) { }
+  },
+  onUnload() {
+    this._unloaded = true
+    this._clearWifiConnectTimer()
+    try { uni.hideLoading() } catch (e) { }
   },
   watch: {
     ipSeg: {
@@ -400,7 +400,8 @@ export default {
     /**
      * 扫二维码连接 WiFi
      * 支持标准 WiFi 二维码格式：WIFI:S:<SSID>;T:<WPA|WEP|nopass>;P:<password>;H:<hidden>;;
-     * 也支持纯 SSID 文本
+     * 也支持纯 SSID 文本。
+     * 现场二维码只带热点名称、不带 P 字段：密码统一用内置常量，用户无需输入。
      */
     handleScanWifi() {
       // #ifdef APP-PLUS || MP-WEIXIN
@@ -430,9 +431,11 @@ export default {
      * 支持三种格式：
      * 1. JSON 格式（扩展最丰富）：{"SSID":"xxx","P":"xxx","T":"WPA","deviceType":"20kW","realtimeTopic":"..."}
      * 2. 标准 WIFI: 格式 + 扩展字段：WIFI:S:xxx;P:xxx;T:WPA;DT:20kW;TOPIC:xxx;;
-     * 3. 纯 SSID 文本（兼容旧格式）
-     * 注：设备地址固定为 FIXED_DEVICE_IP / FIXED_DEVICE_PORT，二维码里的 IP / PORT
-     *     字段会被忽略（不再回填、也不出现在确认弹窗里）。
+     * 3. 纯 SSID 文本（兼容旧格式，也是现场设备二维码的实际格式）
+     * 注 1：设备地址固定为 FIXED_DEVICE_IP / FIXED_DEVICE_PORT，二维码里的 IP / PORT
+     *       字段会被忽略（不再回填、也不出现在确认弹窗里）。
+     * 注 2：二维码没有 P 字段时，自动使用 DEFAULT_DEVICE_WIFI_PASSWORD；
+     *       只有明确写了 T:nopass 才按开放网络处理。
      */
     parseAndConnectWifi(raw) {
       let ssid = ''
@@ -461,9 +464,11 @@ export default {
 
       // 2. 尝试 WIFI: 格式
       if (!ssid) {
-        const wifiMatch = raw.match(/^WIFI:(.*);;?$/i)
+        // 标准格式以 ;; 结尾，部分生成器只写一个分号或不写；统一放宽，
+        // 避免整行被当成 SSID 导致连到错误的网络。
+        const wifiMatch = raw.match(/^WIFI:([\s\S]*)$/i)
         if (wifiMatch) {
-          const fields = wifiMatch[1]
+          const fields = wifiMatch[1].replace(/;+\s*$/, '')
           const ssidMatch = fields.match(/S:([^;]*)/i)
           const passMatch = fields.match(/P:([^;]*)/i)
           const typeMatch = fields.match(/T:([^;]*)/i)
@@ -486,10 +491,16 @@ export default {
         ssid = raw.trim()
       }
 
+      ssid = normalizeSsid(ssid)
       if (!ssid) {
         uni.showToast({ title: '未识别到 WiFi 名称', icon: 'none' })
         return
       }
+
+      // 现场设备二维码只有热点名称，没有 P 字段：密码一律用内置常量。
+      // 二维码自带密码时以二维码为准（兼容特殊设备），明确 T:nopass 才不填密码。
+      const noPass = !!(security && security.toLowerCase() === 'nopass')
+      const effectivePassword = password || (noPass ? '' : DEFAULT_DEVICE_WIFI_PASSWORD)
 
       // 二维码里没写型号时，按 WiFi 名称推断（GCNZ-50-129-01 → 50kW），并同步识别提示；
       // 二维码显式写了 DT 时以二维码为准，不显示 WiFi 提示，避免两者矛盾。
@@ -502,14 +513,11 @@ export default {
       }
 
       // 回填扩展字段到表单
-      let filledExtra = []
       if (extra.deviceType && this.deviceTypes.some(t => t.value === extra.deviceType)) {
         this.form.deviceType = extra.deviceType
-        filledExtra.push('设备型号: ' + extra.deviceType)
       }
       if (extra.deviceName) {
         this.form.deviceName = extra.deviceName
-        filledExtra.push('设备名称: ' + extra.deviceName)
       }
       // 设备地址固定：二维码里的 IP / PORT 不回填、也不出现在确认弹窗里，
       // 否则会出现「弹窗提示已自动填充，实际却被固定值覆盖」的矛盾。
@@ -522,12 +530,9 @@ export default {
       if (extra.controlSetTopic) this.form.controlSetTopic = extra.controlSetTopic
       if (extra.controlRespTopic) this.form.controlRespTopic = extra.controlRespTopic
 
-      // 构建确认弹窗内容
-      const maskedPwd = password ? password.replace(/./g, '*') : ''
-      let content = `SSID: ${ssid}${password ? '\n密码: ' + maskedPwd : '\n(无密码)'}`
-      if (filledExtra.length) {
-        content += '\n\n已自动填充:\n' + filledExtra.join('\n')
-      }
+      // 确认弹窗面向用户：APP 原生弹窗不渲染 \n，只给一句「连哪个热点」，
+      // 密码状态、设备型号等内部处理信息一律不出现。
+      const content = `即将连接设备热点「${ssid}」。`
 
       uni.showModal({
         title: '确认连接 WiFi',
@@ -535,55 +540,170 @@ export default {
         confirmText: '连接',
         success: (modalRes) => {
           if (!modalRes.confirm) return
-          const noPass = !!(security && security.toLowerCase() === 'nopass')
           // 记住热点名称与密码：监测页发现没连上设备 WiFi 时会用它自动重连。
-          // 无密码热点显式清空旧密码，避免把上一台设备的密码带过来。
-          this.wifiPassword = noPass ? '' : password
-          saveWifiCredential(ssid, this.wifiPassword, { clearPassword: noPass })
+          // 明确 nopass 时显式清空旧密码并打开放网络标记，避免把上一台设备的
+          // 密码带过去；其余情况一律保存内置密码。
+          this.wifiPassword = effectivePassword
+          saveWifiCredential(ssid, effectivePassword, { clearPassword: noPass })
           const params = { SSID: ssid }
-          if (password) params.password = password
-          if (noPass) delete params.password
+          if (effectivePassword) params.password = effectivePassword
           this.doConnectWifi(params)
         }
       })
     },
 
+    _clearWifiConnectTimer() {
+      if (this._wifiConnectTimer) {
+        clearTimeout(this._wifiConnectTimer)
+        this._wifiConnectTimer = null
+      }
+    },
+
     /**
-     * 调用 uni-wifi 插件连接 WiFi
+     * 扫码后连接设备 WiFi。
+     *
+     * 现场故障（2026-11-13）：uni-wifi 插件连接前会先 removeNetwork(同名已保存
+     * 配置)，Android 10 起系统禁止三方应用删除该配置，删不掉就返回 12001
+     * "system not support"。手机只要曾经连过这台设备，之后再扫码必失败。
+     * 这里做三件事：
+     *   1. 已经连在目标热点上 → 直接成功，不让插件反过来断开当前网络；
+     *   2. connectWifi 的 success 只代表请求被受理，延时复核 SSID 才算连上；
+     *   3. 失败 / 超时 / 未切换 → 统一弹友好引导，一键打开系统 WiFi 设置，
+     *      底层 errCode / errMsg 只写控制台，不再直显给用户。
      */
     doConnectWifi({ SSID, password }) {
-      uni.showLoading({ title: '正在连接 WiFi...', mask: true })
+      const target = SSID
+      const pwd = password || ''
+      const goal = normalizeSsid(target)
+      this._clearWifiConnectTimer()
+      this._wifiConnectSettled = false
 
-      uni.startWifi({
-        success: () => {
-          const opts = { SSID }
-          if (password) opts.password = password
-          opts.success = () => {
-            uni.hideLoading()
-            uni.showToast({ title: `已连接 ${SSID}`, icon: 'success' })
-          }
-          opts.fail = (err) => {
-            uni.hideLoading()
-            console.error('connectWifi fail:', err)
-            uni.showModal({
-              title: '连接失败',
-              content: err.errMsg || `无法连接到 ${SSID}，请手动到系统设置连接`,
-              showCancel: false
-            })
-          }
-          uni.connectWifi(opts)
-        },
-        fail: (err) => {
-          uni.hideLoading()
-          console.error('startWifi fail:', err)
-          uni.showModal({
-            title: 'WiFi 模块启动失败',
-            content: err.errMsg || '请检查 WiFi 权限设置',
-            showCancel: false
-          })
+      const done = () => {
+        if (this._wifiConnectSettled) return false
+        this._wifiConnectSettled = true
+        this._clearWifiConnectTimer()
+        // 应用级浮层，失败 / 成功 / 超时都必须清掉，否则会盖住后续页面
+        try { uni.hideLoading() } catch (e) { }
+        return true
+      }
+      const showSuccess = () => {
+        if (!done()) return
+        this._pendingManualWifi = ''
+        // 长 SSID 在 APP 单行 toast 里会被截断显示不全；只提示结果，不展示热点名。
+        const toast = () => uni.showToast({ title: '已连接设备热点', icon: 'success' })
+        // #ifdef APP-PLUS
+        // hideLoading 是应用级浮层，移除需要时间；紧接着弹 toast 会被它盖住，
+        // 错开一帧再弹，避免「文字被遮挡」。
+        setTimeout(() => { if (!this._unloaded) toast() }, 120)
+        this.syncDeviceTypeFromWifi()
+        // #endif
+        // #ifndef APP-PLUS
+        toast()
+        // #endif
+      }
+      const showGuide = (err, extraReason) => {
+        if (!done()) return
+        if (err) {
+          // 只写控制台：errMsg 多为 system not support / not init. 等底层原文
+          console.warn('[扫码连WiFi] 原始错误:', err)
+        } else {
+          console.warn('[扫码连WiFi] 连接未生效：热点未切换或接口无回调')
         }
-      })
+        // #ifdef APP-PLUS
+        this._pendingManualWifi = target
+        // #endif
+        showManualWifiGuide(target, {
+          password: pwd,
+          reason: extraReason || (err ? describeWifiError(err) : ''),
+          isActive: () => !this._unloaded && !this._paused
+        })
+      }
+      /** APP 端延时复核当前热点；部分 ROM 切换 WiFi 需要 2~3 秒 */
+      const verify = (retry) => {
+        if (this._wifiConnectSettled || this._unloaded || this._paused) return
+        readCurrentSsid().then(ssid => {
+          if (this._wifiConnectSettled || this._unloaded || this._paused) return
+          if (normalizeSsid(ssid) === goal) {
+            showSuccess()
+            return
+          }
+          if (retry > 0) {
+            setTimeout(() => verify(retry - 1), 1600)
+          } else {
+            showGuide(null, '系统已受理连接请求，但手机还没切到设备热点。')
+          }
+        }).catch(() => showGuide(null, ''))
+      }
+
+      // #ifdef APP-PLUS
+      const current = normalizeSsid(this.readAndroidSsid())
+      if (current && current === goal) {
+        showSuccess()
+        return
+      }
+      // #endif
+
+      // mask:false —— 全屏遮罩会盖住用户随后打开的页面（历史故障）
+      uni.showLoading({ title: '正在连接设备 WiFi...', mask: false })
+      // 部分 ROM 上 startWifi / connectWifi 不回调，12s 后必须收场
+      this._wifiConnectTimer = setTimeout(() => showGuide(null, ''), 12000)
+
+      const doConnect = () => {
+        const opts = { SSID: target }
+        if (pwd) opts.password = pwd
+        opts.success = () => {
+          // #ifdef APP-PLUS
+          setTimeout(() => verify(1), 1200)
+          return
+          // #endif
+          // #ifndef APP-PLUS
+          showSuccess()
+          // #endif
+        }
+        opts.fail = err => showGuide(err, '')
+        try {
+          uni.connectWifi(opts)
+        } catch (e) {
+          showGuide(e, '')
+        }
+      }
+
+      try {
+        uni.startWifi({
+          success: () => { if (!this._wifiConnectSettled) doConnect() },
+          // startWifi 的 12001 是定位权限被拒，与连接阶段的 12001 含义不同
+          fail: err => showGuide(err, '应用需要定位权限才能搜索设备热点，也可以直接在系统 WiFi 列表里连接。')
+        })
+      } catch (e) {
+        showGuide(e, '')
+      }
     },
+
+    // #ifdef APP-PLUS
+    /** 从系统 WiFi 设置返回后，自动确认是否已经连上设备热点 */
+    _checkPendingWifi(retry) {
+      if (this._unloaded || this._paused || !this._pendingManualWifi) return
+      const goal = normalizeSsid(this._pendingManualWifi)
+      readCurrentSsid().then(ssid => {
+        if (this._unloaded || this._paused || !this._pendingManualWifi) return
+        if (normalizeSsid(ssid) === goal) {
+          this._pendingManualWifi = ''
+          this._wifiConnectSettled = true
+          this._clearWifiConnectTimer()
+          try { uni.hideLoading() } catch (e) { }
+          // 与 doConnectWifi 一致：hideLoading 后错开一帧，避免 toast 被浮层遮挡
+          setTimeout(() => {
+            if (!this._unloaded && !this._paused) {
+              uni.showToast({ title: '已连接设备热点', icon: 'success' })
+            }
+          }, 120)
+          this.syncDeviceTypeFromWifi()
+          return
+        }
+        if (retry > 0) setTimeout(() => this._checkPendingWifi(retry - 1), 1500)
+      }).catch(() => { })
+    },
+    // #endif
 
     /**
      * 强制使用固定设备地址。
@@ -605,7 +725,7 @@ export default {
           this.form = { ...DEFAULT_CONFIG, ...cfg, protocol: 'mqtt', accessCode: '' }
           // 热点密码只保存在本地配置里，不进表单、不显示在界面上；
           // 进入监测页时原样带回，避免因整份配置覆盖而丢失自动重连凭据。
-          this.wifiPassword = String(cfg.wifiPassword || '')
+          this.wifiPassword = String(cfg.wifiPassword || '') || getSavedWifi().password
           // 迁移：旧版默认型号是 20kW 且不记录来源。用户要求现在默认 50kW，
           // 因此把这种「旧默认残留」纠正掉；新版保存的手选 / WiFi 识别结果都带
           // deviceTypeSource，一律原样保留。
@@ -708,9 +828,14 @@ export default {
       this.testConnection()
     },
     handleEnter() {
+      // 页面创建较慢时用户容易连点，重复 navigateTo 会叠出多个监测页 webview
+      if (this._entering || this.entering) return
       if (!this.validate()) return
       uni.vibrateShort({ type: 'light' })
-      this.enterMonitor()
+      // 先让按钮变成「正在进入…」，下一帧再触发 navigateTo：
+      // 否则监测页 webview 创建会同步占住主线程，用户看到的是点了没反应、卡几秒才跳。
+      this.entering = true
+      setTimeout(() => this.enterMonitor(), 0)
     },
     testConnection() {
       this.testing = true
@@ -776,11 +901,26 @@ export default {
       return cfg
     },
     enterMonitor() {
+      if (this._entering) return
       const cfg = this.buildConfig()
       try {
         uni.setStorageSync(STORAGE_KEY, cfg)
-        uni.navigateTo({ url: '/pages/profile/direct-device' })
+        // 扫码连 WiFi 流程可能残留一个 mask 全屏 loading（部分 ROM 上
+        // connectWifi 不回调 fail/complete）。它是应用级浮层，会盖住刚打开的
+        // 监测页，用户看到的就是「点了进入监测好几秒没反应」。
+        try { uni.hideLoading() } catch (e) { }
+        this._entering = true
+        uni.navigateTo({
+          url: '/pages/profile/direct-device',
+          complete: () => {
+            this._entering = false
+            // navigateTo 是压栈，配置页仍在；若不复位，返回时按钮会停在「正在进入…」
+            this.entering = false
+          }
+        })
       } catch (e) {
+        this._entering = false
+        this.entering = false
         console.error('保存直连配置失败:', e)
         uni.showToast({ title: '保存失败', icon: 'none' })
       }
@@ -813,198 +953,150 @@ export default {
   }
 }
 
-/* ========== Hero 状态卡 ========== */
-.hero-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* ========== 本地连接主卡（原型：白色卡片 + 蓝色 WiFi 图标 + 分割线） ========== */
+.connect-card {
   margin: 20rpx;
-  padding: 32rpx 28rpx;
+  background: #fff;
   border-radius: 20rpx;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-
-  &.hero-on {
-    background: linear-gradient(135deg, #007AFF 0%, #4096FF 100%);
-    box-shadow: 0 12rpx 32rpx rgba(0, 122, 255, 0.28);
-  }
-
-  &.hero-off {
-    background: #fff;
-    box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
-  }
+  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
+  overflow: hidden;
 }
 
-.hero-left {
+.connect-head {
   display: flex;
   align-items: center;
-  gap: 24rpx;
-  flex: 1;
-  min-width: 0;
+  padding: 56rpx 32rpx;
 }
 
-.hero-icon {
+.connect-icon {
   width: 88rpx;
   height: 88rpx;
-  border-radius: 20rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
-  transition: all 0.4s ease;
-  background: #e8eaed;
-
-  &.hero-icon-on {
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(8px);
-  }
+  margin-right: 24rpx;
 }
 
-.hero-info {
+.connect-icon-img {
+  width: 100%;
+  height: 100%;
+}
+
+.connect-info {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 6rpx;
 }
 
-.hero-title-row {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.hero-title {
-  font-size: 34rpx;
+.connect-title {
+  font-size: 38rpx;
   font-weight: 700;
-
-  .hero-on & {
-    color: #fff;
-  }
-
-  .hero-off & {
-    color: #1d2129;
-  }
-}
-
-.hero-badge {
-  display: flex;
-  align-items: center;
-  gap: 6rpx;
-  background: rgba(255, 255, 255, 0.22);
-  padding: 4rpx 14rpx;
-  border-radius: 20rpx;
-}
-
-.hero-pulse-dot {
-  width: 10rpx;
-  height: 10rpx;
-  border-radius: 50%;
-  background: #fff;
-  animation: hero-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes hero-pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 0.5;
-    transform: scale(0.7);
-  }
-}
-
-.hero-badge-text {
-  font-size: 20rpx;
-  color: #fff;
-  font-weight: 500;
-}
-
-.hero-desc {
-  font-size: 23rpx;
-
-  .hero-on & {
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .hero-off & {
-    color: #86909c;
-  }
-}
-
-/* ========== 扫码连 WiFi（本页主操作，大卡片） ==========
-   设备类型 / 设备地址两块隐藏后，扫码是这一页唯一的用户动作。
-   原来是一条 88rpx 高的细横条，视觉权重甚至低于下方的「操作码」输入框，
-   这里放大到 176rpx 并补齐「图标 + 主标题 + 说明 + 行动按钮」四段结构。
-   整块仍是同一个 @click 入口，扫码逻辑零改动。 */
-.scan-bar {
-  margin: 0 20rpx 24rpx;
-}
-.scan-card {
-  display: flex;
-  align-items: center;
-  gap: 24rpx;
-  min-height: 176rpx;
-  padding: 28rpx 24rpx;
-  box-sizing: border-box;
-  background: linear-gradient(135deg, rgba(0, 122, 255, 0.10), rgba(0, 122, 255, 0.04));
-  border: 2rpx solid rgba(0, 122, 255, 0.20);
-  border-radius: 20rpx;
-  transition: all 0.2s ease;
-
-  &:active {
-    transform: scale(0.985);
-    background: rgba(0, 122, 255, 0.14);
-  }
-}
-.scan-icon-wrap {
-  flex: none;
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 24rpx;
-  background: #fff;
-  border: 2rpx solid rgba(0, 122, 255, 0.12);
-  box-shadow: 0 6rpx 18rpx rgba(0, 122, 255, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.scan-content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10rpx;
-}
-.scan-title {
-  font-size: 34rpx;
-  font-weight: 700;
-  color: #1d2129;
-  line-height: 1.3;
-}
-.scan-desc {
-  font-size: 24rpx;
-  color: #86909c;
+  color: #000000;
   line-height: 1.4;
 }
+
+.connect-desc {
+  font-size: 28rpx;
+  color: #8a94a1;
+  line-height: 1.5;
+  margin-top: 6rpx;
+}
+
+.connect-divider {
+  height: 1rpx;
+  background: #f0f1f3;
+  margin: 0 32rpx;
+}
+
+/* ========== 扫码连接设备 WiFi（原型：主卡下半区，右侧蓝色行动按钮） ==========
+   整块仍是同一个 @click 入口，扫码逻辑零改动。 */
+.scan-row {
+  display: flex;
+  align-items: center;
+  padding: 48rpx 32rpx;
+  min-height: 180rpx;
+  box-sizing: border-box;
+
+  &:active {
+    background: #f9fafb;
+  }
+}
+
+.scan-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding-right: 28rpx;
+}
+
+.scan-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #000000;
+  line-height: 1.4;
+}
+
+.scan-desc {
+  font-size: 27rpx;
+  color: #8a94a1;
+  line-height: 1.5;
+  margin-top: 8rpx;
+}
+
 .scan-action {
   flex: none;
   display: flex;
   align-items: center;
-  gap: 6rpx;
-  padding: 12rpx 18rpx;
+  justify-content: center;
+  padding: 0 24rpx;
+  height: 72rpx;
   background: #007AFF;
-  border-radius: 999rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.24);
+  border-radius: 14rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.22);
 }
+
 .scan-action-text {
-  font-size: 24rpx;
+  font-size: 28rpx;
   font-weight: 600;
   color: #fff;
+  margin-left: 6rpx;
   white-space: nowrap;
+}
+
+/* ========== 操作码（原型：单行白卡，无 section 标题/图标） ========== */
+.code-card {
+  display: flex;
+  align-items: center;
+  margin: 28rpx 20rpx;
+  padding: 0 32rpx;
+  height: 116rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.code-label {
+  flex: none;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #000000;
+  margin-right: 24rpx;
+}
+
+.code-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  font-size: 32rpx;
+  color: #000000;
+}
+
+.code-optional {
+  flex: none;
+  font-size: 28rpx;
+  color: #a8b0bb;
+  margin-left: 16rpx;
 }
 
 /* ========== 通用 section ========== */
@@ -1126,7 +1218,7 @@ export default {
 .form-input {
   flex: 1;
   font-size: 28rpx;
-  color: #1d2129;
+  color: #000000;
   text-align: left;
   height: 100%;
   width: 100%;
@@ -1145,7 +1237,7 @@ export default {
   line-height: 72rpx;
   text-align: center;
   font-size: 28rpx;
-  color: #1d2129;
+  color: #000000;
   background: #f7f8fa;
   border-radius: 8rpx;
   border: 1rpx solid #e5e6eb;
@@ -1194,7 +1286,7 @@ export default {
 
 .dt-chip-title {
   font-size: 32rpx;
-  color: #1d2129;
+  color: #000000;
   font-weight: 600;
   transition: all 0.25s ease;
 }
@@ -1259,114 +1351,41 @@ export default {
   font-weight: 500;
 }
 
-/* ========== 步骤卡片 ========== */
+/* ========== 提示卡片（原型：浅蓝底 + 蓝色小标题 + 深色正文） ========== */
 .help-section {
-  margin: 32rpx 20rpx 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  margin: 24rpx 20rpx 0;
 }
 
-.step-card {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  background: #fff;
-  padding: 24rpx 28rpx;
-  border-radius: 14rpx;
-  margin-bottom: 8rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03);
-  position: relative;
-}
-
-.step-num {
-  width: 44rpx;
-  height: 44rpx;
-  border-radius: 50%;
-  background: #f0f1f3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24rpx;
-  font-weight: 700;
-  color: #86909c;
-  flex-shrink: 0;
-
-  &.step-num-active {
-    background: linear-gradient(135deg, #007AFF, #4096FF);
-    color: #fff;
-    box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.3);
-  }
-}
-
-.step-body {
-  flex: 1;
-}
-
-.step-text {
-  font-size: 27rpx;
-  color: #4e5969;
-  line-height: 1.5;
-}
-
-.step-arrow {
-  position: absolute;
-  bottom: -14rpx;
-  left: 44rpx;
-  z-index: 1;
-}
-
-/* ========== 提示卡片 ========== */
 .tips-card {
-  background: linear-gradient(135deg, rgba(0, 122, 255, 0.06), rgba(0, 122, 255, 0.02));
-  border: 2rpx solid rgba(0, 122, 255, 0.12);
+  background: #e9efff;
   border-radius: 16rpx;
-  padding: 28rpx 30rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03);
+  padding: 48rpx 32rpx;
 }
 
 .tips-header {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  margin-bottom: 20rpx;
-}
-
-.tips-title {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #1d2129;
-}
-
-.tips-list {
-  display: flex;
-  flex-direction: column;
-  gap: 18rpx;
-}
-
-.tips-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 14rpx;
+  margin-bottom: 16rpx;
 }
 
 .tips-icon {
   width: 36rpx;
   height: 36rpx;
-  border-radius: 8rpx;
-  background: rgba(0, 122, 255, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
 }
 
+.tips-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #007AFF;
+  margin-left: 8rpx;
+}
+
 .tips-text {
-  flex: 1;
-  font-size: 26rpx;
-  color: #4e5969;
+  display: block;
+  font-size: 30rpx;
+  color: #222222;
   line-height: 1.5;
-  padding-top: 4rpx;
 }
 
 /* ========== 底部操作栏 ========== */
@@ -1377,24 +1396,22 @@ export default {
   right: 0;
   display: flex;
   gap: 20rpx;
-  padding: 20rpx 28rpx;
-  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 -4rpx 24rpx rgba(0, 0, 0, 0.06);
+  padding: 24rpx 32rpx;
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+  background: transparent;
   z-index: 100;
 }
 
 .btn {
   flex: 1;
-  height: 92rpx;
+  height: 100rpx;
   border-radius: 14rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10rpx;
-  font-size: 30rpx;
-  font-weight: 600;
+  font-size: 34rpx;
+  // font-weight: 600;
   margin: 0;
   border: none;
   transition: all 0.2s ease;
@@ -1410,14 +1427,24 @@ export default {
 
 .btn-primary {
   flex: 1.6;
-  background: linear-gradient(135deg, #007AFF, #4096FF);
+  background: transparent;
   color: #fff;
-  box-shadow: 0 6rpx 20rpx rgba(0, 122, 255, 0.3);
+  position: relative;
+  border-radius: 50rpx;
 
   &:active:not([disabled]) {
     transform: scale(0.97);
-    box-shadow: 0 3rpx 10rpx rgba(0, 122, 255, 0.2);
   }
+}
+
+/* 官方「登录按钮.svg」胶囊底图（裁去阴影区，避免拉伸虚胖） */
+.btn-primary-bg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
 }
 
 .btn-secondary {
@@ -1434,6 +1461,8 @@ export default {
 
 .btn-text {
   margin-top: 2rpx;
+  position: relative;
+  z-index: 1;
 }
 
 .btn-hover {

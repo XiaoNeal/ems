@@ -385,7 +385,7 @@ export default {
       // 保存设备选择到本地存储，防止刷新丢失
       uni.setStorageSync('currentSelectDevice', device)
       
-      // 更新当前微能站角色
+      // 更新当前能源站角色
       this.updateCurrentEsRole(deviceId)
 
       // 先调用接口获取设备信息
@@ -430,7 +430,7 @@ export default {
       const esUser = esUsers.find(item => item.esId === esId)
       const roleId = esUser?.esRoleId || 0
       this.$store.commit('SET_CURRENT_ES_ROLE_ID', roleId)
-      console.log('当前微能站角色:', roleId)
+      console.log('当前能源站角色:', roleId)
     },
 
     register171FDevice() {

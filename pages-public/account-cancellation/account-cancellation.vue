@@ -23,15 +23,15 @@
 				<view class="section-content">
 					<view class="notice-item">
 						<text class="notice-number">1</text>
-						<text class="notice-text">注销微能站帐号是不可恢复的操作，你应自行备份微能站帐号相关的信息和数据。操作之前，请确认与微能站帐号相关的所有服务均已进行妥善处理。</text>
+						<text class="notice-text">注销能源站帐号是不可恢复的操作，你应自行备份能源站帐号相关的信息和数据。操作之前，请确认与能源站帐号相关的所有服务均已进行妥善处理。</text>
 					</view>
 					<view class="notice-item">
 						<text class="notice-number">2</text>
-						<text class="notice-text">注销后，你将无法登录、使用本微能站帐号，也无法找回个人资料和历史信息（包含昵称、头像、设备信息、发电报告、用电报告等）。</text>
+						<text class="notice-text">注销后，你将无法登录、使用本能源站帐号，也无法找回个人资料和历史信息（包含昵称、头像、设备信息、发电报告、用电报告等）。</text>
 					</view>
 					<view class="notice-item">
 						<text class="notice-number">3</text>
-						<text class="notice-text">在微能站帐号注销期间，如果你的微能站帐号被他人投诉、被国家机关调查或者正处于诉讼、仲裁程序中，微能站有权自行终止注销而无需另行得到你的同意。</text>
+						<text class="notice-text">在能源站帐号注销期间，如果你的能源站帐号被他人投诉、被国家机关调查或者正处于诉讼、仲裁程序中，能源站有权自行终止注销而无需另行得到你的同意。</text>
 					</view>
 				</view>
 			</view>

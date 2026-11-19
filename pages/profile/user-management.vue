@@ -109,7 +109,7 @@
             </view>
             <view class="form-item">
               <view class="form-label-wrap">
-                <text class="form-label">当前微能站</text>
+                <text class="form-label">当前能源站</text>
               </view>
               <view class="input-wrap">
                 <uni-icons type="location" size="24" color="#bbb" />
@@ -246,7 +246,7 @@ export default {
   mounted() {
     const currentDevice = this.$store.state.currentSelectDevice || {}
     this.esId = currentDevice.id || currentDevice.esId || ''
-    this.esName = currentDevice.deviceName || currentDevice.name || '未知微能站'
+    this.esName = currentDevice.deviceName || currentDevice.name || '未知能源站'
     this.getUserList()
   },
   computed: {

@@ -73,6 +73,15 @@
       </view>
     </view>
 
+    <!-- 设备连接操作面板 -->
+    <app-action-sheet
+      :visible="directActionVisible"
+      title="设备连接"
+      subtitle="已保存配置，请选择要进行的操作"
+      :items="directActionItems"
+      @select="onDirectActionSelect"
+      @close="closeDirectAction"
+    />
 
   </view>
 </template>
@@ -80,9 +89,10 @@
 <script>
 import { mapState } from 'vuex'
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+import AppActionSheet from '@/components/app-action-sheet/app-action-sheet.vue'
 
 export default {
-  components: { DyNavbar },
+  components: { DyNavbar, AppActionSheet },
   data() {
     return {
       language: '简体中文',
@@ -90,7 +100,12 @@ export default {
       cacheSize: '0MB',
       fontSize: 1,
       platformClass: "",
-      directDeviceConfig: null
+      directDeviceConfig: null,
+      directActionVisible: false,
+      directActionItems: [
+        { key: 'monitor', label: '进入监测页', desc: '查看设备实时运行数据', icon: 'eye', primary: true },
+        { key: 'config', label: '修改配置', desc: '重新设置设备连接信息', icon: 'gear' }
+      ]
     }
   },
   computed: {
@@ -120,6 +135,12 @@ export default {
     this.loadSettings()
     this.calculateCacheSize()
     this.loadDirectDeviceConfig()
+  },
+  onBackPress() {
+    if (this.directActionVisible) {
+      this.directActionVisible = false
+      return true
+    }
   },
   methods: {
     loadSettings() {
@@ -258,16 +279,19 @@ export default {
         return
       }
       // 弹出选择：进入监测页 / 修改配置
-      uni.showActionSheet({
-        itemList: ['进入监测页', '修改配置'],
-        success: (res) => {
-          if (res.tapIndex === 0) {
-            uni.navigateTo({ url: '/pages/profile/direct-device' })
-          } else {
-            uni.navigateTo({ url: '/pages/profile/direct-device-config' })
-          }
-        }
-      })
+      this.directActionVisible = true
+    },
+    closeDirectAction() {
+      this.directActionVisible = false
+    },
+    onDirectActionSelect(payload) {
+      const index = payload && payload.index
+      this.directActionVisible = false
+      if (index === 0) {
+        uni.navigateTo({ url: '/pages/profile/direct-device' })
+      } else if (index === 1) {
+        uni.navigateTo({ url: '/pages/profile/direct-device-config' })
+      }
     },
   }
 }

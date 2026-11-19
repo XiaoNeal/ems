@@ -19,6 +19,12 @@ import { logLine } from './device-log.js'
 
 export const DEVICE_WIFI_PREFIX = 'GCNZ'
 export const WIFI_CONFIG_STORAGE_KEY = 'direct_device_config'
+/**
+ * 设备热点统一密码，内置在程序里。
+ * 现场二维码只带热点名称（SSID），不带 P 字段；用户无需、也没有入口输入密码。
+ * 扫码连接与自动重连共用这一个常量，改密码只改这里。
+ */
+export const DEFAULT_DEVICE_WIFI_PASSWORD = '20150509'
 
 /** 自动连接失败后的冷却时间，避免 onShow 反复触发系统 WiFi 授权弹窗 */
 const AUTO_CONNECT_COOLDOWN_MS = 60 * 1000
@@ -26,8 +32,14 @@ const AUTO_CONNECT_COOLDOWN_MS = 60 * 1000
 const CONNECT_TIMEOUT_MS = 12000
 /** 读取当前 WiFi 最长等待 */
 const READ_TIMEOUT_MS = 2500
+/** 系统限制类错误后不再反复尝试自动重连的时间窗 */
+const UNSUPPORTED_SKIP_MS = 60 * 1000
+/** Android 10+ 不允许应用删改已保存的 WiFi 配置，这些错误重试也不会成功 */
+const WIFI_UNSUPPORTED_CODES = [12001, 12002, 12007, 12010, 12013]
 
 let _lastAutoConnectAt = 0
+let _lastUnsupportedAt = 0
+let _lastConnectErrCode = 0
 let _startWifiReady = false
 let _guideShowing = false
 
@@ -43,6 +55,15 @@ export function normalizeSsid(raw) {
 }
 
 /**
+ * 设备热点名提示。只给出名称本身（含示例），不逐段解释规则 —— 弹窗要短。
+ * 已保存热点直接显示名称，未保存时给一个示例，用户在 WiFi 列表里照着认即可。
+ */
+export function describeDeviceWifi(ssid) {
+  const s = normalizeSsid(ssid)
+  return s ? `设备热点「${s}」` : '设备热点（名称形如 GCNZ-50-129-01）'
+}
+
+/**
  * 是否为设备热点。与配置页 parseSsid 同一前缀，但不强求容量/编号段：
  * 现场出现过 GCNZ_50kW_129_01、GCNZ-50-129-01-5G 等变体，宽松匹配更稳。
  */
@@ -51,14 +72,20 @@ export function isDeviceWifi(ssid) {
   return !!s && s.toUpperCase().indexOf(DEVICE_WIFI_PREFIX) === 0
 }
 
-/** 读取本地保存的设备热点凭据（配置页扫码 / 热点识别时写入） */
+/**
+ * 读取本地保存的设备热点凭据（配置页扫码 / 热点识别时写入）。
+ * 旧版本配置或「在系统设置里手动连过、本地没存到密码」时，回退到内置密码，
+ * 保证自动重连也能带上密码；明确标记过开放网络（wifiNoPassword）的除外。
+ */
 export function getSavedWifi() {
   try {
     const cfg = uni.getStorageSync(WIFI_CONFIG_STORAGE_KEY) || {}
-    return {
-      ssid: normalizeSsid(cfg.wifiSsid),
-      password: String(cfg.wifiPassword || '')
-    }
+    const ssid = normalizeSsid(cfg.wifiSsid)
+    const stored = String(cfg.wifiPassword || '')
+    const password = stored || (!ssid || cfg.wifiNoPassword === true
+      ? ''
+      : DEFAULT_DEVICE_WIFI_PASSWORD)
+    return { ssid, password }
   } catch (e) {
     return { ssid: '', password: '' }
   }
@@ -85,11 +112,16 @@ export function saveWifiCredential(ssid, password, options = {}) {
       pwd = String(password)
     }
     if (cfg.wifiSsid !== target) _lastAutoConnectAt = 0
-    uni.setStorageSync(WIFI_CONFIG_STORAGE_KEY, {
+    const next = {
       ...cfg,
       wifiSsid: target,
       wifiPassword: pwd
-    })
+    }
+    // 开放网络标记只在「明确无密码 / 明确带密码」时改动；
+    // onShow 识别热点时的无参调用不能把它抹掉。
+    if (options.clearPassword === true) next.wifiNoPassword = true
+    else if (pwd) next.wifiNoPassword = false
+    uni.setStorageSync(WIFI_CONFIG_STORAGE_KEY, next)
   } catch (e) {
     console.warn('[设备WiFi] 保存热点信息失败:', e)
   }
@@ -182,24 +214,37 @@ export function readCurrentSsid() {
   })
 }
 
-/** 尝试连接指定热点；成功/失败/超时都 resolve 布尔值，不向界面抛底层错误 */
-export function connectWifi(ssid, password, isActive) {
+/**
+ * 尝试连接指定热点；成功/失败/超时都 resolve 布尔值，不向界面抛底层错误。
+ *
+ * options.silentUi=true 时完全不弹全局 loading：用于「刚进入监测页」这类
+ * 自动前置检查。以前这里用 mask:true 的全屏遮罩，自动重连最长要等 12s，
+ * 用户看到的就是「点了『进入监测』、页面好几秒不出现」——实际上页面早已
+ * 打开，只是被遮罩盖住了。手动触发（刷新 / 引导弹窗里点「去连接」）仍保留
+ * 提示，但改成 mask:false，不再挡住页面与返回按钮。
+ */
+export function connectWifi(ssid, password, isActive, options = {}) {
   const target = normalizeSsid(ssid)
   if (!target) return Promise.resolve(false)
   if (typeof uni.connectWifi !== 'function') return Promise.resolve(false)
   if (isActive && !isActive()) return Promise.resolve(false)
+  const silentUi = options.silentUi === true
 
   return new Promise(resolve => {
     let done = false
-    try {
-      uni.showLoading({ title: '正在连接设备 WiFi...', mask: true })
-    } catch (e) { /* 某些端不支持 loading，忽略 */ }
+    if (!silentUi) {
+      try {
+        uni.showLoading({ title: '正在连接设备 WiFi...', mask: false })
+      } catch (e) { /* 某些端不支持 loading，忽略 */ }
+    }
 
     const finish = ok => {
       if (done) return
       done = true
       clearTimeout(timer)
-      try { uni.hideLoading() } catch (e) { }
+      if (!silentUi) {
+        try { uni.hideLoading() } catch (e) { }
+      }
       resolve(!!ok)
     }
     const timer = setTimeout(() => {
@@ -220,7 +265,12 @@ export function connectWifi(ssid, password, isActive) {
         finish(true)
       }
       opts.fail = err => {
-        console.warn('[设备WiFi] 连接失败:', (err && err.errMsg) || err)
+        const code = Number((err && (err.errCode != null ? err.errCode : err.code)) || 0)
+        _lastConnectErrCode = code
+        // 系统限制类错误（典型：12001 已保存配置删不掉）重试只会重复触发
+        // 系统弹窗，直接转入「去系统 WiFi 设置」引导，冷却期内不再自动尝试。
+        if (WIFI_UNSUPPORTED_CODES.indexOf(code) >= 0) _lastUnsupportedAt = Date.now()
+        console.warn('[设备WiFi] 连接失败:', code, (err && err.errMsg) || err)
         finish(false)
       }
       try {
@@ -268,6 +318,87 @@ export function openWifiSettings() {
   return false
 }
 
+/**
+ * 把 uni-wifi 的底层错误翻译成「用户下一步该做什么」。
+ *
+ * 典型场景（真机 2026-11-13）：Android 10+ 不允许三方应用删除系统里已保存
+ * 的 WiFi 配置，而 uni-wifi 插件连接前会先 removeNetwork(同名配置)，删不掉
+ * 就 fail(12001, 'system not support')。手机只要曾经连过这台设备，之后再
+ * 扫码 / 自动重连都会撞上它。原始 errMsg 只写控制台，绝不进弹窗。
+ */
+export function describeWifiError(err) {
+  const msg = String((err && (err.errMsg || err.message)) || err || '')
+  let code = Number((err && (err.errCode != null ? err.errCode : err.code)) || 0)
+  // 小程序 / 部分 ROM 只回 errMsg 字符串，不带 errCode
+  if (!code) {
+    if (/system not support/i.test(msg)) code = 12001
+    else if (/not init/i.test(msg)) code = 12000
+    else if (/password/i.test(msg)) code = 12002
+    else if (/not turned on/i.test(msg)) code = 12005
+    else if (/expired/i.test(msg)) code = 12013
+  }
+  switch (code) {
+    case 12001:
+      return '这台手机之前保存过该热点，系统不允许应用直接切换。'
+    case 12000:
+      return '暂时没搜索到这个设备热点，请确认设备已上电并靠近设备。'
+    case 12002:
+      return '热点密码可能不正确，或系统不允许应用添加该网络。'
+    case 12005:
+      return '手机 WiFi 开关还没打开。'
+    case 12007:
+      return '系统拒绝了本次连接请求。'
+    case 12010:
+    case 12013:
+      return '系统保存的热点配置已失效，可先在 WiFi 设置里「忘记此网络」再重试。'
+    default:
+      return '无法由应用直接完成连接。'
+  }
+}
+
+/**
+ * 自动连接被系统限制时的引导弹窗：一键打开系统 WiFi 列表，必要时复制密码。
+ * 与 showWifiGuide 共用 _guideShowing，避免自动检查和扫码流程同时弹两个窗。
+ * 系统里通常还保存着这个热点，用户在列表里点一下即可连上（无需重输密码）。
+ */
+export function showManualWifiGuide(ssid, options = {}) {
+  if (_guideShowing) return false
+  const isActive = typeof options.isActive === 'function' ? options.isActive : null
+  if (isActive && !isActive()) return false
+  const target = normalizeSsid(ssid)
+  const password = String(options.password || '')
+  const reason = String(options.reason || '')
+  const name = describeDeviceWifi(target)
+
+  _guideShowing = true
+  const content = (reason || '请在系统 WiFi 列表里连接设备热点。') +
+    `\n选择${name}${password ? '（点「打开 WiFi 设置」会同时复制密码）' : ''}，连上后返回本页会自动继续。`
+  try {
+    uni.showModal({
+      title: '请在系统 WiFi 中完成连接',
+      content,
+      confirmText: '打开 WiFi 设置',
+      cancelText: '稍后',
+      success: res => {
+        _guideShowing = false
+        if (!res.confirm) return
+        if (password) {
+          try { uni.setClipboardData({ data: password }) } catch (e) { }
+        }
+        if (!openWifiSettings()) {
+          uni.showToast({ title: '请手动打开系统 WiFi 设置', icon: 'none' })
+        }
+      },
+      fail: () => { _guideShowing = false }
+    })
+    return true
+  } catch (e) {
+    _guideShowing = false
+    console.warn('[设备WiFi] 引导弹窗失败:', e)
+    return false
+  }
+}
+
 /** 未连上设备热点时的引导弹窗；同一时刻只弹一个 */
 function showWifiGuide(target, isActive) {
   if (_guideShowing) return
@@ -278,9 +409,10 @@ function showWifiGuide(target, isActive) {
     return
   }
   _guideShowing = true
-  const tip = target
-    ? `请先连接设备热点「${target}」，连上后返回本页会自动继续。`
-    : '请先在系统 WiFi 设置里连接设备热点（名称以 GCNZ 开头），连上后返回本页会自动继续。'
+  const reason = _lastConnectErrCode
+    ? describeWifiError({ errCode: _lastConnectErrCode }) + '\n'
+    : ''
+  const tip = reason + `请先连接${describeDeviceWifi(target)}，连上后返回本页会自动继续。`
   try {
     uni.showModal({
       title: '未连接设备 WiFi',
@@ -319,6 +451,7 @@ function showWifiGuide(target, isActive) {
  * @param {boolean} options.guide         未连上时是否弹窗引导（默认 true）
  * @param {boolean} options.forceConnect  忽略冷却时间再试一次（用户主动刷新时）
  * @param {string}  options.ssid          指定目标热点，缺省用本地保存的
+ * @param {boolean} options.silentUi     自动检查时不弹全局 loading（进页面首次检查用）
  * @param {Function} options.isActive     可选，返回 false 表示调用页已离开，不再弹任何 UI
  * @returns {Promise<{ok: boolean, status: string, ssid: string, target: string}>}
  *          status: device | unknown | auto-connected | other
@@ -327,6 +460,7 @@ export function ensureDeviceWifi(options = {}) {
   const autoConnect = options.autoConnect !== false
   const guide = options.guide !== false
   const force = !!options.forceConnect
+  const silentUi = options.silentUi === true
   const isActive = typeof options.isActive === 'function' ? options.isActive : null
 
   return readCurrentSsid().then(current => {
@@ -369,9 +503,15 @@ export function ensureDeviceWifi(options = {}) {
         logLine('WiFi', '处于自动连接冷却期，跳过本次尝试')
         return Promise.resolve(false)
       }
+      // 上一次已经撞上系统限制（如 12001 已保存配置删不掉），冷却期内
+      // 不再重复发起注定失败的自动连接，直接交给引导弹窗。
+      if (!force && now - _lastUnsupportedAt < UNSUPPORTED_SKIP_MS) {
+        logLine('WiFi', '上次连接被系统限制，跳过自动重连，直接引导')
+        return Promise.resolve(false)
+      }
       _lastAutoConnectAt = now
       logLine('WiFi', '当前热点=' + current + '，尝试自动重连到 ' + target)
-      return connectWifi(target, saved.password, isActive).then(ok => {
+      return connectWifi(target, saved.password, isActive, { silentUi }).then(ok => {
         if (!ok) {
           logLine('WiFi', '自动重连未成功（connectWifi 失败 / 超时）')
           return false

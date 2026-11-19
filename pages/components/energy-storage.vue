@@ -62,6 +62,18 @@
           </view>
         </view>
       </view>
+
+      <!-- 日/累计充放电量，与日最高值放在同一统计区 -->
+      <view class="stat-row compact-row">
+        <view v-for="(item, i) in energySummaryList" :key="item.label" class="stat-item compact"
+          :class="{ 'compact-right': i % 2 === 1, 'compact-bottom': i > 1 }">
+          <text class="stat-label compact-label">{{ item.label }}</text>
+          <view class="compact-value-row">
+            <text class="stat-value compact-value">{{ item.value }}</text>
+            <text class="stat-unit compact-unit">{{ item.unit }}</text>
+          </view>
+        </view>
+      </view>
     </view>
 
     <!-- 图表区域 -->
@@ -207,6 +219,15 @@ export default {
         { label: "日最高放电量", value: this.getFieldValue('B144'), unit: "kWh", time: this.formatDischargeDate() },
       ];
     },
+    // 与日最高充电量/日最高放电量同区展示的四项电量汇总
+    energySummaryList() {
+      return [
+        { label: "日充电量", value: this.formatEnergyValue(this.getFieldValue('B154')), unit: "kWh" },
+        { label: "日放电量", value: this.formatEnergyValue(this.getFieldValue('B158')), unit: "kWh" },
+        { label: "累计充电量", value: this.formatEnergyValue(this.getFieldValue('B46')), unit: "kWh" },
+        { label: "累计放电量", value: this.formatEnergyValue(this.getFieldValue('B50')), unit: "kWh" },
+      ];
+    },
 
     storagePowerOptions() {
       const chargeData = this.storageChartData.series?.[0]?.data || [];
@@ -288,6 +309,14 @@ export default {
         return "--";
       }
       return this.device171F.energyData[key].value;
+    },
+    // 电量统一保留 1 位小数并加千分位，无效值保持 --
+    formatEnergyValue(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "--";
+      const parts = n.toFixed(1).split(".");
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return parts.join(".");
     },
     formatChargeDate() {
       if (!this.device171F || !this.device171F.energyData) return "--";
@@ -513,9 +542,9 @@ export default {
             { name: "放电功率", data: dischargeData }
           ]
         };
-        console.log('充电功率:', chargeData)
-        console.log('放电功率:', dischargeData)
-        console.log('时间:', this.storageChartData)
+        // console.log('充电功率:', chargeData)
+        // console.log('放电功率:', dischargeData)
+        // console.log('时间:', this.storageChartData)
         this.powerCurveLoading = false;
       }).catch(() => {
         this.storageChartData = { categories: [], series: [{ name: "充电功率", data: [] }, { name: "放电功率", data: [] }] };
@@ -650,6 +679,57 @@ export default {
   font-size: 8px;
   color: #666;
   margin-left: 4rpx;
+}
+
+/* 与日最高值同区的四项能量统计：一行两个 */
+.stat-row.compact-row {
+  flex-wrap: wrap;
+  padding: 10rpx;
+  margin-bottom: 0;
+}
+
+.stat-item.compact {
+  flex: 0 0 50%;
+  width: 50%;
+  min-width: 0;
+  box-sizing: border-box;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10rpx 16rpx;
+}
+
+.stat-item.compact.compact-right {
+  border-left: 1rpx solid #e8e8e8;
+}
+
+.stat-item.compact.compact-bottom {
+  border-top: 1rpx solid #e8e8e8;
+  padding-top: 12rpx;
+}
+
+.stat-label.compact-label {
+  margin-right: 8rpx;
+  font-size: 26rpx;
+  white-space: nowrap;
+}
+
+.compact-value-row {
+  display: flex;
+  align-items: baseline;
+  flex-shrink: 0;
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+.stat-value.compact-value {
+  font-size: 34rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-unit.compact-unit {
+  font-size: 20rpx;
+  margin-left: 3rpx;
 }
 
 /* 图表 */

@@ -28,6 +28,7 @@
         :groups="faultGroups || []"
         :current="faultCode"
         :has-data="hasStateFrame"
+        :show-group-titles="true"
         hint="暂无故障码数据"
       />
     </DataGroup>

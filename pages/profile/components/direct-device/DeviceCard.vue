@@ -29,7 +29,8 @@
           <view class="action-btn" :class="{ disabled: connecting }" @click="!connecting && $emit('refresh')">
             <uni-icons type="refresh" size="16" color="#fff"></uni-icons>
           </view>
-          <view class="action-btn" @click="$emit('go-config')">
+          <!-- 齿轮 = 系统权限管理：跳系统设置，现场把「附近的设备」等权限改为允许 -->
+          <view class="action-btn" @click="$emit('go-permission')">
             <uni-icons type="gear" size="16" color="#fff"></uni-icons>
           </view>
           <view class="action-btn more" @click="$emit('update:showDeviceMeta', !showDeviceMeta)">
@@ -59,7 +60,7 @@
 <script>
 /**
  * 顶部设备卡片组件
- * 事件: refresh, go-config, update:showDeviceMeta, disconnect
+ * 事件: refresh, go-permission, update:showDeviceMeta, disconnect
  *
  * 「更新 HH:MM:SS」不再由父页面 props 下传：父页面为了 APP 性能把数据提交
  * 节流到 1.5s、页头文案又额外锁 4s，导致每秒上报却 4~6s 才跳一次。

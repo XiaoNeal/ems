@@ -777,7 +777,7 @@ export default {
         if (foundDevice) {
           address = foundDevice.address || address;
           barCode = foundDevice.barCode || foundDevice.homeBarCode || barCode;
-          console.log('找到171F设备:', foundDevice);
+          // console.log('找到171F设备:', foundDevice);
         }
       }
 
@@ -791,7 +791,7 @@ export default {
       };
       realtimeDataProvider.initDeviceList([device171F])
       this.deviceList = [...realtimeDataProvider.getDeviceList()]
-      console.log('deviceList---------------------------', this.deviceList)
+      // console.log('deviceList---------------------------', this.deviceList)
     },
     // 加载状态数据
     async loadStatusData() {

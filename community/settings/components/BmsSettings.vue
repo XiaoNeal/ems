@@ -16,7 +16,7 @@
         </view>
       </view>
 
-      <!-- 旧协议（20kW 微能站）：171C 参数 -->
+      <!-- 旧协议（20kW 能源站）：171C 参数 -->
       <template v-if="!isHighCapacity">
       <!-- 开关型参数 -->
       <view class="switch-section">
@@ -168,7 +168,7 @@
       </view>
       </template>
 
-      <!-- 新协议（50kW 微能站）：171C_V2 系列 —— 参数设置只保留控制数据，20kW 行内编辑风格 -->
+      <!-- 新协议（50kW 能源站）：171C_V2 系列 —— 参数设置只保留控制数据，20kW 行内编辑风格 -->
       <template v-if="isHighCapacity">
         <view v-if="bmsV2ControlFields.length" class="hc-body">
           <!-- 命令 / 模式（选择后下发） -->

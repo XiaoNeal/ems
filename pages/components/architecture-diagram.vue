@@ -386,7 +386,7 @@ export default {
       handler() {
         const device = this.$store.state.currentSelectDevice;
         if (device && device.id) {
-          console.log('currentSelectDevice changed:', device.id, 'areaLevelId:', device.areaLevelId);
+          // console.log('currentSelectDevice changed:', device.id, 'areaLevelId:', device.areaLevelId);
           this.updateDevice171F();
           // 设备信息变更时重新获取电力数据
           this.getPowerData();
@@ -558,7 +558,7 @@ export default {
       // 从store获取当前设备信息
       const currentDevice = this.$store.state.currentSelectDevice || {};
 
-      console.log('currentDevice:', this.selectedDate, currentDevice, this.$store.state.currentSelectDevice, this.$store.state);
+      // console.log('currentDevice:', this.selectedDate, currentDevice, this.$store.state.currentSelectDevice, this.$store.state);
       // 准备接口参数
       const params = {
         esId: currentDevice.id,
@@ -620,7 +620,7 @@ export default {
               { data: gridReverseData, name: '馈电' },
             ]
           };
-          console.log('this.electricityData', this.electricityData);
+          // console.log('this.electricityData', this.electricityData);
         }
         this.electricityLoading = false;
       }).catch(() => {

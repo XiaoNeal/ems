@@ -16,7 +16,7 @@
         </view>
       </view>
 
-      <!-- 旧协议（20kW 微能站）：171E 参数 -->
+      <!-- 旧协议（20kW 能源站）：171E 参数 -->
       <template v-if="!isHighCapacity">
       <!-- 开关型参数 -->
       <view class="switch-section">
@@ -80,7 +80,7 @@
       </view>
       </template>
 
-      <!-- 新协议（50kW 微能站）：对齐网页 MonitoringData.vue 的参数设置结构 -->
+      <!-- 新协议（50kW 能源站）：对齐网页 MonitoringData.vue 的参数设置结构 -->
       <template v-if="isHighCapacity">
         <view v-if="device170CPv" class="hc-body">
           <!-- 命令 / 模式（选择后下发） -->

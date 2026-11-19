@@ -1,5 +1,5 @@
 /**
- * 50kW 微能站（1707 PCS V3.5 / 170C DC-DC V1.1 / 171C BMS V2.0）展示字段表
+ * 50kW 能源站（1707 PCS V3.5 / 170C DC-DC V1.1 / 171C BMS V2.0）展示字段表
  *
  * 用途：直连设备页 4 个监测 tab 在 50kW 模式下的分组、字段名、单位与系数，
  *       与云端监控页（community/monitor-data）保持一致。
@@ -121,8 +121,8 @@ const PCS_STATUS = [
 ]
 
 // 故障信息（FPGA 硬件故障 / ARM 软件故障）
-// 按点表的字节地址分组：每个字节约对应一类保护，组名取该字节的语义，
-// 便于在有限屏宽下分节浏览（原先是 64 个标签平铺，视觉上没有层次）。
+// 按点表的字节地址分组：B115、B146~B153 共 9 个字节，每字节即一个「故障字」。
+// title 只是便于阅读的语义别名，展示用的「故障字N」标题由 PCS_FAULT_WORD_META 给出。
 const PCS_FAULT_GROUPS = [
   {
     title: '电池与母线',
@@ -236,6 +236,39 @@ const PCS_FAULT_GROUPS = [
 
 // 扁平清单（保持旧引用可用）
 const PCS_FAULTS = PCS_FAULT_GROUPS.reduce((acc, g) => acc.concat(g.items), [])
+
+/**
+ * PCS 故障位分组 → 故障字编号 + 点表类别
+ * PCS_FAULT_GROUPS 的 9 组依次对应点表字节 B115、B146~B153，每字节即一个「故障字」，
+ * 与液冷机(0318)/BMS(171C V2) 及云端监控页的「故障字N」分组口径一致。
+ * 类别前缀（ARM软件故障 / FPGA硬件故障 / ARM软件告警）在分组标题上展示，标签不再重复。
+ * ⚠ 与 community/monitor-data/monitor-data.vue 的 PCS1707_FAULT_WORD_GROUPS 同步维护。
+ */
+const PCS_FAULT_WORD_META = [
+  { word: '故障字1', category: 'ARM软件故障' },
+  { word: '故障字2', category: 'FPGA硬件故障' },
+  { word: '故障字3', category: 'FPGA硬件故障' },
+  { word: '故障字4', category: 'ARM软件故障' },
+  { word: '故障字5', category: 'ARM软件故障' },
+  { word: '故障字6', category: 'ARM软件故障' },
+  { word: '故障字7', category: 'ARM软件故障' },
+  { word: '故障字8', category: 'ARM软件故障 / 告警' },
+  { word: '故障字9', category: 'ARM软件故障' }
+]
+
+/**
+ * PCS 转发的 DCDC 故障字 1~4（1707 V3.5 能源帧 B154/B156/B158/B160，各 16 位无符号整数）
+ * 点表只给出整字读数（传输值=实际值），未定义各 bit 的故障名称。
+ * 按「点表有位名的位才列、没有就算了」的口径，这里只展示整字数值（非 0 表示存在故障位），
+ * 不臆造位名；label 带「DCDC」前缀，避免与 PCS 自身的故障字1~9 混淆。
+ * ⚠ 与 community/monitor-data/monitor-data.vue 的 PCS1707_DCDC_FAULT_WORDS 同步维护。
+ */
+const PCS_FAULT_WORDS = [
+  { key: 'B154', label: 'DCDC故障字1', scale: 1, decimals: 0, unit: '' },
+  { key: 'B156', label: 'DCDC故障字2', scale: 1, decimals: 0, unit: '' },
+  { key: 'B158', label: 'DCDC故障字3', scale: 1, decimals: 0, unit: '' },
+  { key: 'B160', label: 'DCDC故障字4', scale: 1, decimals: 0, unit: '' }
+]
 
 
 // ==================== 储能 / 光伏 170C V1.1 ====================
@@ -521,6 +554,8 @@ export {
   PCS_STATUS,
   PCS_FAULT_GROUPS,
   PCS_FAULTS,
+  PCS_FAULT_WORD_META,
+  PCS_FAULT_WORDS,
   DC_RUN,
   DC_RUN_STATE_BITS,
   DC_ERROR_CODE,

@@ -7,8 +7,10 @@
 			"style": {
 				"navigationBarTitleText": "首页",
 				"navigationStyle": "custom",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark",
 				"app-plus": {
-					"bounce": "none"
+					"bounce": "vertical"
 				}
 			}
 		},
@@ -27,7 +29,11 @@
 			"style": {
 				"navigationBarTitleText": "监测",
 				"navigationStyle": "custom",
-				"enablePullDownRefresh": true
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark",
+				"app-plus": {
+					"bounce": "vertical"
+				}
 			}
 		},
 
@@ -44,7 +50,11 @@
 			"style": {
 				"navigationBarTitleText": "我的",
 				"navigationStyle": "custom",
-				"enablePullDownRefresh": true
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark",
+				"app-plus": {
+					"bounce": "vertical"
+				}
 			}
 		}
 		
@@ -93,6 +103,13 @@
 				"style": {
 					"navigationStyle": "custom",
 					"navigationBarTitleText": "快捷控制"
+				}
+			},
+			{
+				"path": "performance-analysis/performance-analysis",
+				"style": {
+					"navigationStyle": "custom",
+					"navigationBarTitleText": "性能分析"
 				}
 			},
 			{
@@ -183,14 +200,14 @@
 					"path": "agreement/privacy-policy",
 					"style": {
 						"navigationStyle": "custom",
-						"navigationBarTitleText": "微能站隐私协议"
+						"navigationBarTitleText": "能源站隐私协议"
 					}
 				},
 				{
 					"path": "agreement/user-agreement",
 					"style": {
 						"navigationStyle": "custom",
-						"navigationBarTitleText": "微能站软件许可及用户服务协议"
+						"navigationBarTitleText": "能源站软件许可及用户服务协议"
 					}
 				},
 				{
@@ -225,6 +242,18 @@
 					"style": {
 						"navigationStyle": "custom",
 						"navigationBarTitleText": "安全设置"
+					}
+				},
+				{
+					"path": "system-permissions",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "系统权限",
+						"enablePullDownRefresh": true,
+						"backgroundTextStyle": "dark",
+						"app-plus": {
+							"bounce": "vertical"
+						}
 					}
 				},
 				{
@@ -300,7 +329,7 @@
 	"globalStyle": {
 		"navigationStyle": "custom",
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "微能站",
+		"navigationBarTitleText": "能源站",
 		"navigationBarBackgroundColor": "#fff",
 		"backgroundColor": "#fff",
 		"enablePullDownRefresh": false,

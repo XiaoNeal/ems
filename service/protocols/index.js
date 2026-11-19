@@ -12,7 +12,7 @@ import { protocol_171E_000A } from './171E'
 import { protocol_170C_000A } from './170C'
 import { protocol_170F_000A } from './170F'
 import { protocol_1713_000A } from './1713'
-// 50kW 微能站新协议（字节地址表，与旧 170C_000A / 171C_000A 布局不同，用带版本号的 key 区分）
+// 50kW 能源站新协议（字节地址表，与旧 170C_000A / 171C_000A 布局不同，用带版本号的 key 区分）
 import { protocol_1707_V3_5 } from './1707_V3_5'
 import { protocol_170C_V1_1 } from './170C_V1_1'
 import { protocol_171C_V2 } from './171C_V2'
@@ -31,7 +31,7 @@ import { protocol_0318_V2_3 } from './0318_V2_3'
 
 export const protocolRegistry = {
   '171F': protocol_171F_000A,
-  // 50kW 微能站 EMS 网关（EMSV2.0 表）：多储能/负荷累计电量与自发自用目标功率
+  // 50kW 能源站 EMS 网关（EMSV2.0 表）：多储能/负荷累计电量与自发自用目标功率
   '171F_V2': protocol_171F_V2,
   '170D': protocol_170D_000A,
   '170E': protocol_170E_001E,
@@ -47,7 +47,7 @@ export const protocolRegistry = {
   '170C': protocol_170C_000A,
   '170F': protocol_170F_000A,
   '1713': protocol_1713_000A,
-  // 50kW 微能站：1707 PCS V3.5 / 170C DC-DC V1.1 / 171C BMS V2.0
+  // 50kW 能源站：1707 PCS V3.5 / 170C DC-DC V1.1 / 171C BMS V2.0
   // 这三个 key 带版本号，供直连页按站点类型显式指定（同类型码下与旧协议并存）
   '1707_V3_5': protocol_1707_V3_5,
   '170C_V1_1': protocol_170C_V1_1,

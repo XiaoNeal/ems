@@ -30,7 +30,7 @@
         :statusText="statusText"
         :showDeviceMeta.sync="showDeviceMeta"
         @refresh="manualRefresh"
-        @go-config="goConfig"
+        @go-permission="goPermission"
         @disconnect="onDisconnect"
       />
 
@@ -191,6 +191,17 @@
       @confirm="onConfirmOk"
     />
 
+    <!-- 设备 WiFi 连接提示（纯提示，单按钮；样式与设置确认弹窗一致） -->
+    <ConfirmDialog
+      :visible="wifiTipVisible"
+      :title="wifiTipTitle"
+      :content="wifiTipContent"
+      :show-cancel="false"
+      confirm-text="知道了"
+      @cancel="onWifiTipOk"
+      @confirm="onWifiTipOk"
+    />
+
     <!-- 操作反馈 Toast -->
     <OpToast :visible="showOpToast" :text="opToast" />
 
@@ -228,8 +239,9 @@
 import { mapState } from 'vuex'
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
 import { MqttDirectClient } from '@/service/socket/mqtt-client.js'
-// 仅用于 [perf] 面板显示 APP(Android) TCP 读取循环的桥调用计数；普通对象，非响应式
-import { tcpReadStats } from '@/service/socket/uniapp-tcp-adapter.js'
+// 仅用于 [perf] 面板显示 APP(Android) TCP 读取循环的桥调用计数，以及按实测档位调屏刷频率；
+// 都是普通对象 / 纯函数，非响应式、不进 render；小程序端档位恒为 0，行为不变
+import { tcpReadStats, getTcpPerfTier } from '@/service/socket/uniapp-tcp-adapter.js'
 import {
   isIemsBinaryFrame,
   parseIemsFrame,
@@ -276,7 +288,13 @@ import LiquidCoolingTab from './components/direct-device/tabs/LiquidCoolingTab.v
 // APP 正式包没有调试控制台，[perf] 日志同时留一份在内存里，页面内长按可看
 import { perfLog, getPerfLogs, clearPerfLogs } from './components/direct-device/perf-log.js'
 // 设备热点检测：连设备前先确认手机在 GCNZ 热点上，未连上可自动重连 / 引导
-import { ensureDeviceWifi } from '@/utils/device-wifi.js'
+import {
+  ensureDeviceWifi,
+  describeDeviceWifi,
+  getSavedWifi,
+  connectWifi,
+  openWifiSettings
+} from '@/utils/device-wifi.js'
 // 运行时权限自检 / 主动申请 / 引导去系统设置（卸载重装后「附近的设备」会被重置）
 import {
   ensureDevicePermissions,
@@ -542,6 +560,10 @@ export default {
       confirmContent: '',
       confirmPayload: null,
       confirmCallback: null,
+      // 设备 WiFi 连接提示弹窗（齿轮入口，小程序 / H5 端）
+      wifiTipVisible: false,
+      wifiTipTitle: '',
+      wifiTipContent: '',
       // 操作反馈 Toast
       opToast: '',
       showOpToast: false,
@@ -686,10 +708,10 @@ export default {
     /** 液冷机监测 tab 数据由 LiquidCoolingTab 直接读 rawValues['0318']（0318 V2.3 字段表驱动） */
     currentDeviceName() {
       const name = (this.config.deviceName || '').trim()
-      // 正式产品名是「微能站」（manifest.json / 隐私政策 / 用户协议一致）。
-      // 旧默认值写成「IEMS 微能量站」多了一个「量」字；配置里若曾存过旧名也一并纠正，
-      // 避免升级后仍显示错名。用户自定义名称原样保留。
-      if (!name || name === 'IEMS 微能量站' || name === '微能量站') return '微能站'
+      // 正式产品名自 V1.0.19 起是「能源站」（manifest.json / 隐私政策 / 用户协议一致）。
+      // 旧默认值写成「IEMS 微能量站」多了一个「量」字；旧版本还存过「微能站」，
+      // 两者都在升级后纠正为新名称，用户自定义名称原样保留。
+      if (!name || name === 'IEMS 微能量站' || name === '微能量站' || name === '微能站') return '能源站'
       return name
     },
     archSoc() {
@@ -958,18 +980,28 @@ export default {
     // 50kW 只需要架构图那几个值（概览 tab 用），其它 tab 直接读 rawValues
     this.rebuildFormattedValues(this.is50KwMode ? ['171F'] : undefined)
     if (this.config.enabled) {
-      // 进入页面即检查设备热点并尝试连接。首屏只挂概览，其余面板在空闲帧里
-      // 一个个建好，用户点到时只需切 display，不再有节点增删 / 整页 reflow。
-      this.$nextTick(() => this.startWithWifiCheck())
+      // 连接前置检查统一走 _startEntryConnect：APP 端等首帧画完再启动，
+      // 小程序保持原来的 nextTick。onLoad / onShow 都会调它，内部有去重，
+      // 不再出现「两次检查并发、靠 _wifiChecking 锁兜底」。
+      // 首屏只挂概览，其余面板在空闲帧里一个个建好，用户点到时只需切 display。
+      this._startEntryConnect()
       this._startPanelWarmup()
+      this._startDiagTicker()
     }
   },
   onUnload() {
     this._unloaded = true
+    // 首帧后的连接任务还没跑就退页：必须撤掉，否则会在已销毁的页面上发起连接
+    if (this._entryConnectTimer) {
+      clearTimeout(this._entryConnectTimer)
+      this._entryConnectTimer = null
+    }
+    this._entryConnectPending = false
     // 清掉本页刚弹的浮层：APP 端 toast 不随页面销毁，会残留到登录页
     this._clearOwnToast()
     this._stopSettingsEchoLoop()
     this._stopPanelWarmup()
+    this._stopDiagTicker()
     if (this._tabScrollTimer) {
       clearTimeout(this._tabScrollTimer)
       this._tabScrollTimer = null
@@ -996,6 +1028,10 @@ export default {
     if (this._permGuideTimer) {
       clearTimeout(this._permGuideTimer)
       this._permGuideTimer = null
+    }
+    if (this._connHintTimer) {
+      clearTimeout(this._connHintTimer)
+      this._connHintTimer = null
     }
     if (this._needEditTimer) {
       clearTimeout(this._needEditTimer)
@@ -1034,7 +1070,8 @@ export default {
       // 连上了就自动继续，不再重复弹同一个引导弹窗。
       const guide = !this._wifiBlocked
       if (!this.client) {
-        this.startWithWifiCheck({ guide })
+        // 首次进入（或自动重连还没建客户端）：走统一入口，APP 端等首帧画完
+        this._startEntryConnect({ guide })
       } else if (!this.connected || !this.client.connected) {
         console.log('[direct-device] onShow: MQTT 未连接，主动重连')
         this.startWithWifiCheck({ guide })
@@ -1814,10 +1851,24 @@ export default {
       const wifiUnknown = !this._lastWifiStatus || this._lastWifiStatus === 'unknown'
       const suspect = (p.missing && p.missing.length > 0) ||
         p.unknown === true || p.permanentlyDenied === true || wifiUnknown
-      return showPermissionGuide({
+      if (showPermissionGuide({
         suspect,
         isActive: () => !this._unloaded && !this._paused
-      })
+      })) return true
+      // 非权限原因（设备热点没开 / 设备未上电 / 原生通道异常）时，权限引导按设计
+      // 不弹；但也不能让用户一直盯着离线页、全程没有任何反馈。再给底层自动重连
+      // 8s，仍全败才给一条不含协议术语的友好提示，本次进页面只提示一次。
+      // 用 toast 而非弹窗，避免首连偶发超时就打断操作。
+      if (this._connHintTimer) clearTimeout(this._connHintTimer)
+      this._connHintTimer = setTimeout(() => {
+        this._connHintTimer = null
+        if (this._unloaded || this._paused) return
+        if (this.connected && this.client && this.client.connected) return
+        if (this._connHintShown) return
+        this._connHintShown = true
+        this._showDirectToast('设备没有响应，请检查设备热点是否开启后重试', 3000)
+      }, 8000)
+      return false
       // #endif
       // #ifndef APP-PLUS
       return false
@@ -1900,16 +1951,47 @@ export default {
      * 从系统 WiFi 设置返回时 onShow 静默重试（guide=false），不重复弹窗；
      * 用户主动点刷新则忽略冷却时间，强制再试一次自动连接。
      */
+    /**
+     * 进页面后的连接启动入口（onLoad / onShow 共用，带去重）。
+     *
+     * 以前 onLoad 用 $nextTick 直接 await 权限 + WiFi 检查：APP 端 webview
+     * 创建和首帧 render 本身就重，再把原生权限桥调用、SSID 读取、可能长达
+     * 12s 的自动连热点全屏遮罩压在同一批任务里，用户看到的就是「点了
+     * 『进入监测』，好几秒才进得去」。现在让首帧先落地，再启动连接准备；
+     * 小程序沿用 nextTick，路径与已验证版本一致。
+     *
+     * 页面层优化只在 APP 端生效，符合两端行为隔离的约定。
+     */
+    _startEntryConnect(options = {}) {
+      if (this._unloaded || this._entryConnectPending) return
+      this._entryConnectPending = true
+      const run = () => {
+        this._entryConnectTimer = null
+        this._entryConnectPending = false
+        if (this._unloaded || this._paused) return
+        this.startWithWifiCheck(options)
+      }
+      // #ifdef APP-PLUS
+      this._entryConnectTimer = setTimeout(run, 60)
+      // #endif
+      // #ifndef APP-PLUS
+      this.$nextTick(run)
+      // #endif
+    },
     async startWithWifiCheck(options = {}) {
       if (!this.config.enabled) return
-      // onLoad 的 nextTick 与 onShow 可能几乎同时触发；检测是异步的，
+      // 首帧任务与 onShow 可能几乎同时触发；检测是异步的，
       // 不加锁会并发发起两次自动连接、弹两个引导框。
       if (this.connecting || this._wifiChecking) return
       // 在线时不需要检测：切后台回来 / 点刷新都不该反复读 SSID
       if (this.connected && this.client && this.client.connected) return
 
       this._wifiChecking = true
+      // 前置检查期间设备卡保持「连接中」：页面已经进来，用户马上能看到状态，
+      // 而不是一个看起来没反应的离线页。
+      this.connecting = true
       let res
+      let checked = false
       try {
         // 卸载重装后运行时权限被清空：先做一次自检与主动申请。
         // 带 2.5s 超时保底，用户不点系统授权框也继续连接，绝不拦截流程。
@@ -1922,20 +2004,34 @@ export default {
           autoConnect: true,
           guide: options.guide !== false,
           forceConnect: !!options.forceConnect,
+          // 自动检查（进页面 / 从 WiFi 设置返回）不弹全局 loading；
+          // 只有用户手动点刷新才给连接提示，且不再用 mask 遮住页面。
+          silentUi: !options.manual,
           ssid: this.config.wifiSsid || '',
           // 检测是异步的，页面可能已退出或切后台；此时工具里不再弹窗 / loading
           isActive: () => !this._unloaded && !this._paused
         })
+        checked = true
+      } catch (e) {
+        // 权限 / WiFi 前置检查自身异常，绝不能把用户挡在门外
+        console.warn('[直连] 连接前置检查异常，按原流程继续:', e)
+        res = { ok: true, status: 'unknown' }
+        checked = true
       } finally {
         this._wifiChecking = false
+        if (!checked) this.connecting = false
       }
       // 异步返回时页面可能已卸载（弹窗没关就返回上一页）或已切后台，
       // 不要再改本页状态、不要再发起连接；回来时 onShow 会重新检测。
-      if (this._unloaded || this._paused) return
+      if (this._unloaded || this._paused) {
+        this.connecting = false
+        return
+      }
       // 供连接失败时判定「是否疑似权限受限」：读不到热点名称（unknown）时，
       // 国产 ROM 把「附近的设备」设为禁止是最常见的原因。
       this._lastWifiStatus = res && res.status
       if (!res.ok) {
+        this.connecting = false
         this.wifiBlocked = true
         this._wifiBlocked = true
         return
@@ -2076,6 +2172,11 @@ export default {
           clearTimeout(this._permGuideTimer)
           this._permGuideTimer = null
         }
+        if (this._connHintTimer) {
+          clearTimeout(this._connHintTimer)
+          this._connHintTimer = null
+        }
+        this._connHintShown = false
         if (wasOffline) {
           // 首次连上/断线重连：清空旧数据（可能来自上一次连接的不同 broker），等新帧到了再填
           this.resetRawValues()
@@ -2143,6 +2244,8 @@ export default {
     handleMqttRealtime(payloadStr, payloadBytes) {
       // 页面不可见期间直接丢弃：连接保持，回前台后 1s 内自然有新帧
       if (this._paused) return
+      // 20s 全链路诊断计数：普通数值，不进响应式数据、不触发 render
+      this._diagMqtt = (this._diagMqtt || 0) + 1
       try {
         // 快路径：真机二进制帧直接进解析器，跳过 hex 解包/转换（每秒多帧时这段字符串处理不便宜）
         if (payloadBytes && payloadBytes.length >= 10 && isIemsBinaryFrame(payloadBytes)) {
@@ -2202,7 +2305,7 @@ export default {
         else if (addr === '1E' || addr === '30') result = '170C_STORAGE'
         else result = '170C_STORAGE'
       } else if (dt === '171CV2' || dt.startsWith('171CV2')) result = '171C_V2'
-      // ⚠️ 50kW 微能站：171C 帧头里写的仍是 '171C'（协议模块本身 deviceType 也是 '171C'），
+      // ⚠️ 50kW 能源站：171C 帧头里写的仍是 '171C'（协议模块本身 deviceType 也是 '171C'），
       // 版本只体现在显式指定的 protocolKey 上。若这里不按模式改写，BMS 数据会全部落到
       // 20kW 的 '171C' bucket，而 BMS 页（50kW 分支）读的是 '171C_V2' → 整页全是 '--'。
       else if (dt === '171C' && this._use50KwProtocol()) {
@@ -2354,6 +2457,55 @@ export default {
      * 改为每帧一次时间比较（8~10 次/s，纯数值比较，不建对象、不碰响应式数据），
      * 只要还在收帧就一定按窗口出日志；断流时不出日志也符合预期。
      */
+    /**
+     * APP 端 20s 全链路诊断（由时钟驱动，独立于收帧）。
+     * 原来的 10s 聚合日志由 applyIemsFrame 驱动，一帧数据都没有时反而什么都不输出，
+     * 现场只能看到「在线 + 满屏 --」却无法区分：订阅没发 / 底层没读到字节 /
+     * 字节读到了但上层没解析出来。这里即使全为 0 也照常出一条，用于定位断流。
+     */
+    _startDiagTicker() {
+      // #ifdef APP-PLUS
+      if (this._diagTimer || this._unloaded) return
+      this._diagLastStats = { bytes: 0, chunks: 0, reads: 0, polls: 0, frames: 0, commits: 0 }
+      this._diagTimer = setInterval(() => {
+        if (this._unloaded || this._paused || !tcpReadStats) return
+        // 有数据时 _maybePerfReport 会清零统计，用增量 + 清零检测取差值
+        const d = (cur, last) => (cur >= last ? cur - last : cur)
+        const s = this._diagLastStats
+        const bytes = d(tcpReadStats.bytes, s.bytes)
+        const chunks = d(tcpReadStats.chunks, s.chunks)
+        const reads = d(tcpReadStats.reads, s.reads)
+        const polls = d(tcpReadStats.polls, s.polls)
+        const frames = d(this._perfFrames || 0, s.frames)
+        const commits = d(this._perfCommits || 0, s.commits)
+        s.bytes = tcpReadStats.bytes
+        s.chunks = tcpReadStats.chunks
+        s.reads = tcpReadStats.reads
+        s.polls = tcpReadStats.polls
+        s.frames = this._perfFrames || 0
+        s.commits = this._perfCommits || 0
+        const subscribed = !!(this.client && this.client.connected && this._subscribedSeq != null)
+        const bulkText = tcpReadStats.bulk === 1 ? '开' : (tcpReadStats.bulk === -1 ? '回退' : '关')
+        perfLog('20s 诊断：订阅=' + (subscribed ? '是' : '否') +
+          '，MQTT回调=' + (this._diagMqtt || 0) +
+          '，收帧=' + frames + '，提交=' + commits +
+          '，通道收=' + bytes + 'B/' + chunks + '片' +
+          '，桥调用≈' + Math.round(reads / 20) + '/s' +
+          '，轮询=' + Math.round(polls / 20) + '/s' +
+          '，单片=' + (tcpReadStats.limit || 0) + 'B/' + (tcpReadStats.tickMs || 0) + 'ms' +
+          '，档位=' + (tcpReadStats.tier || 0) +
+          '，批量读=' + bulkText +
+          '，异常=' + (tcpReadStats.errors || 0))
+        this._diagMqtt = 0
+      }, 20000)
+      // #endif
+    },
+    _stopDiagTicker() {
+      if (this._diagTimer) {
+        clearInterval(this._diagTimer)
+        this._diagTimer = null
+      }
+    },
     _maybePerfReport(now) {
       if (!this._perfAt) { this._perfAt = now; return }
       const secs = Math.round((now - this._perfAt) / 1000)
@@ -2365,12 +2517,20 @@ export default {
       // 因此无需条件编译——有值就追加，没值就不出现，不影响已验证流畅的小程序路径。
       // 11:08 日志已定量确认根因：桥读≈4000/s 而 TCP轮询仅 1~19/s ⇒ 单次 readLoop
       // 连做几千次同步桥调用，是秒级同步长任务，把切 tab 的 patch 整段吞掉。
-      // 长任务切片后验收看两项：单片最长 ≤128B、长任务=0；桥读总量不会下降。
+      // 2026-11-13 验收口径：单片耗时 ≤12ms、长任务=0；若批量读=开，
+      // 「桥调用/s」应从 ~4000 降到 ~100，这才是低端机真正不卡的原因。
       let tcpText = ''
       if (tcpReadStats && (tcpReadStats.polls || tcpReadStats.reads)) {
+        const bulkText = tcpReadStats.bulk === 1 ? '开'
+          : (tcpReadStats.bulk === -1 ? '回退' : '未测')
         tcpText = '，TCP轮询=' + Math.round(tcpReadStats.polls / secs) + '/s' +
-          '，桥读=' + Math.round(tcpReadStats.reads / secs) + '/s' +
+          '，桥调用=' + Math.round(tcpReadStats.reads / secs) + '/s' +
           '，单片最长=' + (tcpReadStats.maxPerTick || 0) + 'B' +
+          '，单片耗时=' + (tcpReadStats.tickMs || 0) + 'ms' +
+          '，单片上限=' + (tcpReadStats.limit || 0) + 'B' +
+          '，档位=' + (tcpReadStats.tier || 0) +
+          '，批量读=' + bulkText +
+          (tcpReadStats.errors ? '，回退次数=' + tcpReadStats.errors : '') +
           '，长任务=' + (tcpReadStats.longTasks || 0)
         tcpReadStats.polls = 0
         tcpReadStats.reads = 0
@@ -2407,7 +2567,7 @@ export default {
       if (APP_SKIP_DUPLICATE_FRAMES && this._shouldSkipDuplicateFrame(frameBytes)) return
       // #endif
       try {
-        // 50kW 微能站：新协议与旧协议共用同一设备类型码（170C/171C），
+        // 50kW 能源站：新协议与旧协议共用同一设备类型码（170C/171C），
         // 必须显式指定协议模块，否则会落到 170C_000A / 171C_000A 旧布局上解析错位
         const protocolKey = this._protocolKeyFor(this._pendingDeviceType(frameBytes))
         const parsed = parseIemsFrame(frameBytes, protocolKey ? { protocolKey } : undefined)
@@ -2576,6 +2736,15 @@ export default {
     },
     /** 显示提交间隔：只有「提交」这一步会让面板重渲染（改这里等于改屏刷频率） */
     _displayCommitMs() {
+      // #ifdef APP-PLUS
+      // 低端机按 TCP 读循环实测的桥调用成本放宽提交间隔：数值刷新稍慢（传感器本就缓变），
+      // 但每轮 render / setData 变少，切 tab、滚动不再和数据提交抢主线程。
+      // tier 由 uniapp-tcp-adapter.js 实测得出；未走 Java Socket（小程序 / WebSocket
+      // 降级）时恒为 0，走下面的原值，已验证流畅的路径一行不改。
+      const tier = getTcpPerfTier()
+      if (tier >= 2) return this.currentSettingsTab ? 1400 : 2400
+      if (tier === 1) return this.currentSettingsTab ? 1100 : 1900
+      // #endif
       // 设置页要较快回显（编辑态读的也是提交后的值）；监测页 1.5s 足够，
       // 传感器量本就缓慢变化，比 0.8s 少掉近一半的渲染 / setData 过桥
       return this.currentSettingsTab ? 900 : 1500
@@ -3028,8 +3197,9 @@ export default {
     async manualRefresh() {
       if (this.connecting) return
       if (!this.connected) {
-        // 用户主动点刷新：忽略冷却时间再试一次自动连接，并重新给出引导
-        await this.startWithWifiCheck({ guide: true, forceConnect: true })
+        // 用户主动点刷新：忽略冷却时间再试一次自动连接，并重新给出引导。
+        // manual=true 保留「正在连接设备 WiFi」提示（已改成不遮罩）。
+        await this.startWithWifiCheck({ guide: true, forceConnect: true, manual: true })
         return
       }
       // 设备数据主动上报，无需手动刷新；提示文案面向用户，不出现协议术语
@@ -3880,9 +4050,50 @@ export default {
       this.confirmPayload = null
       this.confirmCallback = null
     },
+    /** 设备卡齿轮：直达系统权限管理（现场把「附近的设备」改为允许后返回即自动重试） */
+    goPermission() {
+      // #ifdef APP-PLUS
+      const ok = openPermissionSettings()
+      if (!ok) {
+        uni.showToast({
+          title: '请到系统设置里把「附近的设备」设为允许',
+          icon: 'none'
+        })
+      }
+      // #endif
+      // #ifndef APP-PLUS
+      // 小程序 / H5 没有系统权限管理页：改为提示连接设备热点（名称不清楚时给示例）
+      const saved = getSavedWifi()
+      this.wifiTipTitle = '连接设备热点'
+      this.wifiTipContent = '请将手机连接至' + describeDeviceWifi(saved.ssid) +
+        '。连接成功后，本页面将自动继续监测。'
+      this.wifiTipVisible = true
+      // #endif
+    },
+    /** WiFi 提示弹窗「知道了」：带用户去设置 / 连接设备 WiFi */
+    onWifiTipOk() {
+      this.wifiTipVisible = false
+      const saved = getSavedWifi()
+      // APP 端可直达系统 WiFi 设置页
+      if (openWifiSettings()) return
+      // 小程序 / H5 无法打开系统 WiFi 设置：有热点名就触发系统连接确认框，
+      // 系统里通常已保存该热点，用户在确认框里点连接即可。
+      if (saved.ssid && typeof uni.connectWifi === 'function') {
+        if (saved.password) {
+          try { uni.setClipboardData({ data: saved.password }) } catch (e) { }
+        }
+        connectWifi(saved.ssid, saved.password, () => !this._unloaded && !this._paused)
+          .then(ok => {
+            if (!ok) uni.showToast({ title: '请在系统 WiFi 设置中连接设备热点', icon: 'none' })
+          })
+        return
+      }
+      uni.showToast({ title: '请打开系统 WiFi 设置连接设备热点', icon: 'none' })
+    },
+    /** 未开启直连时的「前往配置」入口（保留原配置页跳转） */
     goConfig() {
       uni.navigateTo({ url: '/pages/profile/direct-device-config' })
-    }
+    },
   }
 }
 </script>

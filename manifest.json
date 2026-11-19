@@ -1,10 +1,10 @@
 {
     "sassImplementationName" : "node-sass",
-    "name" : "微能站",
+    "name" : "能源站",
     "appid" : "__UNI__D7E714F",
     "description" : "",
-    "versionName" : "V1.0.18",
-    "versionCode" : 189,
+    "versionName" : "V1.0.19",
+    "versionCode" : 190,
     "transformPx" : false,
     "networkTimeout" : {
         "request" : 40000 // 20秒超时 
@@ -188,7 +188,7 @@
             "base" : "./",
             "mode" : "hash"
         },
-        "title" : "微能站",
+        "title" : "能源站",
         "optimization" : {
             "treeShaking" : {
                 "enable" : true

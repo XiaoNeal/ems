@@ -64,10 +64,10 @@
           <view class="device-name">{{ item.deviceName }}</view>
           <!-- 设备图标 -->
           <view class="device-image">
-            <img class="device-icon" v-if="isVrvType(item.type)" src="../../community/static/images/VRV.png" />
-            <img class="device-icon" v-else-if="isChargingPileType(item.type)" src="../../community/static/images/load-chargingPile.png" />
-            <img class="device-icon" v-else-if="isDcAcType(item.type)" src="../../community/static/images/load-airconditioner.png" />
-            <img class="device-icon" v-else src="../../community/static/images/VRV.png" />
+            <image class="device-icon" mode="aspectFit" v-if="isVrvType(item.type)" src="/static/images/VRV.png" />
+            <image class="device-icon" mode="aspectFit" v-else-if="isChargingPileType(item.type)" src="/static/images/load-chargingPile.png" />
+            <image class="device-icon" mode="aspectFit" v-else-if="isDcAcType(item.type)" src="/static/images/load-airconditioner.png" />
+            <image class="device-icon" mode="aspectFit" v-else src="/static/images/VRV.png" />
           </view>
           <!-- 设备信息 -->
           <view class="device-info">

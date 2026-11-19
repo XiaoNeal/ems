@@ -95,7 +95,7 @@ export function isIemsBinaryFrame(bytes) {
  * 解析一整条 IEMS 帧
  * @param {Uint8Array} frame 完整帧
  * @param {object} [options] 可选：{ protocolKey } 指定协议模块 key（如 '171C_V2'），
- *        用于同一设备类型码下新旧协议并存的场景（50kW 微能站新协议）
+ *        用于同一设备类型码下新旧协议并存的场景（50kW 能源站新协议）
  * @returns {object} 与 DataCenter GetParseStringWithTimeStamp 输出一致的 JSON
  */
 export function parseIemsFrame(frame, options) {
@@ -227,7 +227,7 @@ export function parseIemsFrame(frame, options) {
 function parsePayloadWithProtocol(payload, deviceTypeHex, dataType, protocolKey) {
   // 尝试匹配协议模块（含版本前缀匹配，如 '171C' 匹配 '171C_V1_1'）
   const registry = getProtocolRegistry()
-  // 显式指定协议（50kW 微能站新协议与旧协议同类型码并存时使用）
+  // 显式指定协议（50kW 能源站新协议与旧协议同类型码并存时使用）
   let protocol = protocolKey ? registry[protocolKey] : registry[deviceTypeHex]
   if (!protocol && !protocolKey) {
     // 尝试版本前缀匹配

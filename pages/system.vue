@@ -13,13 +13,13 @@
           <view class="item-row">
             <view class="item" @click="goToAlarm">
               <view class="item-icon alarm-icon">
-                <image src="/static/images/alarm.png" class="icon-image" />
+                <image src="/static/images/alarm.png" class="icon-image" mode="aspectFit" />
               </view>
               <text class="item-text">报警</text>
             </view>
             <view class="item" @click="goToOperationRecord">
               <view class="item-icon record-icon">
-                <image src="/static/images/action.png" class="icon-image" />
+                <image src="/static/images/action.png" class="icon-image" mode="aspectFit" />
               </view>
               <text class="item-text">操作记录</text>
             </view>
@@ -34,7 +34,7 @@
           <view class="item-row">
             <view class="item" @click="goToStrategyConfig">
               <view class="item-icon strategy-icon">
-                <image src="/static/images/config.png" class="icon-image" />
+                <image src="/static/images/config.png" class="icon-image" mode="aspectFit" />
               </view>
               <text class="item-text">策略配置</text>
             </view>
@@ -49,19 +49,19 @@
           <view class="item-row">
             <view class="item" @click="goToMonitorData">
               <view class="item-icon data-icon">
-                <image src="/static/images/monitor-data.png" class="icon-image" />
+                <image src="/static/images/monitor-data.png" class="icon-image" mode="aspectFit" />
               </view>
               <text class="item-text">监控数据</text>
             </view>
             <view class="item" @click="goToQuickControl">
               <view class="item-icon control-icon">
-                <image src="/static/images/quick.png" class="icon-image" />
+                <image src="/static/images/quick.png" class="icon-image" mode="aspectFit" />
               </view>
               <text class="item-text">快捷控制</text>
             </view>
             <view class="item" @click="goToSettings">
               <view class="item-icon setting-icon">
-                <image src="/static/images/settings.png" class="icon-image" />
+                <image src="/static/images/settings.png" class="icon-image" mode="aspectFit" />
               </view>
               <text class="item-text">设置参数</text>
             </view>
@@ -78,13 +78,29 @@
           <view class="item-row">
             <view class="item" @click="goToAIService">
               <view class="item-icon ai-icon">
-                <image src="/static/images/vector-object.png" class="icon-image" />
+                <image src="/static/images/vector-object.png" class="icon-image" mode="aspectFit" />
               </view>
               <text class="item-text">AI客服</text>
             </view>
           </view>
         </view>
       </view> -->
+
+
+      <!-- 数据分析 -->
+      <view class="section">
+        <text class="section-title">数据分析</text>
+        <view class="section-content">
+          <view class="item-row">
+            <view class="item" @click="goToPerformanceAnalysis">
+              <view class="item-icon analysis-icon">
+                <image src="/static/images/perf-analysis.svg" class="icon-image" mode="aspectFit" />
+              </view>
+              <text class="item-text">性能分析</text>
+            </view>
+          </view>
+        </view>
+      </view>
 
       <!-- 系统信息 -->
       <view class="section">
@@ -233,6 +249,13 @@ export default {
         url: '/community/settings/settings'
       });
     },
+
+    // 跳转到性能分析页面
+    goToPerformanceAnalysis() {
+      uni.navigateTo({
+        url: '/community/performance-analysis/performance-analysis'
+      });
+    },
     
     // 跳转到系统信息页面
     showSystemInfo() {
@@ -285,20 +308,35 @@ export default {
 }
 
 .section-content {
-  padding: 30rpx;
+  padding: 20rpx;
 }
 
+/* 不依赖 flex gap：部分 Android WebView / 小程序基础库不支持，
+   gap 被忽略后各入口会按文字宽度紧贴，文字连成一片。
+   改用固定等宽列 + 固定右间距，任何机型下列宽都不受内容影响。 */
 .item-row {
   display: flex;
+  flex-direction: row;
+  align-items: flex-start;
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 120rpx;
 }
 
 .item {
+  flex: 0 0 180rpx;
+  width: 180rpx;
+  box-sizing: border-box;
+  padding: 0 8rpx;
+  margin-right: 24rpx;
+  margin-bottom: 8rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
+}
+
+.item:last-child {
+  margin-right: 0;
 }
 
 .item-icon {
@@ -308,7 +346,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10rpx;
+  margin-bottom: 16rpx;
 }
 
 .icon-text {
@@ -329,7 +367,12 @@ export default {
 
 
 .item-text {
+  display: block;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
   font-size: 12px;
+  line-height: 1.4;
   color: #666;
 }
 

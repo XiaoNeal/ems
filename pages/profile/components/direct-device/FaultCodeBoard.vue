@@ -3,9 +3,25 @@
     <!-- 未收到数据：不能把 0 当成「无故障」 -->
     <view v-if="!hasData || !valid" class="cb-empty">{{ hint }}</view>
 
-    <!-- 与 FaultBoard（BMS / 液冷机）完全相同的三列等宽标签栅格：
-         编号独立一行、名称居中，行列都对齐；命中项红底红字。
-         不再有「当前故障码」大卡和分组码表，界面不再层层嵌套。 -->
+    <!-- 分组模式（储能DC / 光伏DC）：按点表 6 类语义分组，标题右侧给码号，
+         组内仍按码号升序；与云端监控页及 PCS 故障字分组保持一致的层次感。 -->
+    <view v-else-if="showGroupTitles" class="cb-groups">
+      <view v-for="(g, gi) in normalizedGroups" :key="gi" class="cb-group">
+        <view class="cb-group-title">
+          <text>{{ g.title }}</text>
+          <text class="cb-group-codes">{{ g.codes }}</text>
+        </view>
+        <view class="cb-tags">
+          <view v-for="(it, i) in g.items" :key="it.code + '-' + i" class="cb-tag" :class="{ active: it.active }">
+            <text class="cb-tag-code">{{ pad(it.code) }}</text>
+            <text class="cb-tag-text">{{ it.name }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 默认模式：全部故障码按码号升序平铺成三列等宽标签，
+         编号独立一行、名称居中，命中项红底红字；无「当前故障码」大卡。 -->
     <view v-else class="cb-tags">
       <view
         v-for="(it, i) in flatItems"
@@ -28,17 +44,34 @@
  * 但展示层统一为「三列等宽标签栅格」，视觉与 BMS / 液冷机一致。
  * 标签内保留两位码号，命中项高亮即为当前故障码，不再单独放大卡。
  *
- * 用法：<FaultCodeBoard :groups="DC_ERROR_GROUPS" :current="code" :has-data="true" />
+ * 传 showGroupTitles 时按 DC_ERROR_GROUPS 的 6 类语义分组（组内仍按码号升序），
+ * 与云端监控页一致；不传则保持「全部码号升序平铺」的旧行为。
+ *
+ * 用法：<FaultCodeBoard :groups="DC_ERROR_GROUPS" :current="code" :has-data="true" :show-group-titles="true" />
  */
 
 /**
- * 按故障码数值升序平铺。
- * 分组 title 从来不渲染（见 FaultBoard 注释），分组顺序在这里不携带任何信息，
- * 却会让编号出现 02/06 → 08/13 → 07/09 → … → 28/04/41 的跳跃，视觉上很乱。
- * 升序后编号连续递增，现场按故障码查表也更快。
- * A/B：改回 false = 恢复「按点表分组顺序」的旧排列。
+ * 无论平铺还是分组，组内都按故障码数值升序。
+ * 平铺模式（showGroupTitles=false）：全部 27 个码号连续递增，按码查表最快。
+ * 分组模式：组间保持点表 6 类语义顺序、组内升序，标题徽标给出该组码号。
+ * 改回 false = 保留数据原始顺序（不推荐）。
  */
 const SORT_BY_CODE = true
+
+/** 码号补零显示：02、06、41；无效码显示 -- */
+const padCode = (n) => {
+  const num = Number(n)
+  if (!Number.isFinite(num)) return '--'
+  return num < 10 ? '0' + num : String(num)
+}
+/** 按码号数值升序（分组模式在组内排序，平铺模式全局排序） */
+const byCode = (a, b) => {
+  const ca = Number(a.code)
+  const cb = Number(b.code)
+  if (!Number.isFinite(ca)) return 1
+  if (!Number.isFinite(cb)) return -1
+  return ca - cb
+}
 
 export default {
   name: 'FaultCodeBoard',
@@ -62,6 +95,11 @@ export default {
     hint: {
       type: String,
       default: '暂无故障码数据'
+    },
+    /** 是否按点表 6 类语义分组显示标题；默认 false = 全部码号升序平铺 */
+    showGroupTitles: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
@@ -71,6 +109,25 @@ export default {
     },
     isFault() {
       return this.valid && this.current !== 0
+    },
+    /** 分组模式：组内按码号升序，组间保持点表分类顺序；标题徽标给出该组码号 */
+    normalizedGroups() {
+      const groups = Array.isArray(this.groups) ? this.groups : []
+      return groups.map(g => {
+        const items = (g.items || [])
+          .filter(it => it && it.name)
+          .map(it => ({
+            code: it.code,
+            name: it.name,
+            active: this.isFault && it.code === this.current
+          }))
+        if (SORT_BY_CODE) items.sort(byCode)
+        return {
+          title: g.title || '',
+          codes: items.map(it => padCode(it.code)).join(' / '),
+          items
+        }
+      }).filter(g => g.items.length > 0)
     },
     /** 展平成单个标签数组；分组只用于取数据，顺序统一按码号升序 */
     flatItems() {
@@ -88,23 +145,13 @@ export default {
           })
         }
       }
-      if (SORT_BY_CODE) {
-        out.sort((a, b) => {
-          const ca = Number(a.code)
-          const cb = Number(b.code)
-          if (!Number.isFinite(ca)) return 1
-          if (!Number.isFinite(cb)) return -1
-          return ca - cb
-        })
-      }
+      if (SORT_BY_CODE) out.sort(byCode)
       return out
     }
   },
   methods: {
     pad(n) {
-      const num = Number(n)
-      if (!Number.isFinite(num)) return '--'
-      return num < 10 ? '0' + num : String(num)
+      return padCode(n)
     }
   }
 }
@@ -113,6 +160,32 @@ export default {
 <style lang="scss" scoped>
 .code-board {
   padding: 6rpx 2rpx;
+}
+
+/* ---------- 分组模式：点表语义标题 + 该组码号徽标 ---------- */
+.cb-groups {
+  width: 100%;
+}
+.cb-group + .cb-group {
+  margin-top: 20rpx;
+}
+.cb-group-title {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #666;
+}
+.cb-group-codes {
+  font-size: 22rpx;
+  font-weight: 400;
+  color: #8a94a1;
+  background: #f2f4f7;
+  border-radius: 6rpx;
+  padding: 2rpx 10rpx;
+  line-height: 1.5;
 }
 
 /* ---------- 三列等宽标签栅格（与 FaultBoard / StatusGrid 同一套） ---------- */

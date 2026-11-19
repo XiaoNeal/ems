@@ -29,40 +29,115 @@ const CLOSED = 3
  * 同步长任务；切 tab 的 render patch 排在它后面，就被记成 1461/1538ms 全在
  * 「patch 段」。不是 V8 GC，也不是 Vue/DOM 规模。
  *
- * 20ms 只用于「空闲」；有积压数据时见 TCP_MAX_READ_PER_TICK 的续读逻辑。
- * A/B：改回 10 = 旧行为。
+ * 128B 切片把「秒级」长任务切碎了，但**不减少桥调用总量**：手机越慢，单次
+ * 桥调用越贵，128 次连续桥调用仍可能是上百毫秒的同步阻塞；20ms 空闲轮询
+ * 也在持续吃 CPU。这正是「配置差的手机仍然卡」的原因（2026-11-13 处置）。
  */
 const TCP_POLL_INTERVAL_MS = 20
 
 /**
- * 单次 readLoop 最多读多少字节（= 最多多少次同步 read() 桥调用）。
- *
- * 纯 NJS 无法批量读：Java byte[] 是「传出参数」，plus.android 桥接不可靠，
- * 就算能传进去，取回内容仍要逐字节 getAttribute，省不了桥调用（这也是原实现
- * 注释「逐字节 read(int) 绕过 JSB byte[] 桥」的由来）。因此根治要 UTS/原生插件
- * 把读循环放进原生线程，或让 Broker 提供 WebSocket 端口改用事件回调。
- *
- * 在不动传输层的前提下，把「一次读几千字节」切成「每次最多 128 字节 + 让出
- * 一次事件循环」：单次同步长任务从 ~1.5s 降到几十毫秒，Vue 的 nextTick
- * (microtask) 能在每个切片之间插进来，切 tab 不再被整段吞掉。
+ * 单片字节上限（同时是自适应上限）。
  * LightMqttClient._onSocketMessage 有 _recvBuffer 按 MQTT 固定头组包、不足即
- * break 等下一片，任意分片安全；每片仍是一次完整 available 区间的字节，顺序不变。
- *
- * 注意这只切碎长任务、不减少桥调用总量（CPU 总占用不变），换来的是 UI 可响应。
- * A/B：改 8192 = 旧行为（复现 1.5s 冻结）；改 64 = 更细粒度但 setTimeout 更密。
+ * break 等下一片，任意分片安全；每片仍是一次 available 区间内的连续字节，顺序不变。
+ * A/B：TCP_ADAPTIVE_LIMIT=false + 改 8192 = 复现旧的 1.5s 冻结。
  */
 const TCP_MAX_READ_PER_TICK = 128
+
+/* ================== 低端机自适应降负载（2026-11-13，仅 APP Java Socket 路径） ================== */
+
+/** 自适应总开关：false = 完全回到「固定 128B + 20ms 轮询」的已验证路径（诊断/一键回退） */
+const TCP_ADAPTIVE_LIMIT = true
+
+/** 单片同步段的时间预算（ms）：≈60FPS 一帧的 3/4，给点击与 render 留出余量 */
+const TCP_TICK_BUDGET_MS = 12
+
+/** 单片字节下限：再小会被嵌套 setTimeout 的 4ms clamp 拖垮吞吐，反而造成积压 */
+const TCP_MIN_READ_PER_TICK = 12
+
+/** 空闲退避阶梯（ms）：连续读不到数据逐级放宽，一有数据立刻回到首档续读 */
+const TCP_IDLE_BACKOFF_MS = [20, 40, 70, 100]
+
+/**
+ * 每字节桥调用耗时（ms）→ 性能档位：0 高端/未测（128B 片 <6ms）、1 中（6~13ms）、
+ * 2 低端（>13ms，已超出单片预算、肉眼掉帧）。档位由 readLoop 实测得出，
+ * 页面据此降低屏刷频率；只有档位 2 才尝试批量读，中高端机维持已验证路径。
+ */
+const TCP_TIER_COST_MS = [0.05, 0.10]
+
+/**
+ * 低端机批量读总开关 —— **默认关闭（2026-11-13 真机回归后回退）**。
+ *
+ * 设想是用 Java byte[] 一次 read(byte[],0,n) + android.util.Base64 一次回传，
+ * 把 128B 的桥调用从 128 次降到 3 次。但真机（09:26 日志）出现「CONNACK 成功、
+ * 之后一帧数据都没有、无任何异常」：零消费探测只验证了「byte[] 参数被接受」
+ * 和「能编码 buf」，**没验证 read() 是否真的写回了 JS 持有的那个数组**。
+ * 在 plus.android 的 Java byte[] 传出参数不生效的 ROM 上（首连同批日志已报
+ * `Cannot read property '__TYPE__' of null`，桥接层对 Java 对象传参本就不稳），
+ * read() 会消费掉流里的字节、返回 n，buf 却仍是探测时的填充值 0x41；
+ * 长度校验通过 → 不抛异常 → MQTT 层把 0x41 当 PUBACK 静默丢弃，数据全丢。
+ *
+ * 因此默认关闭，所有机型回到已验证的逐字节 read(int) 路径。
+ * 若要在某台已验证可用的设备上做 A/B，把本开关改 true；启用后仍需通过
+ * readBulk 的「填充残留检测」，并在 [perf] 面板确认「桥调用/s」确实下降。
+ * 根治方向仍是 UTS/Android 原生按帧回调或 Broker 开 WebSocket，别再赌 byte[] 桥。
+ */
+const TCP_BULK_READ = false
 
 /** 热路径调试日志总开关：正式包必须关闭（每条 console.log 都要过一次原生日志桥） */
 const TCP_DEBUG_LOG = false
 
 /**
- * 供页面 [perf] 面板读取的桥调用计数（普通对象，非响应式、不发事件、不跨桥）。
- * 每 10s 由 direct-device.vue 的 _maybePerfReport 读出并清零。
- * maxPerTick / longTasks 用于验收切片是否生效：生效后 maxPerTick ≤ 128、longTasks=0。
+ * 供页面 [perf] 面板读取的统计（普通对象，非响应式、不发事件、不跨桥）。
+ * 每 10s 由 direct-device.vue 的 _maybePerfReport 读出并清零计数类字段。
+ * reads = 估算的 JS↔原生桥调用次数（逐字节路径≈字节数；批量读路径≈3/片），
+ *         这样「桥读/s」在两种路径下可直接对比：生效后应从 ~4000/s 降到 ~100/s。
+ * tier / limit / bulk / tickMs 是状态量，不清零。
  */
 export const tcpReadStats = {
-  polls: 0, reads: 0, bytes: 0, chunks: 0, maxPerTick: 0, longTasks: 0
+  polls: 0, reads: 0, bytes: 0, chunks: 0, maxPerTick: 0, longTasks: 0,
+  tickMs: 0, limit: TCP_ADAPTIVE_LIMIT ? 32 : TCP_MAX_READ_PER_TICK, tier: 0, bulk: 0, errors: 0
+}
+
+/** 0=高端/未测 1=中 2=低端。页面据此调屏刷频率；未走 Java Socket 时恒为 0，行为不变 */
+export function getTcpPerfTier() {
+  return tcpReadStats.tier || 0
+}
+
+/* ---------- 批量读：Java byte[] → Base64 字符串 → Uint8Array（纯 JS，不依赖 atob） ---------- */
+const B64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+const B64_LOOKUP = (() => {
+  const t = new Int16Array(128)
+  for (let i = 0; i < 128; i++) t[i] = -1
+  for (let i = 0; i < 64; i++) t[B64_ALPHABET.charCodeAt(i)] = i
+  return t
+})()
+
+function b64val(s, i) {
+  const c = s.charCodeAt(i)
+  return c < 128 ? B64_LOOKUP[c] : -1
+}
+
+/** 把 android.util.Base64(NO_WRAP) 产出的字符串解进 out，返回解出的字节数 */
+function decodeBase64Into(s, out) {
+  let o = 0
+  const cap = out.length
+  for (let i = 0; i + 3 < s.length && o < cap; i += 4) {
+    const c0 = b64val(s, i)
+    const c1 = b64val(s, i + 1)
+    if (c0 < 0 || c1 < 0) break
+    out[o++] = ((c0 << 2) | (c1 >> 4)) & 0xff
+    if (s.charCodeAt(i + 2) !== 61) {
+      const c2 = b64val(s, i + 2)
+      if (c2 < 0 || o >= cap) break
+      out[o++] = (((c1 & 15) << 4) | (c2 >> 2)) & 0xff
+      if (s.charCodeAt(i + 3) !== 61) {
+        const c3 = b64val(s, i + 3)
+        if (c3 < 0 || o >= cap) break
+        out[o++] = (((c2 & 3) << 6) | c3) & 0xff
+      }
+    }
+  }
+  return o
 }
 
 /** 检查当前平台是否支持原生 TCP Socket */
@@ -233,6 +308,7 @@ export class UniappTcpAdapter {
 
   /** App 端 plus.android Java Socket 连接 */
   _connectWithPlusAndroid() {
+    const startedAt = Date.now()
     try {
       const Socket = plus.android.importClass('java.net.Socket')
       const InetSocketAddress = plus.android.importClass('java.net.InetSocketAddress')
@@ -266,21 +342,146 @@ export class UniappTcpAdapter {
         _this._startAndroidReadLoop()
       }, 10)
     } catch (e) {
-      console.error('[TCP] plus.android 连接失败:', e.message)
-      logLine('网络', 'Java Socket 连接失败：' + String((e && e.message) || e) +
-        '（若含 EACCES / permission denied，多为「附近的设备」权限被禁）')
+      const errMsg = String((e && e.message) || e)
+      const elapsed = Date.now() - startedAt
+      const isBridgeError = errMsg.indexOf('__TYPE__') >= 0
+      // Android 刚进页面时 plus.android 桥接层偶发未就绪，会报
+      // "Cannot read property '__TYPE__' of null"（09:26 真机首连日志）。
+      // 这类是「毫秒级」的瞬时失败：重建一次即可，同一实例只重试一次。
+      //
+      // 但 14:30 真机日志是另一种情况：每次都恰好 3s（= socket.connect 的
+      // 超时）才报同一个 __TYPE__ 错误。这是 Java Socket 连设备超时后，桥接层
+      // 包装异常对象时读到 null 的 __TYPE__ 产生的「次生错误」，真因是设备
+      // 192.168.88.1:1883 没有响应。这时再重建一次只会又白等 3s，把单次连接
+      // 拖到 6s，正好撞上 MqttDirectClient 的 APP 6s 首连超时，形成死循环。
+      // 因此只有快速失败才按「桥未就绪」重建；慢失败直接按普通错误上报。
+      if (isBridgeError && elapsed < 1500 && !this._androidBridgeRetried) {
+        this._androidBridgeRetried = true
+        logLine('网络', '原生桥对象为空（' + elapsed + 'ms），立即重建一次连接')
+        try { this._closeUnderlying() } catch (e2) {}
+        return this._connectWithPlusAndroid()
+      }
+      console.error('[TCP] plus.android 连接失败:', errMsg)
+      // 权限提示只在错误里真的含系统拒绝码时追加。以前无条件拼上
+      // 「若含 EACCES / permission denied，多为附近的设备权限被禁」，现场据此
+      // 去改权限是无效的，反而掩盖了「设备没响应 / 桥接异常」这两类真因。
+      let hint = ''
+      if (/EACCES|permission denied|EPERM/i.test(errMsg)) {
+        hint = '（系统拒绝访问，多为「附近的设备」权限被禁，请到系统设置里开启）'
+      } else if (isBridgeError && elapsed >= 1500) {
+        hint = '（耗时 ' + elapsed + 'ms ≈ 连接超时，设备未响应；桥接层异常为次生错误，非权限问题）'
+      } else if (isBridgeError) {
+        hint = '（原生桥对象为空，非权限问题）'
+      }
+      logLine('网络', 'Java Socket 连接失败（' + elapsed + 'ms）：' + errMsg + hint)
       this.readyState = CLOSED
-      this._fire('error', { type: 'error', message: 'Android Socket 连接失败: ' + (e.message || e) })
+      // 构造函数里同步 fire('error') 一定会被丢：上层要等 createTransport()
+      // 返回后才赋 ws.onerror，此刻监听器还没挂上（真机日志表现为「Java Socket
+      // 连接失败」之后紧接着才「原生 TCP 通道已创建」，随后干等 6s 连接超时）。
+      // 改到下一个任务再发，LightMqttClient 才能立刻 reject 并排重连。
+      setTimeout(() => {
+        this._fire('error', { type: 'error', message: 'Android Socket 连接失败: ' + errMsg })
+      }, 0)
     }
   }
 
-  /** plus.android 读取循环 —— 逐字节 read(int) 绕过 JSB byte[] 桥 + 长任务切片 */
+  /**
+   * plus.android 读取循环 —— 自适应长任务切片 + 空闲退避 + 低端机批量读。
+   * 仅 APP(Android) Java Socket 路径调用；小程序走 wx/uni TCPSocket 事件回调，一行不碰。
+   */
   _startAndroidReadLoop() {
     const _this = this
     let loopCount = 0
+    // 首片保守起步：还没测出这台机器的桥调用成本时，弱机上直接读满 128B
+    // 会形成一次百毫秒级长任务。2 片内自适应就会把上限调到实测值。
+    let limit = TCP_ADAPTIVE_LIMIT ? 32 : TCP_MAX_READ_PER_TICK
+    let idleLevel = 0
+    let starvation = 0
+    let lastAvailable = 0
+    let sampleMs = 0
+    let sampleBytes = 0
+    let costEma = 0
+    // 复用写缓冲：每片只 slice 一次，热路径不再产生 [] + push + new Uint8Array 两次分配
+    const scratch = new Uint8Array(TCP_MAX_READ_PER_TICK)
+    // 批量读状态：0=未探测 1=启用 -1=探测失败/运行异常（永久回退逐字节）
+    let bulk = 0
+    let javaBuf = null
+    let base64Cls = null
+    let base64ClsTried = false
+
     if (TCP_DEBUG_LOG) {
       console.log('[TCP] readLoop 启动, 轮询=' + TCP_POLL_INTERVAL_MS +
-        'ms, 单片上限=' + TCP_MAX_READ_PER_TICK + 'B')
+        'ms, 单片上限=' + TCP_MAX_READ_PER_TICK + 'B, 自适应=' + TCP_ADAPTIVE_LIMIT)
+    }
+
+    /**
+     * 零消费探测：确认 byte[] 参数能被桥接受、read(byte[],int,int) 重载可调用、
+     * Base64 能把整片编码回 JS。任一步不符就返回 null，永久回退逐字节路径。
+     * read(buf,0,0) 按 Java InputStream 规范直接返回 0，不会消费任何字节，
+     * 所以探测失败也绝不会丢数据。
+     */
+    function probeBulkRead() {
+      if (typeof plus === 'undefined' || !plus.android) return null
+      try {
+        const seed = new Array(TCP_MAX_READ_PER_TICK + 1).join('A')
+        const jStr = plus.android.newObject('java.lang.String', seed)
+        const buf = plus.android.invoke(jStr, 'getBytes')
+        if (!buf) return null
+        if (Number(plus.android.invoke(_this._javaInput, 'read', buf, 0, 0)) !== 0) return null
+        if (!base64ClsTried) {
+          base64ClsTried = true
+          try { base64Cls = plus.android.importClass('android.util.Base64') } catch (e) { base64Cls = null }
+        }
+        let encoded = null
+        if (base64Cls) {
+          try { encoded = plus.android.invoke(base64Cls, 'encodeToString', buf, 0, 1, 2) } catch (e) {}
+        }
+        if (encoded == null) {
+          try { encoded = plus.android.invoke('android.util.Base64', 'encodeToString', buf, 0, 1, 2) } catch (e) {}
+        }
+        // buf 全 'A'(0x41)，单字节 NO_WRAP(2) 编码应恰为 'QQ=='
+        if (String(encoded).replace(/\s/g, '') !== 'QQ==') return null
+        return buf
+      } catch (e) {
+        if (TCP_DEBUG_LOG) console.log('[TCP] 批量读探测失败：' + ((e && e.message) || e))
+        return null
+      }
+    }
+
+    /** 一次 read(byte[]) + 一次 Base64 回传，替代 n 次逐字节 read() */
+    function readBulk(n) {
+      const got = Number(plus.android.invoke(_this._javaInput, 'read', javaBuf, 0, n))
+      if (!(got > 0)) return 0
+      let b64 = null
+      if (base64Cls) {
+        try { b64 = plus.android.invoke(base64Cls, 'encodeToString', javaBuf, 0, got, 2) } catch (e) {}
+      }
+      if (b64 == null) b64 = plus.android.invoke('android.util.Base64', 'encodeToString', javaBuf, 0, got, 2)
+      const decoded = decodeBase64Into(String(b64).replace(/[\r\n\s]/g, ''), scratch)
+      // 长度不符说明该 ROM 的编码链路有差异；抛出去由外层断线重建，绝不静默喂错位字节
+      if (decoded !== got) throw new Error('批量读数据长度不符')
+      // 必须验证 read() 真的写回了 JS 持有的 byte[]：plus.android 上「返回 n 但 buf
+      // 没变」是静默失败，整片会保持探测时的填充值 0x41，喂给 MQTT 后被当 PUBACK
+      // 丢弃，表现为「已连接、一帧数据都没有」。真实帧首字节是 0x20/0x30/0x90…，
+      // 整片全 0x41 只可能是填充残留；宁可误判回退，也不能静默吞数据。
+      if (decoded > 3) {
+        let allSeed = true
+        for (let i = 0; i < decoded; i++) {
+          if (scratch[i] !== 0x41) { allSeed = false; break }
+        }
+        if (allSeed) throw new Error('批量读未写回缓冲区')
+      }
+      return decoded
+    }
+
+    function readByteByByte(n) {
+      let count = 0
+      for (let i = 0; i < n; i++) {
+        const b = _this._javaInput.read()   // 无参 read() 逐字节读，返回 0-255 或 -1
+        if (b === -1) break
+        scratch[count++] = b & 0xff
+      }
+      return count
     }
 
     function readLoop() {
@@ -291,47 +492,110 @@ export class UniappTcpAdapter {
       try {
         loopCount++
         tcpReadStats.polls++
+        const t0 = Date.now()
         const available = Number(_this._javaInput.available())
         let toRead = 0
         let readBytes = 0
+        let bridgeCalls = 0
 
         if (available > 0) {
-          // 关键：只取一片，绝不在一次同步任务里连做几千次 read() 桥调用
-          toRead = Math.min(available, TCP_MAX_READ_PER_TICK)
-          const bytes = []
-          for (let i = 0; i < toRead; i++) {
-            const b = _this._javaInput.read()   // 无参 read() 逐字节读，返回 0-255 或 -1
-            if (b === -1) break
-            bytes.push(b & 0xff)
+          idleLevel = 0
+          // 只取一片，绝不在一次同步任务里连做几千次桥调用
+          toRead = Math.min(available, limit)
+          if (bulk === 1) {
+            readBytes = readBulk(toRead)
+            bridgeCalls = 3                    // available + read(byte[]) + encodeToString
+          } else {
+            readBytes = readByteByByte(toRead)
+            bridgeCalls = 1 + readBytes        // available + 每字节一次 read
           }
-          readBytes = bytes.length
-          tcpReadStats.reads += bytes.length
-          tcpReadStats.bytes += bytes.length
-          if (bytes.length > tcpReadStats.maxPerTick) tcpReadStats.maxPerTick = bytes.length
-          if (bytes.length > TCP_MAX_READ_PER_TICK) tcpReadStats.longTasks++
-          if (bytes.length > 0) {
-            tcpReadStats.chunks++
-            // ⚡ 正式包关闭：以前每个数据块都要 slice().map().join() 拼一段 hex 再走
-            //    一次原生日志桥，9 次/s 白建一堆短命字符串。需要抓包时把 TCP_DEBUG_LOG 打开。
-            if (TCP_DEBUG_LOG) {
-              console.log('[TCP] 收到 ' + bytes.length + 'B, hex: ' +
-                bytes.slice(0, 16).map(b => b.toString(16).padStart(2, '0')).join(' '))
+        } else if (TCP_ADAPTIVE_LIMIT && idleLevel < TCP_IDLE_BACKOFF_MS.length - 1) {
+          // 空闲越久轮询越稀：低端机空闲期桥调用从 50/s 降到 10/s
+          idleLevel++
+        }
+
+        // 只量「读取段」，不含下面的 message 分发（分发耗时由页面侧的提交节流负责）
+        const elapsed = Date.now() - t0
+
+        if (readBytes > 0) {
+          tcpReadStats.reads += bulk === 1 ? bridgeCalls : readBytes
+          tcpReadStats.bytes += readBytes
+          if (readBytes > tcpReadStats.maxPerTick) tcpReadStats.maxPerTick = readBytes
+          if (bulk !== 1 && readBytes > TCP_MAX_READ_PER_TICK) tcpReadStats.longTasks++
+          tcpReadStats.chunks++
+          tcpReadStats.tickMs = elapsed
+          // ⚡ 正式包关闭：以前每片都要 slice().map().join() 拼一段 hex 再走一次原生日志桥。
+          if (TCP_DEBUG_LOG) {
+            console.log('[TCP] 收到 ' + readBytes + 'B, hex: ' +
+              Array.from(scratch.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' '))
+          }
+          _this._fire('message', { type: 'message', data: scratch.slice(0, readBytes) })
+        }
+
+        // ---- 自适应：按实测「每字节同步段耗时」把单片压进 12ms 预算 ----
+        if (TCP_ADAPTIVE_LIMIT && readBytes > 0) {
+          sampleMs += elapsed
+          sampleBytes += readBytes
+          // 累计到 24ms / 64B 再更新，避开 Date.now() 在单片上的 1ms 量化噪声
+          if (sampleMs >= 24 || sampleBytes >= 64) {
+            const cost = sampleMs / Math.max(1, sampleBytes)
+            costEma = costEma ? costEma * 0.75 + cost * 0.25 : cost
+            sampleMs = 0
+            sampleBytes = 0
+
+            // 只有「积压还在增长」才说明读速追不上、片太小被 setTimeout clamp 卡住了，
+            // 这时才逐步放宽预算。若只判「有积压」，设备一秒内正常突发就会把片推回
+            // 128B，让 12ms 预算形同虚设。
+            starvation = (available > toRead && available >= lastAvailable)
+              ? Math.min(4, starvation + 1)
+              : Math.max(0, starvation - 1)
+            // 批量读探测失败（永久逐字节）时基准预算加倍：低端机逐字节本就吃紧，
+            // 宁可单片稍长也要先把数据读出来，避免 TCP 缓冲持续积压。
+            const baseBudget = bulk === -1 ? TCP_TICK_BUDGET_MS * 2 : TCP_TICK_BUDGET_MS
+            const budget = baseBudget + starvation * 3
+            const next = Math.round(budget / Math.max(0.001, costEma))
+            limit = Math.max(TCP_MIN_READ_PER_TICK, Math.min(TCP_MAX_READ_PER_TICK, next))
+            tcpReadStats.limit = limit
+            tcpReadStats.tier = costEma >= TCP_TIER_COST_MS[1] ? 2
+              : (costEma >= TCP_TIER_COST_MS[0] ? 1 : 0)
+
+            // 只在低端机尝试批量读：高端机维持已验证的逐字节路径不动。
+            // 探测零消费，失败永久回退，最差也只是回到本次优化前的调度方式。
+            if (bulk === 0 && TCP_BULK_READ && tcpReadStats.tier === 2) {
+              javaBuf = probeBulkRead()
+              bulk = javaBuf ? 1 : -1
+              tcpReadStats.bulk = bulk
+              if (TCP_DEBUG_LOG) console.log('[TCP] 批量读' + (bulk === 1 ? '启用' : '不可用，回退逐字节'))
             }
-            _this._fire('message', { type: 'message', data: new Uint8Array(bytes) })
           }
         }
 
         if (TCP_DEBUG_LOG && (loopCount <= 3 || loopCount % 200 === 0)) {
-          console.log('[TCP] readLoop #' + loopCount + ' available=' + available)
+          console.log('[TCP] readLoop #' + loopCount + ' available=' + available +
+            ', limit=' + limit + ', tier=' + tcpReadStats.tier + ', bulk=' + bulk)
         }
         // 还有积压 → 让出一次事件循环后立刻续读（setTimeout 0 在嵌套调用里会被
-        // clamp 到 ≥4ms，足够让点击 / Vue nextTick(microtask) 插进来）；
-        // 空闲才按 20ms 轮询。这样永不出现「一次读几千字节」的秒级长任务。
-        // 本次一字节都没读到（read() 提前返回 -1 等）时不按积压处理，避免 0ms 忙循环
+        // clamp 到 ≥4ms，足够让点击 / Vue nextTick(microtask) 插进来）；空闲才退避轮询。
+        // 本次一字节都没读到（read() 提前返回 -1 等）时不按积压处理，避免 0ms 忙循环。
         const hasBacklog = readBytes > 0 && available > toRead
-        setTimeout(readLoop, hasBacklog ? 0 : TCP_POLL_INTERVAL_MS)
+        lastAvailable = available
+        const idleMs = TCP_ADAPTIVE_LIMIT ? TCP_IDLE_BACKOFF_MS[idleLevel] : TCP_POLL_INTERVAL_MS
+        setTimeout(readLoop, hasBacklog ? 0 : idleMs)
       } catch (e) {
         const msg = (e && e.message) || String(e)
+        // 批量读异常不能吞：字节可能已从流里取走，继续读会把错位数据喂给 MQTT。
+        // 永久回退并断开，由上层重连重建一条干净的连接。
+        if (bulk === 1) {
+          bulk = -1
+          javaBuf = null
+          tcpReadStats.bulk = -1
+          tcpReadStats.errors++
+          logLine('网络', '批量读异常，已回退逐字节并重建连接：' + msg)
+          _this.readyState = CLOSED
+          _this._fire('error', { type: 'error', message: '设备连接已断开，请重新连接后重试' })
+          _this._fire('close', { type: 'close', wasClean: false })
+          return
+        }
         if (msg.indexOf('SocketTimeout') >= 0 || msg.indexOf('timed out') >= 0) {
           setTimeout(readLoop, TCP_POLL_INTERVAL_MS)  // SoTimeout 是我们设的 2s，继续轮询
           return

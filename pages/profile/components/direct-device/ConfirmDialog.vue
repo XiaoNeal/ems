@@ -4,8 +4,8 @@
       <view class="confirm-title"><text>{{ title || '确认操作' }}</text></view>
       <view class="confirm-content"><text>{{ content }}</text></view>
       <view class="confirm-btns">
-        <view class="confirm-btn cancel" @click="$emit('cancel')"><text>取消</text></view>
-        <view class="confirm-btn ok" @click="$emit('confirm')"><text>确认</text></view>
+        <view v-if="showCancel" class="confirm-btn cancel" @click="$emit('cancel')"><text>取消</text></view>
+        <view class="confirm-btn ok" @click="$emit('confirm')"><text>{{ confirmText }}</text></view>
       </view>
     </view>
   </view>
@@ -21,7 +21,11 @@ export default {
   props: {
     visible: { type: Boolean, default: false },
     title: { type: String, default: '确认操作' },
-    content: { type: String, default: '' }
+    content: { type: String, default: '' },
+    /** 是否显示「取消」；纯提示场景设 false，只留一个主按钮 */
+    showCancel: { type: Boolean, default: true },
+    /** 主按钮文案（纯提示场景可用「知道了」） */
+    confirmText: { type: String, default: '确认' }
   }
 }
 </script>

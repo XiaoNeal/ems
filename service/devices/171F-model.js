@@ -115,7 +115,7 @@ export class Model171F extends DeviceBase {
 }
 
 /**
- * 50kW 微能站 EMS 网关（服务端 typeCode = 171F_V2）
+ * 50kW 能源站 EMS 网关（服务端 typeCode = 171F_V2）
  * 字段比 V1 多储能/负荷累计电量与自发自用目标功率，帧布局前缀完全兼容
  */
 export class Model171F_V2 extends Model171F {

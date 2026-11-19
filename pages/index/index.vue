@@ -15,31 +15,40 @@
       </view>
     </view>
 
-    <!-- 内容区域 -->
-    <scroll-view class="content-scroll" scroll-y enable-back-to-top scroll-with-animation @scrolltolower="tabbarPageScrollLower"
-      :scroll-top="scrollTop" ref="contentScroll" :bounces="false" @scroll="onScroll">
-      <view class="content-pages">
-        <!-- 设备列表页面 -->
-        <!-- 个人中心 - 优先级最高，始终可以访问 -->
-        <view v-if="currentTab === 2" class="page-item">
-          <Profile ref="profile"></Profile>
-        </view>
-        <!-- 设备列表页面 -->
-        <view v-else-if="showDeviceList" class="page-item device-list-page">
-          <DeviceList ref="deviceList" @selectDevice="handleDeviceSelect"></DeviceList>
-        </view>
-
-        <!-- 监测页面 -->
-        <view v-else-if="currentTab === 0" class="page-item">
-          <Monitor ref="monitor"></Monitor>
-        </view>
-
-        <!-- 系统页面 -->
-        <view v-else-if="currentTab === 1" class="page-item">
-          <System ref="system"></System>
-        </view>
+    <!-- 内容区域：WebView 原生页面滚动（与 direct-device.vue 同方案）。
+         APP 端内嵌 scroll-view 在旧 WebView 上无法可靠滚动（滑不动/滑不到底），
+         纵向滚动交给页面本身；头部与底部导航 fixed，内容用 padding 让出位置。
+         切换设备期间整块内容 visibility:hidden，避免图表 canvas / z-index 较高的
+         装饰块透过加载遮罩露出来 -->
+    <view class="content-pages" :class="{ 'content-pages--switching': deviceSwitching && !showDeviceList }">
+      <!-- 设备列表页面 -->
+      <!-- 个人中心 - 优先级最高，始终可以访问 -->
+      <view v-if="currentTab === 2" class="page-item">
+        <Profile ref="profile"></Profile>
       </view>
-    </scroll-view>
+      <!-- 设备列表页面 -->
+      <view v-else-if="showDeviceList" class="page-item device-list-page">
+        <DeviceList ref="deviceList" @selectDevice="handleDeviceSelect"></DeviceList>
+      </view>
+
+      <!-- 监测页面 -->
+      <view v-else-if="currentTab === 0" class="page-item">
+        <Monitor ref="monitor"></Monitor>
+      </view>
+
+      <!-- 系统页面 -->
+      <view v-else-if="currentTab === 1" class="page-item">
+        <System ref="system"></System>
+      </view>
+    </view>
+
+    <!-- 设备切换加载态：盖住内容区，避免闪出上一台设备的数据 -->
+    <view v-if="deviceSwitching && !showDeviceList" class="device-switch-mask">
+      <view class="switch-loading">
+        <view class="switch-spinner"></view>
+        <text class="switch-loading-text">正在加载设备数据…</text>
+      </view>
+    </view>
 
     <!-- 底部TabBar -->
     <view class="tab-bar-container">
@@ -128,8 +137,6 @@ export default {
         2: '/static/images/mine.png'
       },
       scrollPositions: { 0: 0, 1: 0, 2: 0 },
-      scrollTop: 0,
-      realScrollTop: 0,
       selectedDeviceId: null,
       fromProfile: false,
       isDeviceListLoaded: false,
@@ -138,6 +145,8 @@ export default {
       lastClickTime: 0, // 上次点击时间戳，用于防重复点击
       device171FList: [],
       device171FRegistered: false,
+      deviceSwitching: false, // 设备切换中：显示加载态，屏蔽上一台设备的残留数据
+      refreshing: false, // 下拉刷新进行中（页面级 onPullDownRefresh 的去重锁）
       esIds: [] // 响应式设备列表（替代 computed，确保 reLaunch 后立即可用）
     }
   },
@@ -157,14 +166,31 @@ export default {
     } catch (e) {
       console.warn('[mounted] ensureConnected 失败:', e.message);
     }
-    // 统一在 mounted 中触发数据加载
-    if (!this.isDeviceListLoaded && !this.deviceListLoading) {
+    // 切换设备直达：URL 参数已带完整设备清单，立即注册（不再重复拉取用户信息/站点/设备清单），
+    // 避免新页面在等待接口期间停留在旧数据上
+    if (this._fastSwitchList && this._fastSwitchList.length) {
+      const fastList = this._fastSwitchList
+      this._fastSwitchList = null
+      this.registerDevices(fastList)
+      if (realtimeDataProvider.getDeviceList().length) {
+        this.isDeviceListLoaded = true
+        // 后台只刷新站点清单，不重新注册实时模型（避免刚加载的新数据被二次清空）
+        this.$nextTick(() => { this.fetchDeviceList({ stationsOnly: true }) })
+      } else {
+        // 参数中的设备清单无效，回退到完整加载链路
+        this.fetchDeviceList()
+      }
+    } else if (!this.isDeviceListLoaded && !this.deviceListLoading) {
       console.log('[mounted] 触发 fetchDeviceList')
       this.fetchDeviceList()
     }
     // 注册实时数据回调：使用 subscribe 多订阅者模式（避免与 Monitor.vue 的 onDataUpdate 单槽互相覆盖）
     this._unsubscribeRealtime = realtimeDataProvider.subscribe(() => {
       this.device171FList = [...realtimeDataProvider.getDeviceList()]
+    })
+    // 订阅设备切换态：注册即回放当前状态，保证 redirectTo 出来的新页面也立即进入加载态
+    this._unsubscribeSwitch = realtimeDataProvider.subscribeSwitchState(v => {
+      this.deviceSwitching = !!v
     })
     // 立即刷一次，避免首次 render 前订阅回调没机会触发
     this.device171FList = [...realtimeDataProvider.getDeviceList()]
@@ -178,6 +204,15 @@ export default {
       this._unsubscribeRealtime()
       this._unsubscribeRealtime = null
     }
+    if (typeof this._unsubscribeSwitch === 'function') {
+      this._unsubscribeSwitch()
+      this._unsubscribeSwitch = null
+    }
+    // 离页前清掉下拉刷新的定时器，避免回弹动画残留到下一个页面
+    clearTimeout(this._refreshTimer)
+    clearTimeout(this._refreshTimeout)
+    this._refreshTimer = null
+    this._refreshTimeout = null
   },
   onLoad(options) {
     console.log('onLoad', options)
@@ -191,8 +226,10 @@ export default {
         this.fromProfile = false
         // 清除fromProfile存储，防止onShow覆盖状态
         uni.removeStorageSync('fromProfile')
-        // 清空之前设备的数据
-        // realtimeDataProvider.clearDeviceState()
+        // 切换设备：立即隔离上一台设备的数据（幂等），新页面只显示加载态与此设备的数据
+        realtimeDataProvider.beginDeviceSwitch(deviceId)
+        // 参数中已带完整设备清单 → mounted 直达注册，跳过重复的接口请求
+        this._fastSwitchList = Array.isArray(device.list) && device.list.length ? device.list : null
         this.$store.commit('changeCurrentSelectDevice', device)
         this.updateCurrentEsRole(deviceId)
       } catch (e) {
@@ -205,8 +242,7 @@ export default {
       this.selectedDeviceId = options.esId
       this.fromProfile = false
       uni.removeStorageSync('fromProfile')
-      // 清空之前设备的数据
-      // realtimeDataProvider.clearDeviceState()
+      realtimeDataProvider.beginDeviceSwitch(options.esId)
       this.$store.commit('changeCurrentSelectDevice', device)
       this.updateCurrentEsRole(options.esId)
 
@@ -217,8 +253,6 @@ export default {
       if (savedDevice) {
         const deviceId = savedDevice.id || savedDevice.esId
         this.selectedDeviceId = deviceId
-        // 清空之前设备的数据
-        // realtimeDataProvider.clearDeviceState()
         this.$store.commit('changeCurrentSelectDevice', savedDevice)
         this.updateCurrentEsRole(deviceId)
       }
@@ -235,6 +269,15 @@ export default {
     // 回到前台：解除订阅暂停 + 补发当前快照 + 重放设备注册（服务端收到 register 会立刻推一帧），
     // 否则后台期间被暂停/超时的实时值一直是 '--'，要手动刷新才恢复
     realtimeDataProvider.resumeRealtime()
+    // 子页面兜底：快速控制 onLoad 会 clearDeviceState() 清空 provider 的设备清单与监听
+    // （策略配置卸载时会 unregister()），resumeRealtime 只能补注册、无法重建设备模型。
+    // 清单为空或没有任何已注册 barCode 时重新拉取注册，与「切回监测 tab」的恢复路径一致，
+    // 否则从子页面返回后实时数据永远是 '--'，必须切一次 tab 才有数据
+    if ((!realtimeDataProvider.getDeviceList().length || !realtimeDataProvider.hasRegisteredCodes())
+      && !this.deviceListLoading && !this.deviceSwitching) {
+      console.log('[onShow] 实时清单为空（子页面清空过），重新拉取设备列表')
+      this.fetchDeviceList()
+    }
     // 确保订阅者已注册（onShow 可能在 mounted 之前触发？uni-app 通常是 mounted → onShow，
     // 但 reLaunch/redirectTo 后新页的 onShow 先于旧页销毁，做个兜底）
     if (!this._unsubscribeRealtime) {
@@ -242,12 +285,105 @@ export default {
         this.device171FList = [...realtimeDataProvider.getDeviceList()]
       })
     }
+    // 切换态订阅兜底：onShow 可能早于 mounted（redirectTo 后新页面先走 onShow）
+    if (!this._unsubscribeSwitch) {
+      this._unsubscribeSwitch = realtimeDataProvider.subscribeSwitchState(v => {
+        this.deviceSwitching = !!v
+      })
+    }
     this.device171FList = [...realtimeDataProvider.getDeviceList()]
   },
   onReady() {
     this.scrollToTop()
   },
+  /** 页面级滚动：滚动位置只记到实例属性，滚动过程零渲染 */
+  onPageScroll(e) {
+    this._realScrollTop = e.scrollTop
+  },
+  /** 页面级触底：分派给当前 tab 的 loadMore */
+  onReachBottom() {
+    this.tabbarPageScrollLower()
+  },
+  /** 页面级下拉刷新（pages.json 的 enablePullDownRefresh 已开启） */
+  onPullDownRefresh() {
+    this._startPullRefresh()
+  },
   methods: {
+    /**
+     * 下拉刷新的实际分派逻辑（onPullDownRefresh 顶层钩子调用）。
+     * 监测页保持实时连接，只补发快照，不重建连接、不重复拉取接口。
+     */
+    _startPullRefresh() {
+      if (this.refreshing) {
+        uni.stopPullDownRefresh()
+        return
+      }
+      this.refreshing = true
+      const startedAt = Date.now()
+      // 请求异常或一直不返回时兜底收起，避免刷新圈一直转
+      clearTimeout(this._refreshTimeout)
+      this._refreshTimeout = setTimeout(() => {
+        this._refreshTimeout = null
+        this._stopRefresh()
+      }, 8000)
+      let task = null
+      try {
+        task = this._refreshCurrentView()
+      } catch (e) {
+        console.warn('[index] 下拉刷新失败:', e && e.message)
+      }
+      Promise.resolve(task).then(
+        () => this._finishRefresh(startedAt),
+        (e) => {
+          console.warn('[index] 下拉刷新失败:', e && e.message)
+          this._finishRefresh(startedAt)
+        }
+      )
+    },
+    /** 最短展示 600ms 后收起，避免动画一闪而过 */
+    _finishRefresh(startedAt) {
+      if (!this.refreshing) return
+      const rest = 600 - (Date.now() - (startedAt || 0))
+      clearTimeout(this._refreshTimer)
+      if (rest <= 0) {
+        this._stopRefresh()
+        return
+      }
+      this._refreshTimer = setTimeout(() => {
+        this._refreshTimer = null
+        this._stopRefresh()
+      }, rest)
+    },
+    _stopRefresh() {
+      clearTimeout(this._refreshTimer)
+      clearTimeout(this._refreshTimeout)
+      this._refreshTimer = null
+      this._refreshTimeout = null
+      // 页面级下拉刷新：显式收起转圈（重复调用幂等）
+      uni.stopPullDownRefresh()
+      this.refreshing = false
+    },
+    _refreshCurrentView() {
+      // 设备切换期间不做任何刷新，避免与切换流程抢注册、清掉刚到位的数据
+      if (this.deviceSwitching) return null
+      // 设备列表：重新获取站点与设备清单
+      if (this.showDeviceList) return this.fetchDeviceList()
+      if (this.currentTab === 0) {
+        // 监测：解除订阅暂停 + 补发当前快照 + 重放注册，让服务端立刻推一帧；
+        // 不重新拉接口、不重建连接，避免实时值被清空闪成 '--'
+        realtimeDataProvider.resumeRealtime()
+        return null
+      }
+      if (this.currentTab === 2) {
+        const profile = this.$refs.profile
+        if (profile && typeof profile.refreshUserInfo === 'function') {
+          return profile.refreshUserInfo()
+        }
+        return null
+      }
+      // 系统页为静态入口，无数据可刷新，直接收起动画
+      return null
+    },
     checkFromProfile() {
       const fromProfile = uni.getStorageSync('fromProfile')
       if (fromProfile === 'true') {
@@ -300,7 +436,9 @@ export default {
     },
 
     // 获取设备列表 - 统一入口，消除竞态
-    async fetchDeviceList() {
+    // options.stationsOnly：切换设备后的后台静默刷新，只更新站点清单与用户信息，
+    // 不重新选择站点、不重复注册实时模型（否则刚加载的新实时数据会被二次清空）
+    async fetchDeviceList(options = {}) {
       if (this.deviceListLoading) return
       this.deviceListLoading = true
 
@@ -332,8 +470,16 @@ export default {
           userInfo.sessionId = storeUserInfo.sessionId
         }
         this.$store.commit('SET_LOGIN', userInfo)
-        this.esIds = energyStations
+        // 后台静默刷新返回空清单时不覆盖已有列表，避免误判为「无设备」而跳回设备列表页
+        if (!options.stationsOnly || energyStations.length > 0) {
+          this.esIds = energyStations
+        }
         // console.log('[数据流] 设置 esIds:', this.esIds.length, '个')
+
+        if (options.stationsOnly) {
+          this.isDeviceListLoaded = true
+          return
+        }
 
         if (energyStations.length >= 1) {
           // 优先沿用已选中的设备（来自 device 参数或本地存储），避免切换设备后被重置为第一台
@@ -370,7 +516,10 @@ export default {
           this.$store.commit('changeCurrentSelectDevice', station)
           uni.setStorageSync('currentSelectDevice', station)
           // 直接传递设备列表，不再从 store 读取
-          this.registerDevices(station.list)
+          // 切换设备时，旧页面残留的未完成请求不再注册，避免与新页面的直达注册互相覆盖
+          if (!this._skipRegisterOnFetch) {
+            this.registerDevices(station.list)
+          }
         }
 
         this.isDeviceListLoaded = true
@@ -435,14 +584,14 @@ export default {
         configs[0].rawDeviceType = configs[0].rawDeviceType || configs[0].typeCode;
         configs[0].deviceType = '171F';
         configs[0].typeCode = '171F';
-        console.log('[数据流] 无171F设备，使用', configs[0].name, '作为汇总设备')
+        // console.log('[数据流] 无171F设备，使用', configs[0].name, '作为汇总设备')
       }
 
-      console.log('[数据流] 准备注册:', configs.length, '个设备')
+      // console.log('[数据流] 准备注册:', configs.length, '个设备')
       // 全量替换：unregister 旧监听 → 清旧实例 → 重新 push + bind 新设备
       realtimeDataProvider.replaceDeviceList(configs)
       const registeredList = [...realtimeDataProvider.getDeviceList()];
-      console.log('[数据流] 注册完成, 设备列表:', registeredList.length, '个设备')
+      // console.log('[数据流] 注册完成, 设备列表:', registeredList.length, '个设备')
       this.device171FList = registeredList;
       this.device171FRegistered = true;
     },
@@ -466,22 +615,27 @@ export default {
       }
       this.isNavigating = true
 
-      // 兼容对象和数字两种格式
-      const device = typeof esId === 'object' ? esId : { id: esId }
+      // 复制一份，避免直接改动设备列表数据；同时不带入列表项里可能残留的旧设备清单，
+      // 一律以本次接口返回的清单为准（接口失败则交给新页面走完整加载链路）
+      const device = typeof esId === 'object' ? { ...esId } : { id: esId }
+      delete device.list
       const deviceId = device.id || device.esId || esId
       this.selectedDeviceId = deviceId
       this.fromProfile = false
       console.log('选择设备:', device)
       
-      // 清空设备状态改为由新页面的 initDeviceList 全量替换时处理，
-      // 避免接口调用期间旧页面 deviceList 被提前清空导致 UI 空白。
-      // realtimeDataProvider.clearDeviceState() // 已移至 initDeviceList
+      // 点击瞬间就隔离上一台设备的数据：注销旧监听、清空旧模型并广播空快照，
+      // 页面改显「正在加载设备数据」，避免新页面订阅时重放出上一台设备的实时值。
+      // 后续 onLoad 会用同一 deviceId 再调一次（幂等，不重置等待计时）
+      realtimeDataProvider.beginDeviceSwitch(deviceId)
+      // 当前页面若还有未完成的设备列表请求，切换后不再让它重复注册设备
+      this._skipRegisterOnFetch = true
 
       this.$store.commit('changeCurrentSelectDevice', device)
       // 保存设备选择到本地存储，防止刷新丢失
       uni.setStorageSync('currentSelectDevice', device)
       
-      // 更新当前微能站角色
+      // 更新当前能源站角色
       this.updateCurrentEsRole(deviceId)
 
       // 先调用接口获取设备信息
@@ -514,6 +668,10 @@ export default {
             icon: 'none'
           })
           this.isNavigating = false
+          // 跳转失败：结束切换态并重新加载当前设备，避免界面长期停在加载态
+          realtimeDataProvider.endDeviceSwitch()
+          this._skipRegisterOnFetch = false
+          this.fetchDeviceList()
         },
         complete: () => {
           this.isNavigating = false
@@ -526,7 +684,7 @@ export default {
       const esUser = esUsers.find(item => item.esId === esId)
       const roleId = esUser?.esRoleId || 0
       this.$store.commit('SET_CURRENT_ES_ROLE_ID', roleId)
-      console.log('当前微能站角色:', roleId)
+      console.log('当前能源站角色:', roleId)
     },
 
     register171FDevice() {
@@ -584,14 +742,14 @@ export default {
         configs[0].deviceType = '171F';
         configs[0].typeCode = '171F';
         configs[0].name = configs[0].name + '(汇总)';
-        console.log('[数据流] 无171F设备，使用', configs[0].typeCode, '作为汇总设备');
+        // console.log('[数据流] 无171F设备，使用', configs[0].typeCode, '作为汇总设备');
       }
 
-      console.log('[数据流] 准备注册:', configs.length, '个设备');
+      // console.log('[数据流] 准备注册:', configs.length, '个设备');
       realtimeDataProvider.initDeviceList(configs);
       this.device171FList = [...realtimeDataProvider.getDeviceList()];
       this.device171FRegistered = true;
-      console.log('[数据流] 注册完成, 设备列表:', this.device171FList.length, '个设备');
+      // console.log('[数据流] 注册完成, 设备列表:', this.device171FList.length, '个设备');
       return this.device171FList;
     },
 
@@ -599,10 +757,6 @@ export default {
     goBackToList() {
       this.selectedDeviceId = null
       this.$store.commit('changeCurrentSelectDevice', {})
-    },
-
-    onScroll(e) {
-      this.realScrollTop = e.detail.scrollTop
     },
 
     // 优化：简化tab切换逻辑
@@ -631,7 +785,7 @@ export default {
       }
 
       // 记录当前滚动位置
-      this.scrollPositions[this.currentTab] = this.realScrollTop
+      this.scrollPositions[this.currentTab] = this._realScrollTop || 0
 
       // 切换tab
       this.currentTab = index
@@ -652,17 +806,14 @@ export default {
       this.scrollToTop()
     },
 
-    // 优化：简化滚动到顶部操作
+    // 页面级滚动：直接调原生 pageScrollTo 归零
     scrollToTop() {
       this.$nextTick(() => {
-        if (this.realScrollTop === 0) {
-          this.scrollTop = 1
-          this.$nextTick(() => {
-            this.scrollTop = 0
-          })
-        } else {
-          this.scrollTop = 0
-        }
+        uni.pageScrollTo({
+          scrollTop: 0,
+          duration: 0
+        })
+        this._realScrollTop = 0
       })
     },
 
@@ -680,28 +831,28 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/* 页面自身滚动：勿给 page 设置 height:100% / overflow:hidden（会锁死原生滚动），
+   但要给 min-height，否则内容不满一屏时 page 只到内容底部，下面露出 WebView 的白底 */
 page {
-  height: 100%;
+  min-height: 100vh;
   background-color: #EFF4FB;
-  overflow: hidden;
 }
 
 .container {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   background-color: #EFF4FB;
-  overflow: hidden;
   position: relative;
-  /* margin-top: 20px; */
 }
 
-/* 头部 */
+/* 头部：fixed 吸顶，内容区用 padding-top 让出位置。
+   z-index 需高于加载遮罩（1100），否则切换设备时遮罩会盖住标题栏 */
 .header {
   position: fixed;
   top: 0px;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 1200;
   background-color: #fff;
 }
 
@@ -731,15 +882,66 @@ page {
   color: #333;
 }
 
-/* 内容区域 */
-.content-scroll {
+/* 内容区域：padding-top 给固定头部让位；
+   padding-bottom 用「先写普通值、再写带 env() 的值」的兜底链，
+   旧 WebView 不支持 env() 时自动落到第一条，不会出现尺寸声明整条失效 */
+.content-pages {
+  width: 100%;
+  padding-top: calc(25px + 64px);
+  padding-bottom: 60px;
+  padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.page-item {
+  width: 100%;
+}
+
+/* 设备切换中：整块内容隐藏但保留高度，避免任何内容透过遮罩 */
+.content-pages--switching {
+  visibility: hidden;
+}
+
+/* 设备切换加载态：盖住头部以下整个可视区。
+   z-index 必须高于内容区里所有元素（架构图装饰块 1000、图表面板 1001），
+   否则会出现「遮罩下透出白块 / 日期选择条」；再低于头部与底栏（1200）以保留导航 */
+.device-switch-mask {
   position: fixed;
   left: 0;
   right: 0;
   top: calc(25px + 64px);
-  bottom: calc(50px + env(safe-area-inset-bottom));
+  bottom: 0;
+  z-index: 1100;
+  background-color: #EFF4FB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-sizing: border-box;
-  -webkit-overflow-scrolling: touch;
+}
+
+.switch-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.switch-spinner {
+  width: 44rpx;
+  height: 44rpx;
+  border: 4rpx solid #dfe5ee;
+  border-top-color: #7b8ba3;
+  border-radius: 50%;
+  animation: switch-spin 0.8s linear infinite;
+}
+
+.switch-loading-text {
+  margin-top: 20rpx;
+  font-size: 26rpx;
+  color: #8a94a1;
+}
+
+@keyframes switch-spin {
+  to { transform: rotate(360deg); }
 }
 
 .content-pages {
@@ -748,16 +950,16 @@ page {
 
 .page-item {
   width: 100%;
-  min-height: 100%;
 }
 
-/* 底部TabBar */
+/* 底部TabBar：fixed 吸底，内容区用 padding-bottom 让出位置。
+   z-index 需高于加载遮罩（1100），切换设备时导航仍可用 */
 .tab-bar-container {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 100;
+  z-index: 1200;
   background-color: #fff;
 }
 
@@ -799,6 +1001,8 @@ page {
 }
 
 .safe-area-bottom {
+  /* 兜底链：env() 不被识别时高度为 0，不影响滚动 */
+  height: 0;
   height: env(safe-area-inset-bottom);
   background-color: #fff;
 }

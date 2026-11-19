@@ -17,7 +17,7 @@
       <swiper-item>
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
-            <!-- 50kW 微能站：PCS 使用 1707_V3_5 模型 -->
+            <!-- 50kW 能源站：PCS 使用 1707_V3_5 模型 -->
             <view v-if="isHighCapacity" class="module">
               <view class="module-title">PCS</view>
 
@@ -83,9 +83,26 @@
 
               <view v-if="device1707" class="data-group">
                 <view class="group-title">故障信息</view>
-                <view class="status-grid">
-                  <view v-for="fault in pcs1707Fields.faults" :key="fault.key" class="fault-item">
-                    <text class="fault-name" :class="{ active: fault.isFault }">{{ fault.name }}</text>
+                <!-- DCDC 转发的故障字 1~4：点表未定义位名，按「有位名的位才列」口径只显示整字读数 -->
+                <view v-if="pcs1707Fields.faultWords.length" class="fault-word">
+                  <view class="fault-word-title">DCDC 故障字（转发）</view>
+                  <view class="data-grid">
+                    <view v-for="w in pcs1707Fields.faultWords" :key="w.key" class="grid-item">
+                      <text class="item-label">{{ w.name }}</text>
+                      <text class="item-value" :class="{ 'item-value--alarm': w.isFault }">{{ w.value }}</text>
+                    </view>
+                  </view>
+                </view>
+                <!-- PCS 自身故障位：按点表字节分成故障字1~9，类别前缀提到分组标题 -->
+                <view v-for="group in pcs1707Fields.faultGroups" :key="group.key" class="fault-word">
+                  <view class="fault-word-title">
+                    <text>{{ group.title }}</text>
+                    <text class="fault-word-category">{{ group.category }}</text>
+                  </view>
+                  <view class="status-grid">
+                    <view v-for="item in group.items" :key="item.key" class="fault-item">
+                      <text class="fault-name" :class="{ active: item.isFault }">{{ item.name }}</text>
+                    </view>
                   </view>
                 </view>
               </view>
@@ -293,7 +310,7 @@
       <swiper-item>
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
-            <!-- 50kW 微能站：储能DC 使用 170C_V1_1 模型（地址1E） -->
+            <!-- 50kW 能源站：储能DC 使用 170C_V1_1 模型（地址1E） -->
             <view v-if="isHighCapacity" class="module">
               <view class="module-title">储能DC</view>
 
@@ -326,9 +343,15 @@
 
               <view v-if="device170CStorage" class="data-group">
                 <view class="group-title">储能DC故障信息</view>
-                <view class="status-grid">
-                  <view v-for="fault in storage170C.faults" :key="fault.code" class="fault-item">
-                    <text class="fault-name" :class="{ active: fault.isAlarm }">{{ fault.name }}</text>
+                <view v-for="group in storage170C.faultGroups" :key="group.key" class="fault-word">
+                  <view class="fault-word-title">
+                    <text>{{ group.title }}</text>
+                    <text class="fault-word-category">{{ group.codes }}</text>
+                  </view>
+                  <view class="status-grid">
+                    <view v-for="fault in group.items" :key="fault.code" class="fault-item">
+                      <text class="fault-name" :class="{ active: fault.isAlarm }">{{ fault.name }}</text>
+                    </view>
                   </view>
                 </view>
               </view>
@@ -429,7 +452,7 @@
       <swiper-item>
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
-            <!-- 50kW 微能站：光伏DC 使用 170C_V1_1 模型（地址06） -->
+            <!-- 50kW 能源站：光伏DC 使用 170C_V1_1 模型（地址06） -->
             <view v-if="isHighCapacity" class="module">
               <view class="module-title">光伏DC</view>
 
@@ -462,9 +485,15 @@
 
               <view v-if="device170CPv" class="data-group">
                 <view class="group-title">光伏DC故障信息</view>
-                <view class="status-grid">
-                  <view v-for="fault in pv170C.faults" :key="fault.code" class="fault-item">
-                    <text class="fault-name" :class="{ active: fault.isAlarm }">{{ fault.name }}</text>
+                <view v-for="group in pv170C.faultGroups" :key="group.key" class="fault-word">
+                  <view class="fault-word-title">
+                    <text>{{ group.title }}</text>
+                    <text class="fault-word-category">{{ group.codes }}</text>
+                  </view>
+                  <view class="status-grid">
+                    <view v-for="fault in group.items" :key="fault.code" class="fault-item">
+                      <text class="fault-name" :class="{ active: fault.isAlarm }">{{ fault.name }}</text>
+                    </view>
                   </view>
                 </view>
               </view>
@@ -652,7 +681,7 @@
       <swiper-item>
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
-            <!-- 50kW 微能站：BMS 使用 171C_V2 模型 -->
+            <!-- 50kW 能源站：BMS 使用 171C_V2 模型 -->
             <view v-if="isHighCapacity" class="module">
               <view class="module-title">BMS</view>
 
@@ -1174,7 +1203,7 @@
         </scroll-view>
       </swiper-item>
 
-      <!-- 液冷机 Tab（仅 50kW 微能站显示） -->
+      <!-- 液冷机 Tab（仅 50kW 能源站显示） -->
       <swiper-item v-if="isHighCapacity">
         <scroll-view class="module-scroll" scroll-y="true">
           <view class="content">
@@ -1344,6 +1373,48 @@ const PCS1707_CLOCK_KEYS = [
   'System_Clock_Year', 'System_Clock_Month', 'System_Clock_Day',
   'System_Clock_Hour', 'System_Clock_Min', 'System_Clock_Sec'
 ];
+// PCS 1707 V3.5 转发的 DCDC 故障字 1~4（能源帧 B154/B156/B158/B160，各 16 位无符号整数）
+// 点表只给整字读数（传输值=实际值），未定义各 bit 的故障名称：只展示整字数值，
+// 非 0 表示存在故障位 → 标红，不臆造位名。带「DCDC」前缀，避免与下方 PCS 自身故障字1~9 混淆。
+// ⚠ 与直连设备页 direct-device-50kw-fields.js 的 PCS_FAULT_WORDS 同步维护。
+const PCS1707_DCDC_FAULT_WORDS = [
+  ['DCDC_Fault_Code_1', 'DCDC故障字1'],
+  ['DCDC_Fault_Code_2', 'DCDC故障字2'],
+  ['DCDC_Fault_Code_3', 'DCDC故障字3'],
+  ['DCDC_Fault_Code_4', 'DCDC故障字4']
+];
+
+// PCS 1707 V3.5 自身故障位：按点表字节 B115、B146~B153 分成 9 个「故障字」，
+// 与液冷机(0318)/BMS(171C V2) 的「故障字N」分组口径一致。
+// start = 该字节第一个有效位在 energyData 中的字段名（顺序同 1707V3_5-model.js）；
+// 点表的类别前缀（ARM软件故障-/FPGA硬件故障-/ARM软件告警-）提到分组标题右侧，
+// 不再在 60+ 个标签上重复，标签只保留故障名。
+// ⚠ 与直连设备页 direct-device-50kw-fields.js 的 PCS_FAULT_GROUPS 同步维护。
+const PCS1707_FAULT_WORD_GROUPS = [
+  { title: '故障字1', category: 'ARM软件故障', start: 'Battery_Overvoltage' },                   // B115
+  { title: '故障字2', category: 'FPGA硬件故障', start: 'Switching_Supply_Undervoltage' },      // B146
+  { title: '故障字3', category: 'FPGA硬件故障', start: 'A_Phase_Overcurrent' },                 // B147
+  { title: '故障字4', category: 'ARM软件故障', start: 'AC_Overvoltage' },                       // B148
+  { title: '故障字5', category: 'ARM软件故障', start: 'A_Phase_Output_Overcurrent' },           // B149
+  { title: '故障字6', category: 'ARM软件故障', start: 'AC_Main_Closure_Fault' },                // B150
+  { title: '故障字7', category: 'ARM软件故障', start: 'DC_Bus_Overvoltage' },                   // B151
+  { title: '故障字8', category: 'ARM软件故障 / 告警', start: 'BMS_Communication_Fault' },       // B152
+  { title: '故障字9', category: 'ARM软件故障', start: 'Ferroelectric_Parameter_Storage_Error' } // B153
+];
+const PCS1707_FAULT_NAME_PREFIX = /^(?:ARM软件故障|ARM软件告警|FPGA硬件故障)-/;
+
+// 170C 储能DC / 光伏DC 故障码：单值枚举（状态帧 B10），同一时刻只命中 1 个码，
+// 因此不套用「故障字N」，按点表既有的 6 类语义分组，标题右侧徽标给出该组码号便于查表。
+// 27 项 = 点表中除「保留」外的全部有效码；与直连设备页 DC_ERROR_GROUPS 完全对应。
+// ⚠ 与 pages/profile/direct-device-50kw-fields.js 的 DC_ERROR_GROUPS 同步维护。
+const DC170C_ERROR_GROUPS = [
+  { title: '母线（BUS 侧）', codes: [2, 6, 8, 13] },
+  { title: '电池（BAT 侧）', codes: [7, 9, 11, 12] },
+  { title: '功率单元 · 过流', codes: [15, 16, 17, 18, 19, 20] },
+  { title: '功率单元 · VCE', codes: [22, 23, 24, 25, 26, 27] },
+  { title: '硬件与通讯', codes: [3, 10, 14, 21, 28] },
+  { title: '系统保护', codes: [4, 41] }
+];
 
 // 171C_V2（V2.0）BMS 能源数据中的「故障字」字段地址（每字 16 位故障标志）
 const BMS_FAULT_WORD_KEYS = [
@@ -1512,7 +1583,7 @@ export default {
     }
   },
   computed: {
-    // 装机容量 >= 50 视为大容量（50kW 微能站，使用新协议 1707/170C/171C_V2/0318）
+    // 装机容量 >= 50 视为大容量（50kW 能源站，使用新协议 1707/170C/171C_V2/0318）
     isHighCapacity() {
       const station = this.$store.state.currentSelectDevice || {};
       const cap = Number(station.totalInstalledCapacity);
@@ -1584,13 +1655,52 @@ export default {
       }
       versionComm.push({ key: 'System_Clock', name: '系统时钟', value: clockStr, unit: '' });
 
-      // 故障信息：FPGA硬件故障 / ARM软件故障 / ARM软件告警，按协议顺序排列
+      // 故障信息：按点表字节分成故障字1~9（与液冷机/BMS 一致）。
+      // 类别前缀（ARM软件故障/FPGA硬件故障/ARM软件告警）提到分组标题，标签只留故障名。
       const isFaultField = name =>
         name.startsWith('FPGA硬件故障-') || name.startsWith('ARM软件故障-') || name.startsWith('ARM软件告警-');
-      const faults = Object.keys(energy)
+      const faultFields = Object.keys(energy)
         .map(key => ({ key, name: energy[key].name, value: energy[key].value }))
         .filter(field => isFaultField(field.name))
-        .map(field => ({ key: field.key, name: field.name, isFault: Number(field.value) === 1 }));
+        .map(field => ({
+          key: field.key,
+          name: field.name.replace(PCS1707_FAULT_NAME_PREFIX, ''),
+          isFault: Number(field.value) === 1
+        }));
+      // 用「每组首字段」切段：模型字段顺序即点表顺序；某个首字段缺失时该组自动并入上一组
+      const groupStarts = {};
+      PCS1707_FAULT_WORD_GROUPS.forEach((g, i) => { groupStarts[g.start] = i; });
+      const faultGroups = [];
+      faultFields.forEach(field => {
+        const startIndex = Object.prototype.hasOwnProperty.call(groupStarts, field.key)
+          ? groupStarts[field.key]
+          : -1;
+        if (startIndex >= 0 || faultGroups.length === 0) {
+          const def = PCS1707_FAULT_WORD_GROUPS[startIndex >= 0 ? startIndex : 0];
+          faultGroups.push({
+            key: 'fw' + faultGroups.length,
+            title: def.title,
+            category: def.category,
+            items: []
+          });
+        }
+        faultGroups[faultGroups.length - 1].items.push(field);
+      });
+
+      // 故障字 1~4（DCDC 转发）：模型已有整字读数，点表未定义位名，只展示整字数值
+      const faultWords = PCS1707_DCDC_FAULT_WORDS
+        .filter(([key]) => energy[key])
+        .map(([key, name]) => {
+          const raw = energy[key].value;
+          const empty = raw === undefined || raw === null || raw === '' || raw === '--';
+          const num = Number(raw);
+          return {
+            key,
+            name,
+            value: empty ? '--' : String(raw),
+            isFault: !empty && Number.isFinite(num) && num !== 0
+          };
+        });
 
       return {
         deviceStatus,
@@ -1599,7 +1709,8 @@ export default {
         temperature: pick(PCS1707_TEMP_KEYS),
         energyTotal: pick(PCS1707_ENERGY_KEYS),
         versionComm,
-        faults
+        faultWords,
+        faultGroups
       };
     },
     storage170C() {
@@ -1999,14 +2110,22 @@ export default {
           state: toList(device && device.stateData)
             .filter(field => field.key !== 'errorCode' && !MOVED_170C_STATE_KEYS.includes(field.key))
         },
-        // 列出所有故障，当前故障码对应的故障标红
-        faults: Object.keys(storage170CFaultEnum)
-          .filter(code => storage170CFaultEnum[code] !== '无故障' && storage170CFaultEnum[code] !== '保留')
-          .map(code => ({
-            code,
-            name: storage170CFaultEnum[code],
-            isAlarm: code === current
-          }))
+        // 按点表 6 类分组列出全部故障码，当前故障码对应的项标红；组内按码号升序
+        faultGroups: DC170C_ERROR_GROUPS.map(g => ({
+          key: g.title,
+          title: g.title,
+          codes: g.codes.map(c => (c < 10 ? '0' + c : String(c))).join(' / '),
+          items: g.codes
+            .filter(code => {
+              const name = storage170CFaultEnum[code];
+              return name && name !== '无故障' && name !== '保留';
+            })
+            .map(code => ({
+              code,
+              name: storage170CFaultEnum[code],
+              isAlarm: String(code) === current
+            }))
+        })).filter(g => g.items.length > 0)
       };
     },
     _toFieldList(obj, prefix = '') {
@@ -2066,7 +2185,7 @@ export default {
       const deviceList = [];
 
       if (this.isHighCapacity) {
-        // 50kW 微能站：新协议设备（1707_V3_5 / 170C_V1_1(06,1E) / 171C_V2 / 0318_V2_3）
+        // 50kW 能源站：新协议设备（1707_V3_5 / 170C_V1_1(06,1E) / 171C_V2 / 0318_V2_3）
         const specs = [
           { deviceType: '1707_V3_5' },
           { deviceType: '170C_V1_1', address: '1E' },
@@ -2123,7 +2242,6 @@ export default {
 
       realtimeDataProvider.initDeviceList(deviceList);
       this.deviceList = [...realtimeDataProvider.getDeviceList()];
-      console.log(this.deviceList, 'deviceList111111111');
     },
     refreshDeviceData() {
       this.deviceList = [...realtimeDataProvider.getDeviceList()];
@@ -2312,6 +2430,11 @@ export default {
   font-weight: 600;
   text-align: center;
   letter-spacing: 0.5rpx;
+
+  /* 故障字整字读数非 0：存在故障位，与故障位命中同一套红字语义 */
+  &.item-value--alarm {
+    color: #FF4D4F;
+  }
 }
 
 /* 机器运行状态多徽标：状态独立着色，多位命中时换行展示 */
@@ -2443,5 +2566,19 @@ export default {
   color: #666;
   margin-bottom: 12rpx;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+/* PCS 故障字分组：把点表的类别前缀（ARM软件故障 / FPGA硬件故障）提到标题右侧 */
+.fault-word-category {
+  font-size: 22rpx;
+  font-weight: 400;
+  color: #8a94a1;
+  background: #f2f4f7;
+  border-radius: 6rpx;
+  padding: 2rpx 10rpx;
+  line-height: 1.5;
 }
 </style>

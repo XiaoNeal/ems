@@ -83,6 +83,15 @@
           <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
         </view>
       </view>
+      <!-- 系统权限：逐项说明用途与当前状态，点击直达系统设置（参考小米运动健康） -->
+      <view class="list-item" @click="navigateToU('/pages/profile/system-permissions')">
+        <view class="item-content">
+          <!-- 盾牌+勾：表示「系统授权/权限管理」，与其他入口统一为蓝色线性风格 -->
+          <image class="perm-icon" src="/static/images/permission-shield.png" mode="aspectFit"></image>
+          <text class="item-title">系统权限</text>
+          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
+        </view>
+      </view>
       <view v-if="[1, 2].includes($store.state.currentEsRoleId)" class="list-item" @click="navigateToU('/pages/profile/user-management')">
         <view class="item-content">
           <uni-icons type="contact" size="20" color="#007AFF"></uni-icons>
@@ -115,15 +124,33 @@
         </view>
       </view>
     </view>
+
+    <!-- 设备连接操作面板 -->
+    <app-action-sheet
+      :visible="directActionVisible"
+      title="设备连接"
+      subtitle="已保存配置，请选择要进行的操作"
+      :items="directActionItems"
+      @select="onDirectActionSelect"
+      @close="closeDirectAction"
+    />
   </view>
 </template>
 
 <script>
 import { findUserInfoByCodeId, getUserCenterInfo, findEnergyStation } from "@/api/user.js";
+import AppActionSheet from '@/components/app-action-sheet/app-action-sheet.vue';
+
 export default {
+  components: { AppActionSheet },
   data() {
     return {
       loading: true,
+      directActionVisible: false,
+      directActionItems: [
+        { key: 'monitor', label: '进入监测页', desc: '查看设备实时运行数据', icon: 'eye', primary: true },
+        { key: 'config', label: '修改配置', desc: '重新设置设备连接信息', icon: 'gear' }
+      ]
     }
   },
   computed: {
@@ -226,6 +253,35 @@ export default {
   onShow() {
     this.refreshUserInfo()
   },
+  /** 独立页面形态下的下拉刷新兜底；主界面中本页以组件嵌入，不触发页面生命周期 */
+  onPullDownRefresh() {
+    const startedAt = Date.now()
+    const finish = () => {
+      const rest = 400 - (Date.now() - startedAt)
+      if (rest <= 0) {
+        uni.stopPullDownRefresh()
+        return
+      }
+      this._pullTimer = setTimeout(() => {
+        this._pullTimer = null
+        uni.stopPullDownRefresh()
+      }, rest)
+    }
+    Promise.resolve(this.refreshUserInfo()).then(finish, finish)
+  },
+  onUnload() {
+    if (this._pullTimer) {
+      clearTimeout(this._pullTimer)
+      this._pullTimer = null
+      uni.stopPullDownRefresh()
+    }
+  },
+  onBackPress() {
+    if (this.directActionVisible) {
+      this.directActionVisible = false
+      return true
+    }
+  },
   methods: {
     async refreshUserInfo() {
       try {
@@ -308,16 +364,21 @@ export default {
         uni.navigateTo({ url: '/pages/profile/direct-device-config' })
         return
       }
-      uni.showActionSheet({
-        itemList: ['进入监测页', '修改配置'],
-        success: (res) => {
-          if (res.tapIndex === 0) {
-            uni.navigateTo({ url: '/pages/profile/direct-device' })
-          } else {
-            uni.navigateTo({ url: '/pages/profile/direct-device-config' })
-          }
-        }
-      })
+      this.directActionVisible = true
+    },
+
+    closeDirectAction() {
+      this.directActionVisible = false
+    },
+
+    onDirectActionSelect(payload) {
+      const index = payload && payload.index
+      this.directActionVisible = false
+      if (index === 0) {
+        uni.navigateTo({ url: '/pages/profile/direct-device' })
+      } else if (index === 1) {
+        uni.navigateTo({ url: '/pages/profile/direct-device-config' })
+      }
     },
 
     navigateToU(url) {
@@ -537,6 +598,14 @@ export default {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+}
+
+/* 系统权限入口图标：与 uni-icons size=20 对齐，避免小程序 image 默认尺寸撑开列表 */
+.perm-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .item-title {

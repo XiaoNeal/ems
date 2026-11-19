@@ -19,14 +19,10 @@ const energyDataFields = createFields([
   { name: 'B34', cType: INT32, scale: 100, desc: '今日发电量' },
   { name: 'B38', cType: INT32, scale: 100, desc: '今日用电量' },
   { name: 'B42', cType: INT32, scale: 100, desc: '今日电网供电' },
-  { name: 'B46', cType: UINT8, skip: true, desc: '预留' },
-  { name: 'B47', cType: UINT8, skip: true, desc: '预留' },
-  { name: 'B48', cType: UINT8, skip: true, desc: '预留' },
-  { name: 'B49', cType: UINT8, skip: true, desc: '预留' },
-  { name: 'B50', cType: UINT8, skip: true, desc: '预留' },
-  { name: 'B51', cType: UINT8, skip: true, desc: '预留' },
-  { name: 'B52', cType: UINT8, skip: true, desc: '预留' },
-  { name: 'B53', cType: UINT8, skip: true, desc: '预留' },
+  // 现场点表：B46~B49 四个字节组成一个 32 位储能累计充电量，B50~B53 为累计放电量
+  // 字节布局与旧版 4 个单字节预留完全重合，总长度不变，后续字段偏移不受影响
+  { name: 'B46', cType: INT32, scale: 100, desc: '储能累计充电量' },
+  { name: 'B50', cType: INT32, scale: 100, desc: '储能累计放电量' },
   { name: 'B54', cType: UINT16, desc: '电网状态' },
   { name: 'B56', cType: UINT16, desc: '启动按钮' },
   { name: 'B58', cType: UINT16, scale: 100, desc: '储能剩余电量' },
@@ -236,10 +232,10 @@ export const protocol_171F_000A = {
 }
 
 /* ------------------------------------------------------------------
- * 50kW 微能站 171F V2.0
+ * 50kW 能源站 171F V2.0
  * 来源：(0x171F)源储网荷页面显示协议(TCP) EMSV2.0 表
  * 与 000A(V1) 的差异：
- *   能源数据：B46/B50 由「预留」改为 储能累计充电量/放电量（int32，×100，0.01kWh）
+ *   能源数据：B46/B50 在两版中均按现场点表解析为储能累计充电量/放电量（int32，×100，0.01kWh）
  *             B70/B74 由「预留」改为 负荷累计用电量/馈电量（int32，×100，0.01kWh）
  *             字节布局不变，仍为 192 字节（原连续预留字节被 4 字节字段覆盖）
  *   控制数据：末尾新增 B224/B226 电网侧目标功率与波动幅度（自发自用），228 字节

@@ -1,24 +1,44 @@
 <template>
     <view class="login-page">
 
+        <!-- 设计背景图：天空/标题/产品柜体/标语/云层/地面（官方资源） -->
+        <image class="login-bg" src="/static/images/login-bg.png" mode="scaleToFill"></image>
+        <!-- 表单页淡化背景：避免表单文字与柜体/标题/竖排标语重叠打架 -->
+        <view class="login-bg-mask" v-if="loginType !== 'none'"></view>
+
+        <!-- 顶部标题 -->
+        <view class="nav-title">
+            <!-- 表单页左上角返回箭头，回到登录入口页 -->
+            <view class="nav-back" v-if="loginType !== 'none'" @click="switchLoginType('none')">
+                <view class="nav-back-arrow"></view>
+            </view>
+            <text>登录</text>
+        </view>
 
         <!-- 登录卡片主体 -->
-        <view class="login-card">
+        <view class="login-card" :class="{ 'login-card--form': loginType !== 'none' }">
 
-            <!-- 顶部品牌区域 -->
-            <view class="brand-section">
-                <text class="welcome-title">欢迎登录</text>
-                <!-- #ifndef APP-PLUS -->
-                <image class="brand-logo" src="@/static/neiic.svg" mode="aspectFit"></image>
-                <!-- #endif -->
-                <text class="brand-title">国创微能站</text>
-                <text class="brand-subtitle">智慧园区，品质生活</text>
-
-                <!-- 插图 -->
-                <view class="login-illustration">
-                    <image src="https://iems.neiic.com/wechatImage/images/slogan.png" mode="aspectFit"></image>
+            <!-- 登录方式入口 -->
+            <view class="login-actions" v-if="loginType === 'none'">
+                <!-- #ifdef MP-WEIXIN -->
+                <!-- 小程序：主按钮一键登录 + 两个描边按钮 -->
+                <button class="btn-main" open-type="getUserInfo" @getuserinfo="handleWechatAuth">
+                    <text class="btn-main-label">手机号快捷登录</text>
+                </button>
+                <view class="alt-buttons">
+                    <button class="btn-alt" @click="switchLoginType('sms')">短信验证码登录</button>
+                    <button class="btn-alt" @click="switchLoginType('account')">账号密码登录</button>
                 </view>
+                <!-- #endif -->
+                <!-- #ifndef MP-WEIXIN -->
+                <!-- APP/H5：主按钮短信登录 + 文字链接账号登录 -->
+                <button class="btn-main" @click="switchLoginType('sms')">
+                    <text class="btn-main-label">短信验证码登录</text>
+                </button>
+                <text class="alt-link" @click="switchLoginType('account')">账号密码登录</text>
+                <!-- #endif -->
             </view>
+
             <!-- #ifdef MP-WEIXIN -->
             <!-- 一键登录 -->
             <view class="login-tab" v-if="loginType === 'wechat' && !showWechatRegister">
@@ -28,29 +48,10 @@
                     <text style="min-width:fit-content;">手机号快捷登录</text>
                 </button>
 
-                <!-- 协议 -->
-                <view class="agreement">
-                    <checkbox :checked="agreeAgreement" @click="agreeAgreement = !agreeAgreement"
-                        @change="onAgreementChange" class="agreement-checkbox"></checkbox>
-                    <text class="agreement-text">
-                        阅读并同意我们的
-                        <text class="link" @click="showAgreement('service')">《服务协议与隐私条款》</text>
-                        以及
-                        <text class="link" @click="showAgreement('privacy')">《个人信息保护声明》</text>
-                    </text>
-                </view>
-
-                <!-- 其他登录方式 -->
-                <view class="login-methods">
-                    <text class="login-methods-title">其他登录方式</text>
-                    <view class="login-methods-buttons">
-                        <button class="login-method-btn" @click="switchLoginType('sms')">
-                            <text>短信验证码登录</text>
-                        </button>
-                        <button class="login-method-btn" @click="switchLoginType('account')">
-                            <text>账号密码登录</text>
-                        </button>
-                    </view>
+                <view class="login-switch">
+                    <text class="switch-item" @click="switchLoginType('sms')">短信验证码登录</text>
+                    <text class="switch-item" @click="switchLoginType('account')">账号密码登录</text>
+                    <text class="switch-item" @click="switchLoginType('none')">返回</text>
                 </view>
             </view>
             <!-- #endif -->
@@ -83,7 +84,7 @@
                                 maxlength="6" />
                             <button class="btn-code" :disabled="wechatCountDown > 0 || !isWechatPhoneValid"
                                 @click="getWechatVerifyCode">
-                                {{ wechatCountDown > 0 ? `${wechatCountDown}秒后重试` : '获取验证码' }}
+                                <text class="btn-code-text">{{ wechatCountDown > 0 ? `${wechatCountDown}秒后重试` : '获取验证码' }}</text>
                             </button>
                         </view>
                         <text class="error-tip"
@@ -93,7 +94,7 @@
                     </view>
 
                     <button class="btn-primary" :disabled="!isWechatFormValid" @click="submitWechatRegister">
-                        完成注册
+                        <text class="btn-primary-text">完成注册</text>
                     </button>
 
                     <view class="back-link">
@@ -126,7 +127,7 @@
                         <view class="input-wrapper">
                             <input type="number" placeholder="请输入验证码" v-model="verifyCode" maxlength="6" />
                             <button class="btn-code" :disabled="countDown > 0 || !isPhoneValid" @click="getVerifyCode">
-                                {{ countDown > 0 ? `${countDown}秒后重试` : '获取验证码' }}
+                                <text class="btn-code-text">{{ countDown > 0 ? `${countDown}秒后重试` : '获取验证码' }}</text>
                             </button>
                         </view>
                         <text class="error-tip" v-if="verifyCode && verifyCode.length !== 6">
@@ -134,23 +135,8 @@
                         </text>
                     </view>
 
-                    <!-- 协议 -->
-                    <view class="agreement">
-                        <checkbox :checked="agreeAgreement" @click="agreeAgreement = !agreeAgreement"
-                            @change="onAgreementChange" class="agreement-checkbox"></checkbox>
-                        <text class="agreement-text">
-                            阅读并同意我们的
-                            <text class="link" @click="showAgreement('service')">《服务协议与隐私条款》</text>
-                            以及
-                            <text class="link" @click="showAgreement('privacy')">《个人信息保护声明》</text>
-                        </text>
-                    </view>
-                    <text class="agreement-error" v-if="!agreeAgreement && (phoneNumber && verifyCode)">
-                        请先同意协议才能登录
-                    </text>
-
                     <button class="btn-primary" :disabled="!isSmsFormValid" @click="smsLoginOrRegister">
-                        登录
+                        <text class="btn-primary-text">登录</text>
                     </button>
 
                     <view class="login-switch">
@@ -158,6 +144,7 @@
                         <text class="switch-item" @click="switchLoginType('wechat')">手机号快捷登录</text>
                         <!-- #endif -->
                         <text class="switch-item" @click="switchLoginType('account')">账号密码登录</text>
+                        <text class="switch-item" @click="switchLoginType('none')">返回</text>
                     </view>
                 </view>
             </view>
@@ -183,24 +170,8 @@
                         </view>
                     </view>
 
-                    <!-- 协议 -->
-                    <view class="agreement">
-                        <checkbox :checked="agreeAgreement" @click="agreeAgreement = !agreeAgreement"
-                            @change="onAgreementChange" class="agreement-checkbox"></checkbox>
-                        <text class="agreement-text">
-                            阅读并同意我们的
-                            <text class="link" @click="showAgreement('service')">《服务协议与隐私条款》</text>
-                            以及
-                            <text class="link" @click="showAgreement('privacy')">《个人信息保护声明》</text>
-                        </text>
-                    </view>
-                    <text class="agreement-error"
-                        v-if="!agreeAgreement && (accountInfo.username && accountInfo.password)">
-                        请先同意协议才能登录
-                    </text>
-
                     <button class="btn-primary" :disabled="!isAccountFormValid" @click="accountLogin">
-                        登录
+                        <text class="btn-primary-text">登录</text>
                     </button>
 
                     <view class="login-switch">
@@ -208,30 +179,41 @@
                         <text class="switch-item" @click="switchLoginType('wechat')">手机号快捷登录</text>
                         <!-- #endif -->
                         <text class="switch-item" @click="switchLoginType('sms')">短信登录</text>
+                        <text class="switch-item" @click="switchLoginType('none')">返回</text>
                     </view>
                 </view>
             </view>
         </view>
 
         <!-- 设备直连入口 -->
-        <view class="device-direct-entry" @click="goDirectDevice">
+        <view class="device-direct-entry">
             <view class="entry-divider">
                 <view class="divider-line"></view>
                 <text class="divider-text">设备直连模式</text>
                 <view class="divider-line"></view>
             </view>
-            <view class="entry-content">
-                <uni-icons type="wifi" size="16" color="#86909c"></uni-icons>
-                <text class="entry-title">局域网连接</text>
-                <uni-icons type="arrowright" size="12" color="#c9cdd4"></uni-icons>
+            <view class="direct-card" @click="goDirectDevice">
+                <text class="direct-title">局域网连接</text>
+                <text class="direct-desc">无需账号登录，直连本地设备进行调试</text>
             </view>
-            <text class="entry-desc">无需账号登录，直连本地设备进行调试</text>
         </view>
 
-        <!-- 底部版权 -->
+        <!-- 底部协议与版权 -->
+        <view class="page-bottom">
+            <view class="agreement">
+                <checkbox :checked="agreeAgreement" @click="agreeAgreement = !agreeAgreement"
+                    @change="onAgreementChange" class="agreement-checkbox"></checkbox>
+                <text class="agreement-text">
+                    阅读并同意我们的
+                    <text class="link" @click="showAgreement('service')">《服务协议与隐私条款》</text>
+                    以及
+                    <text class="link" @click="showAgreement('privacy')">《个人信息保护声明》</text>
+                </text>
+            </view>
 
-        <view class="copyright">
-            Copyright © {{ new Date().getFullYear() }} 国创能源互联网创新中心（广东）有限公司
+            <view class="copyright">
+                Copyright © {{ new Date().getFullYear() }} 国创能源互联网创新中心（广东）有限公司
+            </view>
         </view>
     </view>
 </template>
@@ -245,12 +227,8 @@ export default {
         return {
             // 基础状态
             agreeAgreement: false,
-            // #ifdef MP-WEIXIN
-            loginType: 'wechat',
-            // #endif
-            // #ifndef MP-WEIXIN
-            loginType: 'sms',
-            // #endif
+            // 'none'：登录方式入口页；'sms'/'account'：对应表单；'wechat'：小程序一键登录
+            loginType: 'none',
             showWechatRegister: false,
 
             // 表单有效性标识
@@ -751,223 +729,192 @@ export default {
 </script>
 
 <style scoped>
-/* 页面整体布局 - 高级渐变背景 */
+/* 页面整体布局 - 天空渐变背景 */
 .login-page {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* #ifdef APP-PLUS */
-    justify-content: center;
-    /* #endif */
-    /* background: #f8f8f8; */
+    background: #e9f2fb;
     /* #ifndef APP-PLUS */
-    padding: 60rpx 0;
+    padding: 30rpx 0 0;
     /* #endif */
     /* #ifdef APP-PLUS */
-    padding: 30rpx 0;
-    padding-bottom:unset;
+    padding: 20rpx 0 0;
     /* #endif */
     box-sizing: border-box;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
-/* 装饰背景元素 */
-.login-page::before {
-    content: '';
-    position: absolute;
-    width: 400rpx;
-    height: 400rpx;
-    background: radial-gradient(circle, rgba(7, 193, 96, 0.06) 0%, transparent 70%);
-    top: -100rpx;
-    right: -150rpx;
-    border-radius: 50%;
-    z-index: 0;
-}
-
-.login-page::after {
-    content: '';
-    position: absolute;
-    width: 500rpx;
-    height: 500rpx;
-    background: radial-gradient(circle, rgba(0, 122, 255, 0.05) 0%, transparent 70%);
-    bottom: -150rpx;
-    left: -200rpx;
-    border-radius: 50%;
-    z-index: 0;
-}
-
-/* 品牌区域 */
-.brand-section {
+/* 设计背景图：铺满全屏，标题/柜体/标语/云层/地面均在图内 */
+.login-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    max-width: 540rpx;
-    margin-top: 60rpx;
-    margin-bottom: 40rpx;
+    height: 100vh;
+    z-index: 0;
+}
+
+/* 表单页背景遮罩：不透明渐变彻底盖住品牌图，避免柜体/标语透出干扰表单 */
+.login-bg-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: linear-gradient(180deg, #e9f2fb 0%, #f2f8fd 55%, #ffffff 100%);
+    z-index: 0;
+}
+
+/* 顶部标题 */
+.nav-title {
+    width: 100%;
+    text-align: center;
+    padding: 30rpx 0 6rpx;
     position: relative;
     z-index: 1;
+    /* #ifdef APP-PLUS */
+    /* 自定义导航需避让状态栏/水滴屏挖孔，避免标题被遮挡 */
+    padding-top: calc(var(--status-bar-height) + 20rpx);
+    /* #endif */
+}
+
+.nav-title text {
+    font-size: 36rpx;
+    font-weight: 600;
+    color: #1d2129;
+    letter-spacing: 2rpx;
+}
+
+/* 表单页左上角返回箭头（纯 CSS 绘制，避免组件依赖） */
+.nav-back {
+    position: absolute;
+    left: 24rpx;
+    /* #ifndef APP-PLUS */
+    top: 46rpx;
+    /* #endif */
+    /* #ifdef APP-PLUS */
+    top: calc(var(--status-bar-height) + 36rpx);
+    /* #endif */
+    width: 60rpx;
+    height: 60rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.nav-back-arrow {
+    width: 20rpx;
+    height: 20rpx;
+    border-left: 4rpx solid #1d2129;
+    border-bottom: 4rpx solid #1d2129;
+    transform: rotate(45deg);
+    margin-left: 6rpx;
+}
+
+.nav-back:active {
+    opacity: 0.6;
+}
+
+/* 登录方式入口 */
+.login-actions {
+    width: 100%;
+    max-width: 540rpx;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20rpx;
-    animation: fadeInUp 1s ease-out;
+    position: relative;
+    z-index: 1;
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30rpx);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* 欢迎标题 */
-.welcome-title {
-    font-size: 40rpx;
-    font-weight: 600;
-    color: #1d2129;
-    letter-spacing: 2rpx;
-    margin-bottom: 10rpx;
-}
-
-.brand-logo {
-    width: 160rpx;
-    height: 80rpx;
-    object-fit: contain;
-    filter: drop-shadow(0 4rpx 12rpx rgba(0, 122, 255, 0.15));
-    transition: all 0.3s ease;
-}
-
-.brand-logo:hover {
-    transform: scale(1.05);
-}
-
-.brand-title {
-    font-size: 48rpx;
-    font-weight: 700;
-    color: #1d2129;
-    letter-spacing: 3rpx;
-    text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
-}
-
-.brand-subtitle {
-    font-size: 28rpx;
-    color: #86909c;
-    font-weight: 400;
-    letter-spacing: 1rpx;
-    text-align: center;
-    line-height: 1.4;
-    margin-bottom: 20rpx;
-}
-
-/* 登录插图 */
-.login-illustration {
+/* 主按钮：设计稿渐变胶囊（左深右浅蓝）+ 下方淡蓝阴影 */
+.btn-main {
     width: 100%;
-    max-width: 480rpx;
-    /* #ifdef APP-PLUS */
-    margin: 8rpx 0;
-    /* #endif */
-    /* #ifndef APP-PLUS */
-    margin: 20rpx 0;
-    /* #endif */
-    border-radius: 20rpx;
-    overflow: hidden;
-    /* box-shadow: 0 8rpx 24rpx rgba(0, 122, 255, 0.1); */
-}
-
-.login-illustration image {
-    width: 100%;
-    /* #ifdef APP-PLUS */
-    height: 120rpx;
-    /* #endif */
-    /* #ifndef APP-PLUS */
-    height: 200rpx;
-    /* #endif */
-    object-fit: cover;
-}
-
-/* 短信登录按钮 */
-.btn-sms {
     height: 96rpx;
+    line-height: 96rpx;
+    padding: 0;
+    margin: 0;
     border-radius: 48rpx;
-    background: linear-gradient(135deg, #007aff 0%, #0066cc 100%);
-    color: #fff;
+    background: linear-gradient(90deg, #4488fb 0%, #5b9cfb 48%, #a9cdfd 100%);
+    color: #ffffff;
     font-size: 34rpx;
     font-weight: 600;
+    font-style: normal;
     border: none;
-    margin: 20rpx 0;
-    transition: all 0.2s ease;
     letter-spacing: 2rpx;
-    box-shadow: 0 8rpx 24rpx rgba(0, 122, 255, 0.25);
-}
-
-.btn-sms:active {
-    transform: translateY(2rpx);
-    box-shadow: 0 4rpx 16rpx rgba(0, 122, 255, 0.2);
-}
-
-/* 其他登录方式 */
-.login-methods {
-    margin-top: 40rpx;
-}
-
-/* 其他登录方式标题 */
-.login-methods-title {
-    display: block;
-    text-align: center;
-    font-size: 26rpx;
-    color: #86909c;
-    margin-bottom: 24rpx;
-    position: relative;
-}
-
-.login-methods-title::before,
-.login-methods-title::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    width: 30%;
-    height: 1rpx;
-    background: #e5e6eb;
-}
-
-.login-methods-title::before {
-    left: 0;
-}
-
-.login-methods-title::after {
-    right: 0;
-}
-
-/* 其他登录方式按钮容器 */
-.login-methods-buttons {
     display: flex;
-    gap: 20rpx;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 14rpx 22rpx rgba(133, 180, 253, 0.42);
+    transition: all 0.2s ease;
 }
 
-/* 其他登录方式按钮 */
-.login-method-btn {
+.btn-main::after {
+    border: none;
+}
+
+.btn-main-label {
+    font-style: normal;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.btn-main:active {
+    transform: translateY(2rpx);
+    opacity: 0.9;
+}
+
+/* 小程序：次级描边按钮（短信 / 账号密码） */
+.alt-buttons {
+    width: 100%;
+    display: flex;
+    gap: 24rpx;
+    margin-top: 28rpx;
+}
+
+.btn-alt {
     flex: 1;
     height: 88rpx;
+    line-height: 88rpx;
+    padding: 0;
+    margin: 0;
     border-radius: 44rpx;
-    background: #f7f8fa;
-    color: #4e5969;
+    background: rgba(255, 255, 255, 0.65);
+    border: 1rpx solid rgba(59, 127, 216, 0.35);
+    color: #3b7fd8;
     font-size: 28rpx;
     font-weight: 500;
-    border: 1rpx solid #e5e6eb;
-    transition: all 0.2s ease;
     letter-spacing: 1rpx;
+    transition: all 0.2s ease;
 }
 
-.login-method-btn:active {
-    background: #e8f0fe;
-    color: #007aff;
-    border-color: #007aff;
+.btn-alt::after {
+    border: none;
+}
+
+.btn-alt:active {
+    background: rgba(232, 240, 254, 0.9);
     transform: translateY(2rpx);
+}
+
+/* 次级登录方式链接 */
+.alt-link {
+    margin-top: 28rpx;
+    font-size: 28rpx;
+    color: #3b7fd8;
+    font-weight: 500;
+    padding: 8rpx 16rpx;
+    transition: all 0.2s ease;
+}
+
+.alt-link:active {
+    color: #1e63c8;
+    opacity: 0.8;
 }
 
 /* 登录卡片 - 精致毛玻璃效果 */
@@ -976,7 +923,7 @@ export default {
     max-width: 500px;
     /* background: rgba(255, 255, 255, 0.95); */
     /* border-radius: 36rpx; */
-    padding: 60rpx 40rpx;
+    padding: 12rpx 40rpx;
     /* box-shadow: 0 16rpx 64rpx rgba(0, 122, 255, 0.1); */
     box-sizing: border-box;
     /* border: 1rpx solid rgba(255, 255, 255, 0.95); */
@@ -984,9 +931,16 @@ export default {
     z-index: 1;
     /* margin-bottom: 80rpx; */
     /* animation: slideIn 0.8s ease-out; */
-    backdrop-filter: blur(10rpx);
+    /* backdrop-filter: blur(10rpx); */
     padding-bottom: 20rpx;
+    margin-top: 50vh;
     /* min-height: calc(100vh - 120rpx - 36px); */
+}
+
+/* 表单页：不套用入口页对齐柜体的 50vh 顶部留白，与导航保持适度间距 */
+.login-card--form {
+    margin-top: 100rpx;
+    padding-top: 24rpx;
 }
 
 @keyframes slideIn {
@@ -1055,7 +1009,7 @@ export default {
     padding: 0 28rpx;
     display: flex;
     align-items: center;
-    background-color: #fafbfc;
+    background-color: #ffffff;
     transition: all 0.3s ease;
     box-shadow: inset 0 1rpx 3rpx rgba(0, 0, 0, 0.05);
 }
@@ -1088,8 +1042,9 @@ input::placeholder {
     width: 180rpx;
     height: 60rpx;
     border-radius: 12rpx;
-    background: linear-gradient(to left, rgba(196, 222, 255, 0.996), rgb(68, 136, 251));
-    color: #fff;
+    background: linear-gradient(90deg, #4488fb 0%, #5b9cfb 48%, #a9cdfd 100%);
+    color: #fff !important;
+    -webkit-text-fill-color: #fff;
     font-size: 24rpx;
     border: none;
     margin-left: 16rpx;
@@ -1099,6 +1054,12 @@ input::placeholder {
     box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.2);
 }
 
+/* 小程序原生 button 文字色会覆盖 scoped color，文字包 text 显式设白 */
+.btn-code-text {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff;
+}
+
 .btn-code:active {
     transform: scale(0.96);
     box-shadow: 0 2rpx 8rpx rgba(0, 122, 255, 0.2);
@@ -1106,24 +1067,35 @@ input::placeholder {
 
 .btn-code:disabled {
     background: #f2f3f5;
-    color: #c9cdd4;
     transform: none;
     box-shadow: none;
 }
 
+.btn-code:disabled .btn-code-text {
+    color: #c9cdd4 !important;
+    -webkit-text-fill-color: #c9cdd4;
+}
+
 /* 主按钮 */
 .btn-primary {
-    /* height: 96rpx; */
-    background: linear-gradient(to left, rgba(196, 222, 255, 0.996), rgb(68, 136, 251));
-    color: #fff;
+    /* 与入口登录按钮一致的官方渐变胶囊背景 */
+    background: linear-gradient(90deg, #4488fb 0%, #5b9cfb 48%, #a9cdfd 100%);
+    color: #fff !important;
+    -webkit-text-fill-color: #fff;
     font-size: 34rpx;
     font-weight: 600;
     border: none;
+    border-radius: 48rpx;
     box-shadow: 0 8rpx 24rpx rgba(0, 122, 255, 0.25);
     transition: all 0.2s ease;
     letter-spacing: 2rpx;
     margin-top: 8rpx;
     width: 100%;
+}
+
+.btn-primary-text {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff;
 }
 
 .btn-primary:active {
@@ -1173,17 +1145,20 @@ input::placeholder {
 .agreement {
     display: flex;
     align-items: flex-start;
-    gap: 12rpx;
-    font-size: 22rpx;
+    gap: 8rpx;
+    font-size: 20rpx;
     color: #86909c;
     line-height: 1.5;
-    padding: 0 4rpx;
-    margin-top: 24rpx;
+    padding: 0;
+    margin-top: 0;
+    width: 100%;
 }
 
 .agreement-checkbox {
     transform: scale(0.8);
-    margin-top: 4rpx;
+    transform-origin: left top;
+    margin-top: 2rpx;
+    flex-shrink: 0;
 }
 
 .link {
@@ -1242,38 +1217,7 @@ input::placeholder {
     }
 }
 
-.agreement-error {
-    font-size: 22rpx;
-    color: #f53f3f;
-    margin-top: -16rpx;
-    padding-left: 8rpx;
-    animation: shake 0.3s ease;
-}
-
 /* 登录选项 */
-.login-options {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8rpx;
-    margin-top: 8rpx;
-}
-
-.option-item {
-    font-size: 26rpx;
-    color: #86909c;
-    padding: 8rpx 12rpx;
-    transition: all 0.2s ease;
-    border-radius: 8rpx;
-    position: relative;
-}
-
-.option-item:active {
-    color: #07c160;
-    background-color: rgba(7, 193, 96, 0.05);
-    transform: translateY(-2rpx);
-}
-
 .divider {
     color: #e5e6eb;
     font-size: 24rpx;
@@ -1323,78 +1267,102 @@ input::placeholder {
     transform: translateY(-2rpx);
 }
 
+/* 底部协议与版权 */
+.page-bottom {
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: 3vh;
+    padding: 20rpx 20rpx 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
 /* 底部版权 */
 .copyright {
     width: 100%;
     text-align: center;
-    font-size: 24rpx;
-    color: #c9cdd4;
+    font-size: 20rpx;
+    color: #a9bccf;
+    white-space: nowrap;
     /* #ifndef APP-PLUS */
-    padding: 20rpx 30rpx;
-    margin-top: auto;
+    padding: 10rpx 10rpx 20rpx;
     /* #endif */
     /* #ifdef APP-PLUS */
-    padding: 10rpx 30rpx;
-    margin-top: 20rpx;
+    padding: 8rpx 10rpx calc(8rpx + env(safe-area-inset-bottom));
     /* #endif */
     z-index: 1;
 }
 
-/* 设备直连入口 - 弱化样式 */
+/* 设备直连入口 - 白卡样式 */
 .device-direct-entry {
     width: 100%;
-    max-width: 500px;
-    padding: 30rpx 40rpx 10rpx;
+    max-width: 520rpx;
+    margin-top: 3vh;
+    padding: 30rpx 0rpx 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16rpx;
-    /* margin-top: 20rpx; */
+    gap: 20rpx;
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
 }
 
 .entry-divider {
     width: 100%;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 20rpx;
 }
 
 .divider-line {
-    flex: 1;
+    flex: none;
+    width: 120rpx;
     height: 1rpx;
-    background: #e5e6eb;
+    background: rgba(169, 188, 207, 0.5);
 }
 
 .divider-text {
     font-size: 22rpx;
-    color: #c9cdd4;
+    color: #a9bccf;
     letter-spacing: 1rpx;
 }
 
-.entry-content {
+.direct-card {
+    width: 100%;
+    background: #ffffff;
+    border: 2rpx solid #7aa6e6;
+    border-radius: 60rpx;
+    padding: 12rpx 30rpx 12rpx;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 12rpx;
-    padding: 16rpx 32rpx;
-    border-radius: 36rpx;
-    background: #f7f8fa;
+    justify-content: center;
+    gap: 6rpx;
+    box-shadow: 0 8rpx 24rpx rgba(120, 160, 210, 0.14);
     transition: all 0.2s ease;
+    box-sizing: border-box;
 }
 
-.entry-content:active {
-    background: #e5e6eb;
+.direct-card:active {
     transform: scale(0.98);
+    box-shadow: 0 4rpx 12rpx rgba(120, 160, 210, 0.12);
 }
 
-.entry-title {
-    font-size: 26rpx;
-    color: #86909c;
-    font-weight: 400;
+.direct-title {
+    font-size: 32rpx;
+    color: #3b7fd8;
+    font-weight: 600;
+    letter-spacing: 1rpx;
 }
 
-.entry-desc {
-    font-size: 22rpx;
-    color: #c9cdd4;
+.direct-desc {
+    font-size: 24rpx;
+    color: #9aa9bd;
     text-align: center;
 }
 </style>

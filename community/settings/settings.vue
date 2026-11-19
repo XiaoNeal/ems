@@ -88,7 +88,7 @@ export default {
     LiquidSettings
   },
   computed: {
-    // 装机容量 >= 50 视为大容量（50kW 微能站），额外显示"液冷机"Tab
+    // 装机容量 >= 50 视为大容量（50kW 能源站），额外显示"液冷机"Tab
     isHighCapacity() {
       const station = this.$store.state.currentSelectDevice || {}
       const cap = Number(station.totalInstalledCapacity)
