@@ -261,7 +261,6 @@ export function connectWifi(ssid, password, isActive, options = {}) {
       const opts = { SSID: target, maunal: false }
       if (password) opts.password = password
       opts.success = () => {
-        console.log('[设备WiFi] 已发起连接:', target)
         finish(true)
       }
       opts.fail = err => {

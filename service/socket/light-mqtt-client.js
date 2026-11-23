@@ -43,13 +43,11 @@ function createTransport(brokerUrl) {
     url = 'tcp://' + url
   }
   const isTcp = /^tcp:\/\//i.test(url)
-  console.log('[MQTT] createTransport, url=', url, 'isTcp=', isTcp)
   logLine('连接', '开始建立连接：' + url + '（' + (isTcp ? '原生通道' : 'WebSocket 通道') + '）')
   if (isTcp) {
     // 尝试原生 TCP，不可用时降级 WebSocket
     try {
       const adapter = new UniappTcpAdapter(url, null)
-      console.log('[MQTT] 使用 UniappTcpAdapter')
       logLine('连接', '原生 TCP 通道已创建')
       return adapter
     } catch (e) {
@@ -66,7 +64,6 @@ function createTransport(brokerUrl) {
       throw e
     }
   }
-  console.log('[MQTT] 使用 UniappWebSocketAdapter')
   return new UniappWebSocketAdapter(url, null)
 }
 
@@ -362,7 +359,6 @@ export class LightMqttClient {
       Math.round(this.reconnectInterval * Math.pow(1.5, this._reconnectAttempts - 1)),
       30000
     )
-    console.log(`[mqtt] ${delay}ms 后重连（第 ${this._reconnectAttempts}/${this._maxReconnectAttempts} 次）`)
     logLine('连接', delay + 'ms 后自动重连（第 ' +
       this._reconnectAttempts + '/' + this._maxReconnectAttempts + ' 次）')
     this._reconnectTimer = setTimeout(() => {
@@ -476,7 +472,6 @@ export class LightMqttClient {
     this._sendPublishRaw(topic, payloadBytes, flags, qos)
     if (DEBUG_PUBLISH_LOG) {
       const hex = Array.from(payloadBytes).map(b => b.toString(16).padStart(2, '0')).join(' ')
-      console.log('[MQTT] PUBLISH → topic=' + topic + ' qos=' + qos + ' payload=' + payloadBytes.length + 'B hex=' + hex)
     }
     return true
   }
@@ -552,16 +547,6 @@ export class LightMqttClient {
     this._lastControlAt = Date.now()
     const dtHex = typeof dt === 'string' ? dt : dt.toString(16).toUpperCase().padStart(4, '0')
 
-    console.log('========== MQTT 命令帧下发 ==========')
-    console.log('[MQTT] topic    :', this._controlSetTopic || 'neiic/microEnergyStationCtl002')
-    console.log('[MQTT] deviceType:', dt, '(0x' + dtHex + ')')
-    console.log('[MQTT] 设备大类小类:', command.deviceCategory, ' 索引号:', command.addr, ' 设备ID:', command.deviceId)
-    console.log('[MQTT] field    :', field, '→ registerAddress=', regAddress, '(十进制) → 0x' + regAddress.toString(16).toUpperCase().padStart(8, '0'))
-    console.log('[MQTT] value    :', value, ' 寄存器类型:', command.registerType)
-    console.log('[MQTT] frame length:', frame.length, 'bytes')
-    console.log('[MQTT] payload mode:', CONTROL_PAYLOAD_MODE)
-    console.log('[MQTT] frame hex :', frameHex)
-    console.log('====================================')
 
     const topic = this._controlSetTopic || 'neiic/microEnergyStationCtl002'
     if (CONTROL_PAYLOAD_MODE === 'binary') {
@@ -616,17 +601,8 @@ export class LightMqttClient {
     this._lastControlHex = frameHex.replace(/[\s,]/g, '').toUpperCase()
     this._lastControlAt = Date.now()
 
-    console.log('========== MQTT 组合命令帧下发 ==========')
-    console.log('[MQTT] topic       :', this._controlSetTopic || 'neiic/microEnergyStationCtl002')
-    console.log('[MQTT] deviceType  :', dt, ' 命令条数:', commands.length)
-    console.log('[MQTT] 设备身份    :', profile.category, '索引号', profile.addr, '设备ID', profile.deviceId)
     commands.forEach((c, i) => {
-      console.log('[MQTT] 命令' + (i + 1) + '       : 寄存器', c.registerAddress,
-        ' 值:', c.registerValue, ' 类型:', c.registerType)
     })
-    console.log('[MQTT] frame length:', frame.length, 'bytes')
-    console.log('[MQTT] frame hex   :', frameHex)
-    console.log('========================================')
 
     const topic = this._controlSetTopic || 'neiic/microEnergyStationCtl002'
     if (CONTROL_PAYLOAD_MODE === 'binary') {
@@ -700,8 +676,6 @@ export class LightMqttClient {
     const fixedHeader = this._encodeFixedHeader(T.CONNECT, 0, payload.length)
     const packet = this._concat(fixedHeader, payload)
     const hexStr = Array.from(packet).map(b => b.toString(16).padStart(2, '0')).join(' ')
-    console.log('[mqtt] Sending CONNECT packet hex:', hexStr)
-    console.log('[mqtt] CONNECT summary: protocol=MQTT version=4 flags=0x' + flags.toString(16) + ' keepalive=' + this.keepalive + ' clientId=' + this.clientId)
     logLine('连接', '握手报文已发出（' + packet.length + 'B，会话标识 ' + this.clientId + '）')
     this.ws.send(packet)
   }
@@ -856,10 +830,8 @@ export class LightMqttClient {
 
   _handleConnack(payload) {
     const hex = Array.from(payload).map(b => b.toString(16).padStart(2, '0')).join(' ')
-    console.log('[MQTT] CONNACK raw hex:', hex, 'len=', payload.length)
     if (payload.length < 2) return
     const returnCode = payload[1]
-    console.log('[MQTT] CONNACK returnCode:', returnCode, '(0=accepted)')
     if (returnCode === 0) {
       this.connected = true
       this.connecting = false

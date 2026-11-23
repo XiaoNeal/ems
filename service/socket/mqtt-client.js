@@ -110,7 +110,6 @@ export class MqttDirectClient {
   }
 
   async _doConnect() {
-    console.log('[MQTT-client] connect() brokerUrl=', this.brokerUrl, 'realtimeTopic=', this.realtimeTopic, 'controlSetTopic=', this.controlSetTopic, 'clientId=', this.clientId)
     logLine('连接', '客户端发起连接（会话标识 ' + this.clientId + '）')
 
     // 重建前必须先销毁旧实例：旧 LightMqttClient 自带重连定时器和 TCPSocket，
@@ -161,7 +160,6 @@ export class MqttDirectClient {
       // console.log(11111111111111111111111111111)
       // console.log(topic, payloadStr, payloadBytes,new Date())
       if (typeof this.onMessage === 'function') {
-        console.log('[MQTT-client---------] onMessage() topic=', topic, 'payloadStr=', payloadStr, 'payloadBytes=', payloadBytes)
         this.onMessage(topic, payloadStr, payloadBytes)
       }
     }
@@ -207,12 +205,6 @@ export class MqttDirectClient {
         payloadLog = String(message)
         payloadLen = payloadLog.length
       }
-      console.log('---------- MQTT PUBLISH ----------')
-      console.log('[PUBLISH] topic  :', topic)
-      console.log('[PUBLISH] qos    :', (opts && opts.qos), '| retain:', (opts && opts.retain) || false)
-      console.log('[PUBLISH] length :', payloadLen)
-      console.log('[PUBLISH] payload:', payloadLog)
-      console.log('----------------------------------')
     }
     return this.client.publish(topic, message, opts)
   }
@@ -290,19 +282,6 @@ export class MqttDirectClient {
 
     // frameHex 本身是下发载荷，必须照常计算；仅日志整块关闭
     if (MQTT_DEBUG_LOG) {
-      console.log('========== MQTT 命令帧下发 (MqttDirectClient) ==========')
-      console.log('[MQTT] topic        :', topic)
-      console.log('[MQTT] frameDeviceType (帧头) : 3401  dataType=0xC2')
-      console.log('[MQTT] deviceCategory (命令)  :', command.deviceCategory,
-        ' 索引号:', command.addr, ' 设备ID:', command.deviceId)
-      console.log('[MQTT] field        :', field)
-      console.log('[MQTT] registerAddr :', regAddress, '(十进制) → 0x' + regAddress.toString(16).toUpperCase().padStart(8, '0'))
-      console.log('[MQTT] registerValue:', value)
-      console.log('[MQTT] registerType :', command.registerType)
-      console.log('[MQTT] frame length :', frame.length, 'bytes')
-      console.log('[MQTT] payload mode :', CONTROL_PAYLOAD_MODE)
-      console.log('[MQTT] hex string   :', frameHex)
-      console.log('=======================================================')
     }
 
     // 按设备侧实际协议下发：默认 hex 文本
@@ -366,18 +345,8 @@ export class MqttDirectClient {
     this._lastControlAt = Date.now()
 
     if (MQTT_DEBUG_LOG) {
-      console.log('========== MQTT 组合命令帧下发 (MqttDirectClient) ==========')
-      console.log('[MQTT] topic       :', topic)
-      console.log('[MQTT] deviceType  :', dt, ' 命令条数:', commands.length)
-      console.log('[MQTT] 设备身份    :', profile.category, '索引号', profile.addr, '设备ID', profile.deviceId)
       commands.forEach((c, i) => {
-        console.log('[MQTT] 命令' + (i + 1) + '       : 寄存器', c.registerAddress,
-          '→ 0x' + Number(c.registerAddress).toString(16).toUpperCase().padStart(8, '0'),
-          ' 值:', c.registerValue, ' 类型:', c.registerType)
       })
-      console.log('[MQTT] frame length:', frame.length, 'bytes')
-      console.log('[MQTT] frame hex   :', frameHex)
-      console.log('============================================================')
     }
 
     if (CONTROL_PAYLOAD_MODE === 'binary') {

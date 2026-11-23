@@ -125,10 +125,10 @@
 					mobile: this.phoneNum.trim(),
 					verificationCode: this.verificationCode.trim()
 				})
-				console.log(formdata);
+
 		
 				UpdatePasswordBySms(formdata).then(res=>{
-					console.log(res);
+
 					if(res.status==200){
 						this.password = ''
 						this.confirmPassword = ''

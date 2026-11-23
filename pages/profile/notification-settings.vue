@@ -104,7 +104,6 @@ export default {
           vibrateNotify: this.vibrateNotify
         },
         fail: () => {
-          console.log('通知设置同步失败')
         }
       })
     }

@@ -13,23 +13,21 @@ function judgeIosPermissionPush() {
 	if (app.currentUserNotificationSettings) {
 		var settings = app.currentUserNotificationSettings();
 		enabledTypes = settings.plusGetAttribute("types");
-		console.log("enabledTypes1:" + enabledTypes);
+
 		if (enabledTypes == 0) {
-			console.log("推送权限没有开启");
+
 		} else {
 			result = true;
-			console.log("已经开启推送功能!")
 		}
 		plus.ios.deleteObject(settings);
 	} else {
 		enabledTypes = app.enabledRemoteNotificationTypes();
 		if (enabledTypes == 0) {
-			console.log("推送权限没有开启!");
+
 		} else {
 			result = true;
-			console.log("已经开启推送功能!")
 		}
-		console.log("enabledTypes2:" + enabledTypes);
+
 	}
 	plus.ios.deleteObject(app);
 	plus.ios.deleteObject(UIApplication);
@@ -42,7 +40,7 @@ function judgeIosPermissionLocation() {
 	var cllocationManger = plus.ios.import("CLLocationManager");
 	var status = cllocationManger.authorizationStatus();
 	result = (status != 2)
-	console.log("定位权限开启：" + result);
+
 	// 以下代码判断了手机设备的定位是否关闭，推荐另行使用方法 checkSystemEnableLocation
 	/* var enable = cllocationManger.locationServicesEnabled();
 	var status = cllocationManger.authorizationStatus();
@@ -64,12 +62,12 @@ function judgeIosPermissionRecord() {
 	var avaudiosession = plus.ios.import("AVAudioSession");
 	var avaudio = avaudiosession.sharedInstance();
 	var permissionStatus = avaudio.recordPermission();
-	console.log("permissionStatus:" + permissionStatus);
+
 	if (permissionStatus == 1684369017 || permissionStatus == 1970168948) {
-		console.log("麦克风权限没有开启");
+
 	} else {
 		result = true;
-		console.log("麦克风权限已经开启");
+
 	}
 	plus.ios.deleteObject(avaudiosession);
 	return result;
@@ -80,12 +78,12 @@ function judgeIosPermissionCamera() {
 	var result = false;
 	var AVCaptureDevice = plus.ios.import("AVCaptureDevice");
 	var authStatus = AVCaptureDevice.authorizationStatusForMediaType('vide');
-	console.log("authStatus:" + authStatus);
+
 	if (authStatus == 3) {
 		result = true;
-		console.log("相机权限已经开启");
+
 	} else {
-		console.log("相机权限没有开启");
+
 	}
 	plus.ios.deleteObject(AVCaptureDevice);
 	return result;
@@ -96,12 +94,12 @@ function judgeIosPermissionPhotoLibrary() {
 	var result = false;
 	var PHPhotoLibrary = plus.ios.import("PHPhotoLibrary");
 	var authStatus = PHPhotoLibrary.authorizationStatus();
-	console.log("authStatus:" + authStatus);
+
 	if (authStatus == 3) {
 		result = true;
-		console.log("相册权限已经开启");
+
 	} else {
-		console.log("相册权限没有开启");
+
 	}
 	plus.ios.deleteObject(PHPhotoLibrary);
 	return result;
@@ -114,9 +112,9 @@ function judgeIosPermissionContact() {
 	var cnAuthStatus = CNContactStore.authorizationStatusForEntityType(0);
 	if (cnAuthStatus == 3) {
 		result = true;
-		console.log("通讯录权限已经开启");
+
 	} else {
-		console.log("通讯录权限没有开启");
+
 	}
 	plus.ios.deleteObject(CNContactStore);
 	return result;
@@ -129,9 +127,9 @@ function judgeIosPermissionCalendar() {
 	var ekAuthStatus = EKEventStore.authorizationStatusForEntityType(0);
 	if (ekAuthStatus == 3) {
 		result = true;
-		console.log("日历权限已经开启");
+
 	} else {
-		console.log("日历权限没有开启");
+
 	}
 	plus.ios.deleteObject(EKEventStore);
 	return result;
@@ -144,9 +142,9 @@ function judgeIosPermissionMemo() {
 	var ekAuthStatus = EKEventStore.authorizationStatusForEntityType(1);
 	if (ekAuthStatus == 3) {
 		result = true;
-		console.log("备忘录权限已经开启");
+
 	} else {
-		console.log("备忘录权限没有开启");
+
 	}
 	plus.ios.deleteObject(EKEventStore);
 	return result;
@@ -161,17 +159,17 @@ function requestAndroidPermission(permissionID) {
 				var result = 0;
 				for (var i = 0; i < resultObj.granted.length; i++) {
 					var grantedPermission = resultObj.granted[i];
-					console.log('已获取的权限：' + grantedPermission);
+
 					result = 1
 				}
 				for (var i = 0; i < resultObj.deniedPresent.length; i++) {
 					var deniedPresentPermission = resultObj.deniedPresent[i];
-					console.log('拒绝本次申请的权限：' + deniedPresentPermission);
+
 					result = 0
 				}
 				for (var i = 0; i < resultObj.deniedAlways.length; i++) {
 					var deniedAlwaysPermission = resultObj.deniedAlways[i];
-					console.log('永久拒绝申请的权限：' + deniedAlwaysPermission);
+
 					result = -1
 				}
 				resolve(result);
@@ -181,7 +179,7 @@ function requestAndroidPermission(permissionID) {
 				// }
 			},
 			function(error) {
-				console.log('申请权限错误：' + error.code + " = " + error.message);
+
 				resolve({
 					code: error.code,
 					message: error.message
@@ -247,7 +245,7 @@ function checkSystemEnableLocation() {
 		var result = false;
 		var cllocationManger = plus.ios.import("CLLocationManager");
 		var result = cllocationManger.locationServicesEnabled();
-		console.log("系统定位开启:" + result);
+
 		plus.ios.deleteObject(cllocationManger);
 		return result;
 	} else {
@@ -256,7 +254,7 @@ function checkSystemEnableLocation() {
 		var main = plus.android.runtimeMainActivity();
 		var mainSvr = main.getSystemService(context.LOCATION_SERVICE);
 		var result = mainSvr.isProviderEnabled(locationManager.GPS_PROVIDER);
-		console.log("系统定位开启:" + result);
+
 		return result
 	}
 }

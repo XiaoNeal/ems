@@ -71,7 +71,7 @@ export default {
     register171FDevice() {
       // return;
       if (this.device171FRegistered) {
-        console.log('171F设备已注册，跳过', this.device171FList);
+
         this.device171FList = [...realtimeDataProvider.getDeviceList()];
         return this.device171FList;
       }
@@ -151,7 +151,7 @@ export default {
         if (currentComponent && currentComponent.refresh) {
           currentComponent.refresh();
         } else {
-          console.log('当前子组件未实现refresh方法');
+
         }
       } catch (error) {
         console.error('刷新失败:', error);

@@ -806,7 +806,6 @@ export default {
     /** 由固定设备地址拼出 tcp://brokerUrl（微信小程序原生 TCP MQTT） */
     buildBrokerUrl() {
       const url = `tcp://${FIXED_DEVICE_IP}:${FIXED_DEVICE_PORT}`
-      console.log('[buildBrokerUrl]', url)
       return url
     },
     validate() {

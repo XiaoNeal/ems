@@ -189,7 +189,6 @@ export default {
   watch: {
     '$store.state.currentSelectDevice': {
       handler(newVal) {
-        console.log(newVal, 'newVal')
         this.updateDevice171F()
         if (newVal && (newVal.id || newVal.esId)) {
           this.getDayGeneratedPower();
@@ -211,7 +210,6 @@ export default {
     },
     powerCurveOptions() {
       const maxValue = calculateYAxisMax(this.powerCurveSeries);
-      console.log(maxValue, 'maxValue')
       return {
         dataLabel: false,
         dataPointShape: false,
@@ -238,7 +236,6 @@ export default {
     },
     generationOptions() {
       const maxValue = calculateYAxisMax(this.generationSeries);
-      console.log(maxValue, 'maxValue', this.generationSeries)
       return {
         dataLabel: false,
         dataPointShape: false,
@@ -484,11 +481,11 @@ export default {
     handleDatePicker(value) {
       this.selectedDate = value;
       this.getElectricityStatistic();
-      console.log("选中日期：", value, " 类型：", this.activeDateTab);
+
     },
 
     onPowerDateChange(date) {
-      console.log('发电功率曲线日期变化:', date);
+
       this.powerDate = date;
       this.getDayGeneratedPower();
     },

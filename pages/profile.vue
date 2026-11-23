@@ -245,7 +245,6 @@ export default {
       }
       this.$store.commit('SET_LOGIN', userInfo)
     } catch (e) {
-      console.log(e)
     } finally {
       this.loading = false
     }
@@ -385,7 +384,7 @@ export default {
       uni.navigateTo({
         url: url,
         success: () => {
-          console.log('导航成功');
+
         },
         fail: (err) => {
           console.error('导航失败:', err);

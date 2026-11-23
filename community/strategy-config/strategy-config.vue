@@ -660,7 +660,6 @@ export default {
     // 解析策略配置
     parseStrategyConfig(data) {
 
-      console.log(data, "data")
       // 初始化所有模式的默认数据
       const modeKeys = Object.keys(this.modeToStrategyType)
       modeKeys.forEach(mode => {

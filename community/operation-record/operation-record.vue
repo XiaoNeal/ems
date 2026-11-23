@@ -123,7 +123,6 @@ export default {
 
       return false
       const currentRoleId = this.$store.state.currentEsRoleId || this.$store.state.userInfo?.roleId || this.$store.state.user?.roleId
-      console.log(currentRoleId,this.$store.state.userInfo, 'currentRoleId')
       return [1, 4].includes(currentRoleId)
         // const currentRoleId = this.$store.state.currentEsRoleId 
       // return [4].includes(currentRoleId)
@@ -141,7 +140,6 @@ export default {
       
       try {
 
-        console.log(this.userInfo, this.$store.state, 'this.userId')
         const currentDevice = this.$store.state.currentSelectDevice || {}
         const esId = currentDevice.id || currentDevice.esId
         const params = {
@@ -154,7 +152,6 @@ export default {
         }
         const res = await GetEsOperationLogByUserId(params)
 
-        console.log(res, "-----------------operationLog-------")
 
         const rawList = res.data?.content || res.data?.list || res.data || []
         const total = res.data?.totalElements || res.data?.total || null
@@ -198,7 +195,6 @@ export default {
           this.operationList = mergedList
         }
 
-        console.log(res, "-----------------operationLog-------")
       } catch (e) {
         uni.showToast({ title: '加载失败', icon: 'none' })
       } finally {

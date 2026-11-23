@@ -331,7 +331,6 @@ export default {
         checkWechatUserStatus(code, userInfo) {
             wxLoginApi(code).then(res => {
                 uni.hideLoading();
-                console.log(res, "1111-----------")
                 if (res.code === 200) {
                     if (res.data.newUser) {
                         this.showWechatRegister = true;

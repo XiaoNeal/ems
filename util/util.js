@@ -18,13 +18,13 @@ function utilLoading(tip, mask) {
 	}, 10000)
 };
 function clearVuex(that) {
-	console.log("清除缓存");
+
 	that.$u.vuex('vuex_userInfo', {});
 	that.$u.vuex('vuex_token', '');
 }
 
 function resetShopCar(that) {
-	console.log("清空购物车");
+
 	that.$u.vuex('vuex_shopCar', [{
 		shopId: 1,
 		title: '京东自营',

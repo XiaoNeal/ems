@@ -314,7 +314,7 @@ export default {
         const decoded = decodeURIComponent(options.deviceInfo);
         const parsed = JSON.parse(decoded);
         this.deviceInfo = { ...this.deviceInfo, ...parsed };
-        console.log('device-detail - deviceInfo:', this.deviceInfo);
+
 
         // 根据设备类型确定功率标签，只初始化一次避免闪烁
         const rawData = parsed.rawData || {};
@@ -345,13 +345,7 @@ export default {
     // 调试：查看设备列表
     setTimeout(() => {
       const list = realtimeDataProvider.getDeviceList();
-      console.log('device-detail - 实时设备列表:', list.map(item => ({
-        deviceType: item.deviceType,
-        typeCode: item.typeCode,
-        rawDeviceType: item.rawDeviceType,
-        address: item.address,
-        hasEnergyData: !!(item.energyData && item.energyData.B0)
-      })));
+
     }, 1000);
   },
   beforeDestroy() {
@@ -360,7 +354,7 @@ export default {
   methods: {
     async loadPowerChart() {
       try {
-        console.log('loadPowerChart - selectedDate:', this.selectedDate, this.deviceInfo);
+
         const deviceId = this.deviceInfo.deviceId;
         if (!deviceId || deviceId === '--') {
           this.chartLoading = false;

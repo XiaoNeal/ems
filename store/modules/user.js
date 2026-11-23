@@ -100,7 +100,6 @@ const mutations = {
 	},
 
 	UPDATE_USER(state, payload) {
-		console.log(payload, 'UPDATE_USER')
 		if (payload.avatar !== undefined) {
 			state.avatar = payload.avatar;
 		}
@@ -248,7 +247,7 @@ const getters = {
 	hasPermission: (state) => (permission) =>
 		(state.permissions || []).includes(permission),
 	pagePermission: (state) => (pageId) => {
-		console.log(state.permissions, pageId, 'pagePermission');
+
 		const permissionItem = state.permissions.find((item) => item.pageId === pageId);
 		return permissionItem && permissionItem.operationTypes || [];
 	}

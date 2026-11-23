@@ -87,21 +87,6 @@
       </view> -->
 
 
-      <!-- 数据分析 -->
-      <view class="section">
-        <text class="section-title">数据分析</text>
-        <view class="section-content">
-          <view class="item-row">
-            <view class="item" @click="goToPerformanceAnalysis">
-              <view class="item-icon analysis-icon">
-                <image src="/static/images/perf-analysis.svg" class="icon-image" mode="aspectFit" />
-              </view>
-              <text class="item-text">性能分析</text>
-            </view>
-          </view>
-        </view>
-      </view>
-
       <!-- 系统信息 -->
       <view class="section">
         <view class="system-info" @click="showSystemInfo">
@@ -188,7 +173,7 @@ export default {
   methods: {
     // 刷新数据方法
     refresh() {
-      console.log('刷新系统配置数据');
+
       // 这里可以添加刷新逻辑
     },
     
@@ -250,13 +235,6 @@ export default {
       });
     },
 
-    // 跳转到性能分析页面
-    goToPerformanceAnalysis() {
-      uni.navigateTo({
-        url: '/community/performance-analysis/performance-analysis'
-      });
-    },
-    
     // 跳转到系统信息页面
     showSystemInfo() {
       uni.navigateTo({

@@ -6,10 +6,10 @@ import Vue from "@/main";
 //第三步: 微信授权登录(后端实际登录)
 function login(param) {
 	let that = Vue;
-	console.log("微信授权后台登录的参数", param);
+
 	that.$u.api.sysApi.wxLogin(param).then(res => {
 		if (res.code == 200) {
-			console.log("微信登录响应结果", res);
+
 			let currentUser = res.data.userInfo;
 			let loginToken = res.data.token;
 			if (loginToken != null && loginToken.length > 0) {
@@ -26,11 +26,11 @@ function login(param) {
 			}
 		} else {
 			that.$u.vuex('vuex_wxCode', "");
-			console.log("微信登录响应失败", res);
+
 		}
 	}).catch(error => {
 		that.$u.vuex('vuex_wxCode', "");
-		console.log("微信授权后台登录异常", error);
+
 	});
 };
 
@@ -52,12 +52,12 @@ function getWxUserInfo() {
 							return saveWxUserInfo(wxUserInfo);
 						},
 						fail: function(error) {
-							console.log("获取微信身份信息失败,拒绝授权", error);
+
 							return skip(1);
 						}
 					})
 				} else if (res.cancel) {
-					console.log('用户点击取消,放弃同步身份信息');
+
 					return skip(1);
 				}
 			}
@@ -68,25 +68,25 @@ function getWxUserInfo() {
 //第五步: 同步微信信息
 function saveWxUserInfo(wxUserInfo) {
 	let that = Vue;
-	console.log("获取到的微信身份信息", wxUserInfo);
+
 	let avatar = wxUserInfo.avatarUrl;
 	let sex = wxUserInfo.gender;
 	let address = wxUserInfo.country + "-" + wxUserInfo.province + "-" + wxUserInfo.city;
 	let nickName = wxUserInfo.nickName;
 	let param = that.vuex_userInfo;
-	console.log("登录的用户信息", param);
+
 	param.avatar = avatar;
 	param.address = address;
 	param.nickName = nickName;
 	param.sex=sex;
 	that.$u.api.sysApi.saveWxUserInfo(param).then(res => {
 		if (res.code == 200) {
-			console.log("微信同步身份信息响应结果", res);
+
 			that.$u.vuex('vuex_userInfo', res.data);
 			return skip(2);
 		}
 	}).catch(error => {
-		console.log("微信同步身份信息响应结果", error);
+
 	});
 };
 
@@ -104,7 +104,7 @@ function getWxCode() {
 				uni.login({
 					provider: 'weixin',
 					success: function(loginRes) {
-						console.log("微信登录授权响应信息", loginRes);
+
 						let wxCode = loginRes.code;
 						that.$u.vuex('vuex_wxCode', wxCode);
 						return wxCode;
@@ -113,7 +113,7 @@ function getWxCode() {
 			}
 		// #endif
 		// #ifndef MP-WEIXIN
-			console.log("不支持微信小程序登录");
+
 			return null;
 		// #endif
 };
@@ -130,10 +130,10 @@ function getWxPhonenumber(e) {
 			}
 			let iv = e.detail.iv;
 			let encryptedData = e.detail.encryptedData;
-			console.log("wxCode", wxCode);
-			console.log("errMsg", errMsg);
-			console.log("iv", iv);
-			console.log("encryptedData", encryptedData);
+
+
+
+
 			let param = {
 				wxCode: wxCode,
 				wxIv: iv,
@@ -145,7 +145,7 @@ function getWxPhonenumber(e) {
 			return status;
 		} else {
 			that.$u.vuex('vuex_wxCode', "");
-			console.log("拒绝授权获取手机号");
+
 		}
 	};
 

@@ -196,7 +196,7 @@ export default {
 		this.setUserName = this.userName
 		this.phone = this.mobile
 
-		console.log(this.id, "=----=", this.user);
+
 
 		// this.userPhone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
 		// if(this.currentTemplate == 3){
@@ -298,9 +298,9 @@ export default {
 			password: md5(that.newPassword).toString(),
 			code: that.verificationCode
 		})
-			console.log(formData, "验证码");
+
 			UpdatePasswordBySms(formData).then(res => {
-				console.log(res, "修改密码");
+
 				if (res.status == 200) {
 					uni.showToast({
 						title: '密码修改成功',
@@ -377,7 +377,7 @@ export default {
 				return
 			}
 			const currentUser = this.$store.state.userInfo || this.$store.state.user || {}
-		console.log(currentUser, "currentUser");
+
 		const currentId = currentUser.id || currentUser.userId
 		let formData = {
 			id: currentId,
@@ -420,7 +420,7 @@ export default {
 				sendSmsCode(this.mobile).then(res => {
 					// console.log(res, "验证码");
 					// res = JSON.parse(decrypt(res));
-					console.log(res);
+
 					if (res.code === 200) {
 						this.startCountdown()
 						uni.showToast({ title: '验证码已发送', icon: 'success' })

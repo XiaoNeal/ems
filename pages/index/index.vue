@@ -40,6 +40,11 @@
       <view v-else-if="currentTab === 1" class="page-item">
         <System ref="system"></System>
       </view>
+
+      <!-- 性能分析页面 -->
+      <view v-else-if="currentTab === 3" class="page-item">
+        <PerformanceAnalysis ref="performance" :embedded="true"></PerformanceAnalysis>
+      </view>
     </view>
 
     <!-- 设备切换加载态：盖住内容区，避免闪出上一台设备的数据 -->
@@ -60,6 +65,14 @@
           </view>
           <text class="tab-text">监测</text>
         </view>
+         <!-- 性能分析Tab - 与系统Tab同条件显示 -->
+        <view v-if="!showDeviceList && esIds.length > 0 && selectedDeviceId" class="tab-item"
+          :class="{ 'active': currentTab === 3 }" @click="switchTab(3)">
+          <view class="tab-icon">
+            <image :src="currentTab === 3 ? activeIcons[3] : inactiveIcons[3]" mode="widthFix" />
+          </view>
+          <text class="tab-text">性能分析</text>
+        </view>
         <!-- 系统Tab - 非设备列表页面且有设备且选择设备后才显示 -->
         <view v-if="!showDeviceList && esIds.length > 0 && selectedDeviceId" class="tab-item"
           :class="{ 'active': currentTab === 1 }" @click="switchTab(1)">
@@ -68,6 +81,7 @@
           </view>
           <text class="tab-text">系统</text>
         </view>
+       
         <!-- 我的Tab - 始终显示 -->
         <view class="tab-item" :class="{ 'active': currentTab === 2 }" @click="switchTab(2)">
           <view class="tab-icon">
@@ -85,6 +99,7 @@
 import Monitor from '../monitor.vue'
 import Profile from '../profile.vue'
 import System from '../system.vue'
+import PerformanceAnalysis from '../performance-analysis/performance-analysis.vue'
 import DeviceList from '../components/device-list.vue'
 import { findUserInfoByCodeId, getUserCenterInfo, findEnergyStation } from '@/api/user'
 import { getDeviceByAreaId } from '@/api/devices'
@@ -95,6 +110,7 @@ export default {
     Monitor,
     Profile,
     System,
+    PerformanceAnalysis,
     DeviceList
   },
   computed: {
@@ -116,27 +132,31 @@ export default {
         return '系统管理'
       } else if (this.currentTab === 2) {
         return '我的'
+      } else if (this.currentTab === 3) {
+        return '性能分析'
       }
       return '光储直柔能源站EMS'
     }
   },
   data() {
     return {
-      tabs: ['监测', '系统', '我的'],
+      tabs: ['监测', '系统', '我的', '性能分析'],
       currentTab: 0,
       activeColor: '#007aff',
       inactiveColor: '#8a8a8a',
       activeIcons: {
         0: '/static/images/monitor-active.png',
         1: '/static/images/system-pre.png',
-        2: '/static/images/mine-active.png'
+        2: '/static/images/mine-active.png',
+        3: '/static/images/report-active.png'
       },
       inactiveIcons: {
         0: '/static/images/monitor.png',
         1: '/static/images/system-nor.png',
-        2: '/static/images/mine.png'
+        2: '/static/images/mine.png',
+        3: '/static/images/report.png'
       },
-      scrollPositions: { 0: 0, 1: 0, 2: 0 },
+      scrollPositions: { 0: 0, 1: 0, 2: 0, 3: 0 },
       selectedDeviceId: null,
       fromProfile: false,
       isDeviceListLoaded: false,
@@ -181,7 +201,6 @@ export default {
         this.fetchDeviceList()
       }
     } else if (!this.isDeviceListLoaded && !this.deviceListLoading) {
-      console.log('[mounted] 触发 fetchDeviceList')
       this.fetchDeviceList()
     }
     // 注册实时数据回调：使用 subscribe 多订阅者模式（避免与 Monitor.vue 的 onDataUpdate 单槽互相覆盖）
@@ -215,12 +234,10 @@ export default {
     this._refreshTimeout = null
   },
   onLoad(options) {
-    console.log('onLoad', options)
     // 优先使用完整设备对象参数 - 直接处理，不调用handleDeviceSelect避免循环跳转
     if (options.device) {
       try {
         const device = JSON.parse(decodeURIComponent(options.device))
-        console.log('从device参数加载设备:', device)
         const deviceId = device.id || device.esId
         this.selectedDeviceId = deviceId
         this.fromProfile = false
@@ -237,7 +254,6 @@ export default {
       }
     } else if (options.esId) {
       // 兼容旧的esId参数
-      console.log('从esId参数加载设备:', options.esId)
       const device = { id: options.esId }
       this.selectedDeviceId = options.esId
       this.fromProfile = false
@@ -275,7 +291,6 @@ export default {
     // 否则从子页面返回后实时数据永远是 '--'，必须切一次 tab 才有数据
     if ((!realtimeDataProvider.getDeviceList().length || !realtimeDataProvider.hasRegisteredCodes())
       && !this.deviceListLoading && !this.deviceSwitching) {
-      console.log('[onShow] 实时清单为空（子页面清空过），重新拉取设备列表')
       this.fetchDeviceList()
     }
     // 确保订阅者已注册（onShow 可能在 mounted 之前触发？uni-app 通常是 mounted → onShow，
@@ -381,13 +396,20 @@ export default {
         }
         return null
       }
+      if (this.currentTab === 3) {
+        // 性能分析：重新拉取当前设备各卡片数据
+        const performance = this.$refs.performance
+        if (performance && typeof performance.loadAll === 'function') {
+          return performance.loadAll()
+        }
+        return null
+      }
       // 系统页为静态入口，无数据可刷新，直接收起动画
       return null
     },
     checkFromProfile() {
       const fromProfile = uni.getStorageSync('fromProfile')
       if (fromProfile === 'true') {
-        console.log('从profile跳转过来')
         this.selectedDeviceId = null
         this.fromProfile = true
         uni.removeStorageSync('fromProfile')
@@ -421,7 +443,6 @@ export default {
 
     checkLoginStatus() {
       const userInfo = this._getUserInfo();
-      console.log('checkLoginStatus', userInfo)
 
       if (!userInfo || !userInfo.isLogin || !userInfo.sessionId) {
         uni.redirectTo({
@@ -549,7 +570,6 @@ export default {
         const barCode = (item.barCode || '').trim();
         return (typeCode && typeCode !== '-1') || homeBarCode || barCode;
       });
-      console.log('[数据流] 有效设备:', validDevices.length, '个')
 
       const configs = validDevices.map(item => {
         const typeCode = (item.typeCode || '').trim() || String(item.deviceType || '');
@@ -603,14 +623,12 @@ export default {
       // 节流锁1：防止重复点击（500ms内只响应一次）
       const now = Date.now()
       if (now - this.lastClickTime < 500) {
-        console.log('500ms内重复点击，忽略')
         return
       }
       this.lastClickTime = now
 
       // 节流锁2：防止正在跳转时重复触发
       if (this.isNavigating) {
-        console.log('正在跳转中，忽略重复点击')
         return
       }
       this.isNavigating = true
@@ -622,7 +640,6 @@ export default {
       const deviceId = device.id || device.esId || esId
       this.selectedDeviceId = deviceId
       this.fromProfile = false
-      console.log('选择设备:', device)
       
       // 点击瞬间就隔离上一台设备的数据：注销旧监听、清空旧模型并广播空快照，
       // 页面改显「正在加载设备数据」，避免新页面订阅时重放出上一台设备的实时值。
@@ -642,12 +659,10 @@ export default {
       try {
         const areaId = device.areaId
         const deviceInfo = await getDeviceByAreaId(areaId)
-        console.log('获取设备信息:', deviceInfo)
         // 如果接口返回了设备信息，提取list添加到device对象中
         if (deviceInfo && deviceInfo.data && deviceInfo.data.list) {
           device.list = deviceInfo.data.list
 
-          console.log('获取设备信息11111111111111111111111:', device)
           this.$store.commit('changeCurrentSelectDevice', device)
           uni.setStorageSync('currentSelectDevice', device)
         }
@@ -684,19 +699,18 @@ export default {
       const esUser = esUsers.find(item => item.esId === esId)
       const roleId = esUser?.esRoleId || 0
       this.$store.commit('SET_CURRENT_ES_ROLE_ID', roleId)
-      console.log('当前能源站角色:', roleId)
     },
 
     register171FDevice() {
       if (this.device171FRegistered) {
-        console.log('[数据流] 设备已注册，跳过', this.device171FList.length, '个设备');
+
         this.device171FList = [...realtimeDataProvider.getDeviceList()];
         return this.device171FList;
       }
 
       const currentDevice = this.$store.state.currentSelectDevice || {};
       const deviceList = currentDevice.list || [];
-      console.log('[数据流] register171FDevice 设备列表:', deviceList.length, '个设备');
+
 
       // 收集所有有效设备（有 typeCode 或 homeBarCode）
       const validDevices = deviceList.filter(item => {
@@ -705,8 +719,6 @@ export default {
         const barCode = (item.barCode || '').trim();
         return (typeCode && typeCode !== '-1') || homeBarCode || barCode;
       });
-      console.log('[数据流] 有效设备:', validDevices.length, '个');
-      validDevices.forEach(d => console.log('  -', d.typeCode, d.description, 'barCode:', d.homeBarCode?.trim() || d.barCode?.trim()));
 
       // 构建注册配置列表
       const configs = validDevices.map(item => {
@@ -774,8 +786,8 @@ export default {
         }
       }
 
-      // 系统Tab未显示时，不允许切换到系统Tab
-      if (index === 1 && !this.selectedDeviceId) {
+      // 系统/性能分析Tab未显示时，不允许切换到对应Tab
+      if ((index === 1 || index === 3) && !this.selectedDeviceId) {
         return
       }
 
@@ -823,7 +835,8 @@ export default {
     },
 
     tabbarPageScrollLower() {
-      const currentRef = ['monitor', 'system', 'profile'][this.currentTab];
+      const refMap = { 0: 'monitor', 1: 'system', 2: 'profile', 3: 'performance' };
+      const currentRef = refMap[this.currentTab];
       this.$refs[currentRef]?.loadMore?.();
     }
   }

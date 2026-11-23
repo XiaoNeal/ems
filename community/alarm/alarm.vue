@@ -286,7 +286,6 @@ export default {
       if (this.listLoading) return
       this.listLoading = true
       try {
-        console.log(this.$Config, "-------111-----------------", this.listLoading)
         const currentDevice = this.$store.state.currentSelectDevice || {}
         const date = this.selectedDate || this.formatDate(new Date())
         const res = await getAlarmRecord({
@@ -313,7 +312,6 @@ export default {
             return true
           })
         }
-        console.log('告警接口返回数据:', alarmList, this.$store.state.userInfo?.roleId, this.$store.state.currentEsRoleId)
         const list = (alarmList || []).map(it => this.formatAlarmItem(it))
         this.apiData = list
         this.totalCount = list.length
@@ -323,7 +321,6 @@ export default {
         this.ringOpts.title.name = this.totalCount
         this.updateChart(list)
         this.pageNumber = 1
-        console.log(this.apiData)
         await this.filterListData()
       } catch (e) {
         uni.showToast({ title: '加载失败', icon: 'none' })
@@ -384,7 +381,6 @@ export default {
       if (rawLevel.includes('故障') || rawLevel === '6') level = 0
       else if (rawLevel.includes('保护') || rawLevel === '5') level = 1
       else if (rawLevel.includes('告警') || rawLevel === '4') level = 2
-      console.log(rawLevel, item, level)
       return {
         id: `${item.deviceId || ''}_${item.alarmTime || ''}_${item.alarmName || ''}` || `${Date.now()}_${Math.random()}`,
         alarmLevel: level,

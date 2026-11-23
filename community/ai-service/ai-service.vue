@@ -196,7 +196,7 @@ export default {
           }
         });
 
-        console.log('NVIDIA API response:', response);
+
 
         if (err) {
           throw new Error(`请求失败: ${err.message}`);

@@ -34,7 +34,7 @@ function isDirectMode() {
 function shouldSkipCloudSocket() {
 	try {
 		if (!isLoggedIn()) {
-			console.log('[CloudSocket] 未登录，跳过 WebSocket 创建');
+
 			return true;
 		}
 		return isDirectMode();
@@ -50,7 +50,7 @@ function createSocket() {
 	if (_Socket) return _Socket;
 	if (shouldSkipCloudSocket()) return null;
 
-	console.log('[CloudSocket] 创建云端 WebSocket 连接');
+
 	_Socket = io.connect('wss://serviceiems.gree.com', {
 		secure: true,
 		query: 'areaInfoId=' + 1,

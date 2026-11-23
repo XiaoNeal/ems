@@ -735,8 +735,6 @@ export default {
       // console.log('combinedParams:', this.combinedParams)
       if (this.combinedParams && this.combinedParams[key]) {
         const powerValue = this.combinedParams[key].powerValue
-        console.log('powerValue:', powerValue)
-        console.log('powerValue !== undefined && powerValue !== "":', powerValue !== undefined && powerValue !== '')
         if (powerValue !== undefined && powerValue !== '') {
           return powerValue
         }
@@ -766,7 +764,6 @@ export default {
       }
       // 更新临时选中状态，确保响应式更新
       this.tempSelectedMode = option.value
-      console.log('tempSelectedMode updated:', this.tempSelectedMode)
 
       if (!this.combinedParams) {
         this.combinedParams = {}
@@ -776,7 +773,6 @@ export default {
         this.$set(this.combinedParams, param.key, { selectedMode: '', powerValue: '' })
       }
       this.$set(this.combinedParams[param.key], 'selectedMode', option.value)
-      console.log('combinedParams updated:', this.combinedParams)
     },
 
     handleCombinedInput(param, event) {
@@ -785,7 +781,6 @@ export default {
       }
 
       const value = event.detail.value
-      console.log('handleCombinedInput called:', param.key, value)
 
       // 确保 combinedParams[param.key] 存在且包含所有必要字段
       if (!this.combinedParams[param.key]) {
@@ -807,7 +802,6 @@ export default {
         }
       }
 
-      console.log('handleCombinedInput result:', this.combinedParams[param.key])
     },
 
     handleVoltageInput(param, event) {
@@ -816,7 +810,6 @@ export default {
       }
 
       const value = event.detail.value
-      console.log('handleVoltageInput called:', param.key, value)
 
       // 确保 combinedParams[param.key] 存在且包含所有必要字段
       if (!this.combinedParams[param.key]) {
@@ -838,7 +831,6 @@ export default {
         }
       }
 
-      console.log('handleVoltageInput result:', this.combinedParams[param.key])
     },
 
     // 执行开关命令
@@ -1093,20 +1085,15 @@ export default {
           // 电压/频率（高16位）：实际值 * scale
           const voltageScale = param.voltageScale || (param.voltageUnit === 'Hz' ? 10 : 10)
           const voltageInt = Math.round(parseFloat(combinedData.voltageValue) * voltageScale)
-          console.log('voltageInt:', voltageInt)
           const voltageHex = voltageInt.toString(16).toUpperCase().padStart(4, '0')
-          console.log('voltageHex:', voltageHex)
 
           // 保护时间（低16位）：实际值 * scale（单位 s）
           const timeScale = param.timeScale || 1
           const timeInt = Math.round(parseFloat(combinedData.powerValue) * timeScale)
-          console.log('timeInt:', timeInt)
           const timeHex = timeInt.toString(16).toUpperCase().padStart(4, '0')
-          console.log('timeHex:', timeHex)
 
           // 组合成8位16进制：电压/频率值(高4位) + 时间值(低4位)
           registerValue = '0x' + voltageHex + timeHex
-          console.log('registerValue:', registerValue)
         } else {
           // B48: 模式值和功率值组合（原逻辑）
           // 模式值（高16位）：0x0000 或 0x0001
@@ -1114,9 +1101,7 @@ export default {
 
           // 功率值（低16位）：输入值 × 1000 转成 mW 单位，再转4位16进制
           const powerInt = Math.round(parseFloat(combinedData.powerValue) * 1000)
-          console.log('powerInt:', powerInt)
           const powerHex = powerInt.toString(16).toUpperCase().padStart(4, '0')
-          console.log('powerHex:', powerHex)
 
           // 组合成8位16进制：模式值(高4位) + 功率值(低4位)
           registerValue = '0x' + modeHex + powerHex
@@ -1147,9 +1132,6 @@ export default {
           this.showToast('下发成功', 'success')
           this.params.pcs[param.field] = registerValue
           // 下发成功后，保持 combinedParams 中的值不变
-          console.log('下发成功，combinedParams:', this.combinedParams)
-          console.log('voltageValue:', this.combinedParams && this.combinedParams[param.key] ? this.combinedParams[param.key].voltageValue : 'N/A')
-          console.log('powerValue:', this.combinedParams && this.combinedParams[param.key] ? this.combinedParams[param.key].powerValue : 'N/A')
           // 重要：不要在这里修改 combinedParams，让它保持用户输入的值
         } else {
           this.showToast('下发失败: ' + res.msg, 'error')
@@ -1222,7 +1204,6 @@ export default {
             extra3: '00'
           }]
         }
-        console.log(commandData, param.key)
 
         await sendCommandFrame(commandData)
         this.params.pcs[param.field] = value

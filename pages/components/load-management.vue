@@ -308,7 +308,6 @@ export default {
               allDevices.push(...resultData[key]);
             }
           });
-          console.log(allDevices,'allDevices')
 
           // 注册所有设备到 realtimeDataProvider
           if (allDevices.length > 0) {
@@ -327,7 +326,6 @@ export default {
                 name: item.deviceName || `设备${finalCode}`
               };
             });
-            console.log(deviceConfigs,'deviceConfigs',allDevices)
 
             realtimeDataProvider.initDeviceList(deviceConfigs);
 
@@ -379,7 +377,6 @@ export default {
         const devId = item.devId || item.deviceId || '--';
         // 设备名称：类型 + devId
         const deviceName = `${typeLabel}${devId}`;
-        console.log(item,typeLabel,rawType,flexTypeMap,'item')
         return {
           deviceName:  item.deviceName,
           devId: devId,
@@ -443,7 +440,7 @@ export default {
       this.deviceList = this.deviceList.map(item => {
         const dev = this.realtimeLoadDevices.find(d => d && d.address === item.address);
         if (!dev) {
-          console.log(`未找到 address=${item.address} 的实时设备`);
+
           return item;
         }
         // 数据超时则功率等实时字段置为 '--'

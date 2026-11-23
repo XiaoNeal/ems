@@ -38,7 +38,6 @@ function isDirectMode() {
 function shouldSkipCloudSocket() {
 	try {
 		if (!isLoggedIn()) {
-			console.log('[RealtimeDataProvider] 未登录，跳过云端 WebSocket');
 			return true;
 		}
 		return isDirectMode();
@@ -192,7 +191,6 @@ export class RealtimeDataProviderService {
 		// 重连次数（reconnectionAttempts:20）耗尽后会永久放弃，此时仅靠 sendBuffer
 		// 补发 register 永远不会被冲刷，界面会一直停在 '--'
 		if (socket && socket.disconnected) {
-			console.log('[RealtimeDataProvider] resumeRealtime: socket 已断开，主动重连')
 			try { socket.connect() } catch (e) { console.warn('[RealtimeDataProvider] resume reconnect error', e) }
 		}
 		// onShow 与切 tab 可能在同一帧连续触发，800ms 内只重放一次 register，
@@ -234,7 +232,6 @@ export class RealtimeDataProviderService {
 		if (this._lastFrameAt && this._lastFrameAt >= this._resumeWatchdogStart) return
 		// 连接正在建立中（resume 时触发了重连）：不打断，让 connect 回调补注册后自然推帧
 		if (socket.io && socket.io.readyState === 'opening') {
-			console.log('[RealtimeDataProvider] 看门狗触发时连接正在建立，跳过重建')
 			return
 		}
 		console.warn('[RealtimeDataProvider] 恢复前台后', RealtimeDataProviderService.RESUME_WATCHDOG_MS, 'ms 未收到实时帧，重建云端连接')
@@ -392,7 +389,6 @@ export class RealtimeDataProviderService {
 		if (socket) return; // 已连接
 		if (shouldSkipCloudSocket()) return; // 仍然不该连
 
-		console.log('[RealtimeDataProvider] ensureConnected: 延迟创建云端 WebSocket（登录后）');
 		this._initConnection();
 	}
 
@@ -662,7 +658,6 @@ export class RealtimeDataProviderService {
 
 	getConnectedSocket() {
 		if (isDirectMode()) {
-			console.log('[RealtimeDataProvider] 直连模式，跳过 getConnectedSocket')
 			return;
 		}
 		if (!socket) this.createScoket()
@@ -671,7 +666,6 @@ export class RealtimeDataProviderService {
 			return;
 		}
 		socket.on('connect', () => {
-			console.log("socket已连接上");
 			// 首次连接成功：重放已注册设备的 register。
 			// 登录后 fetchDeviceList/register 往往在 socket 尚未 connected 时执行，
 			// 此时 emit 依赖 socket.io 层 sendBuffer 隐式补发，uni 环境下该时机不可靠，
@@ -680,24 +674,19 @@ export class RealtimeDataProviderService {
 			this.reRegisterAllDevices();
 		})
 		socket.on('connect_timeout', (timeout, error) => {
-			console.log("socket超时", timeout, error)
 		});
 
 		socket.on('connect_error', (error) => {
-			console.log('尝试重新连接中...', error);
 		});
 
 		socket.on('connect_failed', function (data) {
-			console.log('连接失败...');
 		});
 
 		// 监听连接断开事件
 		socket.on('disconnect', () => {
-			console.log('连接断开')
 		})
 		// 监听连接错误事件
 		socket.on('error', (error) => {
-			console.log('连接错误：', error)
 		})
 		// 监听重连事件
 		// socket.on('reconnect', () => {
@@ -710,7 +699,6 @@ export class RealtimeDataProviderService {
 		socket.on('reconnect', (attemptNumber) => {
 			// 从store中获取barCodes
 			const storeBarCodes = store.state.barCodes;
-			console.log('socket重新连接成功，尝试次数:', attemptNumber, storeBarCodes);
 			// 重新注册设备
 			this.reRegisterAllDevices();
 		});

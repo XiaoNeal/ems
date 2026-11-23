@@ -1754,7 +1754,7 @@ export default {
         state: (dev && dev.stateData) || {},
         env131: (env131 && env131.statusData) || {}
       };
-      console.log(stores);
+
       const toVal = v => (v !== undefined && v !== null && v !== '' ? v : '--');
       return BMS_INFO_GROUPS.map(group => {
         if (group.expand) {

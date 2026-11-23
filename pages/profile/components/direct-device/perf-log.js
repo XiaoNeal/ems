@@ -17,7 +17,6 @@ import { logLine, getLogLines, clearLogLines } from '@/utils/device-log.js'
 export function perfLog(msg) {
   const text = String(msg)
   try {
-    console.log('[perf] ' + text)
   } catch (e) { /* 个别机型 console 被裁剪，不影响采集 */ }
   logLine('perf', text)
 }

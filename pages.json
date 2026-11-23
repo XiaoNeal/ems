@@ -56,6 +56,14 @@
 					"bounce": "vertical"
 				}
 			}
+		},
+		{
+			"path": "pages/performance-analysis/performance-analysis",
+			"style": {
+				"navigationBarTitleText": "性能分析",
+				"navigationStyle": "custom",
+				"enablePullDownRefresh": false
+			}
 		}
 		
 	],
@@ -103,13 +111,6 @@
 				"style": {
 					"navigationStyle": "custom",
 					"navigationBarTitleText": "快捷控制"
-				}
-			},
-			{
-				"path": "performance-analysis/performance-analysis",
-				"style": {
-					"navigationStyle": "custom",
-					"navigationBarTitleText": "性能分析"
 				}
 			},
 			{

@@ -20,21 +20,21 @@
  *
  * 【使用规范】
  *   - 所有需要展示、上报版本号的地方统一 import 本模块，禁止再在页面里写死版本号；
- *   - 各端展示格式统一为 "V主版本.次版本.修订号"（如 V1.0.19），不带空格、大小写统一。
+ *   - 各端展示格式统一为 "V主版本.次版本.修订号"（如 V1.0.20），不带空格、大小写统一。
  */
 
 /** 展示用版本号（含 V 前缀，必须与 manifest.json 的 versionName 一致） */
-export const APP_VERSION = 'V1.0.19'
+export const APP_VERSION = 'V1.0.20'
 
 /** 版本序号（必须与 manifest.json 的 versionCode 一致，用于整包 / wgt 升级比较） */
-export const APP_VERSION_CODE = 190
+export const APP_VERSION_CODE = 191
 
-/** 去掉 V/v 前缀，得到纯数字版本号：V1.0.19 -> 1.0.19 */
+/** 去掉 V/v 前缀，得到纯数字版本号：V1.0.20 -> 1.0.19 */
 export function toPlainVersion(version = APP_VERSION) {
 	return String(version).replace(/^[Vv]/, '')
 }
 
-/** 规范化展示版本号：1.0.19 / v1.0.19 / V1.0.19 -> V1.0.19 */
+/** 规范化展示版本号：1.0.19 / v1.0.19 / V1.0.20 -> V1.0.20 */
 export function formatVersion(version = APP_VERSION) {
 	const plain = toPlainVersion(version)
 	return plain ? 'V' + plain : APP_VERSION
@@ -55,7 +55,7 @@ export function getAppVersionSync() {
  *   注意该值来自打包时的 manifest.json，旧安装包仍会显示旧版本号，需重新打包安装；
  * - 小程序 / H5 端：直接取常量（小程序无本地版本概念，只能与源码常量保持一致）。
  *
- * @returns {Promise<string>} 展示用版本号，如 'V1.0.19'
+ * @returns {Promise<string>} 展示用版本号，如 'V1.0.20'
  */
 export function getAppVersion() {
 	// #ifdef APP-PLUS

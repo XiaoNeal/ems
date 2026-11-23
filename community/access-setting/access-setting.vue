@@ -75,7 +75,7 @@ export default {
     },
     onConfigClick(device) {
       // 配置设备
-      console.log('配置设备:', device);
+
       // 这里可以跳转到具体的设备配置页面
     }
   }

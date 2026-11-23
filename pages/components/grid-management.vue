@@ -254,7 +254,6 @@ export default {
     },
     powerCurveOptions() {
       const maxValue = calculateYAxisMax(this.powerCurveSeries, this.powerCurveReverseSeries);
-      console.log(maxValue, 'maxValue')
       return {
         dataLabel: false,
         dataPointShape: false,
@@ -392,7 +391,7 @@ export default {
     },
     refresh() {
       // 刷新数据
-      console.log('刷新电网管理数据');
+
       this.getPowerCurveData();
     },
     toggleFullScreen(type) {
@@ -556,12 +555,12 @@ export default {
       });
     },
     handleDatePicker(date) {
-      console.log('选择的日期:', date);
+
       this.selectedDate = date;
       this.getElectricityStatistic();
     },
     onPowerDateChange(date) {
-      console.log('功率曲线日期变化:', date);
+
       this.powerDate = date;
       this.getPowerCurveData();
     }

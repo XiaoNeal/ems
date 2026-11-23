@@ -144,20 +144,16 @@ function decodeBase64Into(s, out) {
 function isTcpAvailable() {
   // 微信小程序：wx.createTCPSocket (基础库 >= 2.7.0)
   if (typeof wx !== 'undefined' && wx && typeof wx.createTCPSocket === 'function') {
-    console.log('[TCP] wx.createTCPSocket 可用')
     return true
   }
   // uni-app App 端：uni.createTCPSocket (HBuilderX 3.x+)
   if (typeof uni !== 'undefined' && uni && typeof uni.createTCPSocket === 'function') {
-    console.log('[TCP] uni.createTCPSocket 可用')
     return true
   }
   // uni-app App 端：plus.android 调用 Java Socket
   if (typeof plus !== 'undefined' && plus.android) {
-    console.log('[TCP] plus.android 可用，可尝试 Java Socket')
     return true
   }
-  console.log('[TCP] 原生 TCP Socket 不可用, wx=', typeof wx, 'uni=', typeof uni, 'plus=', typeof plus)
   logLine('网络', '当前平台无可用原生 TCP 通道')
   return false
 }
@@ -221,7 +217,6 @@ export class UniappTcpAdapter {
           throw new Error('TCPSocket 创建失败：未返回有效实例（并发连接数已达上限 5 个），请关闭其他页面或重启小程序')
         }
         this._tcpSocket = sock
-        console.log('[TCP] Socket 创建成功(wx/uni), 连接', this.host + ':' + this.port)
         logLine('网络', 'TCPSocket 创建成功，连接 ' + this.host + ':' + this.port)
         this._bindWxTcpEvents()
         try {
@@ -233,12 +228,10 @@ export class UniappTcpAdapter {
         }
       } else if (typeof plus !== 'undefined' && plus.android) {
         // App 端降级：用 Java Socket
-        console.log('[TCP] 使用 plus.android Java Socket, 连接', this.host + ':' + this.port)
         logLine('网络', 'App 端使用 Java Socket 连接 ' + this.host + ':' + this.port)
         this._connectWithPlusAndroid()
       } else if (typeof plus !== 'undefined' && plus.ios) {
         // iOS 端：用 OC Socket
-        console.log('[TCP] 使用 plus.ios Socket, 连接', this.host + ':' + this.port)
         this._connectWithPlusIOS()
       } else {
         throw new Error('当前平台无可用 TCP API (wx/uni/plus 均不可用)')
@@ -259,7 +252,6 @@ export class UniappTcpAdapter {
   /** 绑定 wx/uni TCPSocket 事件 */
   _bindWxTcpEvents() {
     this._tcpSocket.onConnect(() => {
-      console.log('[TCP] onConnect 触发!')
       logLine('网络', 'TCP 已连上设备（onConnect）')
       this.readyState = OPEN
       this._fire('open', { type: 'open' })
@@ -285,7 +277,6 @@ export class UniappTcpAdapter {
     })
 
     this._tcpSocket.onClose((res) => {
-      console.log('[TCP] onClose, res=', JSON.stringify(res))
       logLine('网络', 'TCP 连接关闭')
       this.readyState = CLOSED
       this._fire('close', { type: 'close', code: res && res.code, reason: res && res.reason, wasClean: true })
@@ -295,7 +286,6 @@ export class UniappTcpAdapter {
       const msg = (err && (err.errMsg || err.message || err.errCode))
         ? String(err.errMsg || err.message || err.errCode)
         : 'TCP socket error'
-      console.log('[TCP] onError:', msg, JSON.stringify(err))
       // 这一条是现场判权限问题的关键：无「附近的设备」权限时，
       // 系统常回 EACCES / ENETUNREACH / EHOSTUNREACH / permission denied。
       logLine('网络', 'TCP 错误：' + msg)
@@ -331,13 +321,11 @@ export class UniappTcpAdapter {
       socket.setSoTimeout(2000)   // 2 秒超时，避免阻塞
       socket.setTcpNoDelay(true)
 
-      console.log('[TCP] plus.android Socket 连接成功, isConnected=' + socket.isConnected())
       logLine('网络', 'Java Socket 已连上设备，isConnected=' + socket.isConnected())
       this.readyState = OPEN
 
       const _this = this
       setTimeout(() => {
-        console.log('[TCP] plus.android 异步触发 open')
         _this._fire('open', { type: 'open' })
         _this._startAndroidReadLoop()
       }, 10)
@@ -410,8 +398,6 @@ export class UniappTcpAdapter {
     let base64ClsTried = false
 
     if (TCP_DEBUG_LOG) {
-      console.log('[TCP] readLoop 启动, 轮询=' + TCP_POLL_INTERVAL_MS +
-        'ms, 单片上限=' + TCP_MAX_READ_PER_TICK + 'B, 自适应=' + TCP_ADAPTIVE_LIMIT)
     }
 
     /**
@@ -526,8 +512,6 @@ export class UniappTcpAdapter {
           tcpReadStats.tickMs = elapsed
           // ⚡ 正式包关闭：以前每片都要 slice().map().join() 拼一段 hex 再走一次原生日志桥。
           if (TCP_DEBUG_LOG) {
-            console.log('[TCP] 收到 ' + readBytes + 'B, hex: ' +
-              Array.from(scratch.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' '))
           }
           _this._fire('message', { type: 'message', data: scratch.slice(0, readBytes) })
         }
@@ -571,8 +555,6 @@ export class UniappTcpAdapter {
         }
 
         if (TCP_DEBUG_LOG && (loopCount <= 3 || loopCount % 200 === 0)) {
-          console.log('[TCP] readLoop #' + loopCount + ' available=' + available +
-            ', limit=' + limit + ', tier=' + tcpReadStats.tier + ', bulk=' + bulk)
         }
         // 还有积压 → 让出一次事件循环后立刻续读（setTimeout 0 在嵌套调用里会被
         // clamp 到 ≥4ms，足够让点击 / Vue nextTick(microtask) 插进来）；空闲才退避轮询。
@@ -601,7 +583,6 @@ export class UniappTcpAdapter {
           return
         }
         if (msg.indexOf('Stream closed') >= 0 || msg.indexOf('Connection reset') >= 0) {
-          console.log('[TCP] 连接断开:', msg)
           logLine('网络', '读取中断开：' + msg)
           _this.readyState = CLOSED
           _this._fire('close', { type: 'close', wasClean: false })
@@ -649,7 +630,6 @@ export class UniappTcpAdapter {
 
     if (TCP_DEBUG_LOG) {
       const hexPreview = Array.from(new Uint8Array(cleanAb).slice(0, 10)).map(b => b.toString(16).padStart(2, '0')).join(' ')
-      console.log('[TCP] send() byteLen=', cleanAb.byteLength, 'hexPreview:', hexPreview)
     }
 
     try {

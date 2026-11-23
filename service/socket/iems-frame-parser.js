@@ -371,7 +371,6 @@ export function parseIemsControlFrame(frame) {
     registers['B' + regAddr] = dv.getInt16(9 + i, false)
   }
 
-  console.log(`[IEMS控制帧解析] deviceType=0x${deviceType.toString(16).padStart(4,'0')} addr=${address} startAddr=${startAddr} payloadLen=${payloadLen} CRC=${crcOk?'OK':'FAIL'}`)
 
   return {
     frameType: padHex(frameType, 2),
@@ -481,8 +480,6 @@ export function buildIemsControlFrame(deviceType, address, startAddr, registerVa
 
   // 日志
   const hexStr = Array.from(result).map(b => b.toString(16).padStart(2, '0')).join(' ')
-  console.log(`[IEMS控制帧构建] deviceType=0x${dtNum.toString(16).padStart(4,'0')} startAddr=${startAddr} payloadLen=${payloadLen} CRC=0x${crc.toString(16).padStart(4,'0')}`)
-  console.log(`[IEMS控制帧构建] hex: ${hexStr}`)
 
   return result
 }
@@ -582,16 +579,8 @@ export function buildIemsCommandFrame(deviceType, commands, opts = {}) {
   const fullHex = frameHex + crcHigh + crcLow
   const result = hexStringToBytes(fullHex)
 
-  console.log('[命令帧构建] 帧头 deviceType=0x' + deviceType + ' dataType=0xC2 commandCount=' +
-    commands.length + ' validData=' + (validData.length / 2) + 'B frameLen=' + result.length + 'bytes')
   detail.forEach((d, i) => {
-    console.log('[命令帧构建] 命令' + (i + 1) + ' 大类小类=0x' + d.category + ' 索引号=0x' + d.addr +
-      '(' + parseInt(d.addr, 16) + ') 设备ID=0x' + d.deviceId + '(' + parseInt(d.deviceId, 16) + ')' +
-      ' 寄存器地址=0x' + d.regAddr + '(' + parseInt(d.regAddr, 16) + ')' +
-      ' 寄存器值=0x' + d.regVal + '(' + parseInt(d.regVal, 16) + ')' +
-      ' 寄存器类型=0x' + d.regType)
   })
-  console.log('[命令帧构建] hex: ' + fullHex.match(/.{2}/g).join(' '))
 
   return result
 }

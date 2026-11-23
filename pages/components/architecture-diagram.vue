@@ -438,7 +438,7 @@ export default {
     // 获取设备状态栏高度
     const windowInfo = uni.getWindowInfo();
     this.statusBarHeight = windowInfo.statusBarHeight || 93;
-    console.log('statusBarHeight', this.statusBarHeight);
+
   },
   mounted() {
 

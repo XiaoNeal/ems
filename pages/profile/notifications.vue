@@ -233,7 +233,6 @@ export default {
           doNotDisturb: this.doNotDisturb
         },
         fail: () => {
-          console.log('免打扰设置同步失败')
         }
       })
     },

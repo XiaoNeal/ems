@@ -1073,7 +1073,6 @@ export default {
         // 首次进入（或自动重连还没建客户端）：走统一入口，APP 端等首帧画完
         this._startEntryConnect({ guide })
       } else if (!this.connected || !this.client.connected) {
-        console.log('[direct-device] onShow: MQTT 未连接，主动重连')
         this.startWithWifiCheck({ guide })
       }
     }
@@ -1285,9 +1284,6 @@ export default {
           try {
             // 按容量选地址：50kW=343，20kW=112
             const regAddr = this.is50KwMode ? '343' : '112'
-            console.log('[direct-device] onSystemStartStop:',
-              'is50KwMode=' + this.is50KwMode,
-              'registerAddress=' + regAddr)
             this.client.setDeviceType('171F')
             await this.client.sendControl('B12', running ? 0 : 1, '171F', { registerAddress: regAddr })
             uni.showToast({ title: '指令已下发', icon: 'none' })
@@ -1296,8 +1292,6 @@ export default {
             setTimeout(() => {
               // 直连模式下 MQTT 自动推送帧，按钮状态靠 rawValues['171F'].C_B12 变化驱动
               // 这里只打日志便于排查，不需要额外调用
-              console.log('[direct-device] onSystemStartStop: 10s 后检查 C_B12 回显',
-                this.rawValues['171F'] && this.rawValues['171F']['C_B12'])
             }, 10000)
           } catch (e) {
             console.error('[direct-device] onSystemStartStop error:', e)
@@ -1904,7 +1898,6 @@ export default {
             const wsPort = m ? parseInt(m[2], 10) : 1883
             const tcpPort = wsPort === 9001 ? 1883 : wsPort
             brokerUrl = `tcp://${host}:${tcpPort}`
-            console.log('[loadConfig] 协议规范化 → tcp:', brokerUrl)
           }
           this.config = {
             enabled: !!cfg.enabled,
@@ -2202,7 +2195,6 @@ export default {
       // 激活直连模式——只有真正连上 MQTT 才打激活标记
       try {
         uni.setStorageSync('direct_device_activated', true)
-        console.log('[直连] MQTT 已连接，激活直连标记')
       } catch (e) { }
     },
     async subscribeMqttTopics() {
@@ -2215,12 +2207,10 @@ export default {
       // 同一条连接只订阅一次：onShow / 重试会反复进这里，重复 subscribeAll 会让同一条消息
       // 被多个 handler 重复解析（卡顿、重复 toast 都由此而来）
       if (this._subscribedSeq === c.connectionSeq) {
-        console.log('[MQTT] 该连接已订阅过，跳过重复订阅 seq=' + c.connectionSeq)
         return
       }
       this._subscribing = true
       try {
-        console.log('[MQTT] 订阅主题: realtime=' + realtimeTopic + ' control=' + controlTopic)
         c.setTopics({
           realtime: realtimeTopic,
           controlSet: controlTopic,
@@ -2679,7 +2669,6 @@ export default {
               if (!this._ctlFrameLogAt || now - this._ctlFrameLogAt > 10000) {
                 this._ctlFrameLogAt = now
                 const ks = Object.keys(data).filter(k => data[k] !== undefined).slice(0, 24)
-                console.log('[171F] 控制数据帧字段:', ks.join(','))
               }
             }
           }
@@ -2692,8 +2681,6 @@ export default {
             if (!this._bmsCtlSeen[deviceType]) {
               this._bmsCtlSeen[deviceType] = true
               const head = Object.keys(data).slice(0, 8).map(k => k + '=' + data[k]).join(',')
-              console.log('[171C] 控制帧 bucket=' + deviceType + ' addr=' + (parsed.address || '?') +
-                ' 字段数=' + Object.keys(data).length + ' 前 8 项=' + head)
             }
           }
           // 171C 状态帧（0x03）：BMS 概览「系统配置」6 项（额定电压/容量/串数/温感数/pack 数/
@@ -2705,8 +2692,6 @@ export default {
               this._bmsStateSeen[deviceType] = true
               const cfg = ['B70', 'B72', 'B74', 'B76', 'B78', 'B80']
                 .map(k => k + '=' + (data[k] !== undefined ? data[k] : '无')).join(',')
-              console.log('[171C] 状态帧 bucket=' + deviceType + ' addr=' + (parsed.address || '?') +
-                ' 字段数=' + Object.keys(data).length + ' 系统配置=' + cfg)
             }
           }
           this.scheduleFrameFlush(deviceType)
@@ -2882,7 +2867,6 @@ export default {
         // online: false 通常表示其他客户端离线；不影响本连接状态
         // 仅用于日志展示，这里仅 toast 提示
         if (data.online === false && data.clientId) {
-          console.log('设备端离线:', data.clientId)
         }
       } catch (e) {
         console.error('MQTT status 解析失败:', e)
@@ -2899,7 +2883,6 @@ export default {
       if (unwrapped) {
         const echoHex = unwrapped.replace(/[\s,]/g, '').toUpperCase()
         if (this._isOwnControlEcho(echoHex)) {
-          console.log('[MQTT CONTROL RESP] 忽略本机回环帧: ' + echoHex.slice(0, 80))
           return
         }
       }
@@ -2975,7 +2958,6 @@ export default {
             binHex += payloadBytes[i].toString(16).padStart(2, '0')
           }
           if (this._isOwnControlEcho(binHex.toUpperCase())) {
-            console.log('[MQTT CONTROL RESP] 忽略本机回环帧(二进制): ' + binHex.slice(0, 80))
             return
           }
           try {
@@ -3746,14 +3728,10 @@ export default {
         return { ok: false }
       }
       const deviceType = (target && target.deviceType) || '171F'
-      console.log('========== 下发组合命令帧（储能DC，一个报文） ==========')
       bundle.commands.forEach((c, i) => {
-        console.log(`[CMD] 命令${i + 1} ${c.label}: 字段 ${c.field} 寄存器 ${c.registerAddress} = ${c.value}`)
       })
       if (bundle.fallbacks.length) {
-        console.log('[CMD] 未回显项按默认值一并下发:', bundle.fallbacks.join('、'))
       }
-      console.log('======================================================')
       try {
         this.client.setDeviceType(deviceType)
         await this.client.sendControlBatch(bundle.commands, deviceType)
@@ -3774,7 +3752,6 @@ export default {
       p.currentLabel = opt.label
       p._pending = true
       this._bumpEcho()
-      console.log('[BUNDLE] 本地选择:', p.label, '=', opt.label, '（待下发）')
     },
     /** 组合卡：本地改数值（只弹输入框，不下发） */
     onBundleValueEdit(payload) {
@@ -3804,7 +3781,6 @@ export default {
           p.currentText = this.formatValue(newVal, p.decimals !== undefined ? p.decimals : 1)
           p._pending = true
           this._bumpEcho()
-          console.log('[BUNDLE] 本地改值:', p.label, '=', p.currentText, p.unit || '', '（待下发）')
         }
       })
     },
@@ -3849,8 +3825,6 @@ export default {
       const p = resolved.param
       const opt = resolved.option
       // 排查用：确认事件载荷与解析结果（小程序事件桥异常时这里能一眼看出丢的是哪一段）
-      console.log('[SettingsPanel] switch-click 载荷=', JSON.stringify(payload),
-        '→ 参数=', p && p.key, '选项=', opt && opt.label, '=', opt && opt.value)
       if (!p) return
       if (!opt) {
         console.error('[CMD] 选项解析失败，载荷=', payload, ' 参数=', p.key)
@@ -3904,15 +3878,6 @@ export default {
           }
 
           // 下发前打印完整指令，便于与设备侧抓包逐项比对
-          console.log('========== 下发设置指令（开关量） ==========')
-          console.log('[CMD] 参数      :', p.label, '(' + p.key + ')')
-          console.log('[CMD] 选择      :', opt.label, '=', opt.value, opt.dangerous ? '【危险操作】' : '')
-          console.log('[CMD] 设备类型  :', deviceType)
-          console.log('[CMD] 下发字段  :', sendField, isBit ? '（位命令 bit=' + p.bit + '，已打包整字节）' : '')
-          console.log('[CMD] 寄存器地址:', p.address ? p.address + ' (0x' + Number(p.address).toString(16).toUpperCase() + ')' : '由字段推导',
-            ' 寄存器类型:', p.regType !== undefined ? p.regType : 3)
-          console.log('[CMD] 下发值    :', sendValue)
-          console.log('===========================================')
 
           await this.client.sendControl(sendField, sendValue, deviceType, overrides)
           if (p.pulse && p.options) {
@@ -4014,15 +3979,6 @@ export default {
             }
 
             // 下发前打印完整指令
-            console.log('========== 下发设置指令（数值） ==========')
-            console.log('[CMD] 参数      :', p.label, '(' + p.key + ')')
-            console.log('[CMD] 设备类型  :', this.editingParamDeviceType)
-            console.log('[CMD] 下发字段  :', p.field)
-            console.log('[CMD] 寄存器地址:', p.address ? p.address + ' (0x' + Number(p.address).toString(16).toUpperCase() + ')' : '由字段推导',
-              ' 寄存器类型:', p.regType !== undefined ? p.regType : 3)
-            console.log('[CMD] 页面值    :', newVal, p.unit || '', '→ 下发原始值:', rawVal,
-              '(scale=' + (p.scale || 1) + ', offset=' + (p.offset || 0) + ')')
-            console.log('==========================================')
 
             try {
               this.client.setDeviceType(this.editingParamDeviceType)

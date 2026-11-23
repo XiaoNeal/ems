@@ -98,7 +98,6 @@ export function checkAppUpdate(force = false) {
 	// #ifdef APP-PLUS
 	// 进程内去重：只防同一进程内生命周期重复调用；手动检查不占用自动检查配额
 	if (!force && lastAutoCheckAt && Date.now() - lastAutoCheckAt < CHECK_GAP) {
-		console.log('[AppUpdate] 本次运行已成功检查过，跳过（手动检查不受限）')
 		return
 	}
 
@@ -113,7 +112,6 @@ export function checkAppUpdate(force = false) {
 		let osName = 'Android'
 		try { osName = plus.os.name || osName } catch (e) { }
 		const updateUrl = `${UPDATE_API_BASE}/appletAPI/app/checkUpdate?version=${currentVersion}&osName=${osName}`
-		console.log('[AppUpdate] 开始检查更新:', updateUrl, '| force:', force, '| retry:', retryCount)
 
 		const retryLater = (reason) => {
 			if (!force && retryCount < AUTO_RETRY_MAX) {
@@ -139,7 +137,6 @@ export function checkAppUpdate(force = false) {
 					return
 				}
 				if (!parsed || parsed.status != 200 || !parsed.data) {
-					console.log('[AppUpdate] 接口异常或无数据:', JSON.stringify(parsed))
 					// 已拿到服务端响应即算一次有效检查，避免「无数据」场景反复重试
 					if (!force) lastAutoCheckAt = Date.now()
 					return
@@ -148,18 +145,15 @@ export function checkAppUpdate(force = false) {
 				if (!force) lastAutoCheckAt = Date.now()
 
 				const info = parsed.data
-				console.log('[AppUpdate] 服务端返回:', JSON.stringify(info), '| 本地版本:', currentVersion)
 
 				// 服务端判定无更新
 				if (!info.updateStatus || info.updateStatus === 3) {
-					console.log('[AppUpdate] 服务端判定无更新')
 					if (force) uni.showToast({ title: '当前已是最新版本', icon: 'none' })
 					return
 				}
 
 				// 本地二次校验：服务端版本必须高于当前版本才提示
 				if (info.version && compareVersion(info.version, currentVersion) <= 0) {
-					console.log('[AppUpdate] 服务端版本不高于本地版本，忽略:', info.version, '当前:', currentVersion)
 					if (force) uni.showToast({ title: '当前已是最新版本', icon: 'none' })
 					return
 				}
@@ -211,10 +205,8 @@ function showUpdatePage(info, force = false) {
 	const isForce = !!info.force
 	// 「稍后再说」只在本次运行内生效；下次冷启动会重新提醒（手动检查不受限）
 	if (!force && !isForce && snoozedVersion && snoozedVersion === String(info.version || '')) {
-		console.log('[AppUpdate] 本次运行已选择「稍后再说」，跳过（下次进入 APP 会重新提醒）')
 		return
 	}
-	console.log('[AppUpdate] 命中更新，准备打开升级弹窗页:', info.version, '| force:', isForce)
 
 	uni.setStorageSync(PENDING_UPDATE_KEY, info)
 	openUpdatePageWhenReady(0, Date.now() + 1200)
@@ -239,7 +231,6 @@ function openUpdatePageWhenReady(retry, notBefore) {
 		}
 		uni.navigateTo({
 			url: '/pages-public/app-update/app-update',
-			success: () => console.log('[AppUpdate] 升级弹窗已打开'),
 			fail: (err) => {
 				console.warn('[AppUpdate] 打开升级弹窗失败，重试:', err)
 				if (retry < 12) setTimeout(() => openUpdatePageWhenReady(retry + 1, notBefore), 500)
@@ -296,7 +287,6 @@ export function downloadUpdateFile(url, onProgress, fileExt) {
 		// 固定落盘到应用私有目录 _doc 下，文件名带时间戳和正确后缀
 		const savePath = `_doc/app_update_${Date.now()}.${ext}`
 		cleanupOldPackages(savePath)
-		console.log('[AppUpdate] 下载目标路径:', savePath)
 
 		// #ifndef APP-PLUS
 		reject(new Error('应用内自动更新仅支持 APP 端'))
@@ -307,7 +297,6 @@ export function downloadUpdateFile(url, onProgress, fileExt) {
 			url,
 			filePath: savePath,
 			success: (res) => {
-				console.log('[AppUpdate] 下载完成 statusCode=', res.statusCode, '落盘路径=', res.filePath || res.tempFilePath)
 				if (res.statusCode === 200) {
 					// 优先使用显式落盘路径，部分基础库只返回 tempFilePath
 					resolve(res.filePath || res.tempFilePath || savePath)
@@ -414,9 +403,7 @@ export function installWgt(filePath) {
 		reject(new Error('wgt 安装仅支持 APP 端'))
 		// #endif
 		// #ifdef APP-PLUS
-		console.log('[AppUpdate] 开始安装 wgt，文件路径:', filePath)
 		plus.runtime.install(filePath, { force: false }, () => {
-			console.log('[AppUpdate] wgt 安装成功')
 			uni.showModal({
 				title: '更新完成',
 				content: '新版本已安装，是否立即重启应用？',
@@ -438,7 +425,6 @@ export function installApk(filePath) {
 		reject(new Error('APK 安装仅支持 APP 端'))
 		// #endif
 		// #ifdef APP-PLUS
-		console.log('[AppUpdate] 开始安装 apk，文件路径:', filePath)
 		plus.runtime.install(filePath, { force: false }, () => resolve(), (e) => reject(normalizeInstallError(e, filePath)))
 		// #endif
 	})

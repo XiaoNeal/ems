@@ -281,7 +281,6 @@ export default {
         const currentDevice = this.$store.state.currentSelectDevice || {}
         const esId = this.esId || currentDevice.id || currentDevice.esId || 3
         const res = await getUserInfoByEsId(esId)
-        console.log('getUserList res:', res)
 
         if (res && res.status === 200) {
           this.userList = (res.data || []).map((user, index) => ({
@@ -315,7 +314,6 @@ export default {
       uni.showLoading({ title: '绑定用户中...' })
       try {
         const res = await bindEsUserByTelAndEsId(this.addTel, this.esId)
-        console.log('bindUser res:', res)
 
         if (res && res.status === 200) {
           uni.showToast({ title: '添加成功', icon: 'success' })
@@ -365,7 +363,6 @@ export default {
         const currentDevice = this.$store.state.currentSelectDevice || {}
         const esId = this.esId || currentDevice.id || currentDevice.esId || 3
         const response = await changeEsUserRoleByUserIdAndEsId(userId, esId, this.selectedRole)
-        console.log('confirmSetAdmin response:', response)
 
         if (response && response.status === 200) {
           uni.showToast({ title: '权限设置成功', icon: 'success' })
@@ -404,7 +401,6 @@ export default {
         const currentDevice = this.$store.state.currentSelectDevice || {}
         const esId = this.esId || currentDevice.id || currentDevice.esId || 3
         const response = await changeEsUserByTelAndEsId(tel, esId)
-        console.log('confirmTransfer response:', response)
 
         if (response && response.status === 200) {
           uni.showToast({ title: '管理员转移完成', icon: 'success' })
@@ -461,14 +457,12 @@ export default {
               const currentDevice = this.$store.state.currentSelectDevice || {}
               const esId = this.esId || currentDevice.id || currentDevice.esId 
               const areaLevelId = currentDevice.user.area_level_id 
-              console.log('esId:', esId,currentDevice)
               const deleteData = [{
                 baseUserInfoId: user.id,
                 levelId: areaLevelId,
                 esId: esId
               }]
               const response = await deleteEsUser(deleteData)
-              console.log('deleteEsUser response:', response)
               
               if (response && response.status === 200) {
                 uni.showToast({ title: '删除成功', icon: 'success' })

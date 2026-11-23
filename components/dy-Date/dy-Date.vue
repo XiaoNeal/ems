@@ -1,14 +1,14 @@
 <template>
-	<view>
-		<picker :title="index" @change="bindTimeChange" @columnchange="columnchange" mode="multiSelector" :disabled="disabled" :class="['date-picker', {disabled:disabled}]"
-		 :value="index" :range="array">
-			<view class="input-content" v-if="showTime">
-				<uni-icons type="calendar" class="calendar-icon"/>
-				<text class="date-text">{{showTime}}</text>
+	<view :class="{ 'date-compact-root': compact }" :style="compactRootStyle">
+		<picker :title="index" @change="bindTimeChange" @columnchange="columnchange" mode="multiSelector" :disabled="disabled" :class="['date-picker', {disabled:disabled, 'date-compact':compact}]"
+		 :style="compactPickerStyle" :value="index" :range="array">
+			<view class="input-content" v-if="showTime" :style="compactInputStyle">
+				<uni-icons type="calendar" class="calendar-icon" :style="compactIconStyle"/>
+				<text class="date-text" :style="compactTextStyle">{{showTime}}</text>
 			</view>
-			<view v-else class="input-content placeholder">
-				<uni-icons type="calendar" class="calendar-icon placeholder-icon"/>
-				<text class="date-text">{{placeholder}}</text>
+			<view v-else class="input-content placeholder" :style="compactInputStyle">
+				<uni-icons type="calendar" class="calendar-icon placeholder-icon" :style="compactIconStyle"/>
+				<text class="date-text" :style="compactTextStyle">{{placeholder}}</text>
 			</view>
 		</picker>
 	</view>
@@ -31,6 +31,11 @@
 		iconshow: {
 			type: Boolean,
 			default: () => true
+		},
+		// 紧凑模式：宽高与周期胶囊一致，用于卡片头部内嵌
+		compact: {
+			type: Boolean,
+			default: () => false
 		},
 		placeholder: {
 			type: String,
@@ -68,6 +73,25 @@
 			const month = String(now.getMonth() + 1).padStart(2, '0');
 			const day = String(now.getDate()).padStart(2, '0');
 			return `${year}-${month}-${day}`;
+		},
+		// 紧凑模式用内联 style：APP 端组件样式会被编译成带 data-v 的属性选择器，
+		// 跨组件穿透不可靠，内联 style 在小程序/APP 两端都能稳定生效。
+		compactRootStyle() {
+			return this.compact ? 'width:240rpx;height:52rpx;flex-shrink:0;' : '';
+		},
+		compactPickerStyle() {
+			return this.compact
+				? 'width:240rpx;min-width:240rpx;max-width:240rpx;height:52rpx;padding:0 12rpx;box-sizing:border-box;border:1rpx solid #e6ecf5;border-radius:10rpx;background:#ffffff;flex-shrink:0;'
+				: '';
+		},
+		compactInputStyle() {
+			return this.compact ? 'height:100%;' : '';
+		},
+		compactIconStyle() {
+			return this.compact ? 'font-size:22rpx;margin-right:6rpx;' : '';
+		},
+		compactTextStyle() {
+			return this.compact ? 'font-size:22rpx;line-height:50rpx;' : '';
 		}
 	},
 	data() {
@@ -439,7 +463,7 @@
 		transition: all 0.3s ease;
 		position: relative;
 		min-width: fit-content;
-		max-width: 150px;
+		max-width: 200px;
 		flex-shrink: 0;
 		box-sizing: border-box;
 
@@ -487,7 +511,7 @@
 	@media screen and (max-width: 480px) {
 		picker.date-picker {
 			height: 36px;
-			max-width: 120px;
+			max-width: 180px;
 			padding: 0 10px;
 		}
 
@@ -520,5 +544,40 @@
 	.fa-angle-right {
 		font-size: 36rpx;
 		padding-left: 12rpx;
+	}
+
+	/* 紧凑模式：组件内部渲染，从源头设置宽高，避免被媒体查询/页面样式干扰 */
+	.date-compact-root {
+		width: 240rpx;
+		height: 52rpx;
+		flex-shrink: 0;
+	}
+
+	/* 纯 class 选择器：APP 端 picker 编译为 uni-picker，带 picker 标签的选择器不生效 */
+	.date-picker.date-compact {
+		width: 240rpx;
+		min-width: 240rpx;
+		max-width: 240rpx;
+		height: 52rpx;
+		padding: 0 12rpx;
+		box-sizing: border-box;
+		border: 1rpx solid #e6ecf5;
+		border-radius: 10rpx;
+		background: #ffffff;
+		flex-shrink: 0;
+	}
+
+	.date-picker.date-compact .input-content {
+		height: 100%;
+	}
+
+	.date-picker.date-compact .calendar-icon {
+		font-size: 22rpx;
+		margin-right: 6rpx;
+	}
+
+	.date-picker.date-compact .date-text {
+		font-size: 22rpx;
+		line-height: 50rpx;
 	}
 </style>
