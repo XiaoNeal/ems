@@ -121,7 +121,7 @@
 			},
 			/** 页面背景：浅色用浅灰蓝底衬托白色卡片，非浅色主题沿用主题底色 */
 			pageBg() {
-				return this.isLightTheme ? '#f4f6f9' : this.bGColor
+				return this.isLightTheme ? '#f4f6f9' : (this.bGColor || '#fff')
 			},
 			navTitleStyle() {
 				return { color: this.isLightTheme ? '#2b2f36' : '#e8eaee', width: '100%', fontWeight: '600' }
@@ -144,11 +144,12 @@
 				this.appVersion = version
 			})
 
-			uni.getSystemInfo({
-				success: (res) => {
-					this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
-				},
-			});
+			// 基础库 2.20+ 已废弃 getSystemInfo；此处只需 platform，改为同步读取设备信息
+			let platform = ''
+			try {
+				if (typeof uni.getDeviceInfo === 'function') platform = (uni.getDeviceInfo() || {}).platform || ''
+			} catch (e) { }
+			this.platformClass = platform === 'ios' ? 'ios-platform' : 'android-platform';
 		},
 		mounted() {
 		},

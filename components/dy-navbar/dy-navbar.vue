@@ -1,12 +1,12 @@
 <template>
   <view class="navbar-wrapper">
     <!-- <view v-if="placeholder" class="navbar-placeholder" :class="platformClass" :style="{ backgroundColor: bgColor }"></view> -->
-    <view class="header" :class="[platformClass, { 'navbar-fixed': fixed }]" :style="{ backgroundColor: bgColor }">
+    <view class="header" :class="[platformClass, { 'navbar-fixed': fixed }]" :style="{ backgroundColor: safeBgColor }">
        <view class="header-safe-area"></view>
       <view class="header-content">
         <view class="back-btn" @click="handleBack" v-if="showBack">
           <slot name="left">
-            <uni-icons type="back" :size="20" :color="leftIconColor"></uni-icons>
+            <uni-icons type="back" :size="20" :color="safeLeftIconColor"></uni-icons>
           </slot>
         </view>
         <view v-else>
@@ -14,7 +14,7 @@
         </view>
         <view class="header-center">
           <slot name="center">
-            <text class="title" :style="titleStyle">{{ title }}</text>
+            <text class="title" :style="safeTitleStyle">{{ safeTitle }}</text>
           </slot>
         </view>
         <view class="header-right">
@@ -30,20 +30,23 @@
 export default {
   name: 'DyNavbar',
   data() {
-    let platform = 'android'
+    let platform = ''
     try {
-      const sysInfo = uni.getSystemInfoSync()
-      platform = sysInfo.platform || 'android'
+      // 基础库 2.20+ 已废弃 getSystemInfoSync；这里只需要 platform，getDeviceInfo 即可满足
+      if (typeof uni.getDeviceInfo === 'function') {
+        platform = (uni.getDeviceInfo() || {}).platform || ''
+      }
     } catch (e) {
-      console.error('getSystemInfoSync failed', e)
+      console.warn('getDeviceInfo failed', e)
     }
     return {
       platformClass: platform === 'ios' ? 'ios-platform' : 'android-platform'
     }
   },
   props: {
+    // 同 bgColor：全局 mixin 的 computed 首帧未求值会被序列化为 null，
+    // 声明 type 会触发类型校验告警，改为运行时兜底
     title: {
-      type: String,
       default: ''
     },
     showBack: {
@@ -62,19 +65,35 @@ export default {
       type: Boolean,
       default: true
     },
+    // 不声明 type：小程序端 uni 会把 type 编译进 properties 做类型校验，
+    // 而全局 mixin 的 fontColor/bGColor 是 computed，首帧 patch 尚未求值时
+    // 会被序列化为 null 传入，触发 "received type-uncompatible value"。
+    // default 仍保留，配合下方 computed 做运行时兜底。
     bgColor: {
-      type: String,
       default: '#fff'
     },
     leftIconColor: {
-      type: String,
       default: '#303133'
     },
     titleStyle: {
-      type: Object,
       default() {
         return {}
       }
+    }
+  },
+  computed: {
+    safeTitle() {
+      return typeof this.title === 'string' ? this.title : ''
+    },
+    safeBgColor() {
+      return typeof this.bgColor === 'string' && this.bgColor ? this.bgColor : '#fff'
+    },
+    safeLeftIconColor() {
+      return typeof this.leftIconColor === 'string' && this.leftIconColor ? this.leftIconColor : '#303133'
+    },
+    safeTitleStyle() {
+      const s = this.titleStyle
+      return s && typeof s === 'object' && !Array.isArray(s) ? s : {}
     }
   },
   methods: {

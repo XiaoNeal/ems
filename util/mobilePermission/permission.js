@@ -276,7 +276,14 @@ mainActivity.startActivity(intent);
 
 const  permission = {
 get isIOS(){
-return typeof isIOS === 'boolean' ? isIOS : (isIOS = uni.getSystemInfoSync().platform === 'ios')
+if (typeof isIOS !== 'boolean') {
+var platform = ''
+try {
+if (typeof uni.getDeviceInfo === 'function') platform = (uni.getDeviceInfo() || {}).platform || ''
+} catch (e) { }
+isIOS = platform === 'ios'
+}
+return isIOS
 },
 requestIOS: requestIOS,
 requestAndroid: requestAndroid,

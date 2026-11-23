@@ -166,7 +166,7 @@
                     <view class="input-group">
                         <text class="input-label">密码</text>
                         <view class="input-wrapper">
-                            <input type="password" placeholder="请输入密码" v-model="accountInfo.password" />
+                            <input :password="true" placeholder="请输入密码" v-model="accountInfo.password" />
                         </view>
                     </view>
 

@@ -864,7 +864,7 @@ export default {
     background: #f5f5f5;
     border-radius: 12rpx;
 
-    text {
+    .placeholder-text {
       font-size: 24rpx;
       color: #999;
     }

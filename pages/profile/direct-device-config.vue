@@ -235,11 +235,12 @@ export default {
     this._wifiConnectTimer = null
     this._wifiConnectSettled = false
     this._pendingManualWifi = ''
-    uni.getSystemInfo({
-      success: (res) => {
-        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform"
-      }
-    })
+    // 基础库 2.20+ 已废弃 getSystemInfo；此处只需 platform，改为同步读取设备信息
+    let platform = ''
+    try {
+      if (typeof uni.getDeviceInfo === 'function') platform = (uni.getDeviceInfo() || {}).platform || ''
+    } catch (e) { }
+    this.platformClass = platform === 'ios' ? 'ios-platform' : 'android-platform'
     this.loadConfig()
   },
   /** 首次进入、扫码或从系统 WiFi 设置返回本页都会重新识别热点 */

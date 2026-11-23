@@ -643,7 +643,7 @@ export default {
   white-space: nowrap;
 }
 
-button[type="warn"] {
+.warn-btn {
   background: #ff4444;
   color: #fff;
   border-radius: 8px;

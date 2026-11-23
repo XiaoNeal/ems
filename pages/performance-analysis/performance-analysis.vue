@@ -63,7 +63,7 @@
         </view>
         <view class="banner">
           <view class="banner-item">
-            <text class="banner-label">光伏自驱率</text>
+            <text class="banner-label">清洁化率</text>
             <text class="banner-value">{{ supplySelfSufficiencyRate }}<text class="banner-unit">%</text></text>
           </view>
           <view class="banner-divider"></view>
@@ -101,7 +101,7 @@
           <view class="tooltip-line"><text class="tooltip-term">储能充/放电</text>：储能 DC-DC 的充放电功率</view>
           <view class="tooltip-line"><text class="tooltip-term">负荷</text>：本地负载功率</view>
           <view class="tooltip-line"><text class="tooltip-term">供电/馈电</text>：电网双向功率</view>
-          <view class="tooltip-line"><text class="tooltip-term">光伏自驱率</text>＝光伏发电 / 负荷 × 100%</view>
+          <view class="tooltip-line"><text class="tooltip-term">清洁化率</text>＝光伏发电 / 负荷 × 100%</view>
           <view class="tooltip-line"><text class="tooltip-term">自给率</text>＝(光伏 + 储能放电) / 负荷 × 100%</view>
           <view class="tooltip-line"><text class="tooltip-term">碳减排</text>＝光伏发电量 × 0.0005 tCO₂/kWh</view>
         </view>
@@ -140,11 +140,11 @@
         </view>
       </view>
 
-      <!-- 光伏自驱率 · 自给率 趋势（合并） -->
+      <!-- 清洁化率 · 自给率 趋势（合并） -->
       <view class="chart-card">
         <view class="card-header">
           <view class="card-title-row">
-            <text class="card-title">光伏自驱率 · 自给率 趋势</text>
+            <text class="card-title">清洁化率 · 自给率 趋势</text>
             <view class="info-tip-btn" @tap="toggleTooltip('rate')">
               <text class="info-tip-icon">i</text>
             </view>
@@ -167,7 +167,7 @@
         <view v-if="tooltipKey === 'rate'" class="tooltip-mask" @tap="hideTooltip"></view>
         <view v-if="tooltipKey === 'rate'" class="tooltip-popover" @tap.stop>
           <view class="tooltip-title">指标计算公式</view>
-          <view class="tooltip-line"><text class="tooltip-term">光伏自驱率</text>＝光伏发电量 / 负荷用电量 × 100%</view>
+          <view class="tooltip-line"><text class="tooltip-term">清洁化率</text>＝光伏发电量 / 负荷用电量 × 100%</view>
           <view class="tooltip-line"><text class="tooltip-term">自给率</text>＝(光伏发电量 + 储能放电量) / 负荷用电量 × 100%</view>
           <view class="tooltip-note">自给率越高，说明本地微能站对电网的依赖越低</view>
           <view class="tooltip-note">当自给率 ≥ 100% 时，表示本地供给完全覆盖负荷</view>
@@ -276,6 +276,9 @@ export default {
       canvas2d: this.$Config?.ISCANVAS2D ?? false,
       platformClass: '',
       periodTabs: ['日', '月', '年'],
+      // 日期选择器周期：用 data 而非 computed 承载，避免小程序端首次 patch 时
+      // computed 尚未求值导致 timeType 收到 undefined/null（uni 运行时会序列化成 null）
+      dateTypes: { kpi: 'day', supply: 'day', price: 'day', rate: 'day', bus: 'day' },
       loadingCount: 0,
       busRatedVoltage: BUS_RATED_VOLTAGE,
       tooltipKey: null, // 当前展开的说明卡：null | 'kpi' | 'bus'
@@ -299,7 +302,7 @@ export default {
     supplySums() {
       return this.sumSupplyOf(this.cards.supply)
     },
-    // 光伏自驱率 = 光伏发电 / 负荷 × 100%（与趋势图口径一致，上限 100%）
+    // 清洁化率 = 光伏发电 / 负荷 × 100%（与趋势图口径一致，上限 100%）
     supplySelfSufficiencyRate() {
       const s = this.supplySums
       return s.load > 0 ? (Math.min(s.pv / s.load, 1) * 100).toFixed(1) : '0.0'
@@ -437,14 +440,6 @@ export default {
         }
       })
     },
-    dateTypes() {
-      const map = {}
-      Object.keys(this.cards).forEach(key => {
-        const p = this.cards[key].period
-        map[key] = p === '日' ? 'day' : p === '月' ? 'month' : 'year'
-      })
-      return map
-    },
     priceChartSeries() {
       const card = this.cards.price
       const data = this.hourAlignedOf(card)
@@ -528,7 +523,7 @@ export default {
         extra: { mix: { column: { width: 6 }, line: { type: 'curve', width: 2 } } }
       }
     },
-    // 合并的比率趋势：光伏自驱率(仅光伏) + 自给率(光伏+储能放电) + 光伏/负荷柱状
+    // 合并的比率趋势：清洁化率(仅光伏) + 自给率(光伏+储能放电) + 光伏/负荷柱状
     rateChartData() {
       const card = this.cards.rate
       const data = this.hourAlignedOf(card)
@@ -550,7 +545,7 @@ export default {
       return {
         categories: this.xLabelsOf(card),
         series: [
-          { name: '光伏自驱率', type: 'line', index: 0, data: selfRateData },
+          { name: '清洁化率', type: 'line', index: 0, data: selfRateData },
           { name: '自给率', type: 'line', index: 0, data: balanceRateData },
           { name: '光伏发电量', type: 'column', index: 1, data: pvData },
           { name: '负荷用电量', type: 'column', index: 1, data: loadData }
@@ -636,11 +631,12 @@ export default {
     }
   },
   onLoad() {
-    uni.getSystemInfo({
-      success: res => {
-        this.platformClass = res.platform === 'ios' ? 'ios-platform' : 'android-platform'
-      }
-    })
+    // 基础库 2.20+ 已废弃 getSystemInfo；此处只需 platform，改为同步读取设备信息
+    let devicePlatform = ""
+    try {
+      if (typeof uni.getDeviceInfo === "function") devicePlatform = (uni.getDeviceInfo() || {}).platform || ""
+    } catch (e) { }
+        this.platformClass = devicePlatform === 'ios' ? 'ios-platform' : 'android-platform'
   },
   mounted() {
     this.$nextTick(() => this.measureRingStage())
@@ -735,6 +731,7 @@ export default {
       const card = this.cards[key]
       if (!card || card.period === t) return
       card.period = t
+      this.dateTypes[key] = t === '日' ? 'day' : t === '月' ? 'month' : 'year'
       const now = new Date()
       card.date = t === '日' ? formatDate(now)
         : t === '月' ? `${now.getFullYear()}-${pad2(now.getMonth() + 1)}`

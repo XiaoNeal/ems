@@ -75,11 +75,11 @@
         <view class="card-foot">
           <view class="enter-hint">
             <view class="hint-dot"></view>
-            <text>查看实时数据</text>
+            <text class="hint-text">查看实时数据</text>
           </view>
           <view class="unbind-btn" @click.stop="deleteDevice(esId)">
             <uni-icons type="trash" size="14" color="#98a2b2" />
-            <text>解绑</text>
+            <text class="unbind-text">解绑</text>
           </view>
         </view>
       </view>
@@ -719,7 +719,7 @@ $radius-xl: 28rpx;
     border-radius: 50%;
     background: #95b6f0;
   }
-  text {
+  .hint-text {
     font-size: 24rpx;
     color: #8aa0c4;
   }
@@ -734,7 +734,7 @@ $radius-xl: 28rpx;
   gap: 6rpx;
   transition: background 0.2s;
   &:active { background: #e8edf7; }
-  text {
+  .unbind-text {
     font-size: 24rpx;
     color: $text-gray;
   }

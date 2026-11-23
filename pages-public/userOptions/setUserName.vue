@@ -55,17 +55,17 @@
 		<!-- 更改密码 -->
 		<view class="modify" v-if="type == 3">
 			<view class="form-container">
-				<view class="tip-text">验证码将发送至 {{ mobile }}</view>
+				<view class="tip-text">验证码将发送至 {{ displayMobile || '当前绑定手机号' }}</view>
 
 				<!-- 新密码输入 -->
 				<view class="input-group">
 					<text class="input-label">新密码</text>
 
 					<view class="input-container">
-						<input class="input-field" :type="showPassword ? 'text' : 'password'" placeholder="至少6位字母和数字组合"
+						<input class="input-field" :password="!showPassword" placeholder="至少6位字母和数字组合"
 							v-model.trim="newPassword" @focus="showPasswordRules = true"
 							@blur="validatePasswordStrength" maxlength="20">
-						<uni-icons :type="showPassword ? 'eye-filled' : 'eye-closed-filled'"
+						<uni-icons :type="showPassword ? 'eye-filled' : 'eye-slash-filled'"
 							@click="showPassword = !showPassword" class="password-toggle"></uni-icons>
 					</view>
 
@@ -76,8 +76,8 @@
 					<view v-if="showPasswordRules" class="password-rules">
 						<view class="rule-item" v-for="(rule, index) in passwordRules" :key="index"
 							:class="{ fulfilled: rule.condition }">
-							<uni-icons :type="rule.condition ? 'checkbox-filled' : 'circle'" size="14"
-								:color="rule.condition ? '#52c41a' : '#999'" />
+						<uni-icons class="rule-icon" :type="rule.condition ? 'checkbox-filled' : 'circle'" size="14"
+							:color="rule.condition ? '#52c41a' : '#999'" />
 							<text>{{ rule.text }}</text>
 						</view>
 					</view>
@@ -87,10 +87,10 @@
 				<view class="input-group">
 					<text class="input-label">确认密码</text>
 					<view class="input-container">
-						<input class="input-field" :type="showConfirmPassword ? 'text' : 'password'"
+						<input class="input-field" :password="!showConfirmPassword"
 							placeholder="再次输入新密码" v-model.trim="confirmNewPassword" @blur="validatePasswordMatch"
 							maxlength="20">
-						<uni-icons :type="showConfirmPassword ? 'eye-filled' : 'eye-closed-filled'"
+						<uni-icons :type="showConfirmPassword ? 'eye-filled' : 'eye-slash-filled'"
 							@click="showConfirmPassword = !showConfirmPassword" class="password-toggle"></uni-icons>
 					</view>
 				</view>
@@ -103,7 +103,7 @@
 					<view class="code-wrapper">
 						<input class="code-input" type="text" placeholder="6位验证码" v-model="verificationCode"
 							maxlength="6">
-						<button class="code-btn" @click="handleGetCode" :disabled="isCounting || codeSending">
+						<button class="code-btn" :class="{ 'is-disabled': isCounting || codeSending }" @click="handleGetCode" :disabled="isCounting || codeSending">
 							<text v-if="!codeSending">
 								{{ countdown > 0 ? `${countdown}s后重发` : '获取验证码' }}
 							</text>
@@ -131,6 +131,7 @@ export default {
 	components: { DyNavbar },
 	data() {
 		return {
+			showPassword: false,
 			showConfirmPassword: false,
 			verificationCodeText: '获取验证码',
 			countdown: 0,
@@ -162,6 +163,15 @@ export default {
 	},
 	computed: {
 		...mapState('user', ['userName', 'mobile', 'id']),
+		// 登录态真实数据源是根 store 的 userInfo，字段名为 mobile_phone；
+		// user 模块的 mobile 未被赋值，直接渲染会得到 undefined
+		userMobile() {
+			const info = this.$store.state.userInfo || {}
+			return info.mobile_phone || info.mobile || this.mobile || ''
+		},
+		displayMobile() {
+			return this.userMobile ? this.userMobile.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : ''
+		},
 		pageTitle() {
 			switch (this.type) {
 				case '1':
@@ -183,18 +193,19 @@ export default {
 		},
 	},
 	onLoad() {
-		uni.getSystemInfo({
-			success: (res) => {
-				this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
-			},
-		});
+		// 基础库 2.20+ 已废弃 getSystemInfo；此处只需 platform，改为同步读取设备信息
+		let devicePlatform = ""
+		try {
+		  if (typeof uni.getDeviceInfo === "function") devicePlatform = (uni.getDeviceInfo() || {}).platform || ""
+		} catch (e) { }
+				this.platformClass = devicePlatform === "ios" ? "ios-platform" : "android-platform";
 	},
 	mounted() {
 		let pages = getCurrentPages()
 		let curr = pages[pages.length - 1].options.type
 		this.type = curr
 		this.setUserName = this.userName
-		this.phone = this.mobile
+		this.phone = this.userMobile
 
 
 
@@ -294,7 +305,7 @@ export default {
 		const currentId = currentUser.id || currentUser.userId
 		let formData = JSON.stringify({
 			userId: currentId,
-			tel: that.mobile,
+			tel: that.userMobile,
 			password: md5(that.newPassword).toString(),
 			code: that.verificationCode
 		})
@@ -414,10 +425,14 @@ export default {
 		},
 		async handleGetCode() {
 			if (this.codeSending) return
+			if (!this.userMobile) {
+				uni.showToast({ title: '未获取到绑定手机号，请重新登录', icon: 'none' })
+				return
+			}
 
 			this.codeSending = true
 			try {
-				sendSmsCode(this.mobile).then(res => {
+				sendSmsCode(this.userMobile).then(res => {
 					// console.log(res, "验证码");
 					// res = JSON.parse(decrypt(res));
 
@@ -798,9 +813,10 @@ export default {
 
 	.password-toggle {
 		position: absolute;
-		right: 20rpx;
+		right: 12rpx;
 		top: 50%;
 		transform: translateY(-50%);
+		padding: 12rpx;
 		color: #999;
 		font-size: 28rpx;
 		transition: color 0.3s ease;
@@ -830,7 +846,7 @@ export default {
 			color: #52c41a;
 		}
 
-		uni-icons {
+		.rule-icon {
 			margin-right: 16rpx;
 			font-size: 22rpx;
 		}
@@ -893,14 +909,14 @@ export default {
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 		box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.1);
 
-		&[disabled] {
+		&.is-disabled {
 			background: #f5f5f5;
 			border-color: #e0e0e0;
 			color: #999;
 			box-shadow: none;
 		}
 
-		&:active:not([disabled]) {
+		&:active {
 			transform: scale(0.97);
 			background: linear-gradient(135deg, #e6edff 0%, #d3deff 100%);
 			box-shadow: 0 2rpx 6rpx rgba(74, 140, 255, 0.1);
@@ -924,14 +940,7 @@ export default {
 	box-shadow: 0 8rpx 20rpx rgba(74, 140, 255, 0.3), 0 2rpx 8rpx rgba(74, 140, 255, 0.15);
 	border: 2rpx solid rgba(255, 255, 255, 0.3);
 
-	&[disabled] {
-		background: linear-gradient(180deg, #e0e0e0 0%, #d0d0d0 100%);
-		box-shadow: none;
-		opacity: 0.6;
-		border-color: transparent;
-	}
-
-	&:active:not([disabled]) {
+	&:active {
 		transform: scale(0.98);
 		background-position: 100% 0;
 		box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.3), 0 2rpx 4rpx rgba(74, 140, 255, 0.15);
@@ -957,44 +966,10 @@ export default {
 	align-items: center;
 	justify-content: center;
 
-	&[disabled] {
-		background: linear-gradient(180deg, #e0e0e0 0%, #d0d0d0 100%);
-		box-shadow: none;
-		opacity: 0.6;
-		border-color: transparent;
-	}
-
-	&:active:not([disabled]) {
+	&:active {
 		transform: scale(0.98);
 		background-position: 100% 0;
 		box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.3), 0 2rpx 4rpx rgba(74, 140, 255, 0.15);
-	}
-}
-
-// 通用按钮样式
-button {
-	width: 100%;
-	height: 100rpx;
-	line-height: 100rpx;
-	background: linear-gradient(135deg, #4a8cff 0%, #6b9dff 100%);
-	color: #fff;
-	border-radius: 50rpx;
-	font-size: 32rpx;
-	font-weight: 500;
-	margin-top: 32rpx;
-	transition: all 0.3s ease;
-	box-shadow: 0 8rpx 24rpx rgba(74, 140, 255, 0.3);
-	border: none;
-
-	&[disabled] {
-		background: #d9d9d9;
-		box-shadow: none;
-		opacity: 0.6;
-	}
-
-	&:active:not([disabled]) {
-		transform: scale(0.98);
-		box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.3);
 	}
 }
 

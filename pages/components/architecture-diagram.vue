@@ -446,14 +446,20 @@ export default {
     const deviceControl = (currentDevice.list || []).find(item => item.controlType == 1);
     this.deviceConfig.idCode = deviceControl?.homeBarCode || '';
 
-    // 获取系统信息并设置CSS变量
-    const systemInfo = uni.getSystemInfoSync();
-    this.statusBarHeight = systemInfo.statusBarHeight || 20;
-    this.navBarHeight = systemInfo.platform === 'android' ? 48 : 44;
+    // 获取系统信息并设置CSS变量：基础库 2.20+ 已废弃 getSystemInfoSync，
+    // 所需字段分别来自 getWindowInfo（窗口/安全区）与 getDeviceInfo（platform）。
+    let windowInfo = {}
+    let deviceInfo = {}
+    try {
+      if (typeof uni.getWindowInfo === 'function') windowInfo = uni.getWindowInfo() || {}
+      if (typeof uni.getDeviceInfo === 'function') deviceInfo = uni.getDeviceInfo() || {}
+    } catch (e) { }
+    this.statusBarHeight = windowInfo.statusBarHeight || 20;
+    this.navBarHeight = deviceInfo.platform === 'android' ? 48 : 44;
     this.topSafeArea = this.statusBarHeight + this.navBarHeight;
     // 设置CSS变量用于全屏模式（仅在H5环境中执行）
-    const safeAreaTop = systemInfo.safeArea?.top || systemInfo.statusBarHeight || 0;
-    const safeAreaBottom = systemInfo.safeArea?.bottom || 0;
+    const safeAreaTop = (windowInfo.safeArea && windowInfo.safeArea.top) || windowInfo.statusBarHeight || 0;
+    const safeAreaBottom = (windowInfo.safeArea && windowInfo.safeArea.bottom) || 0;
     if (typeof document !== 'undefined' && document.documentElement) {
       try {
         document.documentElement.style.setProperty('--safe-area-top', safeAreaTop + 'px');

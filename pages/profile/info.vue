@@ -96,11 +96,12 @@ export default {
   },
   onLoad: function (option) {
     this.isAdmin = option.admin
-    uni.getSystemInfo({
-      success: (res) => {
-        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
-      },
-    });
+    // 基础库 2.20+ 已废弃 getSystemInfo；此处只需 platform，改为同步读取设备信息
+    let platform = ''
+    try {
+      if (typeof uni.getDeviceInfo === 'function') platform = (uni.getDeviceInfo() || {}).platform || ''
+    } catch (e) { }
+    this.platformClass = platform === 'ios' ? 'ios-platform' : 'android-platform';
   },
   onShow() {
     this.refreshTick++

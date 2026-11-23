@@ -104,6 +104,7 @@ import DeviceList from '../components/device-list.vue'
 import { findUserInfoByCodeId, getUserCenterInfo, findEnergyStation } from '@/api/user'
 import { getDeviceByAreaId } from '@/api/devices'
 import { realtimeDataProvider } from '@/service/websocket'
+import { resolveDeviceTypeCode } from '@/utils/device-type'
 
 export default {
   components: {
@@ -563,16 +564,13 @@ export default {
         return
       }
 
-      // 过滤有效设备
-      const validDevices = list.filter(item => {
-        const typeCode = (item.typeCode || '').trim();
-        const homeBarCode = (item.homeBarCode || '').trim();
-        const barCode = (item.barCode || '').trim();
-        return (typeCode && typeCode !== '-1') || homeBarCode || barCode;
-      });
+      // 过滤有效设备：'-1'（数字或字符串）是服务端对「未配置协议类型」设备的占位码，
+      // 不能因为带 barCode 就放行——工厂 create 没有该分支，不会生成模型，设备永远无实时数据。
+      // barCode 只用于定位网关，不能替代类型码，因此这里只按类型码有效性过滤。
+      const validDevices = list.filter(item => Boolean(resolveDeviceTypeCode(item)));
 
       const configs = validDevices.map(item => {
-        const typeCode = (item.typeCode || '').trim() || String(item.deviceType || '');
+        const typeCode = resolveDeviceTypeCode(item);
         // barCode 可能存在于多种字段名下，逐一尝试
         const barCode = (
           item.homeBarCode || item.barCode || item.gateway || item.gateWay ||
@@ -585,7 +583,7 @@ export default {
           barCode: barCode,
           deviceId: item.id || item.deviceId,
           name: item.deviceName || item.description || typeCode,
-          rawDeviceType: item.deviceType
+          rawDeviceType: resolveDeviceTypeCode({ rawDeviceType: item.deviceType }) || typeCode
         };
       });
 
@@ -712,17 +710,12 @@ export default {
       const deviceList = currentDevice.list || [];
 
 
-      // 收集所有有效设备（有 typeCode 或 homeBarCode）
-      const validDevices = deviceList.filter(item => {
-        const typeCode = (item.typeCode || '').trim();
-        const homeBarCode = (item.homeBarCode || '').trim();
-        const barCode = (item.barCode || '').trim();
-        return (typeCode && typeCode !== '-1') || homeBarCode || barCode;
-      });
+      // 收集所有有效设备：与 registerDevices 一致，服务端占位码 -1 不作为有效类型
+      const validDevices = deviceList.filter(item => Boolean(resolveDeviceTypeCode(item)));
 
       // 构建注册配置列表
       const configs = validDevices.map(item => {
-        const typeCode = (item.typeCode || '').trim() || String(item.deviceType || '');
+        const typeCode = resolveDeviceTypeCode(item);
         // barCode 可能存在于多种字段名下，逐一尝试
         const barCode = (
           item.homeBarCode || item.barCode || item.gateway || item.gateWay ||
@@ -735,7 +728,7 @@ export default {
           barCode: barCode,
           deviceId: item.id || item.deviceId,
           name: item.deviceName || item.description || typeCode,
-          rawDeviceType: item.deviceType
+          rawDeviceType: resolveDeviceTypeCode({ rawDeviceType: item.deviceType }) || typeCode
         };
       });
 

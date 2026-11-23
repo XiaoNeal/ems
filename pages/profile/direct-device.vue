@@ -955,11 +955,12 @@ export default {
     this._rebuildActiveRv()
   },
   onLoad() {
-    uni.getSystemInfo({
-      success: (res) => {
-        this.platformClass = res.platform === 'ios' ? 'ios-platform' : 'android-platform'
-      }
-    })
+    // 基础库 2.20+ 已废弃 getSystemInfo；此处只需 platform，改为同步读取设备信息
+    let devicePlatform = ""
+    try {
+      if (typeof uni.getDeviceInfo === "function") devicePlatform = (uni.getDeviceInfo() || {}).platform || ""
+    } catch (e) { }
+        this.platformClass = devicePlatform === 'ios' ? 'ios-platform' : 'android-platform'
     this.loadConfig()
     // 参数模板在进页面后的空闲帧预热（不在切 tab 帧）。
     // 设置面板已静态常驻，但参数数组是空的；若等首次点「设置」才填充，

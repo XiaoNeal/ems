@@ -453,7 +453,7 @@
 </script>
 
 <style lang="less">
-	picker.date-picker {
+	.date-picker {
 		width: 100%;
 		height: 40px;
 		border-radius: 8px;
@@ -509,7 +509,7 @@
 	}
 	
 	@media screen and (max-width: 480px) {
-		picker.date-picker {
+		.date-picker {
 			height: 36px;
 			max-width: 180px;
 			padding: 0 10px;

@@ -1,33 +1,33 @@
 <template>
-	<view :style="'background-color:'+ bGColor" class="container" :class="platformClass">
+	<view :style="'background-color:'+ navBgColor" class="container" :class="platformClass">
 		<!-- <u-navbar title="G-FIEMS" :titleStyle="{'color':'#fff','width':'100%','text-align':'left','padding-left':'40rpx'}" :leftIcon="null" :leftText="null" :placeholder="true" :bgColor="headerTabBg"></u-navbar> -->
-		<DyNavbar title="设置" :titleStyle="{'color':fontColor,'width':'100%'}" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
+		<DyNavbar title="设置" :titleStyle="navTitleStyle" :placeholder="true" :leftIconColor="navIconColor"></DyNavbar>
 		<view class="fixed-placeholder"></view>
-		<view class="list" :style="'color:'+fontColor">
+		<view class="list" :style="'color:'+navIconColor">
 			<text style="flex: 1;">个人头像</text>
 			<image :src="imgSrc" mode="widthFix" style="margin-right: 10px;border-radius: 50%;" @click="changeAvatar">
 			</image>
-			<uni-icons type="right" :color="fontColor"></uni-icons>
+			<uni-icons type="right" :color="navIconColor"></uni-icons>
 		</view>
-		<view class="list" @click="goto(1)" :style="'color:'+fontColor">
+		<view class="list" @click="goto(1)" :style="'color:'+navIconColor">
 			<text style="flex: 1;">用户名</text>
 			<text>{{userName}}</text>
-			<uni-icons type="right" :color="fontColor"></uni-icons>
+			<uni-icons type="right" :color="navIconColor"></uni-icons>
 		</view>
-		<view class="list" @click="goto(2)" :style="'color:'+fontColor">
+		<view class="list" @click="goto(2)" :style="'color:'+navIconColor">
 			<text style="flex: 1;">手机号码</text>
 			<text>{{userPhone}}</text>
-			<uni-icons type="right" :color="fontColor"></uni-icons>
+			<uni-icons type="right" :color="navIconColor"></uni-icons>
 		</view>
 
-		<view class="list" @click="goto(3)" :style="'color:'+fontColor">
+		<view class="list" @click="goto(3)" :style="'color:'+navIconColor">
 			<text style="flex: 1;">修改密码</text>
-			<uni-icons type="right" :color="fontColor"></uni-icons>
+			<uni-icons type="right" :color="navIconColor"></uni-icons>
 		</view>
 
-		<view class="list" @click="goto(4)" :style="'color:'+fontColor">
+		<view class="list" @click="goto(4)" :style="'color:'+navIconColor">
 			<text style="flex: 1;">账户与安全</text>
-			<uni-icons type="right" :color="fontColor"></uni-icons>
+			<uni-icons type="right" :color="navIconColor"></uni-icons>
 		</view>
 		<u-toast ref="uToast"></u-toast>
 		<view class=" logout" @click="logout">
@@ -59,6 +59,19 @@
 				platformClass: ''
 			}
 		},
+		computed: {
+			// fontColor 来自全局 mixin（vuex computed），小程序首帧可能尚未求值，
+			// 集中兜底避免把 null 传给 DyNavbar / uni-icons 的 String 类型 prop
+			navIconColor() {
+				return typeof this.fontColor === 'string' && this.fontColor ? this.fontColor : '#000'
+			},
+			navBgColor() {
+				return typeof this.bGColor === 'string' && this.bGColor ? this.bGColor : '#fff'
+			},
+			navTitleStyle() {
+				return { color: this.navIconColor, width: '100%' }
+			}
+		},
 		mounted() {
 			this.imgSrc = `https://serviceiems.gree.com/appletAPI${this.userAvatar}`
 		},
@@ -69,11 +82,12 @@
 			// 	this.iconColor ='#000'
 			// }
 			this.isAdmin = option.admin
-			uni.getSystemInfo({
-				success: (res) => {
-					this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
-				},
-			});
+			// 基础库 2.20+ 已废弃 getSystemInfo；此处只需 platform，改为同步读取设备信息
+			let devicePlatform = ""
+			try {
+				if (typeof uni.getDeviceInfo === "function") devicePlatform = (uni.getDeviceInfo() || {}).platform || ""
+			} catch (e) { }
+			this.platformClass = devicePlatform === "ios" ? "ios-platform" : "android-platform";
 		},
 
 

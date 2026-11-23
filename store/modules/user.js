@@ -10,28 +10,31 @@ import { realtimeDataProvider } from '@/service/websocket.js'
 
 
 
+const defaultUserState = {
+	avatar: '',
+	balance: 0,
+	memberId: '',
+	userName: '',
+	projectId: '',
+	mobile: '',
+	id: '',
+	token: '',
+	sessionId: '',
+	loginTime: '',
+	roles: [],
+	stationId: '',
+	stationIds: [],
+	roleId: '',
+	roleName: '',
+	permissions: [],
+	esIds: [], // 设备列表
+	esUsers: [], // 设备角色关联
+}
+
 const state = {
-	// 初始化时从缓存读取
-	...uni.getStorageSync('userInfo') || {
-		avatar: '',
-		balance: 0,
-		memberId: '',
-		userName: '',
-		projectId: '',
-		mobile: '',
-		id: '',
-		token: '',
-		sessionId: '',
-		loginTime: '',
-		roles: [],
-		stationId: '',
-		stationIds: [],
-		roleId: '',
-		roleName: '',
-		permissions: [],
-		esIds: [], // 设备列表
-		esUsers: [], // 设备角色关联
-	},
+	// 初始化时从缓存读取；缓存缺字段时用默认值兜底，避免出现 undefined
+	...defaultUserState,
+	...(uni.getStorageSync('userInfo') || {}),
 	hasLogin: false,
 	nickname: '',
 	balance: 0,
@@ -80,11 +83,13 @@ const mutations = {
 		state.permissions = payload.permissions || []
 		state.esIds = payload.esIds || []
 		state.esUsers = payload.esUsers || []
+		state.mobile = payload.mobile || payload.mobile_phone || ''
 
 		// 新增持久化存储
 		uni.setStorageSync('userInfo', {
 			id: payload.id,
 			userName: payload.username,
+			mobile: state.mobile,
 			token: payload.token,
 			sessionId: payload.sessionId,
 			loginTime: payload.loginTime,
@@ -205,6 +210,7 @@ const actions = {
 			loginTime: loginTime,
 			roleId: data.roleId,
 			roleName: data.roleName,
+			mobile: data.mobile_phone || data.mobile || '',
 			stationId: 0,
 			stationIds: data.esIds || [],
 			esIds: data.esIds || [],
@@ -233,7 +239,7 @@ const actions = {
 			commit('SET_USER_INFO', {
 				id: '', userName: '', token: '', sessionId: '', loginTime: '',
 				avatar: '', stationId: '', stationIds: [], roleId: '', roleName: '',
-				permissions: [], esIds: [], esUsers: []
+				permissions: [], esIds: [], esUsers: [], mobile: ''
 			})
 			resolve()
 		})

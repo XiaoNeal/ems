@@ -97,11 +97,12 @@
 			this.tip = conf.tip
 			this.allLinkText = conf.allLinkText
 
-			uni.getSystemInfo({
-				success: (res) => {
-					this.platformClass = res.platform === 'ios' ? 'ios-platform' : 'android-platform'
-				}
-			})
+			// 基础库 2.20+ 已废弃 getSystemInfo；此处只需 platform，改为同步读取设备信息
+			let devicePlatform = ""
+			try {
+			  if (typeof uni.getDeviceInfo === "function") devicePlatform = (uni.getDeviceInfo() || {}).platform || ""
+			} catch (e) { }
+					this.platformClass = devicePlatform === 'ios' ? 'ios-platform' : 'android-platform'
 		},
 		/** 从系统设置 / 小程序设置返回时自动刷新状态 */
 		onShow() {

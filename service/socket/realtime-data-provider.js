@@ -1,5 +1,6 @@
 import RealTimeWebSokcetProtocolHandler from '@/service/socket/realtime-websocket-protocolhandler';
 import { parseIemsFrame, isIemsBinaryFrame } from '@/service/socket/iems-frame-parser';
+import { isUsableDeviceType } from '@/utils/device-type';
 import store from '@/store';
 
 import io from '@hyoga/uni-socket.io';
@@ -502,11 +503,21 @@ export class RealtimeDataProviderService {
 		for (let i = 0; deviceList && i < deviceList.length; i++) {
 			let barCode = deviceList[i].barCode || deviceList[i].barcode || ''
 			let address = deviceList[i].address
-			// 使用原始 deviceType 用于 WebSocket 匹配
-			let deviceType = deviceList[i].deviceType || deviceList[i].typeCode
-			// 跳过没有 deviceType 的设备，避免匹配错误
+			// 使用原始 deviceType 用于 WebSocket 匹配；同时在此拦掉服务端占位码 -1/0，
+			// 避免无效类型流到 DeviceFactory.create 产生「未知 deviceType」且该设备永远无数据。
+			// 报文侧允许 typeCode 为数组候选，这里统一取第一个可用值并转为字符串。
+			const rawType = deviceList[i].deviceType == null ? deviceList[i].typeCode : deviceList[i].deviceType
+			const typeCandidates = Array.isArray(rawType) ? rawType : [rawType, deviceList[i].typeCode]
+			let deviceType = ''
+			for (const candidate of typeCandidates) {
+				const code = String(candidate == null ? '' : candidate).trim()
+				if (isUsableDeviceType(code)) {
+					deviceType = code
+					break
+				}
+			}
 			if (!deviceType) {
-				console.warn('设备缺少 deviceType，跳过初始化:', deviceList[i])
+				console.warn('设备类型码无效或缺失，跳过初始化:', deviceList[i] && deviceList[i].name, rawType)
 				continue
 			}
 			// 保存原始类型用于匹配

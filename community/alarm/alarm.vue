@@ -11,7 +11,7 @@
 
           <view class="stats-top-row">
             <view class="chart-box">
-              <qiun-data-charts type="ring" :opts="ringOpts" :chartData="alarmLevelData" canvas-id="ringChart"
+              <qiun-data-charts type="ring" :opts="ringOpts" :chartData="alarmLevelData" :canvas2d="true" canvas-id="ringChart"
                 :canvas2d="canvas2d" :ontouch="true" @touch="handleChartTouch" />
             </view>
 
@@ -248,14 +248,12 @@ export default {
     }
   },
   onLoad() {
-    // const windowInfo = uni.getWindowInfo()
-    // this.platformClass = windowInfo.platform === "ios" ? "ios-platform" : "android-platform"
-
-    uni.getSystemInfo({
-      success: (res) => {
-        this.platformClass = res.platform === "ios" ? "ios-platform" : "android-platform";
-      },
-    });
+    // 基础库 2.20+ 已废弃 getSystemInfo；此处只需 platform，改为同步读取设备信息
+    let platform = ''
+    try {
+      if (typeof uni.getDeviceInfo === 'function') platform = (uni.getDeviceInfo() || {}).platform || ''
+    } catch (e) { }
+    this.platformClass = platform === 'ios' ? 'ios-platform' : 'android-platform';
   },
   mounted() {
     const today = new Date()
