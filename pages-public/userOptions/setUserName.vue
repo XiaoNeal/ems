@@ -299,20 +299,22 @@ export default {
 				return
 			}
 
-			//
-		let that = this
-		const currentUser = this.$store.state.userInfo || this.$store.state.user || {}
-		const currentId = currentUser.id || currentUser.userId
-		let formData = JSON.stringify({
-			userId: currentId,
-			tel: that.userMobile,
-			password: md5(that.newPassword).toString(),
-			code: that.verificationCode
-		})
+			const tel = String(this.userMobile || '').trim()
+			if (!tel) {
+				uni.showToast({ title: '未获取到绑定手机号，请重新登录', icon: 'none' })
+				return
+			}
+
+			// 统一用对象传参，由 uni.request 负责 JSON 序列化；code 必须是数值。
+			// 不传 userId：登录态里的 id 不一定是 base_user_info.id，后端按手机号定位用户更可靠。
+			const formData = {
+				tel,
+				password: md5(this.newPassword).toString(),
+				code: Number(this.verificationCode)
+			}
 
 			UpdatePasswordBySms(formData).then(res => {
-
-				if (res.status == 200) {
+				if (res && (res.status == 200 || res.code == 200)) {
 					uni.showToast({
 						title: '密码修改成功',
 						icon: 'success',
@@ -321,12 +323,14 @@ export default {
 					setTimeout(() => {
 						uni.navigateBack({ delta: 1 })
 					}, 1500)
-				} else if (res.status == 500 && res.msg == '用户名已存在,请重新设置') {
-					that.showToast({
-						type: 'error',
-						message: res.msg
-					})
+					return
 				}
+				this.showToast({
+					type: 'error',
+					message: (res && (res.msg || res.message)) || '密码修改失败，请稍后重试'
+				})
+			}).catch(() => {
+				this.showToast({ type: 'error', message: '密码修改失败，请检查网络后重试' })
 			})
 		},
 		goBack() {

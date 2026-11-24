@@ -57,11 +57,13 @@ import store from '@/store'
 import {
   updateUserInfo,
   findUserInfoByCodeId,
-  getUserCenterInfo,
-  findEnergyStation
+  getUserCenterInfo
 } from "@/api/user.js"
 import md5 from "@/utils/md5.min.js"
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+// #ifdef APP-PLUS
+import { resetNotificationState } from '@/utils/alarm-notification.js'
+// #endif
 
 export default {
   components: { DyNavbar },
@@ -123,12 +125,10 @@ export default {
         const loginType = this.$store.state.userInfo?.loginType
         let userInfo = {}
         if (loginType === 'account') {
-          // 账号密码登录：先 getUserCenterInfo，再根据 roleId 决定 findEnergyStation 是否带 userId
+          // 站点取 ES 用户中心返回的 energyStations（与手机号登录同源，内部按 ES 用户查关联表）
           const userRes = await getUserCenterInfo(userId)
           const userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
-          const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
-          const stationRes = await findEnergyStation('microStation', stationUserId)
-          const stations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
+          const stations = (userData.energyStations || []).map(item => ({ ...item, esId: item.esId || item.id }))
           userInfo = {
             ...this.$store.state.userInfo,
             ...userData,
@@ -262,6 +262,9 @@ export default {
         content: '确定要退出登录吗？',
         success: async (res) => {
           if (res.confirm) {
+            // #ifdef APP-PLUS
+            resetNotificationState();
+            // #endif
             await this.$store.dispatch('user/logout');
             uni.reLaunch({
               url: '/pages/login/login'

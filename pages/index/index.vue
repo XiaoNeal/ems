@@ -28,7 +28,7 @@
       </view>
       <!-- 设备列表页面 -->
       <view v-else-if="showDeviceList" class="page-item device-list-page">
-        <DeviceList ref="deviceList" @selectDevice="handleDeviceSelect"></DeviceList>
+        <DeviceList ref="deviceList" :auto-fetch="false" @selectDevice="handleDeviceSelect" @deviceListUpdated="handleDeviceListUpdated"></DeviceList>
       </view>
 
       <!-- 监测页面 -->
@@ -101,10 +101,11 @@ import Profile from '../profile.vue'
 import System from '../system.vue'
 import PerformanceAnalysis from '../performance-analysis/performance-analysis.vue'
 import DeviceList from '../components/device-list.vue'
-import { findUserInfoByCodeId, getUserCenterInfo, findEnergyStation } from '@/api/user'
+import { getUserCenterInfo } from '@/api/user'
 import { getDeviceByAreaId } from '@/api/devices'
 import { realtimeDataProvider } from '@/service/websocket'
 import { resolveDeviceTypeCode } from '@/utils/device-type'
+import { redirectToLoginSafely } from '@/utils/request.js'
 
 export default {
   components: {
@@ -175,7 +176,7 @@ export default {
     this._initEsIds()
     const userInfo = this._getUserInfo();
     if (!userInfo || !userInfo.isLogin || !userInfo.sessionId) {
-      uni.redirectTo({ url: '/pages/login/login' })
+      redirectToLoginSafely('redirectTo')
       return
     }
     // 登录后兜底：确保云端 WebSocket 已连接
@@ -290,7 +291,10 @@ export default {
     // （策略配置卸载时会 unregister()），resumeRealtime 只能补注册、无法重建设备模型。
     // 清单为空或没有任何已注册 barCode 时重新拉取注册，与「切回监测 tab」的恢复路径一致，
     // 否则从子页面返回后实时数据永远是 '--'，必须切一次 tab 才有数据
-    if ((!realtimeDataProvider.getDeviceList().length || !realtimeDataProvider.hasRegisteredCodes())
+    const launchUser = this._getUserInfo()
+    const isLogged = !!(launchUser && launchUser.isLogin && launchUser.sessionId)
+    if (isLogged
+      && (!realtimeDataProvider.getDeviceList().length || !realtimeDataProvider.hasRegisteredCodes())
       && !this.deviceListLoading && !this.deviceSwitching) {
       this.fetchDeviceList()
     }
@@ -388,6 +392,13 @@ export default {
         // 监测：解除订阅暂停 + 补发当前快照 + 重放注册，让服务端立刻推一帧；
         // 不重新拉接口、不重建连接，避免实时值被清空闪成 '--'
         realtimeDataProvider.resumeRealtime()
+        // 链路被清理过（模型为空 / 没有任何已注册 barCode）时，重放注册无目标，
+        // 下拉刷新也救不回来：这里补一次设备清单重建，与切 tab 的恢复路径一致。
+        const needRebuild = !realtimeDataProvider.getDeviceList().length
+          || !realtimeDataProvider.hasRegisteredCodes()
+        if (needRebuild && !this.deviceListLoading) {
+          return this.fetchDeviceList()
+        }
         return null
       }
       if (this.currentTab === 2) {
@@ -407,6 +418,12 @@ export default {
       }
       // 系统页为静态入口，无数据可刷新，直接收起动画
       return null
+    },
+    // DeviceList 解绑/绑定后本地刷新完成，同步父级 esIds，避免页面仍停留在旧设备列表
+    handleDeviceListUpdated(stations) {
+      if (Array.isArray(stations)) {
+        this.esIds = stations
+      }
     },
     checkFromProfile() {
       const fromProfile = uni.getStorageSync('fromProfile')
@@ -446,9 +463,7 @@ export default {
       const userInfo = this._getUserInfo();
 
       if (!userInfo || !userInfo.isLogin || !userInfo.sessionId) {
-        uni.redirectTo({
-          url: '/pages/login/login'
-        })
+        redirectToLoginSafely('redirectTo')
         return
       }
 
@@ -461,27 +476,26 @@ export default {
     // options.stationsOnly：切换设备后的后台静默刷新，只更新站点清单与用户信息，
     // 不重新选择站点、不重复注册实时模型（否则刚加载的新实时数据会被二次清空）
     async fetchDeviceList(options = {}) {
+      const bootUser = this._getUserInfo()
+      if (!bootUser || !bootUser.isLogin || !bootUser.sessionId) return
       if (this.deviceListLoading) return
       this.deviceListLoading = true
 
       try {
-        const storeUserInfo = this._getUserInfo();
+        const storeUserInfo = bootUser;
         const userId = storeUserInfo.userId
-        const loginType = storeUserInfo.loginType
         let userData = {}
         let energyStations = []
-        if (loginType === 'account') {
-          const userRes = await getUserCenterInfo(userId)
-          userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
-          const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
-          const stationRes = await findEnergyStation('microStation', stationUserId)
-          energyStations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
+        // 统一走 ES 用户中心接口：站点来自 user_es_mapping 关联表，账号密码登录与手机号登录结果一致。
+        // 不再调 /api/energyStation/findEnergyStation —— 它的 userId 是旧用户体系，传 ES id 返回空数组，
+        // 会把登录接口已返回的站点覆盖成 0 台（表现为「账号登录后暂无绑定设备」）。
+        const userInfoRes = await getUserCenterInfo(userId)
+        const fetched = (userInfoRes && userInfoRes.code === 200 && userInfoRes.data) ? userInfoRes.data : null
+        userData = fetched || {}
+        if (fetched) {
+          energyStations = (userData.energyStations || []).map(item => ({ ...item, esId: item.esId || item.id }))
         } else {
-          const userInfoRes = await findUserInfoByCodeId(userId)
-          // console.log('[数据流] findUserInfoByCodeId 响应:', JSON.stringify(userInfoRes).slice(0, 200))
-          userData = (userInfoRes.code === 200 && userInfoRes.data) ? userInfoRes.data : {}
-          energyStations = userData.energyStations || []
-          // console.log('[数据流] energyStations 数量:', energyStations.length)
+          energyStations = storeUserInfo.energyStations || storeUserInfo.esIds || []
         }
 
         const userInfo = { ...storeUserInfo, ...userData }
@@ -796,12 +810,17 @@ export default {
       this.currentTab = index
 
       // 切回监测：v-if 会重建 Monitor 及其子组件。等新组件挂载完再补发一次快照并重放注册，
-      // 避免「从我的切回来全是 --、必须重新加载刷新」的问题；
-      // 设备列表被清空过（退出登录/切换站点）时补建一次，否则重放注册也没有目标。
+      // 避免「从我的切回来全是 --、必须重新加载刷新」的问题。
+      // 补建条件必须与 onShow 一致：只判 deviceList 是否为空会漏掉「模型还在、但
+      // registeredBarCodes 已被 unregister 清空」的情况（子页面 clearDeviceState /
+      // 策略配置卸载都会清监听）。此时重放注册没有任何 barCode 可发、服务端不推帧，
+      // 界面就永久停在 '--'，只有重新拉一次设备清单才能重建监听。
       if (index === 0) {
         this.$nextTick(() => {
           realtimeDataProvider.resumeRealtime()
-          if (!realtimeDataProvider.getDeviceList().length && !this.deviceListLoading) {
+          const needRebuild = !realtimeDataProvider.getDeviceList().length
+            || !realtimeDataProvider.hasRegisteredCodes()
+          if (needRebuild && !this.deviceListLoading && !this.deviceSwitching) {
             this.fetchDeviceList()
           }
         })

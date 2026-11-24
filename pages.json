@@ -115,20 +115,13 @@
 			},
 			{
 				"path": "settings/settings",
-					"style": {
-						"navigationStyle": "custom",
-						"navigationBarTitleText": "设置参数"
-					}
-				},
-				{
-					"path": "access-setting/access-setting",
-					"style": {
-						"navigationStyle": "custom",
-						"navigationBarTitleText": "接入设置"
-					}
-				},
-				{
-					"path": "device-detail/device-detail",
+				"style": {
+					"navigationStyle": "custom",
+					"navigationBarTitleText": "设置参数"
+				}
+			},
+			{
+				"path": "device-detail/device-detail",
 					"style": {
 						"navigationStyle": "custom",
 						"navigationBarTitleText": "设备详情"
@@ -255,27 +248,6 @@
 						"app-plus": {
 							"bounce": "vertical"
 						}
-					}
-				},
-				{
-					"path": "notifications",
-					"style": {
-						"navigationStyle": "custom",
-						"navigationBarTitleText": "消息通知"
-					}
-				},
-				{
-					"path": "system-notifications",
-					"style": {
-						"navigationStyle": "custom",
-						"navigationBarTitleText": "系统通知"
-					}
-				},
-				{
-					"path": "message-reminders",
-					"style": {
-						"navigationStyle": "custom",
-						"navigationBarTitleText": "消息提醒"
 					}
 				},
 				{

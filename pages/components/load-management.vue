@@ -49,10 +49,6 @@
     <view class="card device-list" >
       <view class="list-header">
         <text class="list-title">负荷列表</text>
-        <!-- <view class="access-setting-btn" @click="goToAccessSetting">
-          <text class="setting-icon">⚙️</text>
-          <text class="setting-text">接入设置</text>
-        </view> -->
       </view>
 
       <!-- 卡片网格容器 -->
@@ -615,9 +611,6 @@ export default {
         url: `/community/device-detail/device-detail?deviceInfo=${encodeURIComponent(JSON.stringify(payload))}`
       });
     },
-    goToAccessSetting() {
-      uni.navigateTo({ url: '/community/access-setting/access-setting' });
-    },
     getProgressEndColor(value) {
       const num = Math.round(value * 10) / 10;
       const gradientValueMap = {
@@ -803,25 +796,6 @@ export default {
   font-size: 16px;
   font-weight: 600;
   color: #333;
-}
-
-.access-setting-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: #1890FF;
-  color: white;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.setting-icon {
-  font-size: 14px;
-}
-
-.setting-text {
-  font-size: 14px;
 }
 
 /* 核心：设备卡片一行两个 */

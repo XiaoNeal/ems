@@ -507,6 +507,8 @@ export default {
     // #endif
   },
   destroyed(){
+    // 标记销毁：阻止已排队的 nextTick / 选择器回调继续写已释放的全局配置
+    this._uchartsDestroyed = true;
     if(this.echarts === true){
       delete cfe.option[this.cid]
       delete cfe.instance[this.cid]
@@ -638,6 +640,7 @@ export default {
   },
   methods: {
     beforeInit(){
+      if (this._uchartsDestroyed) return;
       this.mixinDatacomErrorMessage = null;
       if (typeof this.chartData === 'object' && this.chartData != null && this.chartData.series !== undefined && this.chartData.series.length > 0) {
         //拷贝一下chartData，为了opts变更后统一数据来源
@@ -784,6 +787,7 @@ export default {
       }
     },
     checkData(anyData) {
+      if (this._uchartsDestroyed) return;
       let cid = this.cid
       //复位opts或eopts
       if(this.echarts === true){
@@ -831,6 +835,7 @@ export default {
         // #endif
         .select('#ChartBoxId'+this.cid)
         .boundingClientRect(data => {
+          if (this._uchartsDestroyed || !data) return;
           this.showchart = true;
           if (data.width > 0 && data.height > 0) {
             if (data.width !== this.cWidth || data.height !== this.cHeight) {
@@ -865,6 +870,7 @@ export default {
       }
     },
     _clearChart() {
+      if (this._uchartsDestroyed) return;
       let cid = this.cid
       if (this.echarts !== true && cfu.option[cid] && cfu.option[cid].context) {
         const ctx = cfu.option[cid].context;
@@ -875,7 +881,9 @@ export default {
       }
     },
     init() {
+      if (this._uchartsDestroyed) return;
       let cid = this.cid
+      if (this.echarts !== true && !cfu.option[cid]) return;
       let chartdom = uni
         .createSelectorQuery()
         // #ifndef MP-ALIPAY
@@ -883,6 +891,7 @@ export default {
         // #endif
         .select('#ChartBoxId'+cid)
         .boundingClientRect(data => {
+          if (this._uchartsDestroyed || !data || (this.echarts !== true && !cfu.option[cid])) return;
           if (data.width > 0 && data.height > 0) {
             this.mixinDatacomLoading = false;
             this.showchart = true;
@@ -929,12 +938,14 @@ export default {
               this.mixinDatacomLoading = false;
               this.showchart = true;
               this.$nextTick(()=>{
+                if (this._uchartsDestroyed || !cfu.option[cid]) return;
                 if (this.type2d === true) {
                   const query = uni.createSelectorQuery().in(this)
                   query
                     .select('#' + cid)
                     .fields({ node: true, size: true })
                     .exec(res => {
+                      if (this._uchartsDestroyed || !cfu.option[cid]) return;
                       if (res[0]) {
                         const canvas = res[0].node;
                         const ctx = canvas.getContext('2d');
@@ -948,7 +959,7 @@ export default {
                           canvas._width = data.width * this.pixel;
                           canvas._height = data.height * this.pixel;
                           setTimeout(()=>{
-                            if(!cfu.option[cid] || !cfu.option[cid].context){return}
+                            if(this._uchartsDestroyed || !cfu.option[cid] || !cfu.option[cid].context){return}
                             cfu.option[cid].context.restore();
                             cfu.option[cid].context.save();
                             this._newChart(cid)
@@ -968,7 +979,7 @@ export default {
                     this._updataUChart(cid)
                   }else{
                     setTimeout(()=>{
-                      if(!cfu.option[cid] || !cfu.option[cid].context){return}
+                      if(this._uchartsDestroyed || !cfu.option[cid] || !cfu.option[cid].context){return}
                       cfu.option[cid].context.restore();
                       cfu.option[cid].context.save();
                       this._newChart(cid)
@@ -1035,6 +1046,7 @@ export default {
     },
     // #ifndef APP-VUE || H5
     _newChart(cid) {
+      if (this._uchartsDestroyed || !cfu.option[cid]) return;
       if (this.mixinDatacomLoading == true) {
         return;
       }
@@ -1052,6 +1064,7 @@ export default {
       });
     },
     _updataUChart(cid) {
+      if (this._uchartsDestroyed || !cfu.instance[cid] || !cfu.option[cid]) return;
       cfu.instance[cid].updateData(cfu.option[cid])
     },
     _tooltipDefault(item, category, index, opts) {

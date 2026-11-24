@@ -20,6 +20,24 @@ export const userLogin = (userName, password) => {
 	});
 };
 
+// 能源站账号密码登录：后端查询 base_user_info_for_es
+export const userLoginEs = (userName, password) => {
+	const windowInfo = uni.getWindowInfo()
+	const deviceInfo = uni.getDeviceInfoSync ? uni.getDeviceInfoSync() : { brand: 'unknown', model: 'unknown' }
+	let deviceId = `${deviceInfo.brand}-${deviceInfo.model}-${windowInfo.screenWidth}x${windowInfo.screenHeight}`;
+	let deviceHash = md5(deviceId);
+	const requestData = `username=${encodeURIComponent(userName)}&password=${encodeURIComponent(password)}&HashIP=${encodeURIComponent(deviceHash)}`;
+
+	return request({
+		url: `/SsoServer/app/es/Login`,
+		method: 'post',
+		data: requestData,
+		header: {
+			'Content-Type': 'application/x-www-form-urlencoded'
+		}
+	});
+};
+
 
 
 export const getUserInfoApi = (roleId) => {
@@ -204,9 +222,17 @@ export const UpdatePasswordBySms = (data) => {
 	return request({
 		url: '/SsoServer/app/ForgetPasswordByTel',
 		method: 'POST',
-		header: {
-			'Content-Type': 'application/json'
-		},
+		// 由 request.js 统一设置 application/json;charset=utf-8；
+		// 必须传对象，不能传 JSON.stringify 后的字符串，否则小程序端可能出现空请求体（HTTP 400）
+		data: data,
+	});
+}
+
+// 账户注销：验证码校验通过后清除 ES 用户及关联数据
+export const cancelAccount = (data) => {
+	return request({
+		url: '/SsoServer/app/es/CancelAccount',
+		method: 'POST',
 		data: data,
 	});
 }
@@ -276,10 +302,10 @@ export const findUserInfoByCodeId = (codeId) => {
 	})
 }
 
-// 获取用户中心信息（通用，与网页版一致）
+// 获取用户中心信息：APP 账号用户存于 base_user_info_for_es，必须走 /es/ 接口
 export const getUserCenterInfo = (codeId) => {
 	return request({
-		url: `/SsoServer/FindUserInfoByCodeId`,
+		url: `/SsoServer/es/FindUserInfoByCodeId`,
 		method: 'GET',
 		data: {
 			CodeId: codeId

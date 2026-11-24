@@ -85,66 +85,46 @@
       </view>
       <view class="list-bottom-gap"></view>
     </view>
-
-    <!-- 分享弹窗 -->
-    <view v-if="showShareModal" class="modal-mask" @click="closeShareModal">
-      <view class="share-modal" @click.stop>
-        <view class="modal-head">
-          <text class="modal-title">
-            {{ shareModalType === 'code' ? '设备分享码' : '设备分享链接' }}
-          </text>
-          <view class="modal-close" @click="closeShareModal">
-            <uni-icons type="close" size="22" color="#a0a6b2" />
-          </view>
-        </view>
-        <view class="modal-body">
-          <view class="form-row">
-            <text class="form-label">分享设备</text>
-            <text class="form-value">{{ currentShareDeviceName }}</text>
-          </view>
-          <view class="copy-block">
-            <text class="copy-label">
-              {{ shareModalType === 'code' ? '分享码（有效期7天）' : '分享链接' }}
-            </text>
-            <view class="code-wrap">
-              <text selectable class="code-text">
-                {{ shareModalType === 'code' ? currentShareCode : currentShareLink }}
-              </text>
-            </view>
-            <text class="copy-tip">长按文本可复制，发送给同事即可绑定设备</text>
-          </view>
-          <button class="copy-main-btn" @tap="handleCopyClick">
-            <uni-icons type="copy" size="20" color="#fff" />
-            <text>复制分享内容</text>
-          </button>
-          <text class="share-safe-tip">仅设备管理员可生成分享内容</text>
-        </view>
-      </view>
-    </view>
   </view>
 </template>
 
 <script>
 import { mapState } from 'vuex'
-import { bindEsUserByQrId, findUserInfoByCodeId, getUserCenterInfo, findEnergyStation, deleteEsUser } from '@/api/user'
+import { bindEsUserByQrId, getUserCenterInfo, deleteEsUser } from '@/api/user'
 
 export default {
+  props: {
+    // 被 index.vue 内嵌时由父级统一拉取，避免父级 fetchDeviceList 与本组件 mounted 重复请求
+    autoFetch: {
+      type: Boolean,
+      default: true
+    }
+  },
   computed: {
     ...mapState(['userInfo'])
   },
   data() {
     return {
       esIds: [],
-      loading: true,
-      showShareModal: false,
-      shareModalType: 'code',
-      currentShareCode: '',
-      currentShareLink: '',
-      currentShareDeviceName: ''
+      loading: true
+    }
+  },
+  watch: {
+    // 统一从 Vuex 登录态同步列表：父级 fetchDeviceList / 本组件绑定解绑后的 SET_LOGIN 都会更新
+    'userInfo.esIds': {
+      handler(val) {
+        if (Array.isArray(val)) {
+          this.esIds = val
+          this.loading = false
+        }
+      },
+      immediate: true
     }
   },
   mounted() {
-    this.initEsIds()
+    if (this.autoFetch) {
+      this.initEsIds()
+    }
   },
   methods: {
     initEsIds() {
@@ -294,21 +274,19 @@ export default {
       }
       try {
         const userId = this.userInfo.userId
-        const loginType = this.userInfo.loginType
         let stations = []
         let userData = {}
-        if (loginType === 'account') {
-          // 账号密码登录：先 getUserCenterInfo，再根据 roleId 决定 findEnergyStation 是否带 userId
-          const userRes = await getUserCenterInfo(userId)
-          userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
-          const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
-          const stationRes = await findEnergyStation('microStation', stationUserId)
-          stations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
+        // 站点清单统一取用户中心接口返回的 energyStations（内部按 ES 用户查 user_es_mapping），
+        // 账号密码登录与手机号/验证码登录同源，不再额外调 /api/energyStation/findEnergyStation：
+        // 那个接口的 userId 属于另一套用户体系，传 ES 用户 id 只会返回空数组，会把已登录的站点覆盖成 0 台。
+        const userInfoRes = await getUserCenterInfo(userId)
+        const fetched = (userInfoRes && userInfoRes.code === 200 && userInfoRes.data) ? userInfoRes.data : null
+        userData = fetched || {}
+        if (fetched) {
+          stations = (userData.energyStations || []).map(item => ({ ...item, esId: item.esId || item.id }))
         } else {
-          // 手机快捷登录：调用 findUserInfoByCodeId（含/es/）
-          const userInfoRes = await findUserInfoByCodeId(userId)
-          userData = (userInfoRes.code === 200 && userInfoRes.data) ? userInfoRes.data : {}
-          stations = userData.energyStations || []
+          // 接口异常时回退到登录态已缓存的清单，避免把已有设备清空
+          stations = this.userInfo.energyStations || this.userInfo.esIds || []
         }
         this.esIds = stations
         const userInfo = { ...this.userInfo, ...userData }
@@ -318,74 +296,13 @@ export default {
           userInfo.sessionId = this.userInfo.sessionId
         }
         this.$store.commit('SET_LOGIN', userInfo)
+        this.$emit('deviceListUpdated', stations)
       } catch (err) {
         console.error('刷新列表失败', err)
       } finally {
         this.loading = false
       }
     },
-    showShareOptions() {
-      if (!this.esIds.length) return uni.showToast({ title: '请先绑定设备', icon: 'none' })
-      const adminList = this.esIds.filter(item => this.isAdmin(item))
-      if (!adminList.length) return uni.showToast({ title: '仅设备管理员可生成分享码', icon: 'none' })
-      if (adminList.length === 1) {
-        this.shareDevice(adminList[0])
-      } else {
-        uni.showActionSheet({
-          itemList: adminList.map(d => this.getDeviceName(d)),
-          success: res => this.shareDevice(adminList[res.tapIndex])
-        })
-      }
-    },
-    shareDevice(esId) {
-      const name = this.getDeviceName(esId)
-      uni.showActionSheet({
-        itemList: ['生成分享码', '生成分享二维码', '生成分享链接'],
-        itemColor: '#3b7bf0',
-        success: res => {
-          if (res.tapIndex === 0) {
-            this.currentShareCode = this.generateRandomCode()
-            this.currentShareDeviceName = name
-            this.shareModalType = 'code'
-            this.showShareModal = true
-          } else if (res.tapIndex === 1) {
-            this.generateQRCode(esId, name)
-          } else {
-            this.currentShareLink = `https://example.com/add-device?code=${this.generateRandomCode()}`
-            this.currentShareDeviceName = name
-            this.shareModalType = 'link'
-            this.showShareModal = true
-          }
-        }
-      })
-    },
-    handleCopyClick() {
-      const text = this.shareModalType === 'code' ? this.currentShareCode : this.currentShareLink
-      uni.setClipboardData({
-        data: text,
-        success: () => uni.showToast({ title: '已复制，可直接分享', icon: 'success' }),
-        fail: () => uni.showToast({ title: '复制失败，请长按文本复制', icon: 'none' })
-      })
-    },
-    generateQRCode(esId, name) {
-      const code = this.generateRandomCode()
-      uni.showModal({
-        title: '设备分享二维码',
-        content: `设备：${name}\n分享码：${code}\n他人扫码即可绑定设备`,
-        confirmText: '保存到相册',
-        cancelText: '关闭',
-        success: res => res.confirm && uni.showToast({ title: '二维码已保存到相册', icon: 'success' })
-      })
-    },
-    closeShareModal() {
-      this.showShareModal = false
-    },
-    generateRandomCode() {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-      let str = ''
-      for (let i = 0; i < 8; i++) str += chars[Math.floor(Math.random() * chars.length)]
-      return str
-    }
   }
 }
 </script>
@@ -743,116 +660,4 @@ $radius-xl: 28rpx;
   height: 48rpx;
 }
 
-// 分享弹窗
-.modal-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.48);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-.share-modal {
-  width: 680rpx;
-  background: $bg-card;
-  border-radius: $radius-xl;
-  overflow: hidden;
-}
-.modal-head {
-  padding: 44rpx 40rpx;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1rpx solid $line-color;
-  .modal-title {
-    font-size: 38rpx;
-    color: $text-dark;
-    font-weight: 600;
-  }
-  .modal-close {
-    width: 66rpx;
-    height: 66rpx;
-    border-radius: 50%;
-    background: #f3f5fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    &:active { background: #e9ebf2; }
-  }
-}
-.modal-body {
-  padding: 44rpx 40rpx;
-  .form-row {
-    display: flex;
-    margin-bottom: 40rpx;
-    .form-label {
-      width: 170rpx;
-      font-size: 30rpx;
-      color: $text-gray;
-    }
-    .form-value {
-      flex: 1;
-      font-size: 30rpx;
-      color: $text-dark;
-    }
-  }
-  .copy-block {
-    margin-bottom: 52rpx;
-    .copy-label {
-      font-size: 30rpx;
-      color: $text-normal;
-      display: block;
-      margin-bottom: 22rpx;
-    }
-    .code-wrap {
-      background: $main-light;
-      border: 1rpx solid #dbe8ff;
-      padding: 36rpx 30rpx;
-      border-radius: $radius-lg;
-      margin-bottom: 16rpx;
-      .code-text {
-        font-size: 34rpx;
-        color: $main-color;
-        font-family: monospace;
-        word-break: break-all;
-        letter-spacing: 2rpx;
-      }
-    }
-    .copy-tip {
-      font-size: 24rpx;
-      color: $text-light-gray;
-      line-height: 1.6;
-    }
-  }
-  .copy-main-btn {
-    width: 100%;
-    height: 96rpx;
-    background: linear-gradient(135deg, #4b89f5, #2f6ae0);
-    border-radius: 48rpx;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14rpx;
-    font-size: 34rpx;
-    color: #fff;
-    box-shadow: 0 8rpx 20rpx rgba(59, 123, 240, 0.24);
-    transition: all 0.2s;
-    &:active {
-      transform: scale(0.97);
-      box-shadow: 0 2rpx 8rpx rgba(59, 123, 240, 0.15);
-    }
-  }
-  .share-safe-tip {
-    display: block;
-    margin-top: 28rpx;
-    font-size: 24rpx;
-    color: $text-light-gray;
-    text-align: center;
-  }
-}
 </style>

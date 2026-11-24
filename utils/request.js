@@ -2,6 +2,62 @@ import store from '@/store'
 import { decrypt, aesMinEncrypt } from "@/utils/decryptData.js"
 import { RealtimeDataProviderService } from '@/service/socket/realtime-data-provider'
 
+// 登录跳转去重标记：冷启动未登录时，首页与请求拦截器可能同时判定需要跳登录页，
+// 并发调用 reLaunch/redirectTo 会触发小程序 "appLaunch with non-empty page stack"。
+let loginRoutePending = false
+
+/**
+ * 安全地跳转登录页：等待当前 appLaunch 路由处理完成，并去重。
+ * @param {'reLaunch'|'redirectTo'} mode 跳转方式
+ */
+export const redirectToLoginSafely = (mode = 'reLaunch') => {
+  if (loginRoutePending) return
+  loginRoutePending = true
+
+  let initialPages = []
+  try {
+    initialPages = getCurrentPages() || []
+  } catch (e) {
+    initialPages = []
+  }
+
+  const go = () => {
+    loginRoutePending = false
+    // 延迟期间用户可能已完成登录，避免把新登录态又打回登录页
+    try {
+      const lifeData = uni.getStorageSync('lifeData') || {}
+      const userInfo = lifeData.userInfo
+      if (userInfo && userInfo.isLogin && userInfo.sessionId) return
+    } catch (e) { }
+    let pages = []
+    try {
+      pages = getCurrentPages() || []
+    } catch (e) {
+      pages = []
+    }
+    const current = pages[pages.length - 1]
+    if (current && current.route === 'pages/login/login') return
+
+    const doRedirect = () => {
+      uni.redirectTo({
+        url: '/pages/login/login',
+        fail: () => {
+          // redirectTo 在冷启动单一页面栈场景下若失败，退化为 reLaunch
+          uni.reLaunch({ url: '/pages/login/login', fail: () => {} })
+        }
+      })
+    }
+    if (mode === 'redirectTo') {
+      doRedirect()
+    } else {
+      uni.reLaunch({ url: '/pages/login/login', fail: () => {} })
+    }
+  }
+
+  // 让 appLaunch 路由先完成；页面栈为空时再留一段缓冲给首屏 Page 实例入栈。
+  setTimeout(go, initialPages.length ? 0 : 300)
+}
+
 /**
  * 根据平台获取基础 URL
  * @returns {string} 基础 URL
@@ -97,9 +153,7 @@ const request = (options) => {
             success() {
               RealtimeDataProviderService.closeSocket();
               uni.clearStorageSync();
-              uni.reLaunch({
-                url: '/pages/login/login'
-              });
+              redirectToLoginSafely('reLaunch');
             }
           });
           reject(new Error('sessionId为空，请先登录'));
@@ -121,9 +175,7 @@ const request = (options) => {
               success() {
                 RealtimeDataProviderService.closeSocket();
                 uni.clearStorageSync();
-                uni.reLaunch({
-                  url: '/pages/login/login'
-                });
+                redirectToLoginSafely('reLaunch');
               }
             });
             reject(new Error('sessionId已过期，请重新登录'));
@@ -207,9 +259,7 @@ const request = (options) => {
                 success() {
                   RealtimeDataProviderService.closeSocket();
                   uni.clearStorageSync();
-                  uni.reLaunch({
-                    url: '/pages/login/login'
-                  });
+                  redirectToLoginSafely('reLaunch');
                 }
               });
             }

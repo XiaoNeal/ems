@@ -11,8 +11,8 @@
 
           <view class="stats-top-row">
             <view class="chart-box">
-              <qiun-data-charts type="ring" :opts="ringOpts" :chartData="alarmLevelData" :canvas2d="true" canvas-id="ringChart"
-                :canvas2d="canvas2d" :ontouch="true" @touch="handleChartTouch" />
+              <qiun-data-charts type="ring" :opts="ringOpts" :chartData="alarmLevelData" :canvas2d="canvas2d"
+                canvas-id="ringChart" :ontouch="true" @touch="handleChartTouch" />
             </view>
 
             <view class="info-group">

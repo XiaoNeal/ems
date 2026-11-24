@@ -688,7 +688,7 @@
               <view v-for="group in bmsInfoGroups" :key="group.key" class="data-group">
                 <view class="group-title">{{ group.title }}</view>
                 <view class="data-grid">
-                  <view v-for="item in group.items" :key="item.group + '_' + item.key" class="grid-item">
+                  <view v-for="item in group.items" :key="item.key" class="grid-item">
                     <text class="item-label">{{ item.label }}</text>
                     <text class="item-value">{{ item.value }}</text>
                   </view>
@@ -700,7 +700,7 @@
                 <view v-for="group in bmsFaultFields" :key="group.key" class="fault-word">
                   <view class="fault-word-title">{{ group.title }}</view>
                   <view class="status-grid">
-                    <view v-for="item in group.items" :key="group.key + '_' + item.key" class="fault-item">
+                    <view v-for="item in group.items" :key="item.key" class="fault-item">
                       <text class="fault-name" :class="{ active: item.active }">{{ item.name }}</text>
                     </view>
                   </view>

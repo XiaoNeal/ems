@@ -120,27 +120,26 @@
 					this.showToast('error', '验证码不能为空')
 					return
 				}
-				let formdata = JSON.stringify({
+				// 字段名需与后端 UserLogin 一致，且验证码传数值
+				let formdata = {
 					password: Md5.hashAsciiStr(this.password.trim()).toString(),
-					mobile: this.phoneNum.trim(),
-					verificationCode: this.verificationCode.trim()
-				})
+					tel: this.phoneNum.trim(),
+					code: Number(this.verificationCode.trim())
+				}
 
-		
 				UpdatePasswordBySms(formdata).then(res=>{
-
-					if(res.status==200){
+					if(res && (res.status == 200 || res.code == 200)){
 						this.password = ''
 						this.confirmPassword = ''
 						this.phoneNum = ''
 						this.verificationCode = ''
-						this.showToast('success',res.msg)
-					}else if(res.status == 500){
-						this.showToast('error',res.msg)
+						this.showToast('success', res.msg || '密码修改成功')
+					}else{
+						this.showToast('error', (res && (res.msg || res.message)) || '密码修改失败，请稍后重试')
 					}
+				}).catch(() => {
+					this.showToast('error', '密码修改失败，请检查网络后重试')
 				})
-				// userRegister(formdata).then(res=>{
-				// })
 			},
 			goBack() {
 				uni.reLaunch({

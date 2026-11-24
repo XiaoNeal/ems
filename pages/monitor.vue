@@ -122,6 +122,16 @@ export default {
       if (tab !== this.currentTab) {
         this.currentTab = tab;
         uni.vibrateShort({ type: 'light' });
+        // 子页面用 v-if 切换，组件会被销毁重建，新组件 subscribe 时拿到的是内存快照；
+        // 快照一旦为空/过期，界面就会一直停在 '--'。这里在新组件挂载后补发一次注册，
+        // 服务端收到 register 会立刻推一帧全量数据。
+        this.$nextTick(() => {
+          try {
+            realtimeDataProvider.reRegisterAllDevices();
+          } catch (e) {
+            console.warn('[monitor] 重放注册失败:', e && e.message);
+          }
+        });
       }
     },
     handleTabChange(e) {

@@ -65,13 +65,7 @@
         </view>
       </view>
       <!-- #endif -->
-      <!-- <view class="list-item" @click="navigateToU('/pages/profile/notifications')">
-        <view class="item-content">
-          <uni-icons type="notification" size="20" color="#007AFF"></uni-icons>
-          <text class="item-title">消息通知</text>
-          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#999"></uni-icons>
-        </view>
-      </view> -->
+      <!-- 消息通知功能已移除：原为服务端未提供的假数据页面 -->
 
 
 
@@ -138,7 +132,7 @@
 </template>
 
 <script>
-import { findUserInfoByCodeId, getUserCenterInfo, findEnergyStation } from "@/api/user.js";
+import { findUserInfoByCodeId, getUserCenterInfo } from "@/api/user.js";
 import AppActionSheet from '@/components/app-action-sheet/app-action-sheet.vue';
 
 export default {
@@ -205,12 +199,10 @@ export default {
       const loginType = this.$store.state.userInfo?.loginType
       let userInfo = {}
       if (loginType === 'account') {
-        // 账号密码登录：先 getUserCenterInfo，再根据 roleId 决定 findEnergyStation 是否带 userId
+        // 站点取 ES 用户中心返回的 energyStations（与手机号登录同源，内部按 ES 用户查关联表）
         const userRes = await getUserCenterInfo(userId)
         const userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
-        const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
-        const stationRes = await findEnergyStation('microStation', stationUserId)
-        const stations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
+        const stations = (userData.energyStations || []).map(item => ({ ...item, esId: item.esId || item.id }))
         userInfo = {
           ...this.userInfoData,
           ...userData,
@@ -289,12 +281,10 @@ export default {
         const loginType = this.$store.state.userInfo?.loginType
         let userInfo = {}
         if (loginType === 'account') {
-          // 账号密码登录：先 getUserCenterInfo，再根据 roleId 决定 findEnergyStation 是否带 userId
+          // 站点取 ES 用户中心返回的 energyStations（与手机号登录同源，内部按 ES 用户查关联表）
           const userRes = await getUserCenterInfo(userId)
           const userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
-          const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
-          const stationRes = await findEnergyStation('microStation', stationUserId)
-          const stations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
+          const stations = (userData.energyStations || []).map(item => ({ ...item, esId: item.esId || item.id }))
           userInfo = {
             ...this.$store.state.userInfo,
             ...userData,

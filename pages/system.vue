@@ -102,7 +102,7 @@
 
 <script>
 import { decrypt } from "@/utils/decryptData.js";
-import { findUserInfoByCodeId, getUserCenterInfo, findEnergyStation } from '@/api/user';
+import { findUserInfoByCodeId, getUserCenterInfo } from '@/api/user';
 
 export default {
   name: "System",
@@ -129,12 +129,10 @@ export default {
       let esUsers = []
       let roleId = null
       if (loginType === 'account') {
-        // 账号密码登录：先 getUserCenterInfo，再根据 roleId 决定 findEnergyStation 是否带 userId
+        // 站点取 ES 用户中心返回的 energyStations（与手机号登录同源，内部按 ES 用户查关联表）
         const userRes = await getUserCenterInfo(userId)
         const userData = (userRes.code === 200 && userRes.data) ? userRes.data : {}
-        const stationUserId = [1, 2].includes(userData.roleId) ? null : userId
-        const stationRes = await findEnergyStation('microStation', stationUserId)
-        energyStations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : []
+        energyStations = (userData.energyStations || []).map(item => ({ ...item, esId: item.esId || item.id }))
         esUsers = userData.es_users || []
         roleId = userData.roleId
       } else {

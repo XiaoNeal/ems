@@ -12,7 +12,7 @@
           <text class="cb-group-codes">{{ g.codes }}</text>
         </view>
         <view class="cb-tags">
-          <view v-for="(it, i) in g.items" :key="it.code + '-' + i" class="cb-tag" :class="{ active: it.active }">
+          <view v-for="it in g.items" :key="it.code" class="cb-tag" :class="{ active: it.active }">
             <text class="cb-tag-code">{{ pad(it.code) }}</text>
             <text class="cb-tag-text">{{ it.name }}</text>
           </view>
@@ -24,8 +24,8 @@
          编号独立一行、名称居中，命中项红底红字；无「当前故障码」大卡。 -->
     <view v-else class="cb-tags">
       <view
-        v-for="(it, i) in flatItems"
-        :key="it.code + '-' + i"
+        v-for="it in flatItems"
+        :key="it.code"
         class="cb-tag"
         :class="{ active: it.active }"
       >

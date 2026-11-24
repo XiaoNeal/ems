@@ -32,7 +32,8 @@
         "modules" : {
             "Barcode" : {},
             "Geolocation" : {},
-            "Camera" : {}
+            "Camera" : {},
+            "Push" : {}
         },
         /* 模块配置 */
         "distribute" : {

@@ -49,6 +49,7 @@
  * 优化点：数据驱动、代码规范、体验优化、结构清晰
  */
 import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+import { getAppVersionSync } from '@/utils/appVersion.js'
 
 export default {
   components: {
@@ -58,22 +59,10 @@ export default {
   data() {
     return {
       platformClass: "",
-      // 硬件信息列表
-      hardwareList: [
-        { label: 'PCS版本', value: 'PCS/L2073/397' },
-        { label: 'BMS版本', value: 'RCU-A_H020N_B0_1.5.7-F03D-SDLP-S06_V1.0.9' },
-        { label: 'DCDC版本', value: 'DCDC-11' }
-      ],
-      // 软件信息列表
+      // 软件信息列表：版本号统一取全局唯一数据源，避免写死旧版本号误导用户
       softwareList: [
-        { label: '系统名称', value: '光储直柔微能源站' },
-        { label: '版本号', value: 'V1.0.0' },
-        // { label: 'DCDC版本', value: 'DCDC-11' }
-      ],
-      // 日期信息列表
-      dateList: [
-        { label: '更新日期', value: '2024年6月6日' },
-        { label: '生效日期', value: '2024年6月6日' }
+        { label: '系统名称', value: '能源站' },
+        { label: '版本号', value: getAppVersionSync() }
       ]
     }
   },

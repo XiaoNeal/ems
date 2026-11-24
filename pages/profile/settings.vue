@@ -48,15 +48,6 @@
         </view>
       </view>
 
-      <view class="list-item" @click="navigateTo('/pages/profile/notification-settings')">
-        <view class="item-left">
-          <uni-icons type="notification" size="20" color="#007AFF" />
-          <text class="item-title">通知设置</text>
-        </view>
-        <view class="item-right">
-          <uni-icons class="arrow-icon" type="arrowright" size="24" color="#ccc" />
-        </view>
-      </view>
     </view>
 
     <!-- 直连设备配置入口 -->

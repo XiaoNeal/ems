@@ -43,8 +43,7 @@
             <!-- 一键登录 -->
             <view class="login-tab" v-if="loginType === 'wechat' && !showWechatRegister">
                 <!-- 一键登录按钮 -->
-                <button class="btn-wechat" open-type="getUserInfo" @getuserinfo="handleWechatAuth"
-                    :disabled="!agreeAgreement">
+                <button class="btn-wechat" open-type="getUserInfo" @getuserinfo="handleWechatAuth">
                     <text style="min-width:fit-content;">手机号快捷登录</text>
                 </button>
 
@@ -135,7 +134,7 @@
                         </text>
                     </view>
 
-                    <button class="btn-primary" :disabled="!isSmsFormValid" @click="smsLoginOrRegister">
+                    <button class="btn-primary" :class="{ 'is-form-invalid': !isSmsFormValid }" @click="smsLoginOrRegister">
                         <text class="btn-primary-text">登录</text>
                     </button>
 
@@ -166,11 +165,22 @@
                     <view class="input-group">
                         <text class="input-label">密码</text>
                         <view class="input-wrapper">
-                            <input :password="true" placeholder="请输入密码" v-model="accountInfo.password" />
+                            <input
+                                :password="!showPassword"
+                                placeholder="请输入密码"
+                                v-model="accountInfo.password"
+                            />
+                            <view class="pwd-toggle" hover-class="pwd-toggle-hover" @click.stop="togglePasswordVisible">
+                                <uni-icons
+                                    :type="showPassword ? 'eye-filled' : 'eye-slash-filled'"
+                                    size="20"
+                                    :color="showPassword ? '#3b7bf0' : '#96a0b0'"
+                                />
+                            </view>
                         </view>
                     </view>
 
-                    <button class="btn-primary" :disabled="!isAccountFormValid" @click="accountLogin">
+                    <button class="btn-primary" :class="{ 'is-form-invalid': !isAccountFormValid }" @click="accountLogin">
                         <text class="btn-primary-text">登录</text>
                     </button>
 
@@ -201,8 +211,7 @@
         <!-- 底部协议与版权 -->
         <view class="page-bottom">
             <view class="agreement">
-                <checkbox :checked="agreeAgreement" @click="agreeAgreement = !agreeAgreement"
-                    @change="onAgreementChange" class="agreement-checkbox"></checkbox>
+                <checkbox :checked="agreeAgreement" @click="toggleAgreement" class="agreement-checkbox"></checkbox>
                 <text class="agreement-text">
                     阅读并同意我们的
                     <text class="link" @click="showAgreement('service')">《服务协议与隐私条款》</text>
@@ -219,7 +228,7 @@
 </template>
 
 <script>
-import { wechatLoginByTel, sendSmsCode, wxLoginApi, wxRegisterApi, wechatLogin, userLogin, getUserCenterInfo, findUserInfoByCodeId, findEnergyStation } from '@/api/user'
+import { wechatLoginByTel, sendSmsCode, wxLoginApi, wxRegisterApi, wechatLogin, userLoginEs } from '@/api/user'
 import { decrypt } from "@/utils/decryptData.js"
 import md5 from "@/utils/md5.min.js"
 export default {
@@ -260,7 +269,9 @@ export default {
             accountInfo: {
                 username: '',
                 password: ''
-            }
+            },
+            // 密码是否明文显示
+            showPassword: false
         };
     },
     watch: {
@@ -300,6 +311,7 @@ export default {
                 this.updateSmsFormValid();
             } else if (type === 'account') {
                 this.accountInfo = { username: '', password: '' };
+                this.showPassword = false;
                 this.updateAccountFormValid();
             }
         },
@@ -542,62 +554,18 @@ export default {
             }
             uni.showLoading({ title: '登录中...' });
             const encryptedPassword = md5(this.accountInfo.password).toString();
-            userLogin(this.accountInfo.username, encryptedPassword).then(async res => {
-                if (res.code === 200) {
-                    try {
-                        // 1. SSO登录返回：data.code为userId，sessionId在顶层
-                        const userId = res.data.code;
-                        const sessionId = res.sessionId;
-                        // 先保存基础登录状态，让后续请求能带上sessionId
-                        this.$store.commit('SET_LOGIN', {
-                            isLogin: true,
-                            userId: userId,
-                            sessionId: sessionId,
-                            loginType: 'account',
-                            loginTime: new Date().getTime(),
-                            expireMinite: res.data.expireMinite
-                        });
-                        // 2. 调用 getUserCenterInfo 获取用户详情（不含/es/）
-                        const userInfoRes = await getUserCenterInfo(userId);
-                        const userData = (userInfoRes.code === 200 && userInfoRes.data) ? userInfoRes.data : {};
-                        // 3. 根据 roleId 决定 findEnergyStation 是否带 userId
-                        // roleId 为 1（超管）或 2（管理员）时不传 userId，获取所有能源站
-                        const stationUserId = [1, 2].includes(userData.roleId) ? null : userId;
-                        const stationRes = await findEnergyStation('microStation', stationUserId);
-                        const stations = (stationRes.status === 200 && stationRes.data) ? stationRes.data.map(item => ({ ...item, esId: item.id })) : [];
-                        // 4. 合并数据
-                        const merged = {
-                            ...userData,
-                            energyStations: stations,
-                            sessionId: sessionId,
-                            userid: userId,
-                            id: userData.id || userId,
-                            userName: userData.user_name || '',
-                            mobile_phone: userData.mobile_phone || '',
-                            imageFile: userData.imageFile || '',
-                            wxAvaterUrl: userData.wxAvaterUrl || '',
-                            roleId: userData.roleId,
-                            esIds: stations,
-                            esUsers: userData.es_users || [],
-                            loginType: 'account',
-                            isLogin: true,
-                            loginTime: new Date().getTime(),
-                            expireMinite: res.data.expireMinite
-                        };
-                        this.saveLoginState(merged);
-                        uni.hideLoading();
-                        uni.showToast({ title: '登录成功', icon: 'success' });
-                    } catch (e) {
-                        uni.hideLoading();
-                        uni.showToast({ title: '登录成功', icon: 'success' });
-                    }
-                } else {
-                    uni.hideLoading();
-                    uni.showToast({ title: res.message || '登录失败，请重试', icon: 'none' });
-                }
-            }).catch(err => {
+            userLoginEs(this.accountInfo.username, encryptedPassword).then(res => {
                 uni.hideLoading();
-                uni.showToast({ title: '登录失败，请重试', icon: 'none' });
+                if (res.code === 200 && res.data) {
+                    // 新接口直接返回 ES 用户模型（含 sessionId 与能源站），无需再查旧用户表
+                    this.saveLoginState({ ...res.data, loginType: 'account' });
+                    uni.showToast({ title: '登录成功', icon: 'success' });
+                    return;
+                }
+                uni.showToast({ title: res.msg || res.message || '账号或密码错误', icon: 'none' });
+            }).catch(() => {
+                uni.hideLoading();
+                uni.showToast({ title: '登录失败，请检查网络后重试', icon: 'none' });
             });
         },
 
@@ -670,9 +638,14 @@ export default {
             }
         },
 
-        // 协议勾选状态变化
-        onAgreementChange(e) {
-            this.agreeAgreement = e.detail.checked;
+        // 切换密码明文显示
+        togglePasswordVisible() {
+            this.showPassword = !this.showPassword;
+        },
+
+        // 协议勾选状态变化：小程序 checkbox 的 change.detail.checked 不可靠，统一用点击切换
+        toggleAgreement() {
+            this.agreeAgreement = !this.agreeAgreement;
         },
 
         // 展示协议详情
@@ -1020,6 +993,23 @@ export default {
     transform: translateY(-2rpx);
 }
 
+/* 密码明文切换按钮 */
+.pwd-toggle {
+    flex-shrink: 0;
+    width: 56rpx;
+    height: 56rpx;
+    margin-left: 12rpx;
+    margin-right: -10rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.pwd-toggle-hover {
+    background-color: #f0f4fa;
+}
+
 input {
     flex: 1;
     font-size: 30rpx;
@@ -1102,7 +1092,8 @@ input::placeholder {
     box-shadow: 0 4rpx 16rpx rgba(0, 122, 255, 0.2);
 }
 
-.btn-primary:disabled {
+.btn-primary:disabled,
+.btn-primary.is-form-invalid {
     opacity: 0.4;
     box-shadow: none;
     transform: none;

@@ -383,14 +383,17 @@ export default {
   },
   watch: {
     '$store.state.currentSelectDevice': {
-      handler() {
-        const device = this.$store.state.currentSelectDevice;
-        if (device && device.id) {
-          // console.log('currentSelectDevice changed:', device.id, 'areaLevelId:', device.areaLevelId);
-          this.updateDevice171F();
-          // 设备信息变更时重新获取电力数据
-          this.getPowerData();
-        }
+      handler(device) {
+        this.updateDevice171F();
+        // 设备切换/首次就绪才拉电力曲线；deep watch 与 fetchDeviceList 的二次 commit
+        // 不能重复请求，按设备 id + areaLevelId 去重。
+        const deviceId = device && (device.id || device.esId);
+        const areaLevelId = device && device.areaLevelId;
+        if (!deviceId || !areaLevelId) return;
+        const key = deviceId + '|' + areaLevelId;
+        if (key === this._lastPowerDeviceKey) return;
+        this._lastPowerDeviceKey = key;
+        this.getPowerData();
       },
       immediate: true,
       deep: true
@@ -434,6 +437,10 @@ export default {
       return type;
     }
   },
+  created() {
+    // 卸载后忽略尚未返回的异步数据，避免图表在无主状态下重绘
+    this._isAlive = true;
+  },
   onLoad() {
     // 获取设备状态栏高度
     const windowInfo = uni.getWindowInfo();
@@ -468,14 +475,12 @@ export default {
         console.warn('Failed to set CSS variables:', e);
       }
     }
-    // 只有当设备信息已就绪时才获取数据，否则由 watch 触发
-    if (currentDevice && currentDevice.id) {
-      this.getPowerData();
-    }
+    // 电力曲线统一由 currentSelectDevice watch 触发（含 immediate），避免与 mounted 重复请求
     // 实时数据按节流频率推送，重新拉取新数组引用触发刷新
     this._unsubRealtime = realtimeDataProvider.subscribe(() => this.updateDevice171F());
   },
   beforeDestroy() {
+    this._isAlive = false;
     this.dataInterval && clearInterval(this.dataInterval);
     this._unsubRealtime && this._unsubRealtime();
     // realtimeDataProvider.unregister();
@@ -487,6 +492,7 @@ export default {
   },
   methods: {
     updateDevice171F() {
+      if (!this._isAlive) return;
       this.deviceList = [...realtimeDataProvider.getDeviceList()]
       this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
       const b12Value = this.device171F && this.device171F.controlData && this.device171F.controlData.B12 && this.device171F.controlData.B12.value;
@@ -572,6 +578,7 @@ export default {
         areaLevelIds: currentDevice.areaLevelId
       };
       getPowerData(params).then(result => {
+        if (!this._isAlive) return;
         if (result.data && result.data.length > 0) {
           const dataList = result.data;
           const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [], gridData = [], gridReverseData = [];
@@ -630,6 +637,7 @@ export default {
         }
         this.electricityLoading = false;
       }).catch(() => {
+        if (!this._isAlive) return;
         this.electricityLoading = false;
       });
     },
@@ -649,6 +657,7 @@ export default {
         endDate: endDate,
         areaLevelIds: areaLevelIds
       }).then((res) => {
+        if (!this._isAlive) return;
         const dataList = res.data || [];
 
         if (dataList.length > 0) {
@@ -698,6 +707,7 @@ export default {
 
         this.electricityLoading = false;
       }).catch((err) => {
+        if (!this._isAlive) return;
         this.electricityLoading = false;
         console.error('获取月电量数据失败:', err);
       });
@@ -714,6 +724,7 @@ export default {
         year: year,
         areaLevelIds: areaLevelIds
       }).then((res) => {
+        if (!this._isAlive) return;
         if (res.data && res.data.length > 0) {
           const dataList = res.data;
           const generationData = [], loadData = [], chargeData = [], dischargeData = [], xAxisData = [];
@@ -773,6 +784,7 @@ export default {
         }
         this.electricityLoading = false;
       }).catch((err) => {
+        if (!this._isAlive) return;
         this.electricityLoading = false;
         console.error('获取年电量数据失败:', err);
       });

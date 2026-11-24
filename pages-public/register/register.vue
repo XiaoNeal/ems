@@ -11,7 +11,7 @@
 				<view class="welcome">欢迎注册</view>
 			</view>
 			<view class="" style="font-size: 14px;color: #a4abb4;padding: 3vw 6vw 0;">
-				温馨提示：如果你想使用本APP完整的功能<text class="point" @click="gotCon">请与我们取得联系</text>，你也可以前往<text class="point" @click="gotoShili">示例电站</text>体验。
+				请使用您的账号登录，以使用本APP完整的功能。
 			</view>
 			<view class="input-content">
 				<!-- 用户名 -->
@@ -106,15 +106,6 @@
 		},
 		onBackPress(e) {},
 		methods: {
-			gotoShili(){
-				this.toLogin('rocky', 'neiic2024')
-			},
-			gotCon(){
-				uni.navigateTo({
-					url:'/pages-pess/sub-pages/contact-us'
-				})
-			},
-			
 			goToAgreement(e) {
 				if (e == 1) {
 					uni.navigateTo({
@@ -313,11 +304,11 @@
 					password: Md5.hashStr(password).toString()
 				}).then(res => {
 					if (res.code == 200) {
-						uni.setStorageSync('token', res.data.token);
-						uni.setStorageSync('phone', res.data.phone);
-						uni.switchTab({
-							url: '/pages/community/index'
-						});
+					uni.setStorageSync('token', res.data.token);
+					uni.setStorageSync('phone', res.data.phone);
+					uni.reLaunch({
+						url: '/pages/login/login'
+					});
 					} else {
 						this.$refs.uToast.show({
 							title: res.message,

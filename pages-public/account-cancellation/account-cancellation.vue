@@ -1,98 +1,144 @@
 <template>
 	<view class="container" :class="platformClass">
-		<DyNavbar title="账户注销" :titleStyle="{ 'color': fontColor, 'width': '100%', 'font-weight': '600' }" :placeholder="true" :leftIconColor="fontColor"></DyNavbar>
+		<DyNavbar title="账户注销" :titleStyle="{ 'color': fontColor, 'width': '100%', 'font-weight': '600' }"
+			:placeholder="true" :leftIconColor="fontColor"></DyNavbar>
 		<view class="fixed-placeholder"></view>
 		<u-toast ref="uToast"></u-toast>
 
-		<!-- 第一步：注销须知 -->
-		<view v-if="!confirmCancellation" class="page-content">
-			<!-- 警示区域 -->
-			<view class="warning-card">
-				<view class="warning-icon">⚠</view>
-				<view class="warning-content">
-					<view class="warning-title">重要提醒</view>
-					<view class="warning-desc">账户注销后将无法恢复，请谨慎操作</view>
+		<view class="page-content">
+			<!-- 步骤指示 -->
+			<view class="steps">
+				<view class="step-item" :class="{ active: currentStep >= 1 }">
+					<view class="step-dot">
+						<text v-if="currentStep > 1" class="step-check">✓</text>
+						<text v-else>1</text>
+					</view>
+					<text class="step-text">注销须知</text>
+				</view>
+				<view class="step-line" :class="{ active: currentStep > 1 }"></view>
+				<view class="step-item" :class="{ active: currentStep >= 2 }">
+					<view class="step-dot">2</view>
+					<text class="step-text">身份验证</text>
 				</view>
 			</view>
 
-			<!-- 注销须知卡片 -->
-			<view class="section-card">
-				<view class="section-header">
-					<text class="section-title">注销须知</text>
+			<!-- 第一步：注销须知 -->
+			<view v-if="currentStep === 1" class="step-panel">
+				<view class="warning-banner">
+					<view class="warning-icon">!</view>
+					<view class="warning-content">
+						<view class="warning-title">注销后不可恢复</view>
+						<view class="warning-desc">请确认已备份重要数据，并妥善处理账号相关服务</view>
+					</view>
 				</view>
-				<view class="section-content">
-					<view class="notice-item">
-						<text class="notice-number">1</text>
-						<text class="notice-text">注销能源站帐号是不可恢复的操作，你应自行备份能源站帐号相关的信息和数据。操作之前，请确认与能源站帐号相关的所有服务均已进行妥善处理。</text>
+
+				<view class="section-card">
+					<view class="section-head">
+						<text class="section-title">注销须知</text>
+						<text class="section-subtitle">请逐项确认</text>
 					</view>
-					<view class="notice-item">
-						<text class="notice-number">2</text>
-						<text class="notice-text">注销后，你将无法登录、使用本能源站帐号，也无法找回个人资料和历史信息（包含昵称、头像、设备信息、发电报告、用电报告等）。</text>
+
+					<view class="notice-list">
+						<view class="notice-item">
+							<text class="notice-index">1</text>
+							<text class="notice-text">注销能源站账号是不可恢复的操作，请先自行备份账号相关信息与数据。</text>
+						</view>
+						<view class="notice-item">
+							<text class="notice-index">2</text>
+							<text class="notice-text">注销后，你将无法登录或使用当前账号，也无法找回个人资料、设备绑定关系及历史数据。</text>
+						</view>
+						<view class="notice-item">
+							<text class="notice-index">3</text>
+							<text class="notice-text">若账号存在投诉、调查、诉讼或仲裁等未结事项，平台有权依法终止注销申请。</text>
+						</view>
 					</view>
-					<view class="notice-item">
-						<text class="notice-number">3</text>
-						<text class="notice-text">在能源站帐号注销期间，如果你的能源站帐号被他人投诉、被国家机关调查或者正处于诉讼、仲裁程序中，能源站有权自行终止注销而无需另行得到你的同意。</text>
+				</view>
+
+				<view class="scope-card">
+					<view class="scope-title">注销将清除</view>
+					<view class="scope-tags">
+						<text class="scope-tag">用户资料</text>
+						<text class="scope-tag">设备绑定</text>
+						<text class="scope-tag">消息记录</text>
+						<text class="scope-tag">登录会话</text>
 					</view>
+					<view class="scope-note">能源站设备与公共数据不会被删除。</view>
+				</view>
+
+				<view class="agreement-row" @click="toggleAgreement">
+					<view class="agreement-checkbox" :class="{ checked: isRead }">
+						<text v-if="isRead" class="agreement-check-mark">✓</text>
+					</view>
+					<text class="agreement-text">我已阅读并知晓注销须知</text>
 				</view>
 			</view>
 
-			<!-- 确认勾选 -->
-			<view class="checkbox-row">
-				<radio :checked="isRead" @click="isRead = !isRead" color="#4a8cff" />
-				<text :style="{ color: fontColor }">我已阅读并知晓注销须知</text>
-			</view>
+			<!-- 第二步：身份验证 -->
+			<view v-else class="step-panel">
+				<view class="back-hint" @click="prevStep">
+					<view class="back-icon-wrapper">
+						<text class="back-arrow">‹</text>
+					</view>
+					<text class="back-text">返回上一步</text>
+				</view>
 
-			<!-- 底部按钮区 -->
-			<view class="btn-row">
-				<button class="cancel-btn" @click="goBack">取消</button>
-				<button class="confirm-btn" :class="{ disabled: !isRead }" @click="nextStep">下一步</button>
+				<view class="verify-card">
+					<view class="verify-head">
+						<view class="verify-icon">
+							<uni-icons type="phone" size="28" color="#4a8cff"></uni-icons>
+						</view>
+						<view class="verify-title">验证绑定手机号</view>
+						<view class="verify-desc">为确保账号安全，请输入该手机号收到的验证码</view>
+					</view>
+
+					<view class="phone-row">
+						<text class="phone-label">手机号</text>
+						<text class="phone-number">{{ maskedPhone || '未获取到绑定手机号' }}</text>
+					</view>
+
+					<view class="form-item">
+						<view class="input-wrap">
+							<uni-icons type="locked" size="20" color="#9aa0a8"></uni-icons>
+							<input class="code-input" type="number" maxlength="6" v-model.trim="verificationCode"
+								placeholder="请输入6位验证码" placeholder-class="input-placeholder" />
+							<view class="code-btn" :class="{ disabled: isCounting || codeSending }"
+								@click="getCodePassword">
+								{{ codeButtonText }}
+							</view>
+						</view>
+						<view class="form-tip">验证码有效时间为 2 分钟，请勿向任何人提供。</view>
+					</view>
+
+					<button class="submit-btn" :class="{ 'is-loading': isLoading }" @click="showConfirmModal">
+						{{ isLoading ? '正在处理...' : '确认注销' }}
+					</button>
+				</view>
+
+				<view class="bottom-note">
+					<view class="bottom-note-line"></view>
+					<text>注销完成后，当前账号将自动退出登录</text>
+					<view class="bottom-note-line"></view>
+				</view>
 			</view>
 		</view>
 
-		<!-- 第二步：手机验证 -->
-		<view v-if="confirmCancellation" class="page-content">
-			<!-- 返回提示 -->
-			<view class="back-hint" @click="confirmCancellation = false">
-				<view class="back-icon-wrapper">
-					<text class="back-arrow">‹</text>
-				</view>
-				<text class="back-text" :style="{ color: fontColor }">返回上一步</text>
-			</view>
-
-			<view class="verify-card">
-				<view class="verify-header">
-					<view class="verify-icon">📱</view>
-					<view class="verify-title">身份验证</view>
-					<view class="verify-desc">为确保账户安全，请验证你的身份</view>
-				</view>
-
-				<view class="verify-content">
-					<view class="phone-info">
-						<text :style="{ color: fontColor }">验证码将发送至</text>
-						<text class="phone-number">{{ phone }}</text>
-					</view>
-
-					<view class="input-group">
-						<input type="text" placeholder="请输入验证码" v-model="verificationCodePassword" :disabled="confirmPassword" class="code-input" />
-						<text class="code-btn" :class="{ disabled: confirmPassword }" @click="getCodePassword">
-							{{ verificationCodeText }}
-						</text>
-					</view>
-
-					<button class="submit-btn" @click="showConfirmModal">确认注销</button>
-				</view>
-			</view>
+		<!-- 底部操作区 -->
+		<view v-if="currentStep === 1" class="footer-bar">
+			<button class="footer-btn cancel-btn" @click="goBack">取消</button>
+			<button class="footer-btn next-btn" :class="{ 'is-disabled': !isRead }" @click="nextStep">下一步</button>
 		</view>
 
-		<!-- 二次确认弹窗 -->
-		<view v-if="showModal" class="modal-overlay" @click="showModal = false">
+		<!-- 二次确认 -->
+		<view v-if="showModal" class="modal-overlay" @click="closeModal">
 			<view class="modal-content" @click.stop>
-				<view class="modal-icon">😱</view>
-				<view class="modal-title">确认注销账户？</view>
-				<view class="modal-desc">账户注销后，所有数据将被清除且无法恢复</view>
+				<view class="modal-icon">!</view>
+				<view class="modal-title">确认注销账号？</view>
+				<view class="modal-desc">账号注销后，所有个人数据及关联关系将被清除，且无法恢复。</view>
 				<view class="modal-btn-row">
-					<button class="modal-cancel" @click="showModal = false">我再想想</button>
-					<button class="modal-confirm" @click="confirmAccountDelete">确认注销</button>
+					<button class="modal-btn modal-cancel" @click="closeModal">我再想想</button>
+					<button class="modal-btn modal-confirm" :disabled="isLoading" @click="confirmAccountDelete">
+						{{ isLoading ? '处理中...' : '确认注销' }}
+					</button>
 				</view>
 			</view>
 		</view>
@@ -101,137 +147,214 @@
 
 <script>
 	import DyNavbar from '@/components/dy-navbar/dy-navbar.vue'
+	import { sendSmsCode, cancelAccount } from '@/api/user'
+	import { destroySocket } from '@/service/websocket'
 
 	export default {
 		components: { DyNavbar },
 		data() {
+			let platform = ''
+			try {
+				if (typeof uni.getDeviceInfo === 'function') {
+					platform = (uni.getDeviceInfo() || {}).platform || ''
+				}
+			} catch (e) {
+				platform = ''
+			}
 			return {
-				platformClass: '',
+				// 首帧就确定平台，保证顶部占位高度与导航栏一致，避免内容上移闪一下
+				platformClass: platform === 'ios' ? 'ios-platform' : 'android-platform',
+				currentStep: 1,
 				isRead: false,
-				confirmCancellation: false,
 				phone: '',
-				verificationCodePassword: '',
+				userId: '',
+				verificationCode: '',
 				verificationCodeText: '获取验证码',
-				confirmPassword: false,
+				countdown: 0,
+				codeTimer: null,
+				isCounting: false,
+				codeSending: false,
 				isLoading: false,
 				showModal: false
 			}
 		},
+		computed: {
+			fontColor() {
+				return this.$store.state.fontColor || '#1a1a1a'
+			},
+			maskedPhone() {
+				return this.phone ? this.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : ''
+			},
+			codeButtonText() {
+				if (this.codeSending) return '发送中...'
+				if (this.isCounting) return `${this.countdown}s 后重发`
+				return '获取验证码'
+			}
+		},
 		onLoad() {
-			this.phone = uni.getStorageSync('phone')
-			// 基础库 2.20+ 已废弃 getSystemInfo；此处只需 platform，改为同步读取设备信息
-			let devicePlatform = ""
-			try {
-			  if (typeof uni.getDeviceInfo === "function") devicePlatform = (uni.getDeviceInfo() || {}).platform || ""
-			} catch (e) { }
-					this.platformClass = devicePlatform === 'ios' ? 'ios-platform' : 'android-platform'
+			this.loadAccount()
+			this.setPlatformClass()
+		},
+		onUnload() {
+			this.clearCountdown()
+		},
+		onHide() {
+			this.clearCountdown()
 		},
 		methods: {
+			loadAccount() {
+				let lifeUser = {}
+				try {
+					lifeUser = (uni.getStorageSync('lifeData') || {}).userInfo || {}
+				} catch (e) {
+					lifeUser = {}
+				}
+				const userInfo = this.$store.state.userInfo || lifeUser || {}
+				const moduleUser = this.$store.state.user || {}
+				this.phone = userInfo.mobile_phone || userInfo.mobile || moduleUser.mobile || uni.getStorageSync('phone') || ''
+				this.userId = userInfo.userId || userInfo.id || moduleUser.id || ''
+			},
+			setPlatformClass() {
+				let platform = ''
+				try {
+					if (typeof uni.getDeviceInfo === 'function') {
+						platform = (uni.getDeviceInfo() || {}).platform || ''
+					}
+				} catch (e) {
+					platform = ''
+				}
+				this.platformClass = platform === 'ios' ? 'ios-platform' : 'android-platform'
+			},
+			showToast(title, type = 'none') {
+				if (this.$refs.uToast) {
+					this.$refs.uToast.show({ title, type, duration: 1800 })
+				} else {
+					uni.showToast({ title, icon: type === 'success' ? 'success' : 'none', duration: 1800 })
+				}
+			},
+			toggleAgreement() {
+				this.isRead = !this.isRead
+			},
+			goBack() {
+				uni.navigateBack({
+					fail: () => uni.reLaunch({ url: '/pages/index/index' })
+				})
+			},
 			nextStep() {
 				if (!this.isRead) {
-					this.$refs.uToast.show({
-						title: '请先阅读并同意注销须知',
-						type: 'error'
-					})
+					this.showToast('请先阅读并确认注销须知', 'error')
 					return
 				}
-				this.confirmCancellation = true
+				if (!this.phone || !/^1[3-9]\d{9}$/.test(this.phone)) {
+					this.showToast('未获取到有效手机号，请重新登录', 'error')
+					return
+				}
+				this.currentStep = 2
 			},
-			getCodePassword() {
-				if (this.confirmPassword) {
-					return
+			prevStep() {
+				this.currentStep = 1
+				this.clearCountdown()
+			},
+			clearCountdown() {
+				if (this.codeTimer) {
+					clearInterval(this.codeTimer)
+					this.codeTimer = null
 				}
-				this.confirmPassword = true
-				this.verificationCodeText = '60s'
-				let num = 60
-				let timer = setInterval(() => {
-					num--
-					this.verificationCodeText = num + 's'
-					if (num === 0) {
-						clearInterval(timer)
-						this.confirmPassword = false
-						this.verificationCodeText = '获取验证码'
+				this.isCounting = false
+				this.countdown = 0
+				this.verificationCodeText = '获取验证码'
+			},
+			startCountdown() {
+				this.clearCountdown()
+				this.isCounting = true
+				this.countdown = 60
+				this.codeTimer = setInterval(() => {
+					this.countdown--
+					if (this.countdown <= 0) {
+						this.clearCountdown()
 					}
 				}, 1000)
-				uni.request({
-					url: 'https://serviceiems.gree.com/appletAPI/user/sendVerifyCode',
-					method: 'POST',
-					data: {
-						phone: this.phone,
-						type: 3
-					},
-					success: (res) => {
-						if (res.data.code === 200) {
-							this.$refs.uToast.show({
-								title: '发送成功',
-								type: 'success'
-							})
-						} else {
-							this.$refs.uToast.show({
-								title: res.data.message,
-								type: 'error'
-							})
-						}
-					},
-					fail: () => {
-						this.$refs.uToast.show({
-							title: '网络请求失败',
-							type: 'error'
-						})
+			},
+			getCodePassword() {
+				if (this.codeSending || this.isCounting) return
+				if (!this.phone || !/^1[3-9]\d{9}$/.test(this.phone)) {
+					this.showToast('未获取到有效手机号，请重新登录', 'error')
+					return
+				}
+				this.codeSending = true
+				sendSmsCode(this.phone).then(res => {
+					if (res && (res.code === 200 || res.status === 200)) {
+						this.startCountdown()
+						this.showToast('验证码已发送', 'success')
+					} else {
+						const message = (res && (res.msg || res.message)) || '验证码发送失败'
+						this.showToast(message, 'error')
 					}
+				}).catch(() => {
+					this.showToast('验证码发送失败，请稍后重试', 'error')
+				}).finally(() => {
+					this.codeSending = false
 				})
 			},
 			showConfirmModal() {
-				if (!this.verificationCodePassword) {
-					this.$refs.uToast.show({
-						title: '请输入验证码',
-						type: 'error'
-					})
+				const code = String(this.verificationCode || '').trim()
+				if (!/^\d{6}$/.test(code)) {
+					this.showToast('请输入6位短信验证码', 'error')
 					return
 				}
+				this.verificationCode = code
 				this.showModal = true
 			},
-			confirmAccountDelete() {
+			closeModal() {
+				if (this.isLoading) return
 				this.showModal = false
-				this.isLoading = true
-				uni.showLoading({
-					title: '处理中...'
-				})
-				uni.request({
-					url: 'https://serviceiems.gree.com/appletAPI/user/cancelAccount',
-					method: 'POST',
-					data: {
-						phone: this.phone,
-						verifyCode: this.verificationCodePassword
-					},
-					success: (res) => {
-						if (res.data.code === 200) {
-							uni.hideLoading()
-							uni.removeStorageSync('token')
-							uni.removeStorageSync('phone')
-							uni.redirectTo({
-								url: '/pages-public/login/login'
-							})
-						} else {
-							this.$refs.uToast.show({
-								title: res.data.message,
-								type: 'error'
-							})
-						}
-					},
-					fail: () => {
-						uni.hideLoading()
-						this.$refs.uToast.show({
-							title: '网络请求失败',
-							type: 'error'
-						})
-					},
-					complete: () => {
-						this.isLoading = false
-						uni.hideLoading()
-					}
-				})
 			},
+			async confirmAccountDelete() {
+				if (this.isLoading) return
+				this.isLoading = true
+				this.showModal = false
+				uni.showLoading({ title: '正在注销...', mask: true })
+
+				try {
+					const res = await cancelAccount({
+						userId: this.userId ? Number(this.userId) : undefined,
+						tel: this.phone,
+						code: Number(this.verificationCode)
+					})
+					uni.hideLoading()
+					if (res && (res.code === 200 || res.status === 200)) {
+						uni.showToast({ title: '账号已注销', icon: 'success', duration: 1200 })
+						await this.clearLoginState()
+						setTimeout(() => {
+							uni.reLaunch({ url: '/pages/login/login' })
+						}, 800)
+					} else {
+						const message = (res && (res.msg || res.message)) || '注销失败，请稍后重试'
+						this.showToast(message, 'error')
+					}
+				} catch (e) {
+					uni.hideLoading()
+					this.showToast('注销失败，请稍后重试', 'error')
+				} finally {
+					this.isLoading = false
+				}
+			},
+			async clearLoginState() {
+				this.clearCountdown()
+				try {
+					destroySocket()
+				} catch (e) { }
+				try {
+					await this.$store.dispatch('user/logout')
+				} catch (e) { }
+				try {
+					this.$store.commit('CLEAR_DEVICE_STATE')
+					this.$store.commit('$uStore', { name: 'userInfo', value: {} })
+					this.$store.commit('$uStore', { name: 'hasLogin', value: false })
+					this.$store.commit('$uStore', { name: 'token', value: '' })
+					this.$store.commit('$uStore', { name: 'currentSelectDevice', value: {} })
+				} catch (e) { }
+			}
 		}
 	}
 </script>
@@ -239,44 +362,126 @@
 <style lang="scss" scoped>
 	.container {
 		min-height: 100vh;
-		background: linear-gradient(180deg, #f0f5ff 0%, #f5f7fb 30%);
+		background: #f5f6f8;
+		color: #1a1a1a;
+	}
 
-		&.android-platform {
-			.fixed-placeholder {
-				height: calc(25px + 44px + 20px);
-			}
-		}
+	/* 占位必须与 DyNavbar 实际高度一致：
+	   安卓 状态栏(25px+20px) + 导航条 44px = 89px；
+	   iOS  安全区 59px + 导航条 44px = 103px。
+	   否则内容会上移被固定导航栏遮住（步骤圆点显示不全）。 */
+	.fixed-placeholder {
+		height: calc(25px + 44px + 20px);
 
-		&.ios-platform {
-			.fixed-placeholder {
-				height: calc(44px);
-				background: #fff;
-			}
+		.ios-platform & {
+			height: calc(59px + 44px);
 		}
 	}
 
-	/* 页面内容 */
 	.page-content {
-		padding: 24rpx;
-		padding-bottom: 160rpx;
+		padding: 28rpx 28rpx 220rpx;
 	}
 
-	/* 警示卡片 */
-	.warning-card {
+	/* 步骤指示 */
+	.steps {
 		display: flex;
 		align-items: center;
-		background: linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%);
-		border-radius: 20rpx;
-		padding: 32rpx;
-		margin-bottom: 32rpx;
-		border-left: 8rpx solid #faad14;
-		box-shadow: 0 4rpx 16rpx rgba(250, 173, 20, 0.15);
+		justify-content: center;
+		padding: 8rpx 40rpx 32rpx;
+	}
+
+	.step-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		min-width: 120rpx;
+	}
+
+	.step-dot {
+		width: 48rpx;
+		height: 48rpx;
+		border-radius: 50%;
+		border: 2rpx solid #d8dce3;
+		background: #fff;
+		color: #9aa0a8;
+		font-size: 26rpx;
+		line-height: 44rpx;
+		text-align: center;
+		font-weight: 600;
+	}
+
+	.step-item.active .step-dot {
+		background: #4a8cff;
+		border-color: #4a8cff;
+		color: #fff;
+	}
+
+	.step-check {
+		font-size: 28rpx;
+	}
+
+	.step-text {
+		margin-top: 12rpx;
+		font-size: 24rpx;
+		color: #9aa0a8;
+	}
+
+	.step-item.active .step-text {
+		color: #1a1a1a;
+		font-weight: 500;
+	}
+
+	.step-line {
+		flex: 1;
+		height: 2rpx;
+		background: #e5e8ed;
+		/* 让连线对齐圆点垂直中心（圆点 48rpx，其中心距顶部 24rpx） */
+		margin: -23rpx 16rpx 0;
+	}
+
+	.step-line.active {
+		background: #4a8cff;
+	}
+
+	.step-panel {
+		animation: fade-in 0.2s ease;
+	}
+
+	@keyframes fade-in {
+		from {
+			opacity: 0;
+			transform: translateY(10rpx);
+		}
+
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	/* 警示条 */
+	.warning-banner {
+		display: flex;
+		align-items: flex-start;
+		padding: 24rpx;
+		background: #fff5f4;
+		border: 2rpx solid #ffd9d5;
+		border-radius: 16rpx;
+		margin-bottom: 24rpx;
 	}
 
 	.warning-icon {
-		font-size: 48rpx;
-		margin-right: 20rpx;
 		flex-shrink: 0;
+		width: 40rpx;
+		height: 40rpx;
+		border-radius: 50%;
+		background: #e54d42;
+		color: #fff;
+		font-size: 28rpx;
+		font-weight: 700;
+		line-height: 40rpx;
+		text-align: center;
+		margin-right: 18rpx;
 	}
 
 	.warning-content {
@@ -286,354 +491,397 @@
 	.warning-title {
 		font-size: 28rpx;
 		font-weight: 600;
-		color: #d46b08;
-		margin-bottom: 8rpx;
+		color: #b52d24;
+		margin-bottom: 6rpx;
 	}
 
 	.warning-desc {
 		font-size: 24rpx;
-		color: #fa8c16;
+		line-height: 1.55;
+		color: #a6524b;
 	}
 
-	/* 注销须知卡片 */
-	.section-card {
+	/* 内容卡片 */
+	.section-card,
+	.verify-card {
 		background: #fff;
-		border-radius: 24rpx;
-		padding: 40rpx;
-		box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
-		margin-bottom: 32rpx;
+		border: 2rpx solid #eceef2;
+		border-radius: 20rpx;
+		padding: 32rpx;
+		box-shadow: 0 4rpx 20rpx rgba(24, 32, 48, 0.04);
 	}
 
-	.section-header {
-		text-align: center;
-		margin-bottom: 32rpx;
+	.section-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		padding-bottom: 24rpx;
+		border-bottom: 2rpx solid #f0f1f4;
 	}
 
 	.section-title {
-		font-size: 34rpx;
+		font-size: 32rpx;
 		font-weight: 600;
 		color: #1a1a1a;
 	}
 
-	.section-content {
-		.notice-item {
-			display: flex;
-			margin-bottom: 28rpx;
-			padding-bottom: 28rpx;
-			border-bottom: 2rpx solid #f0f0f0;
-
-			&:last-child {
-				border-bottom: none;
-				margin-bottom: 0;
-				padding-bottom: 0;
-			}
-		}
-
-		.notice-number {
-			flex-shrink: 0;
-			width: 48rpx;
-			height: 48rpx;
-			line-height: 48rpx;
-			text-align: center;
-			background: linear-gradient(135deg, #4a8cff 0%, #6b9dff 100%);
-			color: #fff;
-			border-radius: 50%;
-			font-size: 24rpx;
-			font-weight: 600;
-			margin-right: 20rpx;
-		}
-
-		.notice-text {
-			flex: 1;
-			font-size: 26rpx;
-			line-height: 1.7;
-			color: #555;
-		}
+	.section-subtitle {
+		font-size: 22rpx;
+		color: #a0a5ad;
 	}
 
-	/* 复选框行 */
-	.checkbox-row {
+	.notice-list {
+		padding-top: 8rpx;
+	}
+
+	.notice-item {
 		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin-top: 40rpx;
-		font-size: 28rpx;
+		align-items: flex-start;
+		padding: 24rpx 0;
+		border-bottom: 2rpx solid #f4f5f7;
 
-		radio {
-			margin-right: 16rpx;
-			transform: scale(1.2);
+		&:last-child {
+			border-bottom: none;
+			padding-bottom: 4rpx;
 		}
 	}
 
-	/* 底部按钮区 */
-	.btn-row {
-		position: fixed;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		padding: 24rpx 32rpx;
-		padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
-		background: #fff;
-		box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.06);
-		display: flex;
-		gap: 20rpx;
-	}
-
-	.cancel-btn {
-		flex: 1;
-		height: 88rpx;
-		line-height: 88rpx;
-		border-radius: 44rpx;
-		font-size: 28rpx;
-		font-weight: 500;
-		color: #666;
-		border: 2rpx solid #e0e0e0;
-		background: #fff;
-		transition: all 0.3s ease;
-
-		&:active {
-			background: #f5f5f5;
-			transform: scale(0.98);
-		}
-	}
-
-	.confirm-btn {
-		flex: 2;
-		height: 88rpx;
-		line-height: 88rpx;
-		border-radius: 44rpx;
-		font-size: 28rpx;
-		font-weight: 500;
-		color: #fff;
-		border: none;
-		background: linear-gradient(135deg, #4a8cff 0%, #6b9dff 50%, #4a8cff 100%);
-		background-size: 200% 100%;
-		box-shadow: 0 8rpx 20rpx rgba(74, 140, 255, 0.3);
-		transition: all 0.3s ease;
-
-		&.disabled {
-			background: linear-gradient(180deg, #e0e0e0 0%, #d0d0d0 100%);
-			box-shadow: none;
-			opacity: 0.6;
-		}
-
-		&:active:not(.disabled) {
-			transform: scale(0.98);
-			background-position: 100% 0;
-			box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.3);
-		}
-	}
-
-	/* 返回提示 */
-	.back-hint {
-		display: flex;
-		align-items: center;
-		padding: 16rpx 20rpx;
-		margin-bottom: 24rpx;
-		background: rgba(74, 140, 255, 0.08);
-		border-radius: 40rpx;
-		width: fit-content;
-		transition: all 0.2s ease;
-
-		&:active {
-			background: rgba(74, 140, 255, 0.15);
-			transform: scale(0.98);
-		}
-
-		.back-icon-wrapper {
-			width: 48rpx;
-			height: 48rpx;
-			border-radius: 50%;
-			background: linear-gradient(135deg, #4a8cff 0%, #6b9dff 100%);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			margin-right: 12rpx;
-		}
-
-		.back-arrow {
-			font-size: 32rpx;
-			color: #fff;
-			line-height: 1;
-			margin-top: -4rpx;
-		}
-
-		.back-text {
-			font-size: 26rpx;
-			font-weight: 500;
-		}
-	}
-
-	/* 验证卡片 */
-	.verify-card {
-		background: #fff;
-		border-radius: 28rpx;
-		padding: 48rpx;
-		box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
-	}
-
-	.verify-header {
+	.notice-index {
+		flex-shrink: 0;
+		width: 40rpx;
+		height: 40rpx;
+		margin-right: 18rpx;
+		border-radius: 50%;
+		background: #f0f4fb;
+		color: #4a8cff;
+		font-size: 24rpx;
+		line-height: 40rpx;
 		text-align: center;
-		margin-bottom: 48rpx;
+		font-weight: 600;
 	}
 
-	.verify-icon {
-		font-size: 80rpx;
+	.notice-text {
+		flex: 1;
+		font-size: 26rpx;
+		line-height: 1.7;
+		color: #555b64;
+	}
+
+	.scope-card {
+		margin-top: 24rpx;
+		padding: 28rpx 32rpx;
+		background: #fff;
+		border: 2rpx solid #eceef2;
+		border-radius: 20rpx;
+	}
+
+	.scope-title {
+		font-size: 28rpx;
+		font-weight: 600;
+		color: #1a1a1a;
 		margin-bottom: 20rpx;
 	}
 
+	.scope-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 16rpx;
+	}
+
+	.scope-tag {
+		padding: 10rpx 20rpx;
+		border-radius: 28rpx;
+		background: #f5f7fa;
+		border: 2rpx solid #e9ebef;
+		color: #5f6570;
+		font-size: 24rpx;
+	}
+
+	.scope-note {
+		margin-top: 20rpx;
+		font-size: 22rpx;
+		color: #9aa0a8;
+	}
+
+	.agreement-row {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 36rpx 0 12rpx;
+	}
+
+	.agreement-checkbox {
+		width: 34rpx;
+		height: 34rpx;
+		margin-right: 14rpx;
+		border: 2rpx solid #c8ccd3;
+		border-radius: 8rpx;
+		background: #fff;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.agreement-checkbox.checked {
+		background: #4a8cff;
+		border-color: #4a8cff;
+	}
+
+	.agreement-check-mark {
+		color: #fff;
+		font-size: 24rpx;
+		line-height: 1;
+	}
+
+	.agreement-text {
+		font-size: 26rpx;
+		color: #4a4f57;
+	}
+
+	/* 验证步骤 */
+	.back-hint {
+		display: inline-flex;
+		align-items: center;
+		padding: 8rpx 20rpx 8rpx 8rpx;
+		margin-bottom: 24rpx;
+	}
+
+	.back-icon-wrapper {
+		width: 40rpx;
+		height: 40rpx;
+		border-radius: 50%;
+		background: #edf3ff;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-right: 12rpx;
+	}
+
+	.back-arrow {
+		font-size: 34rpx;
+		color: #4a8cff;
+		line-height: 1;
+		margin-top: -4rpx;
+	}
+
+	.back-text {
+		font-size: 26rpx;
+		color: #4a8cff;
+	}
+
+	.verify-head {
+		text-align: center;
+		padding-bottom: 32rpx;
+		border-bottom: 2rpx solid #f0f1f4;
+	}
+
+	.verify-icon {
+		width: 76rpx;
+		height: 76rpx;
+		margin: 0 auto 20rpx;
+		border-radius: 50%;
+		background: #edf3ff;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
 	.verify-title {
-		font-size: 36rpx;
+		font-size: 34rpx;
 		font-weight: 600;
 		color: #1a1a1a;
-		margin-bottom: 12rpx;
+		margin-bottom: 10rpx;
 	}
 
 	.verify-desc {
-		font-size: 26rpx;
-		color: #666;
+		font-size: 24rpx;
+		line-height: 1.6;
+		color: #8a9099;
 	}
 
-	.verify-content {
-		.phone-info {
-			text-align: center;
-			font-size: 26rpx;
-			color: #666;
-			margin-bottom: 40rpx;
-
-			.phone-number {
-				color: #4a8cff;
-				font-weight: 600;
-				font-size: 28rpx;
-				margin-left: 8rpx;
-			}
-		}
-	}
-
-	/* 输入组 */
-	.input-group {
+	.phone-row {
 		display: flex;
 		align-items: center;
-		gap: 16rpx;
-		margin-bottom: 40rpx;
+		justify-content: space-between;
+		padding: 32rpx 0 24rpx;
+	}
+
+	.phone-label {
+		font-size: 26rpx;
+		color: #8a9099;
+	}
+
+	.phone-number {
+		font-size: 30rpx;
+		font-weight: 600;
+		color: #1a1a1a;
+	}
+
+	.form-item {
+		margin-bottom: 36rpx;
+	}
+
+	.input-wrap {
+		display: flex;
+		align-items: center;
+		height: 92rpx;
+		padding: 0 24rpx;
+		border: 2rpx solid #e3e6eb;
+		border-radius: 14rpx;
+		background: #fafbfc;
 	}
 
 	.code-input {
 		flex: 1;
 		height: 88rpx;
-		padding: 0 28rpx;
-		border: 2rpx solid #e0e0e0;
-		border-radius: 16rpx;
+		padding: 0 20rpx;
 		font-size: 28rpx;
-		background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
-		box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04);
-		transition: all 0.3s ease;
+		color: #1a1a1a;
+	}
 
-		&:focus {
-			border-color: #4a8cff;
-			background: #fff;
-			box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.04), 0 0 0 4rpx rgba(74, 140, 255, 0.1);
-		}
+	.input-placeholder {
+		color: #b3b8c0;
 	}
 
 	.code-btn {
 		flex-shrink: 0;
-		width: 180rpx;
-		height: 88rpx;
-		line-height: 88rpx;
+		min-width: 160rpx;
 		text-align: center;
-		border-radius: 16rpx;
-		background: linear-gradient(135deg, #f0f5ff 0%, #e6edff 100%);
-		border: 2rpx solid #a3c0f5;
+		font-size: 26rpx;
 		color: #4a8cff;
-		font-size: 24rpx;
 		font-weight: 500;
-		transition: all 0.3s ease;
-		box-shadow: 0 4rpx 12rpx rgba(74, 140, 255, 0.1);
-
-		&.disabled {
-			background: #f5f5f5;
-			border-color: #e0e0e0;
-			color: #999;
-			box-shadow: none;
-		}
-
-		&:active:not(.disabled) {
-			transform: scale(0.97);
-			background: linear-gradient(135deg, #e6edff 0%, #d3deff 100%);
-		}
 	}
 
-	/* 提交按钮 */
+	.code-btn.disabled {
+		color: #a8adb5;
+	}
+
+	.form-tip {
+		margin-top: 16rpx;
+		font-size: 22rpx;
+		line-height: 1.5;
+		color: #9aa0a8;
+	}
+
 	.submit-btn {
 		width: 100%;
-		height: 88rpx;
-		line-height: 88rpx;
-		border-radius: 44rpx;
-		font-size: 28rpx;
-		font-weight: 500;
-		color: #fff;
+		height: 92rpx;
+		line-height: 92rpx;
 		border: none;
-		background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 50%, #ff6b6b 100%);
-		background-size: 200% 100%;
-		box-shadow: 0 8rpx 20rpx rgba(255, 107, 107, 0.3);
-		transition: all 0.3s ease;
-
-		&:active {
-			transform: scale(0.98);
-			background-position: 100% 0;
-			box-shadow: 0 4rpx 12rpx rgba(255, 107, 107, 0.3);
-		}
+		border-radius: 14rpx;
+		background: #e54d42;
+		color: #fff;
+		font-size: 30rpx;
+		font-weight: 600;
 	}
 
-	/* 弹窗遮罩 */
+	.submit-btn::after,
+	.footer-btn::after,
+	.modal-btn::after {
+		border: none;
+	}
+
+	.submit-btn.is-loading {
+		opacity: 0.75;
+	}
+
+	.bottom-note {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-top: 40rpx;
+	}
+
+	.bottom-note-line {
+		width: 60rpx;
+		height: 2rpx;
+		background: #e3e6eb;
+		margin: 0 20rpx;
+	}
+
+	.bottom-note text {
+		font-size: 22rpx;
+		color: #a0a5ad;
+	}
+
+	/* 底部操作 */
+	.footer-bar {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		display: flex;
+		gap: 20rpx;
+		padding: 20rpx 28rpx;
+		padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+		background: #fff;
+		border-top: 2rpx solid #eceef2;
+		z-index: 100;
+	}
+
+	.footer-btn {
+		height: 88rpx;
+		line-height: 88rpx;
+		border-radius: 14rpx;
+		font-size: 28rpx;
+		font-weight: 500;
+	}
+
+	.cancel-btn {
+		flex: 1;
+		border: 2rpx solid #dfe2e8;
+		background: #fff;
+		color: #5f6570;
+	}
+
+	.next-btn {
+		flex: 2;
+		border: none;
+		background: #4a8cff;
+		color: #fff;
+	}
+
+	.next-btn.is-disabled {
+		background: #d8dfec;
+		color: #fff;
+	}
+
+	/* 弹窗 */
 	.modal-overlay {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(0, 0, 0, 0.5);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		z-index: 1000;
-		animation: fadeIn 0.2s ease;
-	}
-
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
-	}
-
-	/* 弹窗内容 */
-	.modal-content {
-		width: 560rpx;
-		background: #fff;
-		border-radius: 24rpx;
 		padding: 48rpx;
-		text-align: center;
-		animation: slideUp 0.3s ease;
+		background: rgba(18, 22, 28, 0.45);
+		z-index: 1000;
+		animation: fade-in 0.18s ease;
 	}
 
-	@keyframes slideUp {
-		from {
-			opacity: 0;
-			transform: translateY(40rpx);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
+	.modal-content {
+		width: 100%;
+		max-width: 600rpx;
+		padding: 40rpx 36rpx 32rpx;
+		border-radius: 22rpx;
+		background: #fff;
+		text-align: center;
 	}
 
 	.modal-icon {
-		font-size: 80rpx;
-		margin-bottom: 24rpx;
+		width: 76rpx;
+		height: 76rpx;
+		margin: 0 auto 22rpx;
+		border-radius: 50%;
+		background: #fff1f0;
+		border: 2rpx solid #ffd4d0;
+		color: #e54d42;
+		font-size: 44rpx;
+		font-weight: 700;
+		line-height: 72rpx;
 	}
 
 	.modal-title {
@@ -645,8 +893,9 @@
 
 	.modal-desc {
 		font-size: 26rpx;
-		color: #666;
-		margin-bottom: 40rpx;
+		line-height: 1.7;
+		color: #6b7078;
+		margin-bottom: 36rpx;
 	}
 
 	.modal-btn-row {
@@ -654,35 +903,24 @@
 		gap: 20rpx;
 	}
 
-	.modal-cancel {
+	.modal-btn {
 		flex: 1;
-		height: 80rpx;
-		line-height: 80rpx;
-		border-radius: 40rpx;
+		height: 84rpx;
+		line-height: 84rpx;
+		border-radius: 14rpx;
 		font-size: 28rpx;
 		font-weight: 500;
-		color: #666;
-		border: 2rpx solid #e0e0e0;
-		background: #fff;
+	}
 
-		&:active {
-			background: #f5f5f5;
-		}
+	.modal-cancel {
+		border: 2rpx solid #dfe2e8;
+		background: #fff;
+		color: #5f6570;
 	}
 
 	.modal-confirm {
-		flex: 1;
-		height: 80rpx;
-		line-height: 80rpx;
-		border-radius: 40rpx;
-		font-size: 28rpx;
-		font-weight: 500;
-		color: #fff;
 		border: none;
-		background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
-
-		&:active {
-			transform: scale(0.98);
-		}
+		background: #e54d42;
+		color: #fff;
 	}
 </style>
