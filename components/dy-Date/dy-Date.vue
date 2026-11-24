@@ -1,6 +1,6 @@
 <template>
 	<view :class="{ 'date-compact-root': compact }" :style="compactRootStyle">
-		<picker :title="index" @change="bindTimeChange" @columnchange="columnchange" mode="multiSelector" :disabled="disabled" :class="['date-picker', {disabled:disabled, 'date-compact':compact}]"
+		<picker :title="index" @change="bindTimeChange" @columnchange="columnchange" mode="multiSelector" :disabled="disabled" :class="['dy-date-inner', {disabled:disabled, 'date-compact':compact}]"
 		 :style="compactPickerStyle" :value="index" :range="array">
 			<view class="input-content" v-if="showTime" :style="compactInputStyle">
 				<uni-icons type="calendar" class="calendar-icon" :style="compactIconStyle"/>
@@ -453,7 +453,10 @@
 </script>
 
 <style lang="less">
-	.date-picker {
+	/* 使用方传入的 class="date-picker" 会落到组件根 view；内部 picker 改用独立类名，
+	   避免 APP 端无样式隔离时根 view 与 picker 双双命中 .date-picker 造成双层框。
+	   纯 class 选择器同时规避小程序 wxss 对 picker.date-picker 标签选择器的告警。 */
+	.dy-date-inner {
 		width: 100%;
 		height: 40px;
 		border-radius: 8px;
@@ -509,7 +512,7 @@
 	}
 	
 	@media screen and (max-width: 480px) {
-		.date-picker {
+		.dy-date-inner {
 			height: 36px;
 			max-width: 180px;
 			padding: 0 10px;
@@ -554,7 +557,7 @@
 	}
 
 	/* 纯 class 选择器：APP 端 picker 编译为 uni-picker，带 picker 标签的选择器不生效 */
-	.date-picker.date-compact {
+	.dy-date-inner.date-compact {
 		width: 240rpx;
 		min-width: 240rpx;
 		max-width: 240rpx;
@@ -567,16 +570,16 @@
 		flex-shrink: 0;
 	}
 
-	.date-picker.date-compact .input-content {
+	.dy-date-inner.date-compact .input-content {
 		height: 100%;
 	}
 
-	.date-picker.date-compact .calendar-icon {
+	.dy-date-inner.date-compact .calendar-icon {
 		font-size: 22rpx;
 		margin-right: 6rpx;
 	}
 
-	.date-picker.date-compact .date-text {
+	.dy-date-inner.date-compact .date-text {
 		font-size: 22rpx;
 		line-height: 50rpx;
 	}

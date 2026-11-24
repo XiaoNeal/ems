@@ -2241,10 +2241,10 @@ export default {
       }
 
       realtimeDataProvider.initDeviceList(deviceList);
-      this.deviceList = [...realtimeDataProvider.getDeviceList()];
+      this.deviceList = realtimeDataProvider.getViewList();
     },
     refreshDeviceData() {
-      this.deviceList = [...realtimeDataProvider.getDeviceList()];
+      this.deviceList = realtimeDataProvider.getViewList();
     }
   },
   onLoad() {
@@ -2256,12 +2256,29 @@ export default {
         this.platformClass = devicePlatform === 'ios' ? 'ios-platform' : 'android-platform';
   },
   mounted() {
+    this._isAlive = true
     this.initDeviceList();
-    this.dataRefreshTimer = setInterval(() => {
+    // 与网页版对齐：实时帧到达即刷新，不再靠 2s 轮询（原先平均晚 1 秒以上）。
+    // subscribe 会把本页登记为「活动订阅者」，首页 onHide 暂停旧订阅者时本页仍能收到通知。
+    this._realtimeUnsub = realtimeDataProvider.subscribe(() => {
+      if (this._isAlive === false) return
       this.refreshDeviceData();
-    }, 2000);
+    });
+    // 仅作兜底：异常场景下帧通知若停摆，5s 仍能从内存取一次最新快照；
+    // 正常运行时帧驱动已覆盖，这一步不会增加刷新频率。
+    this.dataRefreshTimer = setInterval(() => {
+      if (this._isAlive === false) return
+      this.refreshDeviceData();
+    }, 5000);
   },
-  beforeUnmount() {
+  // Vue2 项目用 beforeDestroy；原来的 beforeUnmount 永不触发，
+  // 每次进页面都会遗留定时器/订阅，长时间使用后拖慢实时刷新。
+  beforeDestroy() {
+    this._isAlive = false
+    if (this._realtimeUnsub) {
+      this._realtimeUnsub()
+      this._realtimeUnsub = null
+    }
     if (this.dataRefreshTimer) {
       clearInterval(this.dataRefreshTimer);
       this.dataRefreshTimer = null;

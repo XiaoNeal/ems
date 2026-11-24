@@ -254,7 +254,7 @@ export default {
     energyData() {
       void this.dataVersion
       var address = this.deviceInfo.address
-      var list = realtimeDataProvider.getDeviceList() || []
+      var list = realtimeDataProvider.getViewList() || []
       // console.log('energyData - 查找 address:', address, '设备总数:', list.length);
 
       // 查找设备：优先 typeCode=1714，其次 rawDeviceType=0305

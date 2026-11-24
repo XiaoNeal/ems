@@ -7,6 +7,7 @@ import {
 	startNotification,
 	resumeNotification
 } from "@/utils/alarm-notification.js"
+import { realtimeDataProvider } from '@/service/websocket.js'
 // #endif
 
 // 本地告警通知点击：跳到报警记录页（仅处理本模块发出的消息，payload.local=true）
@@ -80,6 +81,15 @@ export default {
 		// #ifdef APP-PLUS
 		// 回到前台补检一次：后台期间定时器可能被系统冻结，避免漏掉新告警
 		resumeNotification()
+		// 页面 onShow 在部分安卓 WebView 上可能不随 App 回前台触发；这里补一次
+		// resumeRealtime，确保订阅暂停一定被解除、register 被重放、链路自愈看门狗布防。
+		// 无已注册设备（未登录 / 直连模式）时不做任何事。
+		try {
+			if (realtimeDataProvider && typeof realtimeDataProvider.hasRegisteredCodes === 'function'
+				&& realtimeDataProvider.hasRegisteredCodes()) {
+				realtimeDataProvider.resumeRealtime()
+			}
+		} catch (e) { }
 		// #endif
 	},
 }

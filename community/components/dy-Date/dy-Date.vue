@@ -1,6 +1,6 @@
 <template>
 	<view>
-		<picker :title="index" @change="bindTimeChange" @columnchange="columnchange" mode="multiSelector" :disabled="disabled" :class="['date-picker', {disabled:disabled}]"
+		<picker :title="index" @change="bindTimeChange" @columnchange="columnchange" mode="multiSelector" :disabled="disabled" :class="['dy-date-inner', {disabled:disabled}]"
 		 :value="index" :range="array">
 			<view class="input-content" v-if="showTime">
 				<uni-icons type="calendar" class="calendar-icon"/>
@@ -429,7 +429,9 @@
 </script>
 
 <style lang="less">
-	picker.date-picker {
+	/* 使用方传入的 class="date-picker" 落到组件根 view；内部 picker 用独立类名避免
+	   APP 端根 view 与 picker 双命中造成双层框，纯 class 选择器同时规避小程序 wxss 告警。 */
+	.dy-date-inner {
 		width: 100%;
 		height: 40px;
 		border-radius: 8px;
@@ -485,7 +487,7 @@
 	}
 	
 	@media screen and (max-width: 480px) {
-		picker.date-picker {
+		.dy-date-inner {
 			height: 36px;
 			max-width: 120px;
 			padding: 0 10px;

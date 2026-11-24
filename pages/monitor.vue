@@ -51,7 +51,9 @@ export default {
     return {
       currentTab: 0,
       tabList: ['架构图', '光伏', '储能', '电网', '负荷'],
-      device171FList: [], // 171F设备列表
+      // 171F 列表仅供子组件通过 get171FDeviceList() 读取，模板没有绑定它。
+      // 放进 Vue data 会让每次通知都 observe/序列化 43 个设备对象并触发父页整页重绘，
+      // 架构图等子页面因此比网页版慢 1 秒多。改为实例上的非响应式缓存。
       device171FRegistered: false, // 是否已注册
     };
   },
@@ -72,8 +74,8 @@ export default {
       // return;
       if (this.device171FRegistered) {
 
-        this.device171FList = [...realtimeDataProvider.getDeviceList()];
-        return this.device171FList;
+        this._device171FList = realtimeDataProvider.getViewList();
+        return this._device171FList;
       }
 
       const currentDevice = this.$store.state.currentSelectDevice || {};
@@ -107,16 +109,16 @@ export default {
       };
       // console.log('注册171F设备:', deviceConfig);
       realtimeDataProvider.initDeviceList([deviceConfig]);
-      this.device171FList = [...realtimeDataProvider.getDeviceList()];
+      this._device171FList = realtimeDataProvider.getViewList();
       this.device171FRegistered = true;
-      // console.log('171F设备注册完成:', this.device171FList);
-      return this.device171FList;
+      // console.log('171F设备注册完成:', this._device171FList);
+      return this._device171FList;
     },
     get171FDeviceList() {
       if (!this.device171FRegistered) {
         return this.register171FDevice();
       }
-      return this.device171FList;
+      return this._device171FList;
     },
     switchTab(tab) {
       if (tab !== this.currentTab) {
@@ -181,20 +183,24 @@ export default {
     // 监听屏幕旋转事件
     uni.onWindowResize(this.onOrientationChange);
     // 使用 subscribe 多订阅者模式（避免与 index.vue 的 onDataUpdate 单槽互相覆盖）
+    // 只更新非响应式缓存供子组件读取；父页面模板不绑定这份列表，
+    // 不再 $forceUpdate()，避免每帧把架构图等子组件跟着整页重绘一遍。
     this._unsubscribeRealtime = realtimeDataProvider.subscribe(() => {
-      this.device171FList = [...realtimeDataProvider.getDeviceList()];
+      if (this._isAlive === false) return;
+      this._device171FList = realtimeDataProvider.getViewList();
     });
     // 立即刷一次
-    this.device171FList = [...realtimeDataProvider.getDeviceList()];
+    this._device171FList = realtimeDataProvider.getViewList();
   },
   onShow() {
     // 确保订阅者已注册（兜底）
     if (!this._unsubscribeRealtime) {
       this._unsubscribeRealtime = realtimeDataProvider.subscribe(() => {
-        this.device171FList = [...realtimeDataProvider.getDeviceList()];
+        if (this._isAlive === false) return;
+        this._device171FList = realtimeDataProvider.getViewList();
       });
     }
-    this.device171FList = [...realtimeDataProvider.getDeviceList()];
+    this._device171FList = realtimeDataProvider.getViewList();
   },
   /** 独立页面形态下的下拉刷新兜底：只补发一次实时快照，不重建连接、不重复拉接口 */
   onPullDownRefresh() {
@@ -209,6 +215,7 @@ export default {
     }, 400);
   },
   beforeDestroy() {
+    this._isAlive = false;
     // 移除监听器
     uni.offWindowResize(this.onOrientationChange);
     if (this._pullTimer) {

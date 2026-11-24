@@ -290,14 +290,17 @@ export default {
   },
 
   beforeDestroy() {
+    this._isAlive = false;
     this.showChart = false;
     if (this.updateTimer) clearTimeout(this.updateTimer);
     this._unsubRealtime && this._unsubRealtime();
   },
   methods: {
     updateDevice171F() {
-      this.deviceList = [...realtimeDataProvider.getDeviceList()]
+      if (this._isAlive === false) return;
+      this.deviceList = realtimeDataProvider.getViewList()
       this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
+      if (typeof this.$forceUpdate === 'function') this.$forceUpdate()
     },
     init171FDevice() {
       this.deviceList = this.get171FDeviceList();

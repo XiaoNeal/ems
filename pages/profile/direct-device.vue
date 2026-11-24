@@ -79,7 +79,7 @@
              DOM 节点 + 架构图重解码 + 一次整页 reflow，来回切就反复付这份成本。
              现在首屏只挂概览，其余由空闲预热提前建好（display:none，不参与布局），
              之后切 tab 只是 display 切换。数据通知由 rtKey 只发给可见面板，
-             隐藏面板常驻也不会被每 1.5s 的收帧叫醒。 -->
+             隐藏面板常驻也不会被每 0.9s 的收帧叫醒。 -->
         <!-- 概览标签页 -->
         <view v-if="panelMounted(0)" class="panel-slot" :class="{ 'panel-hidden': currentTab !== 0 }">
           <view class="content">
@@ -353,14 +353,14 @@ const CONTROL_ACK_WINDOW_MS = 8000
  * 设置组可见时的「参数回显心跳」间隔（ms）。
  * 回显不能只靠「帧提交且值有变化」或「点修改」触发：设备稳态上报 / 重复帧被短路 /
  * 切 tab 时恰好没有待执行定时器，都会让只读态一直停在初始 '--'。
- * 1s 与设置页的显示提交间隔（_displayCommitMs = 900ms）对齐；
+ * 600ms 与设置页的显示提交间隔（_displayCommitMs = 600ms）对齐；
  * _syncSettingsCore 内有原始值快照快路径，稳态下不写值、不通知渲染。
  */
-const SETTINGS_ECHO_INTERVAL_MS = 1000
+const SETTINGS_ECHO_INTERVAL_MS = 600
 
 /**
  * 设置项下发成功后的「乐观显示」窗口（ms）。
- * 「当前 xxx」和分段按钮高亮本来读的是设备实时回读值，而回显心跳 1s 一次：
+ * 「当前 xxx」和分段按钮高亮本来读的是设备实时回读值，而回显心跳 600ms 一次：
  * 直接写 currentValue 会在下一拍被设备的旧值刷回去，看起来像「点了没反应」。
  * 这里改成独立的显示层：下发后 3s 内显示刚下发的值，实时值仍由回显帧在后台
  * 持续维护；3s 到期直接回落到最新实时值（设备已回读就是新值，没回读就是旧值）。
@@ -520,7 +520,7 @@ export default {
       //    合计几千个字段，只要进了 Vue data，小程序每次 patch 的 cloneWithData
       //    都要整体深拷贝 + diff 一遍。现在统一放 realtime-store.js（普通对象），
       //    页面内部靠 storeVer 触发非渲染类 computed；可见面板自己订阅仓库刷新，
-      //    父页面不再因每 1.5s 一次的数据提交而整页 render。
+      //    父页面不再因每 0.9s 一次的数据提交而整页 render。
       storeVer: 0,
       // 50kW 协议判定结果（标量）：由收帧路径设置一次，替代 is50KwMode 里
       // 直接读 rawValues —— 否则父模板会经由它依赖 storeVer，每帧提交都拖整页 render。
@@ -795,8 +795,8 @@ export default {
     /**
      * 切 tab 只做三件事：复位编辑态（纯标量写入） + 换当前面板的数据快照 + 把重活排到切换帧之后。
      * 以前这里同步做 LRU 淘汰、骨架挂载、强制 flush、两阶段挂载、参数回显，
-     * 再叠加 48 / 50 / 80 / 90 / 250 / 1500ms 六个定时器 —— 一次点击会产生
-     * 8 次以上跨 1.5 秒的 setData，任何一帧渲染层没画完就是空白或残影。
+     * 再叠加 48 / 50 / 80 / 90 / 250 / 900ms 六个定时器 —— 一次点击会产生
+     * 8 次以上跨近 1 秒的 setData，任何一帧渲染层没画完就是空白或残影。
      */
     currentTab() {
       // 兜底：正常路径已在 switchTab 里同步复位编辑态（右上角「✓ 完成」回到初始「修改」）。
@@ -949,7 +949,7 @@ export default {
   created() {
     // 冻结的空对象：喂给「后台标签页」当 props 用。
     // 引用恒定 + 不被 Vue 观测，后台面板的 computed 永远不会被逐帧失效，
-    // 既不会因为每 800ms 一次落库而重渲染，也不会拖慢当前页。
+    // 既不会因为每 900ms 一次的数据提交而重渲染，也不会拖慢当前页。
     this._emptyRef = Object.freeze({})
     rtStore.setActiveKey('overview')
     this._rebuildActiveRv()
@@ -1225,7 +1225,7 @@ export default {
       if (this._postSwitchTimer) clearTimeout(this._postSwitchTimer)
       this._postSwitchTimer = setTimeout(() => {
         this._postSwitchTimer = null
-        // ⚡ 切 tab 不再强制 flush 暂存帧：800ms 的常规 flush 本来就在跑，
+        // ⚡ 切 tab 不再强制 flush 暂存帧：250ms 的常规 flush 本来就在跑，
         //    这里再 flushPendingFramesNow() 等于切换帧刚画完 220ms 就追加一次
         //    整树提交 + 参数回显 —— 正是「点完 tab 过一秒又卡一下」的来源。
         //    新面板的数据在切换瞬间已由 _rebuildActiveRv() 从仓库读好，不依赖这次强制提交。
@@ -1245,7 +1245,7 @@ export default {
      * ⚡ 数据刷新不再经过父页面：模板不再向面板传 fmtVer / snapVer。
      *    每个面板通过 realtime-subscribe mixin 订阅仓库，数据变化时只递增
      *    自己内部的 rtVer，只有这一个面板重渲染；父页面的 navbar / 设备卡 /
-     *    标签栏 / 底部栏不再被每 1.5s 一次的数据提交拖着重建 vnode。
+     *    标签栏 / 底部栏不再被每 0.9s 一次的数据提交拖着重建 vnode。
      *    _fmtVer / _snapVer 仅保留作调试读取，不参与模板依赖收集。
      */
     /** 重建「当前可见面板」的数据快照：只含当前 tab 真正会读的 1~3 个桶 */
@@ -2343,7 +2343,7 @@ export default {
         }
       })
       if (hasNew) {
-        // ⚡ 同 applyIemsFrame：暂存 + 800ms 节流合并写入，避免每帧全量重渲染
+        // ⚡ 同 applyIemsFrame：暂存 + 250ms 节流合并写入，避免每帧全量重渲染
         if (!this._frameBatches) this._frameBatches = {}
         this._frameBatches[deviceType] = Object.assign(this._frameBatches[deviceType] || {}, batch)
         this.scheduleFrameFlush(deviceType)
@@ -2547,7 +2547,7 @@ export default {
     applyIemsFrame(frameBytes) {
       // 页头「更新」按真实收帧打点（同一秒多帧只通知一次，且只刷新设备卡一个文本）。
       // 放在 APP 重复帧过滤之前：帧被去重只是渲染优化，设备确实又上报了一次，
-      // 稳态数值不变时时间戳也必须继续走。与 800ms 合并 / 1.5s 提交节流完全解耦。
+      // 稳态数值不变时时间戳也必须继续走。与 250ms 合并 / 900ms 提交节流完全解耦。
       rtStore.markFrame()
       // #ifdef APP-PLUS
       // 放在自增之前：窗口切换时本帧计入新窗口，不丢计数
@@ -2655,7 +2655,7 @@ export default {
 
         if (hasNewValue) {
           // ⚡ 性能关键：设备每秒上报多路帧，这里不再同步写 rawValues / 重建显示值，
-          // 只把本帧数据暂存进非响应式缓冲，由 800ms 节流的统一 flush 合并写一次。
+          // 只把本帧数据暂存进非响应式缓冲，由 250ms 节流的统一 flush 合并写一次。
           // 之前每帧 spread 替换 rawValues bucket + 重建 formattedValues，
           // 一次引用变化会让所有 v-show 挂载的 tab 组件整体重渲染，1 秒多帧时页面直接卡死。
           if (!this._frameBatches) this._frameBatches = {}
@@ -2701,7 +2701,7 @@ export default {
         console.error('IEMS 帧解析失败:', e && e.message, 'deviceType=', arguments[1] || '(unknown)')
       }
     },
-    /** ⚡ 帧数据节流 flush：最多 800ms 把多帧数据合并进暂存区（是否提交到 rawValues 由 _displayCommitMs 决定） */
+    /** ⚡ 帧数据节流 flush：最多 250ms 把多帧数据合并进暂存区（是否提交到 rawValues 由 _displayCommitMs 决定） */
     scheduleFrameFlush(deviceType) {
       if (!this._frameDirty) this._frameDirty = {}
       this._frameDirty[deviceType] = true
@@ -2709,9 +2709,9 @@ export default {
       this._frameFlushTimer = setTimeout(() => {
         this._frameFlushTimer = null
         this._flushFrameBatches()
-      }, 800)
+      }, 250)
     },
-    /** 立即合并暂存帧并强制提交：下发前读当前值、进入编辑态同步回显前调用，避免读到 ≤1.5s 的旧值 */
+    /** 立即合并暂存帧并强制提交：下发前读当前值、进入编辑态同步回显前调用，避免读到 ≤900ms 的旧值 */
     flushPendingFramesNow() {
       if (this._frameFlushTimer) {
         clearTimeout(this._frameFlushTimer)
@@ -2728,12 +2728,14 @@ export default {
       // tier 由 uniapp-tcp-adapter.js 实测得出；未走 Java Socket（小程序 / WebSocket
       // 降级）时恒为 0，走下面的原值，已验证流畅的路径一行不改。
       const tier = getTcpPerfTier()
-      if (tier >= 2) return this.currentSettingsTab ? 1400 : 2400
-      if (tier === 1) return this.currentSettingsTab ? 1100 : 1900
+      // 低端档仍保持「档位越差提交越慢」的相对顺序，只在原值基础上整体前移一档
+      if (tier >= 2) return this.currentSettingsTab ? 1000 : 1600
+      if (tier === 1) return this.currentSettingsTab ? 800 : 1300
       // #endif
-      // 设置页要较快回显（编辑态读的也是提交后的值）；监测页 1.5s 足够，
-      // 传感器量本就缓慢变化，比 0.8s 少掉近一半的渲染 / setData 过桥
-      return this.currentSettingsTab ? 900 : 1500
+      // 设置页要较快回显（编辑态读的也是提交后的值）；监测页 900ms 兼顾实时性与
+      // 低端机主线程：原先 1.5s 提交让直连页比网页端晚 1 秒以上，这里对半压缩，
+      // 帧节奏不变、合并写仍保留，不会退化成每帧整树重排。
+      return this.currentSettingsTab ? 600 : 900
     },
     _flushFrameBatches(force) {
       const dirty = this._frameDirty || {}
@@ -2752,8 +2754,9 @@ export default {
         if (batch) this._mergeBucket(dt, batch)
       })
       // 2) 到点才把暂存区提交进 rawValues（唯一触发面板重渲染的一步）。
-      //    以前 800ms 提交一次：BMS 面板 100+ 数值 + 150 个故障位每次都整树重排，
-      //    再走一轮 setData 过桥；现在合并成 1.5s 一次，收帧节奏不变、桥调用砍一半。
+      //    以前 1.5s 提交一次：BMS 面板 100+ 数值 + 150 个故障位每次都整树重排，
+      //    再走一轮 setData 过桥；现在合并成 900ms 一次，收帧节奏不变，
+      //    仍远低于逐帧重绘，不会把低端机主线程让给渲染。
       const now = Date.now()
       if (!force && this._lastCommitAt && now - this._lastCommitAt < this._displayCommitMs()) return
       this._lastCommitAt = now
@@ -2775,12 +2778,12 @@ export default {
         }
       }
       // 3) 设置面板参数回显：本次确实提交了新值时确保回显心跳在跑。
-      //    实际回显由 _startSettingsEchoLoop 的 1s 心跳统一驱动，不再靠
+      //    实际回显由 _startSettingsEchoLoop 的 600ms 心跳统一驱动，不再靠
       //    「帧值变化」这一偶发条件——稳态上报时只读态也必须显示当前值。
       //    没有新帧的那几轮不会把几百项参数树过一遍。
       if (onSettings && changed) this.syncSettingsFromRealtime()
       // 「更新」时间戳不在这里写：它已在 applyIemsFrame 按收帧打点，由 DeviceCard
-      // 自己订阅帧时钟刷新。这里只管数据提交（1.5s 节流），两者互不牵连。
+      // 自己订阅帧时钟刷新。这里只管数据提交（900ms 节流），两者互不牵连。
       // 诊断计数：APP 的 10s 聚合日志由 applyIemsFrame → _maybePerfReport 输出（收帧驱动），
       // 这里只负责累加；否则重复帧被短路、长时间无提交时日志会整段消失。
       this._perfFrames = this._perfFrames || 0
@@ -3343,7 +3346,7 @@ export default {
       // ⚡ 不在设置 tab 时直接返回：参数模板与回显只对当前设置面板有意义，
       //    监测态跑它等于每轮把几百项参数树填进 data 再被深拷贝一遍。
       if (!this.currentSettingsTab) return
-      // ⚡ 这里不再 force flush。以前「800ms flush → 排 1s 同步 → 同步里又 force flush
+      // ⚡ 这里不再 force flush。以前「250ms flush → 排 600ms 同步 → 同步里又 force flush
       //    → force flush 又排一次同步 …」形成自激循环，即使一帧新数据都没有，
       //    也在每秒把几百项参数全量遍历一遍。现在回显直接读上一次提交的值
       //    （最多滞后一次显示提交，数值设定类参数本就是慢变量）。
@@ -3674,7 +3677,7 @@ export default {
      * @returns {{commands:Array, fallbacks:Array, error?:string}}
      */
     _buildStorageDcBundle(target, targetRaw) {
-      // 组帧前先把暂存帧落库：避免把 ≤800ms 前的回显旧值当作「当前值」一并下发
+      // 组帧前先把暂存帧落库：避免把 ≤250ms 前的回显旧值当作「当前值」一并下发
       this.flushPendingFramesNow()
       const groups = [
         { key: 'qc_storage_dc', arr: this.quickControlParams },

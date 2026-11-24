@@ -208,20 +208,26 @@ export default {
     }
     // 注册实时数据回调：使用 subscribe 多订阅者模式（避免与 Monitor.vue 的 onDataUpdate 单槽互相覆盖）
     this._unsubscribeRealtime = realtimeDataProvider.subscribe(() => {
-      this.device171FList = [...realtimeDataProvider.getDeviceList()]
+      if (this._isAlive === false) return;
+      this.device171FList = realtimeDataProvider.getViewList()
+      // 强制刷新兜底：高频容器被跳过 Vue observe，仅靠数组引用变化在 APP 端可能不重绘
+      if (typeof this.$forceUpdate === 'function') this.$forceUpdate()
     })
     // 订阅设备切换态：注册即回放当前状态，保证 redirectTo 出来的新页面也立即进入加载态
     this._unsubscribeSwitch = realtimeDataProvider.subscribeSwitchState(v => {
       this.deviceSwitching = !!v
     })
     // 立即刷一次，避免首次 render 前订阅回调没机会触发
-    this.device171FList = [...realtimeDataProvider.getDeviceList()]
+    this.device171FList = realtimeDataProvider.getViewList()
+      // 强制刷新兜底：高频容器被跳过 Vue observe，仅靠数组引用变化在 APP 端可能不重绘
+      if (typeof this.$forceUpdate === 'function') this.$forceUpdate()
   },
   onHide() {
     // 页面隐藏（进入子页面）时暂停首页子组件们的订阅通知，避免后台渲染抢主线程
     realtimeDataProvider.setSubscribersPaused(true)
   },
   onUnload() {
+    this._isAlive = false;
     if (typeof this._unsubscribeRealtime === 'function') {
       this._unsubscribeRealtime()
       this._unsubscribeRealtime = null
@@ -294,8 +300,7 @@ export default {
     // 否则从子页面返回后实时数据永远是 '--'，必须切一次 tab 才有数据
     const launchUser = this._getUserInfo()
     const isLogged = !!(launchUser && launchUser.isLogin && launchUser.sessionId)
-    if (isLogged
-      && (!realtimeDataProvider.getDeviceList().length || !realtimeDataProvider.hasRegisteredCodes())
+    if (isLogged && this._needRebuildRealtime()
       && !this.deviceListLoading && !this.deviceSwitching) {
       this.fetchDeviceList()
     }
@@ -303,7 +308,10 @@ export default {
     // 但 reLaunch/redirectTo 后新页的 onShow 先于旧页销毁，做个兜底）
     if (!this._unsubscribeRealtime) {
       this._unsubscribeRealtime = realtimeDataProvider.subscribe(() => {
-        this.device171FList = [...realtimeDataProvider.getDeviceList()]
+        if (this._isAlive === false) return;
+        this.device171FList = realtimeDataProvider.getViewList()
+      // 强制刷新兜底：高频容器被跳过 Vue observe，仅靠数组引用变化在 APP 端可能不重绘
+      if (typeof this.$forceUpdate === 'function') this.$forceUpdate()
       })
     }
     // 切换态订阅兜底：onShow 可能早于 mounted（redirectTo 后新页面先走 onShow）
@@ -312,7 +320,9 @@ export default {
         this.deviceSwitching = !!v
       })
     }
-    this.device171FList = [...realtimeDataProvider.getDeviceList()]
+    this.device171FList = realtimeDataProvider.getViewList()
+      // 强制刷新兜底：高频容器被跳过 Vue observe，仅靠数组引用变化在 APP 端可能不重绘
+      if (typeof this.$forceUpdate === 'function') this.$forceUpdate()
   },
   onReady() {
     this.scrollToTop()
@@ -399,6 +409,24 @@ export default {
       uni.stopPullDownRefresh()
       this.refreshing = false
     },
+    /**
+     * 是否需要重建实时模型。除「清单为空 / 没有任何已注册设备」外，
+     * 还要覆盖子页面把全局 provider 清成只剩 171F 的情况：此时模型数小于
+     * 当前站点的有效设备数，其它页面（光伏/储能/电网/负荷）会一直停在旧值或 '--'。
+     */
+    _needRebuildRealtime() {
+      const models = realtimeDataProvider.getDeviceList() || []
+      if (!models.length || !realtimeDataProvider.hasRegisteredCodes()) return true
+      const configuredKeys = new Set()
+      ;(this.$store.state.currentSelectDevice?.list || []).forEach(item => {
+        const code = resolveDeviceTypeCode(item)
+        if (!code) return
+        const barCode = (item.homeBarCode || item.barCode || item.gateway || item.gateWay ||
+          item.serialCode || item.sn || item.serialNumber || item.deviceCode || item.code || '').trim()
+        configuredKeys.add(code + '|' + (item.address || '').trim() + '|' + barCode)
+      })
+      return configuredKeys.size > 0 && models.length < configuredKeys.size
+    },
     _refreshCurrentView() {
       // 设备切换期间不做任何刷新，避免与切换流程抢注册、清掉刚到位的数据
       if (this.deviceSwitching) return null
@@ -410,9 +438,7 @@ export default {
         realtimeDataProvider.resumeRealtime()
         // 链路被清理过（模型为空 / 没有任何已注册 barCode）时，重放注册无目标，
         // 下拉刷新也救不回来：这里补一次设备清单重建，与切 tab 的恢复路径一致。
-        const needRebuild = !realtimeDataProvider.getDeviceList().length
-          || !realtimeDataProvider.hasRegisteredCodes()
-        if (needRebuild && !this.deviceListLoading) {
+        if (this._needRebuildRealtime() && !this.deviceListLoading) {
           return this.fetchDeviceList()
         }
         return null
@@ -638,7 +664,7 @@ export default {
       // console.log('[数据流] 准备注册:', configs.length, '个设备')
       // 全量替换：unregister 旧监听 → 清旧实例 → 重新 push + bind 新设备
       realtimeDataProvider.replaceDeviceList(configs)
-      const registeredList = [...realtimeDataProvider.getDeviceList()];
+      const registeredList = realtimeDataProvider.getViewList();
       // console.log('[数据流] 注册完成, 设备列表:', registeredList.length, '个设备')
       this.device171FList = registeredList;
       this.device171FRegistered = true;
@@ -732,7 +758,9 @@ export default {
     register171FDevice() {
       if (this.device171FRegistered) {
 
-        this.device171FList = [...realtimeDataProvider.getDeviceList()];
+        this.device171FList = realtimeDataProvider.getViewList()
+      // 强制刷新兜底：高频容器被跳过 Vue observe，仅靠数组引用变化在 APP 端可能不重绘
+      if (typeof this.$forceUpdate === 'function') this.$forceUpdate();
         return this.device171FList;
       }
 
@@ -782,7 +810,9 @@ export default {
 
       // console.log('[数据流] 准备注册:', configs.length, '个设备');
       realtimeDataProvider.initDeviceList(configs);
-      this.device171FList = [...realtimeDataProvider.getDeviceList()];
+      this.device171FList = realtimeDataProvider.getViewList()
+      // 强制刷新兜底：高频容器被跳过 Vue observe，仅靠数组引用变化在 APP 端可能不重绘
+      if (typeof this.$forceUpdate === 'function') this.$forceUpdate();
       this.device171FRegistered = true;
       // console.log('[数据流] 注册完成, 设备列表:', this.device171FList.length, '个设备');
       return this.device171FList;
@@ -834,9 +864,7 @@ export default {
       if (index === 0) {
         this.$nextTick(() => {
           realtimeDataProvider.resumeRealtime()
-          const needRebuild = !realtimeDataProvider.getDeviceList().length
-            || !realtimeDataProvider.hasRegisteredCodes()
-          if (needRebuild && !this.deviceListLoading && !this.deviceSwitching) {
+          if (this._needRebuildRealtime() && !this.deviceListLoading && !this.deviceSwitching) {
             this.fetchDeviceList()
           }
         })

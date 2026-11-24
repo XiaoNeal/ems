@@ -411,12 +411,13 @@ export default {
     this.initRealtimeData() // 初始化实时数据
     this.loadStatusData() // 默认加载状态数据
     // 实时数据回调：自增版本号驱动 computed 重新读取（provider 内已 300ms 节流）
-    this._realtimeCb = () => { this.dataVersion++ }
+    this._realtimeCb = () => { if (this._isAlive === false) return; this.dataVersion++ }
     realtimeDataProvider.onDataUpdate = this._realtimeCb
   },
-  beforeUnmount() {
-    // 页面卸载时取消注册
-    realtimeDataProvider.unregister()
+  // Vue2 项目必须用 beforeDestroy；且不能在这里 unregister()——provider 是全局单例，
+  // 卸载子页面时摘掉监听会让首页/其它页面收不到帧，必须只释放自己的 legacy 回调。
+  beforeDestroy() {
+    this._isAlive = false;
     if (realtimeDataProvider.onDataUpdate === this._realtimeCb) {
       realtimeDataProvider.onDataUpdate = null
     }
@@ -439,7 +440,7 @@ export default {
     // 获取 171F 设备
     device171F() {
       const _ = this.dataVersion
-      const deviceList = realtimeDataProvider.getDeviceList()
+      const deviceList = realtimeDataProvider.getViewList()
       return deviceList.find(item => item && item.deviceType.includes('171F'))
     },
     userId() {
@@ -790,7 +791,7 @@ export default {
         name: 'DCDC设备171F'
       };
       realtimeDataProvider.initDeviceList([device171F])
-      this.deviceList = [...realtimeDataProvider.getDeviceList()]
+      this.deviceList = realtimeDataProvider.getViewList()
       // console.log('deviceList---------------------------', this.deviceList)
     },
     // 加载状态数据

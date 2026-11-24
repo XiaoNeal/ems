@@ -319,8 +319,10 @@ export default {
   },
   methods: {
     updateDevice171F() {
-      this.deviceList = [...realtimeDataProvider.getDeviceList()]
+      if (this._isAlive === false) return;
+      this.deviceList = realtimeDataProvider.getViewList()
       this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
+      if (typeof this.$forceUpdate === 'function') this.$forceUpdate()
     },
     init171FDevice() {
       this.deviceList = this.get171FDeviceList();
@@ -573,6 +575,7 @@ export default {
     this._unsubRealtime = realtimeDataProvider.subscribe(() => this.updateDevice171F());
   },
   beforeDestroy() {
+    this._isAlive = false;
     this._unsubRealtime && this._unsubRealtime();
   }
 };

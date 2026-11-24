@@ -60,7 +60,13 @@ export class RealtimeDataProviderService {
 	// —— 数据更新事件：多订阅者 + 全局节流 ——
 	// 实时帧每秒可达数十条，逐帧通知会让所有存活页面（含后台隐藏页）整页重渲染。
 	// 所有通知合并到最多 NOTIFY_INTERVAL_MS 一次。
-	static NOTIFY_INTERVAL_MS = 300
+	// 150ms：网页版是收帧即渲染，APP/小程序端原先 300ms 的合并窗口是端到端晚了约 1 秒
+	// 的其中一层；缩到 150ms（约 6.7 次/秒）可把这一层延迟减半，同时仍远低于逐帧
+	// 重绘的频率，保留对低端机主线程的保护。
+	static NOTIFY_INTERVAL_MS = 150
+	// 仅连接成功但长时间没有帧时，温和补发一次 register（比直接断链重建代价小）。
+	// 解决「服务端会话已丢但 socket 自认为在线」时，首帧之后永久不再更新的问题。
+	static REGISTER_REFRESH_MS = 45 * 1000
 	// 恢复前台后等待实时帧的宽限期：超时仍未收到任何帧则判定 socket 已失效，主动重建
 	static RESUME_WATCHDOG_MS = 6000
 	// 连接正常打开期间，超过该时长没有收到任何有效帧则判定为「半开连接」（TCP 已死但客户端未感知），
@@ -69,8 +75,29 @@ export class RealtimeDataProviderService {
 	// 两次主动重建连接的最小间隔，避免离线站点场景下反复重建
 	static FORCE_RECONNECT_MIN_INTERVAL_MS = 120 * 1000
 	_dataListeners = new Set()
+	// 暂停期间新注册的订阅者：它们是当前活动子页面，必须继续收实时更新。
+	// 首页 onHide 时清空本集合，之后子页面 subscribe() 加入；首页 onShow 恢复时清空并全量通知。
+	_activeListeners = new Set()
 	_notifyTimer = null
-	// 首页等宿主页面隐藏时暂停多订阅者通知（活动页的 legacy 单回调不受影响）
+	// trailing 补发定时器：突发帧批次里，除首帧外的后续帧（含排在后面的 171F）
+	// 若全被节流窗口吞掉，界面要等到下一批首帧才刷新（体感慢约 2 秒）。
+	// 窗口末尾补发一次，把批次尾部数据带出来；绝不阻塞 leading 通知。
+	_trailingTimer = null
+	_trailingEmitCount = 0
+	// 通知看门狗用：最后一次实际广播时间 / 暂停异常告警限频 / 看门狗定时器
+	_lastNotifyAt = 0
+	_lastPauseWarnAt = 0
+	_notifyWatchdogTimer = null
+	// —— 端到端延迟诊断（低频输出，不参与业务逻辑）——
+	// frameGap: 服务端两帧的到达间隔（判断是不是服务端 1Hz 推送）
+	// notifyLag: 帧到达 → 实际广播的等待（判断是不是 150ms 节流窗口）
+	// skipped: 被节流窗口吞掉的帧数；viewMs: getViewList 浅拷贝平均耗时
+	_frameGapMs = -1
+	_notifyLagMs = -1
+	_skippedFrames = 0
+	_viewListCalls = 0
+	_viewListCostMs = 0
+	// 首页等宿主页面隐藏时暂停「旧订阅者」通知（活动页的 legacy 单回调与新订阅者不受影响）
 	_subscribersPaused = false
 	// 兼容旧代码 realtimeDataProvider.onDataUpdate = fn / null 的单回调写法
 	_legacyListener = null
@@ -98,11 +125,16 @@ export class RealtimeDataProviderService {
 	_resumeWatchdogStart = 0
 	// 上次主动重建连接的时间（限频用）
 	_lastForceReconnectAt = 0
+	// 上次补发 register 的时间，避免 60s 周期检查里反复注册
+	_lastRegisterPokeAt = 0
 	static SWITCH_TIMEOUT_MS = 8000
 
 	/** 暂停 subscribe() 多订阅者通知（宿主页面 onHide 调用；恢复请用 resumeRealtime） */
 	setSubscribersPaused(paused) {
 		this._subscribersPaused = !!paused
+		// 每次切换暂停状态时重置「活动订阅者」：恢复前台后所有订阅者重新参与全量通知；
+		// 进入后台后只放行此后新注册的子页面订阅者。
+		this._activeListeners.clear()
 	}
 
 	/**
@@ -186,7 +218,7 @@ export class RealtimeDataProviderService {
 	 * 必须手动刷新」的问题；服务端收到 register 会立刻推一帧全量数据。
 	 */
 	resumeRealtime() {
-		this._subscribersPaused = false
+		this.setSubscribersPaused(false)
 		this._notifyNow()
 		// socket 已断开时主动拉起重连：后台期间系统可能掐断连接，且 socket.io
 		// 重连次数（reconnectionAttempts:20）耗尽后会永久放弃，此时仅靠 sendBuffer
@@ -208,7 +240,11 @@ export class RealtimeDataProviderService {
 
 	/** 记录一次有效帧到达（登录态云端链路），供看门狗判断链路是否存活 */
 	_onFrameReceived() {
-		this._lastFrameAt = Date.now()
+		this._frameCount = (this._frameCount || 0) + 1
+		const at = Date.now()
+		// 服务端帧间隔：若约 1000ms，则前端改任何 150/300ms 节流窗口都不会带来改善
+		if (this._lastFrameAt) this._frameGapMs = at - this._lastFrameAt
+		this._lastFrameAt = at
 		if (this._resumeWatchdogTimer) {
 			clearTimeout(this._resumeWatchdogTimer)
 			this._resumeWatchdogTimer = null
@@ -280,38 +316,87 @@ export class RealtimeDataProviderService {
 	}
 
 	/**
-	 * 订阅实时数据更新（已节流，最多约 3 次/秒）
+	 * 订阅实时数据更新（已节流，150ms 窗口，最多约 6~7 次/秒）
 	 * @param {Function} cb 数据更新回调
 	 * @returns {Function} 取消订阅函数
 	 */
 	subscribe(cb) {
 		if (typeof cb === 'function') {
 			this._dataListeners.add(cb)
+			// 首页 onHide 会全局暂停旧订阅者，但此后新订阅的页面就是当前活动页。
+			// 放进 _activeListeners，暂停期间仍能收到通知，避免子页面实时数据静止。
+			this._activeListeners.add(cb)
 			// 注册即同步一次当前快照：切 tab 时监测页及其子组件被 v-if 销毁重建，
 			// 若只等下一次实时帧通知，界面会一直停在初始值 '--'（需手动刷新才恢复）。
 			// 所有订阅者都只是「读 getDeviceList() 写本地 data」，立即回调安全。
 			try { cb() } catch (e) { console.warn('[RealtimeDataProvider] replay error', e) }
 		}
-		return () => this._dataListeners.delete(cb)
+		return () => {
+			this._dataListeners.delete(cb)
+			this._activeListeners.delete(cb)
+		}
 	}
 
+	/**
+	 * 帧到达后的通知入口。
+	 * 不再使用 setTimeout 做节流：APP 端 WebView 的定时器在长时间运行、息屏、
+	 * WebView 重建等场景可能被系统冻结，一旦 _notifyTimer 卡在 truthy，
+	 * 后续每一帧的 _notifyDataUpdate 都会被 `if (_notifyTimer) return` 吞掉，
+	 * 内存数据照常更新、界面却永久定格，只有切 tab / 下拉刷新（主动 _notifyNow）才恢复。
+	 * 改为基于 Date.now() 的同步节流：首帧到达即判断即广播，不依赖定时器。
+	 * 唯一的 trailing 定时器只做「窗口末尾补发一次」，把被吞掉的批次尾部数据
+	 * 带出来；它是 fire-and-forget 的一次性定时器（触发后即置 null），即使被
+	 * WebView 冻结也只是少一次补发，绝不会阻塞 leading 广播、不会造成永久定格。
+	 */
 	_notifyDataUpdate() {
-		if (this._notifyTimer) return
-		this._notifyTimer = setTimeout(() => {
-			this._notifyTimer = null
-			if (this._subscribersPaused) {
-				// 暂停期间只保留 legacy 单回调（活动页需要），多订阅者由 resumeRealtime 补发
-				if (typeof this._legacyListener === 'function') {
-					try { this._legacyListener() } catch (e) { console.error('[RealtimeDataProvider] listener error', e) }
-				}
-				return
+		const now = Date.now()
+		if (now - (this._lastNotifyAt || 0) < RealtimeDataProviderService.NOTIFY_INTERVAL_MS) {
+			this._skippedFrames += 1
+			// leading+trailing：首帧已在本窗口广播过，后续帧仅暂存不通知，
+			// 但安排一次窗口末尾补发，确保批次尾部设备（如 171F）的数据也能上屏。
+			// 不重排已存在的 timer：窗口内第一批尾部帧到达时定一次即可，
+			// 到点读的是最新内存值，天然合并整批数据。
+			if (!this._trailingTimer) {
+				const delay = Math.max(10, RealtimeDataProviderService.NOTIFY_INTERVAL_MS - (now - (this._lastNotifyAt || 0)))
+				this._trailingTimer = setTimeout(() => {
+					this._trailingTimer = null
+					this._trailingEmitCount = (this._trailingEmitCount || 0) + 1
+					// 走统一广播入口，和 leading 一致地尊重暂停/活动订阅者语义
+					this._broadcast()
+				}, delay)
 			}
-			this._notifyNow()
-		}, RealtimeDataProviderService.NOTIFY_INTERVAL_MS)
+			return
+		}
+		// 帧到达 → 实际广播的等待时间（只有被节流吞帧时才可能 >0）
+		if (this._lastFrameAt) this._notifyLagMs = now - this._lastFrameAt
+		this._broadcast()
+	}
+
+	/**
+	 * 统一广播出口：按暂停状态分流给全部订阅者 / 仅活动订阅者。
+	 * leading 与 trailing 补发共用，避免补发打到已 onHide 的宿主旧订阅者。
+	 */
+	_broadcast() {
+		// 只有确实有「暂停后新注册的活动页订阅者」时才跳过旧订阅者，
+		// 避免 APP onHide/onShow 不成对导致暂停标记残留、页面永久失联。
+		const reallyPaused = this._subscribersPaused && this._activeListeners.size > 0
+		if (reallyPaused) {
+			this._lastNotifyAt = Date.now()
+			this._activeListeners.forEach(cb => {
+				try { cb() } catch (e) { console.error('[RealtimeDataProvider] active listener error', e) }
+			})
+			if (typeof this._legacyListener === 'function') {
+				try { this._legacyListener() } catch (e) { console.error('[RealtimeDataProvider] listener error', e) }
+			}
+			return
+		}
+		this._notifyNow()
 	}
 
 	/** 立即广播当前数据给全部监听者（不节流、不判暂停） */
 	_notifyNow() {
+		this._notifyCount = (this._notifyCount || 0) + 1
+		this._lastNotifyAt = Date.now()
 		this._dataListeners.forEach(cb => {
 			try { cb() } catch (e) { console.error('[RealtimeDataProvider] listener error', e) }
 		})
@@ -377,11 +462,59 @@ export class RealtimeDataProviderService {
 	/** 初始化 WebSocket 和定时器（登录后延迟创建时用） */
 	_initConnection() {
 		this.createScoket();
+		this._ensureTimers();
+	}
+
+	/**
+	 * 启动周期性定时器。必须同时由 _initConnection 与 createScoket 调用：
+	 * ensureConnected() 在 socket 已存在时会提前 return，如果 socket 是经其它路径
+	 * （如组件直接 createScoket）创建的，_initConnection 就永远不会执行，
+	 * 心跳与过期检查将全程缺席——这正是「有数据但界面不刷新」的隐蔽成因之一。
+	 */
+	_ensureTimers() {
 		// 定时检查数据是否超时（每分钟检查一次）
 		if (!this.expiredCheckTimer) {
 			this.expiredCheckTimer = setInterval(() => {
 				this.checkAllDevicesExpired();
 			}, 60 * 1000);
+		}
+		// 低频链路诊断：只读内存、不触发任何视图更新。
+		// 【重要】这里曾经每秒无条件 _notifyNow() 广播，但它会把 $forceUpdate 打到
+		// 已经销毁的视图实例，触发 "[JS Framework] Failed to receiveTasks,
+		// instance (xx) is not available"。真正的数据刷新由帧驱动 _notifyDataUpdate
+		// + getViewList()（新对象引用）保证，不依赖这个常驻定时器，故移除广播。
+		if (!this._notifyWatchdogTimer) {
+			this._notifyWatchdogTimer = setInterval(() => {
+				this._heartbeatTick = (this._heartbeatTick || 0) + 1
+				// 每 15 秒输出一次链路诊断，单行纯文本。去掉 deviceList 非空门槛：
+				// 帧没来时旧代码直接 return，恰好在最能暴露问题时永远不输出。
+				if (this._heartbeatTick % 15 === 0) {
+					const ems = this.deviceList.find(d => d && String(d.deviceType || '').toUpperCase().indexOf('171F') === 0)
+					const ed = ems && ems.energyData
+					const val = k => (ed && ed[k] && ed[k].value !== undefined) ? ed[k].value : 'null'
+					const types = this.deviceList.map(d => d ? String(d.deviceType) : '?').join(',')
+					console.log('[RealtimeDataProvider] 心跳诊断 frames=' + (this._frameCount || 0)
+						+ ' notifies=' + (this._notifyCount || 0)
+						+ ' listeners=' + this._dataListeners.size
+						+ ' active=' + this._activeListeners.size
+						+ ' paused=' + this._subscribersPaused
+						+ ' codes=' + this.registeredBarCodes.size
+						+ ' devices=' + this.deviceList.length
+						+ ' connected=' + (socket ? socket.connected : 'null')
+						+ ' lastFrameAgo=' + (this._lastFrameAt ? Date.now() - this._lastFrameAt : -1)
+						+ ' b0=' + val('B0') + ' b4=' + val('B4') + ' b60=' + val('B60')
+						+ ' updated=' + (ems && ems.lastUpdateTime ? Date.now() - ems.lastUpdateTime : -1)
+						+ ' nInterval=' + RealtimeDataProviderService.NOTIFY_INTERVAL_MS
+						+ ' frameGap=' + this._frameGapMs
+						+ ' fps=' + (Math.round((this._frameCount - (this._diagFrameAtLastLog || 0)) / 15 * 10) / 10)
+						+ ' notifyLag=' + this._notifyLagMs
+						+ ' skipped=' + this._skippedFrames
+						+ ' trailing=' + (this._trailingEmitCount || 0)
+						+ ' viewMs=' + (this._viewListCalls ? Math.round(this._viewListCostMs / this._viewListCalls * 100) / 100 : 0)
+						+ ' types=[' + types + ']')
+					this._diagFrameAtLastLog = this._frameCount || 0
+				}
+			}, 1000)
 		}
 	}
 
@@ -402,11 +535,20 @@ export class RealtimeDataProviderService {
 				// 后台期间重连次数耗尽后 socket.io 会永久放弃，这里周期性拉起
 				console.warn('[RealtimeDataProvider] 检测到 socket 断开，尝试重连');
 				try { socket.connect() } catch (e) { console.warn('[RealtimeDataProvider] periodic reconnect error', e) }
-			} else if (this._lastFrameAt > 0
-				&& now - this._lastFrameAt > RealtimeDataProviderService.FRAME_STALE_RECONNECT_MS
+			} else if ((this._lastFrameAt > 0
+				? now - this._lastFrameAt > RealtimeDataProviderService.FRAME_STALE_RECONNECT_MS
+				// 一帧都没来过：以「上次补注册」为时钟，补注册也无效时同样重建
+				: !!this._lastRegisterPokeAt && now - this._lastRegisterPokeAt > RealtimeDataProviderService.FRAME_STALE_RECONNECT_MS)
 				&& now - this._lastForceReconnectAt > RealtimeDataProviderService.FORCE_RECONNECT_MIN_INTERVAL_MS) {
 				// 连接未断但长时间收不到任何帧：半开连接（register/心跳被静默吞掉），重建
 				this._forceReconnect('stale-frame');
+			} else if ((!this._lastFrameAt || now - this._lastFrameAt > RealtimeDataProviderService.REGISTER_REFRESH_MS)
+				&& now - this._lastRegisterPokeAt > RealtimeDataProviderService.REGISTER_REFRESH_MS) {
+				// socket 显示在线但没有帧：服务端会话可能已单方面丢失。先温和补注册，
+				// 让服务端立刻推一帧；若补注册也无效，后续 180s 分支会重建连接。
+				// _lastFrameAt=0（登录后一帧都没来过）也必须走这里，否则永远不会自愈。
+				console.warn('[RealtimeDataProvider] 长时间无实时帧，补发 register')
+				this.reRegisterAllDevices();
 			}
 		}
 		let hasExpired = false;
@@ -450,6 +592,9 @@ export class RealtimeDataProviderService {
 			reconnectionDelayMax: 30000
 		});
 		this.getConnectedSocket()
+		// 兜底：socket 可能不经 _initConnection 创建（其它模块直接调 createScoket），
+		// 此处必须确保心跳/过期检查已启动。
+		this._ensureTimers()
 	}
 
 	// IEMS_0106V2State_
@@ -457,6 +602,10 @@ export class RealtimeDataProviderService {
 
 	clearDeviceState() {
 		this.unregister()
+		if (this._trailingTimer) {
+			clearTimeout(this._trailingTimer)
+			this._trailingTimer = null
+		}
 		this.deviceList = [];
 		this.modelKeyMap.clear()
 		this.barCode = new Set()
@@ -587,6 +736,27 @@ export class RealtimeDataProviderService {
 	}
 	getDeviceList() {
 		return this.deviceList
+	}
+
+	/**
+	 * 供视图层使用：每次返回一批全新的设备对象引用（浅拷贝）。
+	 *
+	 * 背景：设备模型的 energyData/stateData/controlData 容器被加了 Symbol.toStringTag，
+	 * Vue2 会跳过对它们的 observe（性能优化），因此容器内字段值的写入不会 notify。
+	 * 若视图直接持有 provider 的原始设备对象引用，即使数据每帧在变，Vue2 的
+	 * render watcher 也收不到任何依赖变更 —— 小程序端靠 setData 整体序列化还能刷新，
+	 * APP 端直接操作 DOM 就表现为「数据一动不动，切 tab 重建组件才更新」。
+	 *
+	 * 这里浅拷贝设备对象本身（容器仍是同一引用，但读值时取的是内存最新值），
+	 * 视图层赋新引用即可稳定触发 Vue2 重绘。仅 startTime 等写操作用 getDeviceList()。
+	 */
+	getViewList() {
+		const t0 = Date.now()
+		const list = this.deviceList.map(d => d && typeof d === 'object' ? Object.assign({}, d) : d)
+		// 仅累计，不输出；心跳诊断里算平均值（判断是不是视图层构造拖慢）
+		this._viewListCalls += 1
+		this._viewListCostMs += Date.now() - t0
+		return list
 	}
 
 	bindDevicesRealtimeData(barCode) {
@@ -722,6 +892,7 @@ export class RealtimeDataProviderService {
 	 */
 	reRegisterAllDevices() {
 		if (!socket) return;
+		this._lastRegisterPokeAt = Date.now();
 		// 合并 store 登记与实例已注册的两组 barCode：页面重建 / 切 tab 后
 		// store 可能被 CLEAR_DEVICE_STATE 清过，只取 store 会漏注册、服务端不推帧。
 		const codes = new Set();

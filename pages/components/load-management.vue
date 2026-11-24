@@ -181,6 +181,7 @@ export default {
     this.loadDeviceList();
   },
   beforeDestroy() {
+    this._isAlive = false;
     this._unsubRealtime && this._unsubRealtime();
   },
   computed: {
@@ -325,8 +326,11 @@ export default {
 
             realtimeDataProvider.initDeviceList(deviceConfigs);
 
+            // 异步接口返回时组件可能已销毁，避免为已释放实例重新订阅
+            if (this._isAlive === false) return;
             this._unsubRealtime && this._unsubRealtime();
             this._unsubRealtime = realtimeDataProvider.subscribe(() => {
+              if (this._isAlive === false) return;
               if (this._isUserInteracting) return;
               this.updateDeviceFromRealtime();
             });
@@ -417,7 +421,7 @@ export default {
     //   };
     // },
     updateDeviceFromRealtime() {
-      this.deviceListRealtime = realtimeDataProvider.getDeviceList();
+      this.deviceListRealtime = realtimeDataProvider.getViewList();
       this.device1712 = this.deviceListRealtime.find(item => item && (item.deviceType === '1712' || item.typeCode === '1712'));
       this.device1713 = this.deviceListRealtime.find(item => item && (item.deviceType === '1713' || item.typeCode === '1713'));
       // 筛选 load 类设备：兼容 typeCode 和 deviceType（实时数据创建的设备可能没有 typeCode）

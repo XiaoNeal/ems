@@ -288,6 +288,10 @@ import EmptyState from '@/components/empty-state/empty-state.vue';
 
 import { sendCommandFrame } from '@/api/control.js'
 
+// 架构图模板实际读取的 171F 能量数据字段。只把这些字段的当前值建成小快照，
+// 不把整个设备对象（含上百字段的高频容器）反复塞进 Vue data / setData。
+const ARCH_ENERGY_FIELDS = ['B0', 'B4', 'B8', 'B14', 'B18', 'B26', 'B30', 'B34', 'B38', 'B42', 'B60', 'B68', 'B128']
+
 export default {
   components: { dyDate, EmptyState },
   name: "ArchitectureDiagram",
@@ -321,8 +325,6 @@ export default {
         totalGridReverseQ: 0,
         totalConsumeElectricityQ: 0,
       },
-      deviceList: [],
-      nyzData: { SOC: "--" },
       // 设备配置参数
       deviceConfig: {
         idCode: '',
@@ -378,6 +380,9 @@ export default {
       statusBarHeight: 93, // 默认状态栏高度
       navBarHeight: 44, // 导航栏高度
       topSafeArea: 0, // 顶部安全区域总高度
+      // 架构图模板只读 171F 的十几个字段：只放极小快照进 Vue data，
+      // 避免每次通知把 getViewList() 的全部设备对象重新 observe / setData 过桥
+      // （原先 43 个设备 × 每次通知，是 APP/小程序比网页慢 1 秒多的主要来源）
       device171F: null
     }
   },
@@ -493,12 +498,29 @@ export default {
   methods: {
     updateDevice171F() {
       if (!this._isAlive) return;
-      this.deviceList = [...realtimeDataProvider.getDeviceList()]
-      this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
-      const b12Value = this.device171F && this.device171F.controlData && this.device171F.controlData.B12 && this.device171F.controlData.B12.value;
+      // 只取 171F 一台设备的十几个模板字段，构造极小快照：
+      // 容器是共享引用，读到的始终是内存最新值；新对象引用保证 Vue2 重绘。
+      // 不再用 getViewList() 浅拷贝全部设备，避免每次通知 observe/序列化 43 个对象。
+      const src = realtimeDataProvider.getDeviceList().find(item => item && item.deviceType === '171F');
+      if (!src) {
+        if (this.device171F !== null) this.device171F = null
+        return
+      }
+      const ed = src.energyData || {}
+      const snap = { energyData: {}, controlData: {} }
+      for (let i = 0; i < ARCH_ENERGY_FIELDS.length; i++) {
+        const key = ARCH_ENERGY_FIELDS[i]
+        const field = ed[key]
+        if (field) snap.energyData[key] = { value: field.value }
+      }
+      const b12 = src.controlData && src.controlData.B12
+      if (b12) snap.controlData.B12 = { value: b12.value }
+      this.device171F = snap
+      const b12Value = b12 && b12.value
       if (b12Value !== undefined && b12Value !== null) {
         this.systemRunning = (b12Value === 1 || b12Value === '1');
       }
+      if (typeof this.$forceUpdate === 'function') this.$forceUpdate()
     },
     formatValue(value, decimals = 2) {
       const num = parseFloat(value);
@@ -875,7 +897,10 @@ export default {
       const norm = t => String(t == null ? '' : t).toUpperCase().replace(/_/g, '').replace(/^0X/, '').replace(/\s+/g, '');
       const is50kwType = t => /^(1707|170C|171CV2|0318)/.test(norm(t));
       if ((station.list || []).some(item => is50kwType(item.typeCode || item.deviceType))) return '343';
-      if ((this.deviceList || []).some(item => item && is50kwType(item.deviceType))) return '343';
+      // deviceList 已从 data 移除（避免 43 个设备对象进响应式 setData），
+      // 这里改为从 provider 的非响应式原始列表读取，不再引用已删除的 this.deviceList。
+      const liveList = realtimeDataProvider.getDeviceList() || [];
+      if (liveList.some(item => item && is50kwType(item.deviceType))) return '343';
       return '112';
     },
 
@@ -1213,10 +1238,13 @@ export default {
   padding: 20rpx;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
-  /* 安全区适配 */
-  padding-top: max(20rpx, env(safe-area-inset-top));
-  padding-left: max(20rpx, env(safe-area-inset-left));
-  padding-right: max(20rpx, env(safe-area-inset-right));
+  /* 该卡片嵌在 monitor 的 tab 内容区，页面外层已处理状态栏/安全区。
+     APP 端 webview 全屏时 env(safe-area-inset-top) 为状态栏高度，
+     若在此再叠加会把「日/月/年」栏上方撑出一大块空白（小程序该值为 0 故正常）。
+     非全屏统一用固定内边距；全屏态由 .fullscreen-chart 与内联 style 单独接管。 */
+  padding-top: 20rpx;
+  padding-left: 20rpx;
+  padding-right: 20rpx;
 }
 
 /* 全屏时安全区样式 */

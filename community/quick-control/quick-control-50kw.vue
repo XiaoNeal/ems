@@ -175,7 +175,7 @@ export default {
     // 订阅设备列表变化：_dataVersion 作为响应式触发源
     deviceList() {
       const _ = this._dataVersion
-      return realtimeDataProvider.getDeviceList()
+      return realtimeDataProvider.getViewList()
     },
     device171F() {
       const list = this.deviceList
@@ -238,9 +238,8 @@ export default {
         this.platformClass = devicePlatform === "ios" ? "ios-platform" : "android-platform";
 
     // 先设置回调（在 initDevice 之前就绑定好，确保实时数据到达时能立刻更新）
-    realtimeDataProvider.onDataUpdate = () => {
-      this._dataVersion++;
-    };
+    this._realtimeCb = () => { if (this._isAlive === false) return; this._dataVersion++ };
+    realtimeDataProvider.onDataUpdate = this._realtimeCb;
 
     // 清空旧设备列表，防止跨页面残留的不同网关设备导致显示与下发不一致
     realtimeDataProvider.clearDeviceState();
@@ -250,6 +249,13 @@ export default {
 
     // 立即触发一次数据刷新
     this._dataVersion++;
+  },
+  // 组件顶层钩子：销毁后释放 legacy 单槽，避免旧页面继续抢占实时回调
+  beforeDestroy() {
+    this._isAlive = false;
+    if (realtimeDataProvider.onDataUpdate === this._realtimeCb) {
+      realtimeDataProvider.onDataUpdate = null;
+    }
   },
   methods: {
     init171FDevice() {

@@ -266,13 +266,18 @@ export default {
     this._unsubRealtime = realtimeDataProvider.subscribe(() => this.updateDevice171F());
   },
   beforeDestroy() {
+    this._isAlive = false;
     this._unsubRealtime && this._unsubRealtime();
   },
 
   methods: {
     updateDevice171F() {
-      this.deviceList = [...realtimeDataProvider.getDeviceList()]
+      if (this._isAlive === false) return;
+      this.deviceList = realtimeDataProvider.getViewList()
       this.device171F = this.deviceList.find(item => item && item.deviceType === '171F');
+      // 高频数据容器被标记为非 plain object，Vue2 跳过 observe；
+      // 强制刷新确保模板读到的始终是 provider 内存里的最新值。
+      if (typeof this.$forceUpdate === 'function') this.$forceUpdate()
     },
     init171FDevice() {
       this.deviceList = this.get171FDeviceList();
