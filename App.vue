@@ -97,6 +97,12 @@ page {
 	// background-image: url('static/main_bg_img_750.jpg');
 	height: 100%;
 	box-sizing: border-box;
+	/* App 端禁用 webview 边界橡皮筋回弹。必须写在全局非 scoped 样式里：
+	   scoped 会把它编译成 page[data-v-xxx]，页面根元素不带该属性，从来不会生效。 */
+	/* #ifdef APP-PLUS */
+	overscroll-behavior: none;
+	overscroll-behavior-y: none;
+	/* #endif */
 	/* 全局字体栈：安卓 WebView 未显式指定时会落到思源/默认字体，
 	   数字与中文混排字重不齐；统一走系统 UI 字体，子组件继承后观感一致 */
 	font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC',

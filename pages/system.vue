@@ -244,16 +244,15 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/* 与「我的」tab（profile.vue）保持一致：根容器不设 min-height:100%、不建 flex 上下文。
+   原先的 min-height:100% 参照父级 .page-item（高度由内容决定），会算出略大于一屏的
+   高度，导致内容不满一屏时 App 端仍能整页上滑；去掉后高度完全由内容决定。 */
 .container {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
   background: #EFF4FB;
 }
 
 .content {
   padding: 20rpx;
-  flex: 1;
 }
 
 .system-header {

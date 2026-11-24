@@ -208,7 +208,7 @@
         </view>
       </view>
 
-      <view class="bottom-space"></view>
+      <!-- <view class="bottom-space"></view> -->
     </view>
 
     <view v-if="loading" class="loading-mask">

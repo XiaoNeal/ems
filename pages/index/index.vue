@@ -20,7 +20,8 @@
          纵向滚动交给页面本身；头部与底部导航 fixed，内容用 padding 让出位置。
          切换设备期间整块内容 visibility:hidden，避免图表 canvas / z-index 较高的
          装饰块透过加载遮罩露出来 -->
-    <view class="content-pages" :class="{ 'content-pages--switching': deviceSwitching && !showDeviceList }">
+    <view class="content-pages" :class="{ 'content-pages--switching': deviceSwitching && !showDeviceList }"
+      @touchstart="onPagesTouchStart" @touchmove="onPagesTouchMove">
       <!-- 设备列表页面 -->
       <!-- 个人中心 - 优先级最高，始终可以访问 -->
       <view v-if="currentTab === 2" class="page-item">
@@ -315,6 +316,21 @@ export default {
   },
   onReady() {
     this.scrollToTop()
+    // #ifdef APP-PLUS
+    // 关闭 WebView 边界回弹：pages.json 的 app-plus.bounce 在真机调试基座可能未生效
+    // （基座沿用启动时缓存的 WebView 配置），这里在页面就绪后对当前 webview 再设一次。
+    try {
+      const wv = plus.webview.currentWebview()
+      if (wv && typeof wv.setStyle === 'function') {
+        wv.setStyle({ bounce: 'none' })
+      }
+    } catch (e) { }
+    // 非响应式实例字段：touchmove 高频路径用，不进 data 避免触发渲染
+    this._overscrollLocked = false
+    this._pagesTouchStartY = 0
+    this._measuringOverflow = false
+    this._measureOverflowGuard()
+    // #endif
   },
   /** 页面级滚动：滚动位置只记到实例属性，滚动过程零渲染 */
   onPageScroll(e) {
@@ -828,6 +844,10 @@ export default {
 
       // 滚动到顶部
       this.scrollToTop()
+      // #ifdef APP-PLUS
+      // 切 tab 后内容高度变化，重新测量是否需要锁 overscroll
+      this._measureOverflowGuard()
+      // #endif
     },
 
     // 页面级滚动：直接调原生 pageScrollTo 归零
@@ -839,6 +859,67 @@ export default {
         })
         this._realScrollTop = 0
       })
+    },
+
+    // #ifdef APP-PLUS
+    /**
+     * App 端 overscroll 兜底：内容不足一屏时，页面本不该有滚动空间。
+     * 部分 WebView（含调试基座）在 page 高度计算有 1~2px 误差或 bounce 残留时，
+     * 仍允许整页上滑，连带 fixed 底栏被推出屏幕。这里在 touchstart 时测量真实
+     * 内容高度，若 <= 可视区高度，则在 touchmove 阶段阻止默认滚动。
+     * 内容确实超出时不干预，正常滚动与下拉刷新完全不受影响。
+     */
+    _measureOverflowGuard() {
+      if (this._measuringOverflow) return
+      this._measuringOverflow = true
+      this.$nextTick(() => {
+        setTimeout(() => {
+          try {
+            const sys = uni.getSystemInfoSync()
+            const query = uni.createSelectorQuery().in(this)
+            query.select('.content-pages').boundingClientRect()
+            query.selectViewport().scrollOffset()
+            query.exec(res => {
+              const rect = res && res[0]
+              const contentH = rect ? rect.height : 0
+              const winH = sys.windowHeight || 0
+              // 留出 2px 容差，避免因小数误差误锁
+              this._overscrollLocked = contentH > 0 && contentH <= (winH + 2)
+              this._measuringOverflow = false
+              // 诊断输出：真机上从 console 搜索 [overscroll-guard]，一次性判断
+              console.log('[overscroll-guard] tab=' + this.currentTab +
+                ' contentH=' + Math.round(contentH) + ' winH=' + Math.round(winH) +
+                ' locked=' + this._overscrollLocked)
+            })
+          } catch (e) {
+            this._overscrollLocked = false
+            this._measuringOverflow = false
+          }
+        }, 60)
+      })
+    },
+    // #endif
+    // 模板两端都绑定了 touch 事件，方法定义必须两端都存在，
+    // 否则小程序端方法被 #ifdef 剔除后触摸会报 not a function。实际逻辑仅 App 端执行。
+    onPagesTouchStart(e) {
+      // #ifdef APP-PLUS
+      // 每次按下重新测量一次：数据加载/切 tab 后内容高度会变
+      this._measureOverflowGuard()
+      this._pagesTouchStartY = (e && e.touches && e.touches[0]) ? e.touches[0].clientY : 0
+      // #endif
+    },
+    onPagesTouchMove(e) {
+      // #ifdef APP-PLUS
+      if (!this._overscrollLocked) return
+      const touch = e && e.touches && e.touches[0]
+      if (!touch) return
+      const dy = this._pagesTouchStartY - touch.clientY // >0 表示手指向上滑（页面内容上移）
+      if (dy > 0) {
+        // uni-app App 端 touchmove 事件对象提供 preventDefault
+        if (e.preventDefault) e.preventDefault()
+        if (e.stopPropagation) e.stopPropagation()
+      }
+      // #endif
     },
 
     getIconType(index) {
@@ -859,13 +940,28 @@ export default {
 /* 页面自身滚动：勿给 page 设置 height:100% / overflow:hidden（会锁死原生滚动），
    但要给 min-height，否则内容不满一屏时 page 只到内容底部，下面露出 WebView 的白底 */
 page {
+  /* 小程序端：page 高度由内容决定，用 100vh 保证背景铺满整屏 */
   min-height: 100vh;
+  /* App 端：App.vue 全局已设 page{height:100%}（= webview 可视区高度）。
+     这里若仍用 100vh，custom 导航下 100vh 按整屏算、比可视区多一个状态栏高度，
+     min-height 会把 page 撑得超出可视区 → 内容不满一屏也能整页上滑。
+     改为 100% 与全局 height 对齐，消除这段虚假滚动空间。 */
+  /* #ifdef APP-PLUS */
+  min-height: 100%;
+  /* #endif */
   background-color: #EFF4FB;
+  /* App 端页面级滚动禁回弹：即便 bounce 配置未生效，也从 CSS 层掐掉橡皮筋 */
+  /* #ifdef APP-PLUS */
+  overscroll-behavior: none;
+  /* #endif */
 }
 
 .container {
   width: 100%;
   min-height: 100vh;
+  /* #ifdef APP-PLUS */
+  min-height: 100%;
+  /* #endif */
   background-color: #EFF4FB;
   position: relative;
 }

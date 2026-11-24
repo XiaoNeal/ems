@@ -2,7 +2,7 @@
     <view class="login-page">
 
         <!-- 设计背景图：天空/标题/产品柜体/标语/云层/地面（官方资源） -->
-        <image class="login-bg" src="/static/images/login-bg.png" mode="scaleToFill"></image>
+        <image class="login-bg" src="/static/images/login-bg.jpg" mode="scaleToFill"></image>
         <!-- 表单页淡化背景：避免表单文字与柜体/标题/竖排标语重叠打架 -->
         <view class="login-bg-mask" v-if="loginType !== 'none'"></view>
 

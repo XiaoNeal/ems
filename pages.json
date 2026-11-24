@@ -10,7 +10,7 @@
 				"enablePullDownRefresh": true,
 				"backgroundTextStyle": "dark",
 				"app-plus": {
-					"bounce": "vertical"
+					"bounce": "none"
 				}
 			}
 		},

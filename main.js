@@ -2,7 +2,10 @@
 // #ifndef VUE3
 import Vue from 'vue'
 import App from './App'
-import { uniIcons } from '@dcloudio/uni-ui'
+// uni-icons 统一从 uni_modules 引入：项目里既装了 npm 包 @dcloudio/uni-ui，
+// 又有 uni_modules/uni-icons，两边会被各打一份（产物里 uni-icons.wxss 53KB × 2）。
+// 只保留 uni_modules 这一份，主包可直接省掉整个 node-modules/@dcloudio/uni-ui 产物。
+import uniIcons from '@/uni_modules/uni-icons/components/uni-icons/uni-icons.vue'
 import store from './store'
 import uView from '@/uni_modules/uview-ui'
 import Config from './static/js/config.js'
@@ -10,7 +13,6 @@ import Config from './static/js/config.js'
 let vuexStore = require("@/store/$u.mixin.js");
 Vue.mixin(vuexStore);
 import api from './api'
-import Moment from 'moment'
 
 // #ifdef MP-WEIXIN
 // 微信小程序会把 console 输出写入本地日志文件，日志量过大时会报
@@ -49,7 +51,6 @@ Vue.config.productionTip = false
 Vue.prototype.$store = store;
 Vue.prototype.$Config = Config
 Vue.prototype.$api = api
-Vue.prototype.$moment = Moment;
 const bus = new Vue()
 Vue.prototype.$bus = bus
 App.mpType = 'app'
